@@ -39,12 +39,15 @@ function buildSnapshot(score) {
                         var annStaffIdx = ann.track !== undefined
                             ? Math.floor(ann.track / 4) : ann.staffIdx;
                         if (annStaffIdx === staffIdx && ann.text) {
+                            var annType = "text";
+                            if (ann.type === Element.TEMPO_TEXT) annType = "tempo";
                             staff.events.push({
                                 type: "text",
                                 text: ann.text.toLowerCase().trim(),
                                 rawText: ann.text,
                                 tick: seg.tick,
-                                measure: measureNum
+                                measure: measureNum,
+                                annotationType: annType
                             });
                         }
                     }
@@ -72,6 +75,20 @@ function buildSnapshot(score) {
                     }
 
                     staff.events.push(ev);
+                }
+
+                // 小節線（barline）の取得
+                for (var v = 0; v < 4; v++) {
+                    var barEl = seg.elementAt(staffIdx * 4 + v);
+                    if (barEl && barEl.type === Element.BAR_LINE) {
+                        staff.events.push({
+                            type: "barline",
+                            barlineType: barEl.barLineType,
+                            tick: seg.tick,
+                            measure: measureNum
+                        });
+                        break;
+                    }
                 }
 
                 seg = seg.next;

@@ -24,6 +24,9 @@ MuseScore {
         property bool rulePizzArco: true
         property bool ruleSordino: true
         property bool ruleSoloTutti: true
+        property bool ruleDivUnis: true
+        property bool ruleRestAnnotation: true
+        property bool ruleTempoBarline: true
     }
 
     onRun: {
@@ -34,7 +37,10 @@ MuseScore {
         enabledRules = {
             "pizz-arco": persistedSettings.rulePizzArco,
             "sordino": persistedSettings.ruleSordino,
-            "solo-tutti": persistedSettings.ruleSoloTutti
+            "solo-tutti": persistedSettings.ruleSoloTutti,
+            "div-unis": persistedSettings.ruleDivUnis,
+            "rest-annotation": persistedSettings.ruleRestAnnotation,
+            "tempo-barline": persistedSettings.ruleTempoBarline
         };
     }
 
@@ -243,6 +249,9 @@ MuseScore {
                                 if (checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
                                 else if (checker.id === "sordino") persistedSettings.ruleSordino = checked;
                                 else if (checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
+                                else if (checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
+                                else if (checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
+                                else if (checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
                             }
                         }
                     }

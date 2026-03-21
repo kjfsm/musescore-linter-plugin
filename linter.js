@@ -2,11 +2,17 @@
 .import "checkers/PizzArcoChecker.js" as PizzArco
 .import "checkers/SordinoChecker.js" as Sordino
 .import "checkers/SoloTuttiChecker.js" as SoloTutti
+.import "checkers/DivisiChecker.js" as Divisi
+.import "checkers/RestAnnotationChecker.js" as RestAnnotation
+.import "checkers/TempoBarlineChecker.js" as TempoBarline
 
 var allCheckers = [
     PizzArco.checker,
     Sordino.checker,
-    SoloTutti.checker
+    SoloTutti.checker,
+    Divisi.checker,
+    RestAnnotation.checker,
+    TempoBarline.checker
 ];
 
 function getCheckerList() {
