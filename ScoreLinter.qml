@@ -16,6 +16,7 @@ MuseScore {
 
     property var enabledRules: ({})
     property var issuesList: []
+    property string snapshotText: ""
 
     Settings {
         id: persistedSettings
@@ -46,6 +47,7 @@ MuseScore {
     function runLinter() {
         issuesModel.clear();
         issuesList = [];
+        snapshotText = "";
 
         if (!curScore) {
             issuesModel.append({
@@ -60,9 +62,17 @@ MuseScore {
             return;
         }
 
-        var snapshot = Snapshot.buildSnapshot(curScore);
+        var snapshot = Snapshot.buildSnapshot(curScore, {
+            CHORD: Element.CHORD,
+            REST: Element.REST,
+            BAR_LINE: Element.BAR_LINE,
+            TEMPO_TEXT: Element.TEMPO_TEXT
+        });
+        snapshotText = JSON.stringify(snapshot, null, 2);
+
         var issues = Linter.runAllCheckers(snapshot, enabledRules);
         issuesList = issues;
+        console.log("[ScoreLinter] 実行完了: " + issues.length + " 件の問題を検出");
 
         if (issues.length === 0) {
             issuesModel.append({
@@ -86,11 +96,42 @@ MuseScore {
 
     function jumpToIssue(issue) {
         if (!curScore || issue.measure <= 0) return;
-        // cmd() による小節ジャンプが最も確実にUIのスクロール・選択を反映する
-        cmd("escape");
-        cmd("first-element");
-        for (var i = 1; i < issue.measure; i++) {
-            cmd("next-measure");
+        var cursor = curScore.newCursor();
+        cursor.rewind(Cursor.SCORE_START);
+        // 目的の小節まで移動
+        for (var i = 0; i < issue.measure - 1; i++) {
+            cursor.nextMeasure();
+        }
+        // 該当小節内のアノテーションを探して選択
+        var m = cursor.measure;
+        if (m) {
+            for (var seg = m.firstSegment; seg; seg = seg.nextInMeasure) {
+                if (seg.annotations) {
+                    for (var a = 0; a < seg.annotations.length; a++) {
+                        var ann = seg.annotations[a];
+                        var annStaffIdx = ann.track !== undefined
+                            ? Math.floor(ann.track / 4) : -1;
+                        if (annStaffIdx === issue.staffIdx) {
+                            curScore.selection.select(ann);
+                            cmd("reset");
+                            cmd("note-input");
+                            cmd("note-input");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        // フォールバック: アノテーションが見つからない場合は小節の先頭要素を選択
+        if (m && m.firstSegment) {
+            var track = issue.staffIdx * 4;
+            var el = m.firstSegment.elementAt(track);
+            if (el) {
+                curScore.selection.select(el);
+                cmd("reset");
+                cmd("note-input");
+                cmd("note-input");
+            }
         }
     }
 
@@ -130,8 +171,9 @@ MuseScore {
             id: tabBar
             Layout.fillWidth: true
 
-            TabButton { text: "Issues" }
-            TabButton { text: "Settings" }
+            TabButton { text: "問題" }
+            TabButton { text: "設定" }
+            TabButton { text: "スナップショット" }
         }
 
         // タブコンテンツ
@@ -140,7 +182,7 @@ MuseScore {
             Layout.fillHeight: true
             currentIndex: tabBar.currentIndex
 
-            // === Issues タブ ===
+            // === 問題タブ ===
             ListView {
                 id: issuesView
                 clip: true
@@ -162,7 +204,8 @@ MuseScore {
                             if (model.tick > 0 && model.ruleId !== "") {
                                 jumpToIssue({
                                     tick: model.tick,
-                                    staffIdx: model.staffIdx
+                                    staffIdx: model.staffIdx,
+                                    measure: model.measure
                                 });
                             }
                         }
@@ -217,7 +260,7 @@ MuseScore {
                 }
             }
 
-            // === Settings タブ ===
+            // === 設定タブ ===
             ScrollView {
                 clip: true
 
@@ -253,6 +296,47 @@ MuseScore {
                                 else if (checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
                             }
                         }
+                    }
+                }
+            }
+
+            // === スナップショットタブ ===
+            ColumnLayout {
+                spacing: 4
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "スナップショット（実行結果のJSON）"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+
+                    Button {
+                        text: "コピー"
+                        enabled: snapshotText.length > 0
+                        onClicked: {
+                            snapshotArea.selectAll();
+                            snapshotArea.copy();
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+
+                    TextArea {
+                        id: snapshotArea
+                        text: snapshotText || "「実行」ボタンを押すとスナップショットが表示されます"
+                        readOnly: true
+                        selectByMouse: true
+                        wrapMode: TextArea.Wrap
+                        font.family: "monospace"
+                        font.pixelSize: 11
                     }
                 }
             }
