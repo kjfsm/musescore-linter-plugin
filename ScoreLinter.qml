@@ -304,16 +304,24 @@ MuseScore {
             ColumnLayout {
                 spacing: 4
 
-                Label {
-                    text: "スナップショット（実行結果のJSON）"
-                    font.pixelSize: 14
-                    font.bold: true
-                }
+                RowLayout {
+                    Layout.fillWidth: true
 
-                Label {
-                    text: "全選択してコピーできます"
-                    color: "#888888"
-                    font.pixelSize: 11
+                    Label {
+                        text: "スナップショット（実行結果のJSON）"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+
+                    Button {
+                        text: "コピー"
+                        enabled: snapshotText.length > 0
+                        onClicked: {
+                            snapshotArea.selectAll();
+                            snapshotArea.copy();
+                        }
+                    }
                 }
 
                 ScrollView {
