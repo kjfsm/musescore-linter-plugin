@@ -62,7 +62,12 @@ MuseScore {
             return;
         }
 
-        var snapshot = Snapshot.buildSnapshot(curScore);
+        var snapshot = Snapshot.buildSnapshot(curScore, {
+            CHORD: Element.CHORD,
+            REST: Element.REST,
+            BAR_LINE: Element.BAR_LINE,
+            TEMPO_TEXT: Element.TEMPO_TEXT
+        });
         snapshotText = JSON.stringify(snapshot, null, 2);
 
         var issues = Linter.runAllCheckers(snapshot, enabledRules);

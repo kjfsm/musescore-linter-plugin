@@ -15,7 +15,9 @@ function getPartName(score, staffIdx) {
     return "Staff " + (staffIdx + 1);
 }
 
-function buildSnapshot(score) {
+// E: QML 側から渡される Element 列挙型
+// { CHORD, REST, BAR_LINE, TEMPO_TEXT }
+function buildSnapshot(score, E) {
     var snapshot = { staves: [] };
     var numStaves = score.nstaves;
 
@@ -45,7 +47,7 @@ function buildSnapshot(score) {
                         var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
                         if (annStaffIdx === staffIdx && cleanText.length > 0) {
                             var annType = "text";
-                            if (ann.type === Element.TEMPO_TEXT) annType = "tempo";
+                            if (ann.type === E.TEMPO_TEXT) annType = "tempo";
                             console.log("[ScoreLinter] annotation: staff=" + staffIdx
                                 + " m=" + measureNum
                                 + " raw='" + ann.text + "'"
@@ -67,8 +69,8 @@ function buildSnapshot(score) {
                 var el = seg.elementAt(track);
                 if (el) {
                     var evType = "other";
-                    if (el.type === Element.CHORD) evType = "chord";
-                    else if (el.type === Element.REST) evType = "rest";
+                    if (el.type === E.CHORD) evType = "chord";
+                    else if (el.type === E.REST) evType = "rest";
 
                     var ev = {
                         type: evType,
@@ -89,7 +91,7 @@ function buildSnapshot(score) {
                 // 小節線（barline）の取得
                 for (var v = 0; v < 4; v++) {
                     var barEl = seg.elementAt(staffIdx * 4 + v);
-                    if (barEl && barEl.type === Element.BAR_LINE) {
+                    if (barEl && barEl.type === E.BAR_LINE) {
                         staff.events.push({
                             type: "barline",
                             barlineType: barEl.barLineType,
