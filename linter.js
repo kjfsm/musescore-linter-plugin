@@ -1,0 +1,36 @@
+.pragma library
+.import "checkers/PizzArcoChecker.js" as PizzArco
+.import "checkers/SordinoChecker.js" as Sordino
+.import "checkers/SoloTuttiChecker.js" as SoloTutti
+
+var allCheckers = [
+    PizzArco.checker,
+    Sordino.checker,
+    SoloTutti.checker
+];
+
+function getCheckerList() {
+    return allCheckers;
+}
+
+function runAllCheckers(snapshot, enabledRules) {
+    var allIssues = [];
+    for (var i = 0; i < allCheckers.length; i++) {
+        var checker = allCheckers[i];
+        if (enabledRules[checker.id] !== false) {
+            var issues = checker.run(snapshot);
+            for (var j = 0; j < issues.length; j++) {
+                allIssues.push(issues[j]);
+            }
+        }
+    }
+    // ソート: severity (error > warning), 次に measure
+    allIssues.sort(function(a, b) {
+        if (a.severity !== b.severity) {
+            return a.severity === "error" ? -1 : 1;
+        }
+        if (a.staffIdx !== b.staffIdx) return a.staffIdx - b.staffIdx;
+        return a.measure - b.measure;
+    });
+    return allIssues;
+}
