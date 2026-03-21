@@ -7,10 +7,77 @@ function matchesAny(text, patterns) {
     return false;
 }
 
+function buildPartBuckets(snapshot) {
+    var buckets = {};
+
+    for (var s = 0; s < snapshot.staves.length; s++) {
+        var staff = snapshot.staves[s];
+        var key = staff.partName || ("Staff " + (staff.staffIdx + 1));
+
+        if (!buckets[key]) {
+            buckets[key] = {
+                partName: key,
+                staffIdx: staff.staffIdx,
+                events: []
+            };
+        }
+
+        if (staff.staffIdx < buckets[key].staffIdx) {
+            buckets[key].staffIdx = staff.staffIdx;
+        }
+
+        for (var e = 0; e < staff.events.length; e++) {
+            var ev = staff.events[e];
+            if (ev.type !== "text") continue;
+            buckets[key].events.push({
+                text: ev.text,
+                rawText: ev.rawText,
+                tick: ev.tick,
+                measure: ev.measure,
+                staffIdx: staff.staffIdx
+            });
+        }
+    }
+
+    var result = [];
+    for (var partName in buckets) {
+        if (!buckets.hasOwnProperty(partName)) continue;
+
+        var bucket = buckets[partName];
+        bucket.events.sort(function(a, b) {
+            if (a.measure !== b.measure) return a.measure - b.measure;
+            if (a.tick !== b.tick) return a.tick - b.tick;
+            if (a.text !== b.text) return a.text < b.text ? -1 : 1;
+            return a.staffIdx - b.staffIdx;
+        });
+
+        // 同一パート内で重複して収集される同一注記を除外
+        var deduped = [];
+        var prevKey = "";
+        for (var i = 0; i < bucket.events.length; i++) {
+            var bev = bucket.events[i];
+            var currentKey = bev.measure + "|" + bev.tick + "|" + bev.text;
+            if (currentKey !== prevKey) {
+                deduped.push(bev);
+                prevKey = currentKey;
+            }
+        }
+
+        bucket.events = deduped;
+        result.push(bucket);
+    }
+
+    result.sort(function(a, b) {
+        return a.staffIdx - b.staffIdx;
+    });
+    return result;
+}
+
 function createTextPairChecker(config) {
     // config: {
     //   id:           "pizz-arco",
     //   name:         "Pizz / Arco",
+    //   description:  "説明文",
     //   onPatterns:   ["pizz.", "pizz", "pizzicato"],
     //   offPatterns:  ["arco"],
     //   defaultState: "off",
@@ -20,27 +87,28 @@ function createTextPairChecker(config) {
     return {
         id: config.id,
         name: config.name,
+        description: config.description || "",
         run: function(snapshot) {
             var issues = [];
-            for (var s = 0; s < snapshot.staves.length; s++) {
-                var staff = snapshot.staves[s];
+            var parts = buildPartBuckets(snapshot);
+
+            for (var p = 0; p < parts.length; p++) {
+                var part = parts[p];
                 var state = config.defaultState;
                 var lastSwitchEvent = null;
 
-                for (var e = 0; e < staff.events.length; e++) {
-                    var ev = staff.events[e];
-                    if (ev.type !== "text") continue;
-                    // snapshot.js で既に lowercase/trim 済み
+                for (var e = 0; e < part.events.length; e++) {
+                    var ev = part.events[e];
                     if (matchesAny(ev.text, config.onPatterns)) {
                         if (state === "on") {
                             issues.push({
                                 ruleId: config.id,
                                 severity: "warning",
-                                message: staff.partName + ": " +
+                                message: part.partName + ": " +
                                     config.onLabel + " が既に指示済みの状態で再度指示されています（" +
                                     ev.measure + "小節目）",
-                                staffIdx: staff.staffIdx,
-                                partName: staff.partName,
+                                staffIdx: part.staffIdx,
+                                partName: part.partName,
                                 measure: ev.measure,
                                 tick: ev.tick
                             });
@@ -52,11 +120,11 @@ function createTextPairChecker(config) {
                             issues.push({
                                 ruleId: config.id,
                                 severity: "warning",
-                                message: staff.partName + ": " +
+                                message: part.partName + ": " +
                                     config.offLabel + " が既に指示済みの状態で再度指示されています（" +
                                     ev.measure + "小節目）",
-                                staffIdx: staff.staffIdx,
-                                partName: staff.partName,
+                                staffIdx: part.staffIdx,
+                                partName: part.partName,
                                 measure: ev.measure,
                                 tick: ev.tick
                             });
@@ -71,11 +139,11 @@ function createTextPairChecker(config) {
                     issues.push({
                         ruleId: config.id,
                         severity: "warning",
-                        message: staff.partName + ": " +
+                        message: part.partName + ": " +
                             config.onLabel + " のまま曲が終了しています（" +
                             config.offLabel + " が必要かもしれません）",
-                        staffIdx: staff.staffIdx,
-                        partName: staff.partName,
+                        staffIdx: part.staffIdx,
+                        partName: part.partName,
                         measure: lastSwitchEvent.measure,
                         tick: lastSwitchEvent.tick
                     });

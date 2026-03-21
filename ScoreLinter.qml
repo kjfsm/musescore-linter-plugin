@@ -278,22 +278,38 @@ MuseScore {
                     Repeater {
                         model: Linter.getCheckerList().length
 
-                        CheckBox {
+                        ColumnLayout {
                             property var checker: Linter.getCheckerList()[index]
-                            text: checker.name
-                            checked: enabledRules[checker.id] !== false
                             Layout.fillWidth: true
-                            onToggled: {
-                                var rules = enabledRules;
-                                rules[checker.id] = checked;
-                                enabledRules = rules;
-                                // Settings に永続化
-                                if (checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
-                                else if (checker.id === "sordino") persistedSettings.ruleSordino = checked;
-                                else if (checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
-                                else if (checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
-                                else if (checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
-                                else if (checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
+                            spacing: 1
+
+                            CheckBox {
+                                text: parent.checker.name
+                                checked: enabledRules[parent.checker.id] !== false
+                                Layout.fillWidth: true
+                                onToggled: {
+                                    var rules = enabledRules;
+                                    rules[parent.checker.id] = checked;
+                                    enabledRules = rules;
+                                    // Settings に永続化
+                                    if (parent.checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
+                                    else if (parent.checker.id === "sordino") persistedSettings.ruleSordino = checked;
+                                    else if (parent.checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
+                                    else if (parent.checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
+                                    else if (parent.checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
+                                    else if (parent.checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
+                                }
+                            }
+
+                            Label {
+                                text: parent.checker.description || ""
+                                visible: text.length > 0
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                color: "#666666"
+                                font.pixelSize: 11
+                                leftPadding: 34
+                                Layout.bottomMargin: 6
                             }
                         }
                     }

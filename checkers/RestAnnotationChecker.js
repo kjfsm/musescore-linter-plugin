@@ -21,6 +21,7 @@ function isDynamicLikeText(ev) {
 var checker = {
     id: "rest-annotation",
     name: "休符へのアノテーション",
+    description: "休符と同位置のテキスト指示を検知（強弱記号は除外）",
     run: function(snapshot) {
         var issues = [];
         for (var s = 0; s < snapshot.staves.length; s++) {
