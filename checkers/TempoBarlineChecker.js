@@ -3,6 +3,7 @@
 var checker = {
     id: "tempo-barline",
     name: "テンポ変更と複縦線",
+    description: "テンポ変更前の小節に複縦線があるかを確認",
     run: function(snapshot) {
         var issues = [];
         if (snapshot.staves.length === 0) return issues;

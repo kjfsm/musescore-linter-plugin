@@ -1,8 +1,27 @@
 .pragma library
 
+
+function isDynamicLikeText(ev) {
+    var t = (ev.text || "").toLowerCase();
+    var raw = (ev.rawText || "").toLowerCase();
+
+    // MuseScore snapshot ではダイナミクスが dynamic... の内部名で出る場合がある
+    if (t.indexOf("dynamic") === 0 || raw.indexOf("dynamic") === 0) return true;
+
+    // プレーンテキストの強弱記号
+    var normalized = raw.replace(/\s+/g, "").replace(/\./g, "");
+    var dynamicTokens = {
+        p: true, pp: true, ppp: true, pppp: true,
+        f: true, ff: true, fff: true, ffff: true,
+        mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
+    };
+    return !!dynamicTokens[normalized];
+}
+
 var checker = {
     id: "rest-annotation",
     name: "休符へのアノテーション",
+    description: "休符と同位置のテキスト指示を検知（強弱記号は除外）",
     run: function(snapshot) {
         var issues = [];
         for (var s = 0; s < snapshot.staves.length; s++) {
@@ -19,7 +38,7 @@ var checker = {
             // 休符と同じ tick にテキスト指示がある場合に警告
             for (var e2 = 0; e2 < staff.events.length; e2++) {
                 var ev = staff.events[e2];
-                if (ev.type === "text" && restTicks[ev.tick]) {
+                if (ev.type === "text" && restTicks[ev.tick] && !isDynamicLikeText(ev)) {
                     issues.push({
                         ruleId: "rest-annotation",
                         severity: "warning",

@@ -17,6 +17,7 @@ MuseScore {
     property var enabledRules: ({})
     property var issuesList: []
     property string snapshotText: ""
+    property string issuesCopyText: ""
 
     Settings {
         id: persistedSettings
@@ -50,6 +51,7 @@ MuseScore {
         snapshotText = "";
 
         if (!curScore) {
+            issuesCopyText = "";
             issuesModel.append({
                 severity: "error",
                 message: "スコアが開かれていません",
@@ -72,6 +74,7 @@ MuseScore {
 
         var issues = Linter.runAllCheckers(snapshot, enabledRules);
         issuesList = issues;
+        issuesCopyText = buildIssuesCopyText(issues);
         console.log("[ScoreLinter] 実行完了: " + issues.length + " 件の問題を検出");
 
         if (issues.length === 0) {
@@ -92,6 +95,19 @@ MuseScore {
 
         statusText.text = issues.length + " 件の問題";
         tabBar.currentIndex = 0;
+    }
+
+
+    function buildIssuesCopyText(issues) {
+        if (!issues || issues.length === 0) return "";
+        var lines = [];
+        for (var i = 0; i < issues.length; i++) {
+            var issue = issues[i];
+            var part = issue.partName ? (issue.partName + ": ") : "";
+            var measure = issue.measure > 0 ? (" 小節" + issue.measure) : "";
+            lines.push(part + issue.message + measure);
+        }
+        return lines.join("\n");
     }
 
     function jumpToIssue(issue) {
@@ -183,80 +199,109 @@ MuseScore {
             currentIndex: tabBar.currentIndex
 
             // === 問題タブ ===
-            ListView {
-                id: issuesView
-                clip: true
-                model: ListModel { id: issuesModel }
-                spacing: 2
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 4
 
-                delegate: Rectangle {
-                    width: issuesView.width
-                    height: issueContent.implicitHeight + 12
-                    color: mouseArea.containsMouse ? "#e8e8e8" : (index % 2 === 0 ? "#f8f8f8" : "#ffffff")
-                    radius: 3
+                RowLayout {
+                    Layout.fillWidth: true
 
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: model.tick > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "問題をコピー"
+                        enabled: issuesCopyText.length > 0
                         onClicked: {
-                            if (model.tick > 0 && model.ruleId !== "") {
-                                jumpToIssue({
-                                    tick: model.tick,
-                                    staffIdx: model.staffIdx,
-                                    measure: model.measure
-                                });
-                            }
-                        }
-                    }
-
-                    RowLayout {
-                        id: issueContent
-                        anchors.fill: parent
-                        anchors.margins: 6
-                        spacing: 8
-
-                        // Severity アイコン
-                        Rectangle {
-                            width: 8
-                            height: 8
-                            radius: 4
-                            color: model.severity === "error" ? "#e53935" :
-                                   model.severity === "warning" ? "#fb8c00" : "#43a047"
-                            Layout.alignment: Qt.AlignTop
-                            Layout.topMargin: 4
-                        }
-
-                        // メッセージ
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-
-                            Label {
-                                text: model.message
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                                font.pixelSize: 13
-                            }
-
-                            Label {
-                                text: model.measure > 0 ? ("小節 " + model.measure) : ""
-                                visible: model.measure > 0
-                                color: "#888888"
-                                font.pixelSize: 11
-                            }
+                            issuesCopyArea.selectAll();
+                            issuesCopyArea.copy();
                         }
                     }
                 }
 
-                // 空状態
-                Label {
-                    anchors.centerIn: parent
-                    text: "「実行」ボタンを押してチェックを開始"
-                    color: "#aaaaaa"
-                    visible: issuesModel.count === 0
-                    font.pixelSize: 13
+                ListView {
+                    id: issuesView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: ListModel { id: issuesModel }
+                    spacing: 2
+
+                    delegate: Rectangle {
+                        width: issuesView.width
+                        height: issueContent.implicitHeight + 12
+                        color: mouseArea.containsMouse ? "#e8e8e8" : (index % 2 === 0 ? "#f8f8f8" : "#ffffff")
+                        radius: 3
+
+                        MouseArea {
+                            id: mouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: model.tick > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                if (model.tick > 0 && model.ruleId !== "") {
+                                    jumpToIssue({
+                                        tick: model.tick,
+                                        staffIdx: model.staffIdx,
+                                        measure: model.measure
+                                    });
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            id: issueContent
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            spacing: 8
+
+                            // Severity アイコン
+                            Rectangle {
+                                width: 8
+                                height: 8
+                                radius: 4
+                                color: model.severity === "error" ? "#e53935" :
+                                       model.severity === "warning" ? "#fb8c00" : "#43a047"
+                                Layout.alignment: Qt.AlignTop
+                                Layout.topMargin: 4
+                            }
+
+                            // メッセージ
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                Label {
+                                    text: model.message
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                    font.pixelSize: 13
+                                }
+
+                                Label {
+                                    text: model.measure > 0 ? ("小節 " + model.measure) : ""
+                                    visible: model.measure > 0
+                                    color: "#888888"
+                                    font.pixelSize: 11
+                                }
+                            }
+                        }
+                    }
+
+                    // 空状態
+                    Label {
+                        anchors.centerIn: parent
+                        text: "「実行」ボタンを押してチェックを開始"
+                        color: "#aaaaaa"
+                        visible: issuesModel.count === 0
+                        font.pixelSize: 13
+                    }
+                }
+
+                TextArea {
+                    id: issuesCopyArea
+                    visible: false
+                    text: issuesCopyText
                 }
             }
 
@@ -278,22 +323,38 @@ MuseScore {
                     Repeater {
                         model: Linter.getCheckerList().length
 
-                        CheckBox {
+                        ColumnLayout {
                             property var checker: Linter.getCheckerList()[index]
-                            text: checker.name
-                            checked: enabledRules[checker.id] !== false
                             Layout.fillWidth: true
-                            onToggled: {
-                                var rules = enabledRules;
-                                rules[checker.id] = checked;
-                                enabledRules = rules;
-                                // Settings に永続化
-                                if (checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
-                                else if (checker.id === "sordino") persistedSettings.ruleSordino = checked;
-                                else if (checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
-                                else if (checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
-                                else if (checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
-                                else if (checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
+                            spacing: 1
+
+                            CheckBox {
+                                text: parent.checker.name
+                                checked: enabledRules[parent.checker.id] !== false
+                                Layout.fillWidth: true
+                                onToggled: {
+                                    var rules = enabledRules;
+                                    rules[parent.checker.id] = checked;
+                                    enabledRules = rules;
+                                    // Settings に永続化
+                                    if (parent.checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
+                                    else if (parent.checker.id === "sordino") persistedSettings.ruleSordino = checked;
+                                    else if (parent.checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
+                                    else if (parent.checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
+                                    else if (parent.checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
+                                    else if (parent.checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
+                                }
+                            }
+
+                            Label {
+                                text: parent.checker.description || ""
+                                visible: text.length > 0
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                color: "#666666"
+                                font.pixelSize: 11
+                                leftPadding: 34
+                                Layout.bottomMargin: 6
                             }
                         }
                     }
