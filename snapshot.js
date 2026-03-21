@@ -38,13 +38,22 @@ function buildSnapshot(score) {
                         // track から staffIdx を算出（track / 4 の切り捨て）
                         var annStaffIdx = ann.track !== undefined
                             ? Math.floor(ann.track / 4) : ann.staffIdx;
-                        if (annStaffIdx === staffIdx && ann.text) {
+                        // plainText はリッチテキストを除去した値（MuseScore 4）
+                        var rawText = (ann.plainText !== undefined && ann.plainText !== null)
+                            ? ann.plainText : (ann.text || "");
+                        // 万が一 HTML タグが残っている場合に除去
+                        var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
+                        if (annStaffIdx === staffIdx && cleanText.length > 0) {
                             var annType = "text";
                             if (ann.type === Element.TEMPO_TEXT) annType = "tempo";
+                            console.log("[ScoreLinter] annotation: staff=" + staffIdx
+                                + " m=" + measureNum
+                                + " raw='" + ann.text + "'"
+                                + " clean='" + cleanText + "'");
                             staff.events.push({
                                 type: "text",
-                                text: ann.text.toLowerCase().trim(),
-                                rawText: ann.text,
+                                text: cleanText,
+                                rawText: rawText.replace(/<[^>]*>/g, "").trim(),
                                 tick: seg.tick,
                                 measure: measureNum,
                                 annotationType: annType
@@ -99,5 +108,18 @@ function buildSnapshot(score) {
 
         snapshot.staves.push(staff);
     }
+
+    // デバッグ用サマリー
+    console.log("[ScoreLinter] snapshot: " + snapshot.staves.length + " staves");
+    for (var si = 0; si < snapshot.staves.length; si++) {
+        var st = snapshot.staves[si];
+        var textCount = 0;
+        for (var ei = 0; ei < st.events.length; ei++) {
+            if (st.events[ei].type === "text") textCount++;
+        }
+        console.log("[ScoreLinter]   staff " + si + " (" + st.partName + "): "
+            + st.events.length + " events, " + textCount + " text annotations");
+    }
+
     return snapshot;
 }

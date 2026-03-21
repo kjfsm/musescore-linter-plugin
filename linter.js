@@ -25,6 +25,7 @@ function runAllCheckers(snapshot, enabledRules) {
         var checker = allCheckers[i];
         if (enabledRules[checker.id] !== false) {
             var issues = checker.run(snapshot);
+            console.log("[ScoreLinter] checker '" + checker.id + "': " + issues.length + " 件検出");
             for (var j = 0; j < issues.length; j++) {
                 allIssues.push(issues[j]);
             }
