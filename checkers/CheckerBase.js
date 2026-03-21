@@ -52,14 +52,17 @@ function buildPartBuckets(snapshot) {
         });
 
         // 同一パート内で重複して収集される同一注記を除外
+        // NOTE:
+        //   snapshot 側の都合で、同一 tick/text が別 measure として
+        //   重複混入するケースを吸収するため、measure をキーに含めない。
         var deduped = [];
-        var prevKey = "";
+        var seen = {};
         for (var i = 0; i < bucket.events.length; i++) {
             var bev = bucket.events[i];
-            var currentKey = bev.measure + "|" + bev.tick + "|" + bev.text;
-            if (currentKey !== prevKey) {
+            var currentKey = bev.tick + "|" + bev.text;
+            if (!seen[currentKey]) {
                 deduped.push(bev);
-                prevKey = currentKey;
+                seen[currentKey] = true;
             }
         }
 

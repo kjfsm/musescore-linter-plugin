@@ -32,7 +32,16 @@ function buildSnapshot(score, E) {
         var m = score.firstMeasure;
         while (m) {
             var seg = m.firstSegment;
+            var measureEndTick = null;
+            if (m.nextMeasure && m.nextMeasure.firstSegment) {
+                measureEndTick = m.nextMeasure.firstSegment.tick;
+            }
             while (seg) {
+                // 現在小節の範囲外に出たら終了
+                if (measureEndTick !== null && seg.tick >= measureEndTick) {
+                    break;
+                }
+
                 // annotations（テキスト系: pizz, arco, con sord. など）
                 if (seg.annotations) {
                     for (var a = 0; a < seg.annotations.length; a++) {

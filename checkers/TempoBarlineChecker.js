@@ -20,26 +20,50 @@ var checker = {
             }
         }
 
-        // 小節線情報を収集: measure番号 -> barlineType
+        // 小節線情報を収集
         var barlines = {};
+        var barlineEvents = [];
         for (var e2 = 0; e2 < staff.events.length; e2++) {
             var bev = staff.events[e2];
             if (bev.type === "barline") {
                 barlines[bev.measure] = bev.barlineType;
+                barlineEvents.push(bev);
             }
         }
 
+        tempoEvents.sort(function(a, b) {
+            if (a.tick !== b.tick) return a.tick - b.tick;
+            return a.measure - b.measure;
+        });
+
+        barlineEvents.sort(function(a, b) {
+            if (a.tick !== b.tick) return a.tick - b.tick;
+            return a.measure - b.measure;
+        });
+
         // 各テンポ指示について、前小節に複縦線があるか確認
-        // 1小節目のテンポ指示はスキップ（曲頭なので前小節がない）
+        // 最初のテンポ指示はスキップ（曲頭想定）
         for (var t = 0; t < tempoEvents.length; t++) {
             var tm = tempoEvents[t];
-            if (tm.measure <= 1) continue;
+            if (t === 0) continue;
+
+            // tick 基準で直前の小節線を探索
+            var prevBarlineByTick = null;
+            for (var b = 0; b < barlineEvents.length; b++) {
+                if (barlineEvents[b].tick < tm.tick) {
+                    prevBarlineByTick = barlineEvents[b];
+                } else {
+                    break;
+                }
+            }
 
             var prevMeasure = tm.measure - 1;
             var prevBarline = barlines[prevMeasure];
+            var hasDoubleByMeasure = (prevBarline === 2);
+            var hasDoubleByTick = (prevBarlineByTick && prevBarlineByTick.barlineType === 2);
 
             // barlineType 2 = double barline (複縦線)
-            if (prevBarline !== 2) {
+            if (!hasDoubleByMeasure && !hasDoubleByTick) {
                 issues.push({
                     ruleId: "tempo-barline",
                     severity: "warning",
