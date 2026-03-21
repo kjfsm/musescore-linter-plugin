@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import Qt.labs.settings 1.0
 import MuseScore 3.0
 
 import "snapshot.js" as Snapshot
@@ -17,17 +18,24 @@ MuseScore {
     property var enabledRules: ({})
     property var issuesList: []
 
+    Settings {
+        id: persistedSettings
+        category: "ScoreLinter"
+        property bool rulePizzArco: true
+        property bool ruleSordino: true
+        property bool ruleSoloTutti: true
+    }
+
     onRun: {
         initSettings();
     }
 
     function initSettings() {
-        var checkers = Linter.getCheckerList();
-        var rules = {};
-        for (var i = 0; i < checkers.length; i++) {
-            rules[checkers[i].id] = true;
-        }
-        enabledRules = rules;
+        enabledRules = {
+            "pizz-arco": persistedSettings.rulePizzArco,
+            "sordino": persistedSettings.ruleSordino,
+            "solo-tutti": persistedSettings.ruleSoloTutti
+        };
     }
 
     function runLinter() {
@@ -72,16 +80,13 @@ MuseScore {
     }
 
     function jumpToIssue(issue) {
-        if (!curScore || issue.tick <= 0) return;
-        var cursor = curScore.newCursor();
-        cursor.staffIdx = issue.staffIdx;
-        cursor.voice = 0;
-        cursor.rewindToTick(issue.tick);
+        if (!curScore || issue.measure <= 0) return;
+        // cmd() による小節ジャンプが最も確実にUIのスクロール・選択を反映する
         cmd("escape");
-        curScore.selection.selectRange(
-            issue.tick, issue.tick + 1,
-            issue.staffIdx, issue.staffIdx + 1
-        );
+        cmd("first-element");
+        for (var i = 1; i < issue.measure; i++) {
+            cmd("next-measure");
+        }
     }
 
     ColumnLayout {
@@ -234,6 +239,10 @@ MuseScore {
                                 var rules = enabledRules;
                                 rules[checker.id] = checked;
                                 enabledRules = rules;
+                                // Settings に永続化
+                                if (checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
+                                else if (checker.id === "sordino") persistedSettings.ruleSordino = checked;
+                                else if (checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
                             }
                         }
                     }

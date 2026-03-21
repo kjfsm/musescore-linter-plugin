@@ -35,10 +35,14 @@ function buildSnapshot(score) {
                 if (seg.annotations) {
                     for (var a = 0; a < seg.annotations.length; a++) {
                         var ann = seg.annotations[a];
-                        if (ann.staffIdx === staffIdx && ann.text) {
+                        // track から staffIdx を算出（track / 4 の切り捨て）
+                        var annStaffIdx = ann.track !== undefined
+                            ? Math.floor(ann.track / 4) : ann.staffIdx;
+                        if (annStaffIdx === staffIdx && ann.text) {
                             staff.events.push({
                                 type: "text",
-                                text: ann.text,
+                                text: ann.text.toLowerCase().trim(),
+                                rawText: ann.text,
                                 tick: seg.tick,
                                 measure: measureNum
                             });

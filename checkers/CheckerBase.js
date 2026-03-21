@@ -30,9 +30,8 @@ function createTextPairChecker(config) {
                 for (var e = 0; e < staff.events.length; e++) {
                     var ev = staff.events[e];
                     if (ev.type !== "text") continue;
-                    var normalized = ev.text.toLowerCase().trim();
-
-                    if (matchesAny(normalized, config.onPatterns)) {
+                    // snapshot.js で既に lowercase/trim 済み
+                    if (matchesAny(ev.text, config.onPatterns)) {
                         if (state === "on") {
                             issues.push({
                                 ruleId: config.id,
@@ -48,7 +47,7 @@ function createTextPairChecker(config) {
                         }
                         state = "on";
                         lastSwitchEvent = ev;
-                    } else if (matchesAny(normalized, config.offPatterns)) {
+                    } else if (matchesAny(ev.text, config.offPatterns)) {
                         if (state === "off") {
                             issues.push({
                                 ruleId: config.id,
