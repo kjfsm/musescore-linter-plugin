@@ -215,11 +215,8 @@ MuseScore {
             }
         }
 
-        if (selected) {
-            cmd("reset");
-            cmd("note-input");
-            cmd("note-input");
-        }
+        // ジャンプ機能は選択位置の移動のみを行い、
+        // ノート入力モードなどの編集状態は変更しない。
     }
 
     ColumnLayout {
