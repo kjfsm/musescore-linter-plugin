@@ -1,12 +1,5 @@
 .pragma library
-
-function isTempoEvent(ev, snapshot) {
-    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
-    if (enums && enums.TEMPO_TEXT !== undefined && enums.TEMPO_TEXT !== null) {
-        return ev.elementType === enums.TEMPO_TEXT;
-    }
-    return ev.type === "text" && ev.annotationType === "tempo";
-}
+.import "CheckerBase.js" as CheckerBase
 
 var checker = {
     id: "opening-tempo",
@@ -35,7 +28,7 @@ var checker = {
 
         for (var j = 0; j < staff.events.length; j++) {
             var tev = staff.events[j];
-            if (!isTempoEvent(tev, snapshot)) continue;
+            if (!CheckerBase.isTempoEvent(tev, snapshot)) continue;
             if (tev.tick <= firstMusicTick) {
                 hasTempoAtOpening = true;
                 break;
@@ -46,7 +39,7 @@ var checker = {
         if (!hasTempoAtOpening) {
             for (var u = 0; u < unresolved.length; u++) {
                 var uev = unresolved[u];
-                if (!isTempoEvent(uev, snapshot)) continue;
+                if (!CheckerBase.isTempoEvent(uev, snapshot)) continue;
                 if (uev.tick <= firstMusicTick) {
                     hasTempoAtOpening = true;
                     break;

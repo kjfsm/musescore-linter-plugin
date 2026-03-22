@@ -18,6 +18,16 @@ MuseScore {
     property var issuesList: []
     property string snapshotText: ""
     property string issuesCopyText: ""
+    property var ruleSettingKeyMap: ({
+        "pizz-arco": "rulePizzArco",
+        "sordino": "ruleSordino",
+        "solo-tutti": "ruleSoloTutti",
+        "div-unis": "ruleDivUnis",
+        "rest-annotation": "ruleRestAnnotation",
+        "tempo-barline": "ruleTempoBarline",
+        "opening-tempo": "ruleOpeningTempo",
+        "first-note-dynamics": "ruleFirstNoteDynamics"
+    })
 
     Settings {
         id: persistedSettings
@@ -37,16 +47,13 @@ MuseScore {
     }
 
     function initSettings() {
-        enabledRules = {
-            "pizz-arco": persistedSettings.rulePizzArco,
-            "sordino": persistedSettings.ruleSordino,
-            "solo-tutti": persistedSettings.ruleSoloTutti,
-            "div-unis": persistedSettings.ruleDivUnis,
-            "rest-annotation": persistedSettings.ruleRestAnnotation,
-            "tempo-barline": persistedSettings.ruleTempoBarline,
-            "opening-tempo": persistedSettings.ruleOpeningTempo,
-            "first-note-dynamics": persistedSettings.ruleFirstNoteDynamics
-        };
+        var rules = {};
+        for (var ruleId in ruleSettingKeyMap) {
+            if (!ruleSettingKeyMap.hasOwnProperty(ruleId)) continue;
+            var settingsKey = ruleSettingKeyMap[ruleId];
+            rules[ruleId] = persistedSettings[settingsKey];
+        }
+        enabledRules = rules;
     }
 
     function runLinter() {
@@ -123,6 +130,17 @@ MuseScore {
         return lines.join("\n");
     }
 
+    function resolveAnnotationStaffIdx(ann) {
+        if (!ann) return -1;
+        if (ann.track !== undefined && ann.track !== null && ann.track >= 0) {
+            return Math.floor(ann.track / 4);
+        }
+        if (ann.staffIdx !== undefined && ann.staffIdx !== null && ann.staffIdx >= 0) {
+            return ann.staffIdx;
+        }
+        return -1;
+    }
+
     function jumpToIssue(issue) {
         if (!curScore) return;
 
@@ -143,12 +161,7 @@ MuseScore {
                         var unresolvedAnn = null;
                         for (var a = 0; a < segTick.annotations.length; a++) {
                             var ann = segTick.annotations[a];
-                            var annStaffIdx = -1;
-                            if (ann.track !== undefined && ann.track !== null && ann.track >= 0) {
-                                annStaffIdx = Math.floor(ann.track / 4);
-                            } else if (ann.staffIdx !== undefined && ann.staffIdx !== null && ann.staffIdx >= 0) {
-                                annStaffIdx = ann.staffIdx;
-                            }
+                            var annStaffIdx = resolveAnnotationStaffIdx(ann);
                             if (annStaffIdx === targetStaffIdx) {
                                 curScore.selection.select(ann);
                                 selected = true;
@@ -192,12 +205,7 @@ MuseScore {
                     if (seg.annotations) {
                         for (var j = 0; j < seg.annotations.length; j++) {
                             var fallbackAnn = seg.annotations[j];
-                            var fallbackStaffIdx = -1;
-                            if (fallbackAnn.track !== undefined && fallbackAnn.track !== null && fallbackAnn.track >= 0) {
-                                fallbackStaffIdx = Math.floor(fallbackAnn.track / 4);
-                            } else if (fallbackAnn.staffIdx !== undefined && fallbackAnn.staffIdx !== null && fallbackAnn.staffIdx >= 0) {
-                                fallbackStaffIdx = fallbackAnn.staffIdx;
-                            }
+                            var fallbackStaffIdx = resolveAnnotationStaffIdx(fallbackAnn);
                             if (fallbackStaffIdx === targetStaffIdx) {
                                 curScore.selection.select(fallbackAnn);
                                 selected = true;
@@ -421,15 +429,9 @@ MuseScore {
                                     var rules = enabledRules;
                                     rules[parent.checker.id] = checked;
                                     enabledRules = rules;
-                                    // Settings に永続化
-                                    if (parent.checker.id === "pizz-arco") persistedSettings.rulePizzArco = checked;
-                                    else if (parent.checker.id === "sordino") persistedSettings.ruleSordino = checked;
-                                    else if (parent.checker.id === "solo-tutti") persistedSettings.ruleSoloTutti = checked;
-                                    else if (parent.checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
-                                    else if (parent.checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
-                                    else if (parent.checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
-                                    else if (parent.checker.id === "opening-tempo") persistedSettings.ruleOpeningTempo = checked;
-                                    else if (parent.checker.id === "first-note-dynamics") persistedSettings.ruleFirstNoteDynamics = checked;
+                                    // Settings に永続化（新規ルールは ruleSettingKeyMap に追加）
+                                    var key = ruleSettingKeyMap[parent.checker.id];
+                                    if (key) persistedSettings[key] = checked;
                                 }
                             }
 
