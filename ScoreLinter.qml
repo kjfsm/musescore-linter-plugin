@@ -116,43 +116,87 @@ MuseScore {
     }
 
     function jumpToIssue(issue) {
-        if (!curScore || issue.measure <= 0) return;
-        var cursor = curScore.newCursor();
-        cursor.rewind(Cursor.SCORE_START);
-        // 目的の小節まで移動
-        for (var i = 0; i < issue.measure - 1; i++) {
-            cursor.nextMeasure();
-        }
-        // 該当小節内のアノテーションを探して選択
-        var m = cursor.measure;
-        if (m) {
-            for (var seg = m.firstSegment; seg; seg = seg.nextInMeasure) {
-                if (seg.annotations) {
-                    for (var a = 0; a < seg.annotations.length; a++) {
-                        var ann = seg.annotations[a];
-                        var annStaffIdx = ann.track !== undefined
-                            ? Math.floor(ann.track / 4) : -1;
-                        if (annStaffIdx === issue.staffIdx) {
-                            curScore.selection.select(ann);
-                            cmd("reset");
-                            cmd("note-input");
-                            cmd("note-input");
-                            return;
+        if (!curScore) return;
+
+        var targetTick = issue.tick;
+        var targetStaffIdx = issue.staffIdx;
+        var targetMeasure = issue.measure;
+        var selected = false;
+
+        // tick があれば優先して厳密に対象位置を探索する
+        if (targetTick !== undefined && targetTick !== null && targetTick >= 0) {
+            var mTick = curScore.firstMeasure;
+            while (mTick && !selected) {
+                for (var segTick = mTick.firstSegment; segTick; segTick = segTick.nextInMeasure) {
+                    if (segTick.tick !== targetTick) continue;
+
+                    // 1) まず annotation を優先的に選択
+                    if (segTick.annotations) {
+                        for (var a = 0; a < segTick.annotations.length; a++) {
+                            var ann = segTick.annotations[a];
+                            var annStaffIdx = ann.track !== undefined
+                                ? Math.floor(ann.track / 4) : -1;
+                            if (annStaffIdx === targetStaffIdx) {
+                                curScore.selection.select(ann);
+                                selected = true;
+                                break;
+                            }
                         }
                     }
+                    if (selected) break;
+
+                    // 2) annotation がなければ該当 staff の要素を選択
+                    var trackAtTick = targetStaffIdx * 4;
+                    var elAtTick = segTick.elementAt(trackAtTick);
+                    if (elAtTick) {
+                        curScore.selection.select(elAtTick);
+                        selected = true;
+                        break;
+                    }
+                }
+                mTick = mTick.nextMeasure;
+            }
+        }
+
+        // tick で見つからない場合は従来の measure ベースでフォールバック
+        if (!selected && targetMeasure > 0) {
+            var cursor = curScore.newCursor();
+            cursor.rewind(Cursor.SCORE_START);
+            for (var i = 0; i < targetMeasure - 1; i++) {
+                cursor.nextMeasure();
+            }
+            var m = cursor.measure;
+            if (m) {
+                for (var seg = m.firstSegment; seg; seg = seg.nextInMeasure) {
+                    if (seg.annotations) {
+                        for (var j = 0; j < seg.annotations.length; j++) {
+                            var fallbackAnn = seg.annotations[j];
+                            var fallbackStaffIdx = fallbackAnn.track !== undefined
+                                ? Math.floor(fallbackAnn.track / 4) : -1;
+                            if (fallbackStaffIdx === targetStaffIdx) {
+                                curScore.selection.select(fallbackAnn);
+                                selected = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (selected) break;
+                }
+            }
+            if (!selected && m && m.firstSegment) {
+                var track = targetStaffIdx * 4;
+                var el = m.firstSegment.elementAt(track);
+                if (el) {
+                    curScore.selection.select(el);
+                    selected = true;
                 }
             }
         }
-        // フォールバック: アノテーションが見つからない場合は小節の先頭要素を選択
-        if (m && m.firstSegment) {
-            var track = issue.staffIdx * 4;
-            var el = m.firstSegment.elementAt(track);
-            if (el) {
-                curScore.selection.select(el);
-                cmd("reset");
-                cmd("note-input");
-                cmd("note-input");
-            }
+
+        if (selected) {
+            cmd("reset");
+            cmd("note-input");
+            cmd("note-input");
         }
     }
 
@@ -242,9 +286,9 @@ MuseScore {
                             id: mouseArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: model.tick > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            cursorShape: model.tick >= 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: {
-                                if (model.tick > 0 && model.ruleId !== "") {
+                                if (model.tick >= 0 && model.ruleId !== "") {
                                     jumpToIssue({
                                         tick: model.tick,
                                         staffIdx: model.staffIdx,
