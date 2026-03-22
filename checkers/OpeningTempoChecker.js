@@ -18,6 +18,7 @@ var checker = {
         if (!snapshot.staves || snapshot.staves.length === 0) return issues;
 
         var staff = snapshot.staves[0];
+        var unresolved = snapshot.unresolvedAnnotations || [];
         var firstMusicTick = null;
         var hasTempoAtOpening = false;
 
@@ -38,6 +39,18 @@ var checker = {
             if (tev.tick <= firstMusicTick) {
                 hasTempoAtOpening = true;
                 break;
+            }
+        }
+
+        // 未解決注記（staffIdx: -1）は全体適用として扱う
+        if (!hasTempoAtOpening) {
+            for (var u = 0; u < unresolved.length; u++) {
+                var uev = unresolved[u];
+                if (!isTempoEvent(uev, snapshot)) continue;
+                if (uev.tick <= firstMusicTick) {
+                    hasTempoAtOpening = true;
+                    break;
+                }
             }
         }
 
