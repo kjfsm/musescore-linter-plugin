@@ -1,10 +1,51 @@
 .pragma library
 
+var DYNAMIC_TOKENS = {
+    p: true, pp: true, ppp: true, pppp: true,
+    f: true, ff: true, fff: true, ffff: true,
+    mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
+};
+
 function matchesAny(text, patterns) {
     for (var i = 0; i < patterns.length; i++) {
         if (text === patterns[i]) return true;
     }
     return false;
+}
+
+function isType(ev, snapshot, enumName) {
+    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
+    if (!enums) return false;
+    if (enums[enumName] === undefined || enums[enumName] === null) return false;
+    return ev.elementType === enums[enumName];
+}
+
+function normalizeToken(rawText) {
+    return (rawText || "")
+        .toLowerCase()
+        .replace(/<[^>]*>/g, "")
+        .replace(/\s+/g, "")
+        .replace(/\./g, "")
+        .trim();
+}
+
+function isDynamicLikeText(ev, snapshot) {
+    if (isType(ev, snapshot, "DYNAMIC")) return true;
+
+    var t = (ev.text || "").toLowerCase();
+    var raw = (ev.rawText || "").toLowerCase();
+    if (t.indexOf("dynamic") === 0 || raw.indexOf("dynamic") === 0) return true;
+
+    var normalized = normalizeToken(raw);
+    return !!DYNAMIC_TOKENS[normalized];
+}
+
+function isTempoEvent(ev, snapshot) {
+    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
+    if (enums && enums.TEMPO_TEXT !== undefined && enums.TEMPO_TEXT !== null) {
+        return ev.elementType === enums.TEMPO_TEXT;
+    }
+    return ev.type === "text" && ev.annotationType === "tempo";
 }
 
 function buildPartBuckets(snapshot) {

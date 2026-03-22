@@ -1,34 +1,12 @@
 .pragma library
-
-function isType(ev, snapshot, enumName) {
-    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
-    if (!enums) return false;
-    if (enums[enumName] === undefined || enums[enumName] === null) return false;
-    return ev.elementType === enums[enumName];
-}
-
-function normalizeToken(rawText) {
-    return (rawText || "")
-        .toLowerCase()
-        .replace(/<[^>]*>/g, "")
-        .replace(/\s+/g, "")
-        .replace(/\./g, "")
-        .trim();
-}
+.import "CheckerBase.js" as CheckerBase
 
 function isDisallowedOnRest(ev, snapshot) {
     var raw = (ev.rawText || ev.text || "").toLowerCase();
-    var normalized = normalizeToken(raw);
+    var normalized = CheckerBase.normalizeToken(raw);
 
     // 明示的ダイナミクス記号
-    if (isType(ev, snapshot, "DYNAMIC")) return true;
-
-    var dynamicTokens = {
-        p: true, pp: true, ppp: true, pppp: true,
-        f: true, ff: true, fff: true, ffff: true,
-        mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
-    };
-    if (dynamicTokens[normalized]) return true;
+    if (CheckerBase.isDynamicLikeText(ev, snapshot)) return true;
 
     // pizz / arco 系
     var pizzArcoTokens = {
@@ -45,11 +23,11 @@ function isDisallowedOnRest(ev, snapshot) {
 }
 
 function isAnnotationTarget(ev, snapshot) {
-    if (isType(ev, snapshot, "STAFF_TEXT")) return true;
-    if (isType(ev, snapshot, "SYSTEM_TEXT")) return true;
-    if (isType(ev, snapshot, "EXPRESSION")) return true;
-    if (isType(ev, snapshot, "REHEARSAL_MARK")) return true;
-    if (isType(ev, snapshot, "DYNAMIC")) return true;
+    if (CheckerBase.isType(ev, snapshot, "STAFF_TEXT")) return true;
+    if (CheckerBase.isType(ev, snapshot, "SYSTEM_TEXT")) return true;
+    if (CheckerBase.isType(ev, snapshot, "EXPRESSION")) return true;
+    if (CheckerBase.isType(ev, snapshot, "REHEARSAL_MARK")) return true;
+    if (CheckerBase.isType(ev, snapshot, "DYNAMIC")) return true;
 
     var hasEnum = snapshot && snapshot.enums
         && (snapshot.enums.STAFF_TEXT !== undefined || snapshot.enums.SYSTEM_TEXT !== undefined);

@@ -1,12 +1,5 @@
 .pragma library
-
-function isTempoEvent(ev, snapshot) {
-    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
-    if (enums && enums.TEMPO_TEXT !== undefined && enums.TEMPO_TEXT !== null) {
-        return ev.elementType === enums.TEMPO_TEXT;
-    }
-    return ev.type === "text" && ev.annotationType === "tempo";
-}
+.import "CheckerBase.js" as CheckerBase
 
 var checker = {
     id: "tempo-barline",
@@ -24,7 +17,7 @@ var checker = {
         var tempoEvents = [];
         for (var e = 0; e < staff.events.length; e++) {
             var ev = staff.events[e];
-            if (isTempoEvent(ev, snapshot)) {
+            if (CheckerBase.isTempoEvent(ev, snapshot)) {
                 tempoEvents.push(ev);
             }
         }
@@ -64,6 +57,7 @@ var checker = {
         // 曲頭 tick はスキップ
         var firstTempoTick = uniqueTempoEvents.length > 0 ? uniqueTempoEvents[0].tick : null;
         var prevTempoValue = null;
+        var barlineCursor = -1;
         for (var t = 0; t < uniqueTempoEvents.length; t++) {
             var tm = uniqueTempoEvents[t];
             if (tm.tick === firstTempoTick) {
@@ -75,15 +69,12 @@ var checker = {
             }
             prevTempoValue = tm.tempo;
 
-            // tick 基準で直前の小節線を探索
-            var prevBarlineByTick = null;
-            for (var b = 0; b < barlineEvents.length; b++) {
-                if (barlineEvents[b].tick < tm.tick) {
-                    prevBarlineByTick = barlineEvents[b];
-                } else {
-                    break;
-                }
+            // tick 基準で直前の小節線を探索（前進ポインタ）
+            while (barlineCursor + 1 < barlineEvents.length
+                && barlineEvents[barlineCursor + 1].tick < tm.tick) {
+                barlineCursor++;
             }
+            var prevBarlineByTick = barlineCursor >= 0 ? barlineEvents[barlineCursor] : null;
 
             var prevMeasure = tm.measure - 1;
             var prevBarline = barlines[prevMeasure];

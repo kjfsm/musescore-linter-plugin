@@ -1,27 +1,5 @@
 .pragma library
-
-function isType(ev, snapshot, enumName) {
-    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
-    if (!enums) return false;
-    if (enums[enumName] === undefined || enums[enumName] === null) return false;
-    return ev.elementType === enums[enumName];
-}
-
-function isDynamicLikeText(ev, snapshot) {
-    if (isType(ev, snapshot, "DYNAMIC")) return true;
-
-    var t = (ev.text || "").toLowerCase();
-    var raw = (ev.rawText || "").toLowerCase();
-    if (t.indexOf("dynamic") === 0 || raw.indexOf("dynamic") === 0) return true;
-
-    var normalized = raw.replace(/\s+/g, "").replace(/\./g, "");
-    var dynamicTokens = {
-        p: true, pp: true, ppp: true, pppp: true,
-        f: true, ff: true, fff: true, ffff: true,
-        mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
-    };
-    return !!dynamicTokens[normalized];
-}
+.import "CheckerBase.js" as CheckerBase
 
 var checker = {
     id: "first-note-dynamics",
@@ -52,7 +30,7 @@ var checker = {
                 var tv = staff.events[t];
                 if (tv.tick !== firstChord.tick) continue;
                 if (tv.type !== "text") continue;
-                if (isDynamicLikeText(tv, snapshot)) {
+                if (CheckerBase.isDynamicLikeText(tv, snapshot)) {
                     hasDynamics = true;
                     break;
                 }
@@ -64,7 +42,7 @@ var checker = {
                     var uev = unresolved[u];
                     if (uev.tick !== firstChord.tick) continue;
                     if (uev.type !== "text") continue;
-                    if (isDynamicLikeText(uev, snapshot)) {
+                    if (CheckerBase.isDynamicLikeText(uev, snapshot)) {
                         hasDynamics = true;
                         break;
                     }
