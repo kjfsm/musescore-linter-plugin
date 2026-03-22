@@ -5,6 +5,8 @@
 .import "checkers/DivisiChecker.js" as Divisi
 .import "checkers/RestAnnotationChecker.js" as RestAnnotation
 .import "checkers/TempoBarlineChecker.js" as TempoBarline
+.import "checkers/OpeningTempoChecker.js" as OpeningTempo
+.import "checkers/FirstNoteDynamicsChecker.js" as FirstNoteDynamics
 
 var allCheckers = [
     PizzArco.checker,
@@ -12,7 +14,9 @@ var allCheckers = [
     SoloTutti.checker,
     Divisi.checker,
     RestAnnotation.checker,
-    TempoBarline.checker
+    TempoBarline.checker,
+    OpeningTempo.checker,
+    FirstNoteDynamics.checker
 ];
 
 function getCheckerList() {
@@ -31,10 +35,13 @@ function runAllCheckers(snapshot, enabledRules) {
             }
         }
     }
-    // ソート: severity (error > warning), 次に measure
+    // ソート: severity (error > warning > info), 次に measure
     allIssues.sort(function(a, b) {
         if (a.severity !== b.severity) {
-            return a.severity === "error" ? -1 : 1;
+            var order = { error: 0, warning: 1, info: 2 };
+            var av = order[a.severity] !== undefined ? order[a.severity] : 99;
+            var bv = order[b.severity] !== undefined ? order[b.severity] : 99;
+            return av - bv;
         }
         if (a.staffIdx !== b.staffIdx) return a.staffIdx - b.staffIdx;
         return a.measure - b.measure;
