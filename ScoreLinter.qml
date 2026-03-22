@@ -137,15 +137,28 @@ MuseScore {
 
                     // 1) まず annotation を優先的に選択
                     if (segTick.annotations) {
+                        var unresolvedAnn = null;
                         for (var a = 0; a < segTick.annotations.length; a++) {
                             var ann = segTick.annotations[a];
-                            var annStaffIdx = ann.track !== undefined
-                                ? Math.floor(ann.track / 4) : -1;
+                            var annStaffIdx = -1;
+                            if (ann.track !== undefined && ann.track !== null && ann.track >= 0) {
+                                annStaffIdx = Math.floor(ann.track / 4);
+                            } else if (ann.staffIdx !== undefined && ann.staffIdx !== null && ann.staffIdx >= 0) {
+                                annStaffIdx = ann.staffIdx;
+                            }
                             if (annStaffIdx === targetStaffIdx) {
                                 curScore.selection.select(ann);
                                 selected = true;
                                 break;
                             }
+                            // staff が解決できない注記は最後のフォールバック候補にする
+                            if (annStaffIdx < 0 && unresolvedAnn === null) {
+                                unresolvedAnn = ann;
+                            }
+                        }
+                        if (!selected && unresolvedAnn !== null) {
+                            curScore.selection.select(unresolvedAnn);
+                            selected = true;
                         }
                     }
                     if (selected) break;
@@ -176,8 +189,12 @@ MuseScore {
                     if (seg.annotations) {
                         for (var j = 0; j < seg.annotations.length; j++) {
                             var fallbackAnn = seg.annotations[j];
-                            var fallbackStaffIdx = fallbackAnn.track !== undefined
-                                ? Math.floor(fallbackAnn.track / 4) : -1;
+                            var fallbackStaffIdx = -1;
+                            if (fallbackAnn.track !== undefined && fallbackAnn.track !== null && fallbackAnn.track >= 0) {
+                                fallbackStaffIdx = Math.floor(fallbackAnn.track / 4);
+                            } else if (fallbackAnn.staffIdx !== undefined && fallbackAnn.staffIdx !== null && fallbackAnn.staffIdx >= 0) {
+                                fallbackStaffIdx = fallbackAnn.staffIdx;
+                            }
                             if (fallbackStaffIdx === targetStaffIdx) {
                                 curScore.selection.select(fallbackAnn);
                                 selected = true;
@@ -291,9 +308,15 @@ MuseScore {
                             id: mouseArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: model.tick >= 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            cursorShape: (model.ruleId !== "" &&
+                                ((model.tick !== undefined && model.tick >= 0)
+                                 || (model.measure !== undefined && model.measure > 0)))
+                                ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: {
-                                if (model.tick >= 0 && model.ruleId !== "") {
+                                var canJump = model.ruleId !== ""
+                                    && ((model.tick !== undefined && model.tick >= 0)
+                                        || (model.measure !== undefined && model.measure > 0));
+                                if (canJump) {
                                     jumpToIssue({
                                         tick: model.tick,
                                         staffIdx: model.staffIdx,

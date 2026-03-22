@@ -25,6 +25,17 @@ function getPartName(score, staffIdx) {
     return "Staff " + (staffIdx + 1);
 }
 
+function resolveAnnotationStaffIdx(ann) {
+    if (!ann) return -1;
+    if (ann.track !== undefined && ann.track !== null && ann.track >= 0) {
+        return Math.floor(ann.track / 4);
+    }
+    if (ann.staffIdx !== undefined && ann.staffIdx !== null && ann.staffIdx >= 0) {
+        return ann.staffIdx;
+    }
+    return -1;
+}
+
 // E: QML 側から渡される Element 列挙型
 // { CHORD, REST, BAR_LINE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
 function buildSnapshot(score, E) {
@@ -56,9 +67,9 @@ function buildSnapshot(score, E) {
                 if (seg.annotations) {
                     for (var a = 0; a < seg.annotations.length; a++) {
                         var ann = seg.annotations[a];
-                        // track から staffIdx を算出（track / 4 の切り捨て）
-                        var annStaffIdx = ann.track !== undefined
-                            ? Math.floor(ann.track / 4) : ann.staffIdx;
+                        var annStaffIdx = resolveAnnotationStaffIdx(ann);
+                        // staff が判定不能な注記（例: system text）を先頭 staff に寄せる
+                        if (annStaffIdx < 0) annStaffIdx = 0;
                         // plainText はリッチテキストを除去した値（MuseScore 4）
                         var rawText = (ann.plainText !== undefined && ann.plainText !== null)
                             ? ann.plainText : (ann.text || "");
