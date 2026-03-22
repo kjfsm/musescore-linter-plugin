@@ -68,7 +68,12 @@ MuseScore {
             CHORD: Element.CHORD,
             REST: Element.REST,
             BAR_LINE: Element.BAR_LINE,
-            TEMPO_TEXT: Element.TEMPO_TEXT
+            TEMPO_TEXT: Element.TEMPO_TEXT,
+            STAFF_TEXT: Element.STAFF_TEXT,
+            SYSTEM_TEXT: Element.SYSTEM_TEXT,
+            EXPRESSION: Element.EXPRESSION,
+            REHEARSAL_MARK: Element.REHEARSAL_MARK,
+            DYNAMIC: Element.DYNAMIC
         });
         snapshotText = JSON.stringify(snapshot, null, 2);
 

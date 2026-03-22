@@ -1,5 +1,13 @@
 .pragma library
 
+function isTempoEvent(ev, snapshot) {
+    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
+    if (enums && enums.TEMPO_TEXT !== undefined && enums.TEMPO_TEXT !== null) {
+        return ev.elementType === enums.TEMPO_TEXT;
+    }
+    return ev.type === "text" && ev.annotationType === "tempo";
+}
+
 var checker = {
     id: "tempo-barline",
     name: "テンポ変更と複縦線",
@@ -15,7 +23,7 @@ var checker = {
         var tempoEvents = [];
         for (var e = 0; e < staff.events.length; e++) {
             var ev = staff.events[e];
-            if (ev.type === "text" && ev.annotationType === "tempo") {
+            if (isTempoEvent(ev, snapshot)) {
                 tempoEvents.push(ev);
             }
         }
@@ -41,11 +49,30 @@ var checker = {
             return a.measure - b.measure;
         });
 
-        // 各テンポ指示について、前小節に複縦線があるか確認
-        // 最初のテンポ指示はスキップ（曲頭想定）
-        for (var t = 0; t < tempoEvents.length; t++) {
-            var tm = tempoEvents[t];
-            if (t === 0) continue;
+        // 同 tick 重複を解消
+        var uniqueTempoEvents = [];
+        var seenTempoTicks = {};
+        for (var t0 = 0; t0 < tempoEvents.length; t0++) {
+            var tEv = tempoEvents[t0];
+            if (seenTempoTicks[tEv.tick]) continue;
+            seenTempoTicks[tEv.tick] = true;
+            uniqueTempoEvents.push(tEv);
+        }
+
+        // 各テンポ変更について、前小節に複縦線があるか確認
+        // 曲頭 tick はスキップ
+        var firstTempoTick = uniqueTempoEvents.length > 0 ? uniqueTempoEvents[0].tick : null;
+        var prevTempoValue = null;
+        for (var t = 0; t < uniqueTempoEvents.length; t++) {
+            var tm = uniqueTempoEvents[t];
+            if (tm.tick === firstTempoTick) {
+                prevTempoValue = tm.tempo;
+                continue;
+            }
+            if (prevTempoValue !== null && tm.tempo !== null && tm.tempo === prevTempoValue) {
+                continue;
+            }
+            prevTempoValue = tm.tempo;
 
             // tick 基準で直前の小節線を探索
             var prevBarlineByTick = null;

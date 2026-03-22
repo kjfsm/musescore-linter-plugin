@@ -1,5 +1,15 @@
 .pragma library
 
+function cloneEnumMap(E) {
+    var out = {};
+    if (!E) return out;
+    for (var key in E) {
+        if (!E.hasOwnProperty(key)) continue;
+        out[key] = E[key];
+    }
+    return out;
+}
+
 function getPartName(score, staffIdx) {
     if (!score.parts) return "Staff " + (staffIdx + 1);
     var trackOffset = 0;
@@ -16,9 +26,9 @@ function getPartName(score, staffIdx) {
 }
 
 // E: QML 側から渡される Element 列挙型
-// { CHORD, REST, BAR_LINE, TEMPO_TEXT }
+// { CHORD, REST, BAR_LINE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
 function buildSnapshot(score, E) {
-    var snapshot = { staves: [] };
+    var snapshot = { staves: [], enums: cloneEnumMap(E) };
     var numStaves = score.nstaves;
 
     for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
@@ -55,8 +65,6 @@ function buildSnapshot(score, E) {
                         // 万が一 HTML タグが残っている場合に除去
                         var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
                         if (annStaffIdx === staffIdx && cleanText.length > 0) {
-                            var annType = "text";
-                            if (ann.type === E.TEMPO_TEXT) annType = "tempo";
                             console.log("[ScoreLinter] annotation: staff=" + staffIdx
                                 + " m=" + measureNum
                                 + " raw='" + ann.text + "'"
@@ -67,16 +75,22 @@ function buildSnapshot(score, E) {
                                 rawText: rawText.replace(/<[^>]*>/g, "").trim(),
                                 tick: seg.tick,
                                 measure: measureNum,
-                                annotationType: annType
+                                annotationType: (ann.type === E.TEMPO_TEXT) ? "tempo" : "text",
+                                elementType: ann.type,
+                                subtype: ann.subtype,
+                                subStyle: ann.subStyle,
+                                tempo: (ann.tempo !== undefined) ? ann.tempo : null
                             });
                         }
                     }
                 }
 
-                // 音符・休符（voice 0 のみ）
-                var track = staffIdx * 4;
-                var el = seg.elementAt(track);
-                if (el) {
+                // 音符・休符（全 voice）
+                for (var v0 = 0; v0 < 4; v0++) {
+                    var track = staffIdx * 4 + v0;
+                    var el = seg.elementAt(track);
+                    if (!el) continue;
+
                     var evType = "other";
                     if (el.type === E.CHORD) evType = "chord";
                     else if (el.type === E.REST) evType = "rest";
@@ -84,7 +98,8 @@ function buildSnapshot(score, E) {
                     var ev = {
                         type: evType,
                         tick: seg.tick,
-                        measure: measureNum
+                        measure: measureNum,
+                        voice: v0
                     };
 
                     if (el.duration) {

@@ -1,7 +1,15 @@
 .pragma library
 
+function isType(ev, snapshot, enumName) {
+    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
+    if (!enums) return false;
+    if (enums[enumName] === undefined || enums[enumName] === null) return false;
+    return ev.elementType === enums[enumName];
+}
 
-function isDynamicLikeText(ev) {
+function isDynamicLikeText(ev, snapshot) {
+    if (isType(ev, snapshot, "DYNAMIC")) return true;
+
     var t = (ev.text || "").toLowerCase();
     var raw = (ev.rawText || "").toLowerCase();
 
@@ -16,6 +24,19 @@ function isDynamicLikeText(ev) {
         mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
     };
     return !!dynamicTokens[normalized];
+}
+
+function isAnnotationTarget(ev, snapshot) {
+    if (isType(ev, snapshot, "STAFF_TEXT")) return true;
+    if (isType(ev, snapshot, "SYSTEM_TEXT")) return true;
+    if (isType(ev, snapshot, "EXPRESSION")) return true;
+    if (isType(ev, snapshot, "REHEARSAL_MARK")) return true;
+
+    // 後方互換: enum 未提供時は旧挙動に近いフォールバック
+    var hasEnum = snapshot && snapshot.enums
+        && (snapshot.enums.STAFF_TEXT !== undefined || snapshot.enums.SYSTEM_TEXT !== undefined);
+    if (!hasEnum) return ev.type === "text";
+    return false;
 }
 
 var checker = {
@@ -38,7 +59,7 @@ var checker = {
             // 休符と同じ tick にテキスト指示がある場合に警告
             for (var e2 = 0; e2 < staff.events.length; e2++) {
                 var ev = staff.events[e2];
-                if (ev.type === "text" && restTicks[ev.tick] && !isDynamicLikeText(ev)) {
+                if (isAnnotationTarget(ev, snapshot) && restTicks[ev.tick] && !isDynamicLikeText(ev, snapshot)) {
                     issues.push({
                         ruleId: "rest-annotation",
                         severity: "warning",
