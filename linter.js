@@ -35,16 +35,17 @@ function runAllCheckers(snapshot, enabledRules) {
             }
         }
     }
-    // ソート: severity (error > warning > info), 次に measure
+    // ソート: 小節順 → パート順（上から）→ severity (error > warning > info)
     allIssues.sort(function(a, b) {
-        if (a.severity !== b.severity) {
-            var order = { error: 0, warning: 1, info: 2 };
-            var av = order[a.severity] !== undefined ? order[a.severity] : 99;
-            var bv = order[b.severity] !== undefined ? order[b.severity] : 99;
-            return av - bv;
-        }
+        if (a.measure !== b.measure) return a.measure - b.measure;
         if (a.staffIdx !== b.staffIdx) return a.staffIdx - b.staffIdx;
-        return a.measure - b.measure;
+
+        var order = { error: 0, warning: 1, info: 2 };
+        var av = order[a.severity] !== undefined ? order[a.severity] : 99;
+        var bv = order[b.severity] !== undefined ? order[b.severity] : 99;
+        if (av !== bv) return av - bv;
+
+        return (a.tick || 0) - (b.tick || 0);
     });
     return allIssues;
 }
