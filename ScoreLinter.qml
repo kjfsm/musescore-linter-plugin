@@ -411,7 +411,7 @@ MuseScore {
                             spacing: 1
 
                             CheckBox {
-                                text: "[" + (parent.checker.level || "WARN") + "] " + parent.checker.name
+                                text: parent.checker.name
                                 checked: enabledRules[parent.checker.id] !== false
                                 Layout.fillWidth: true
                                 onToggled: {
