@@ -7,23 +7,41 @@ function isType(ev, snapshot, enumName) {
     return ev.elementType === enums[enumName];
 }
 
-function isDynamicLikeText(ev, snapshot) {
+function normalizeToken(rawText) {
+    return (rawText || "")
+        .toLowerCase()
+        .replace(/<[^>]*>/g, "")
+        .replace(/\s+/g, "")
+        .replace(/\./g, "")
+        .trim();
+}
+
+function isDisallowedOnRest(ev, snapshot) {
+    var raw = (ev.rawText || ev.text || "").toLowerCase();
+    var normalized = normalizeToken(raw);
+
+    // 明示的ダイナミクス記号
     if (isType(ev, snapshot, "DYNAMIC")) return true;
 
-    var t = (ev.text || "").toLowerCase();
-    var raw = (ev.rawText || "").toLowerCase();
-
-    // MuseScore snapshot ではダイナミクスが dynamic... の内部名で出る場合がある
-    if (t.indexOf("dynamic") === 0 || raw.indexOf("dynamic") === 0) return true;
-
-    // プレーンテキストの強弱記号
-    var normalized = raw.replace(/\s+/g, "").replace(/\./g, "");
     var dynamicTokens = {
         p: true, pp: true, ppp: true, pppp: true,
         f: true, ff: true, fff: true, ffff: true,
         mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
     };
-    return !!dynamicTokens[normalized];
+    if (dynamicTokens[normalized]) return true;
+
+    // pizz / arco 系
+    var pizzArcoTokens = {
+        pizz: true,
+        pizzicato: true,
+        arco: true
+    };
+    if (pizzArcoTokens[normalized]) return true;
+
+    // dynamic の内部名フォールバック
+    if (raw.indexOf("dynamic") === 0) return true;
+
+    return false;
 }
 
 function isAnnotationTarget(ev, snapshot) {
@@ -31,8 +49,8 @@ function isAnnotationTarget(ev, snapshot) {
     if (isType(ev, snapshot, "SYSTEM_TEXT")) return true;
     if (isType(ev, snapshot, "EXPRESSION")) return true;
     if (isType(ev, snapshot, "REHEARSAL_MARK")) return true;
+    if (isType(ev, snapshot, "DYNAMIC")) return true;
 
-    // 後方互換: enum 未提供時は旧挙動に近いフォールバック
     var hasEnum = snapshot && snapshot.enums
         && (snapshot.enums.STAFF_TEXT !== undefined || snapshot.enums.SYSTEM_TEXT !== undefined);
     if (!hasEnum) return ev.type === "text";
@@ -41,14 +59,14 @@ function isAnnotationTarget(ev, snapshot) {
 
 var checker = {
     id: "rest-annotation",
-    name: "休符へのアノテーション",
-    description: "休符と同位置のテキスト指示を検知（強弱記号は除外）",
+    name: "休符アノテーション",
+    level: "ERROR",
+    description: "休符位置の注記を確認（強弱記号・pizz・arco などは不受理、その他テキストは受理）",
     run: function(snapshot) {
         var issues = [];
         for (var s = 0; s < snapshot.staves.length; s++) {
             var staff = snapshot.staves[s];
 
-            // tick -> true のマップを作成（休符がある tick）
             var restTicks = {};
             for (var e = 0; e < staff.events.length; e++) {
                 if (staff.events[e].type === "rest") {
@@ -56,22 +74,22 @@ var checker = {
                 }
             }
 
-            // 休符と同じ tick にテキスト指示がある場合に警告
             for (var e2 = 0; e2 < staff.events.length; e2++) {
                 var ev = staff.events[e2];
-                if (isAnnotationTarget(ev, snapshot) && restTicks[ev.tick] && !isDynamicLikeText(ev, snapshot)) {
-                    issues.push({
-                        ruleId: "rest-annotation",
-                        severity: "warning",
-                        message: staff.partName + ": 休符にテキスト指示 \"" +
-                            ev.rawText + "\" が付与されています（" +
-                            ev.measure + "小節目）",
-                        staffIdx: staff.staffIdx,
-                        partName: staff.partName,
-                        measure: ev.measure,
-                        tick: ev.tick
-                    });
-                }
+                if (!isAnnotationTarget(ev, snapshot) || !restTicks[ev.tick]) continue;
+                if (!isDisallowedOnRest(ev, snapshot)) continue;
+
+                issues.push({
+                    ruleId: "rest-annotation",
+                    severity: "error",
+                    message: staff.partName + ": 休符に不受理の注記 \"" +
+                        ev.rawText + "\" が付与されています（" +
+                        ev.measure + "小節目）",
+                    staffIdx: staff.staffIdx,
+                    partName: staff.partName,
+                    measure: ev.measure,
+                    tick: ev.tick
+                });
             }
         }
         return issues;

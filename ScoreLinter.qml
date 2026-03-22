@@ -28,6 +28,8 @@ MuseScore {
         property bool ruleDivUnis: true
         property bool ruleRestAnnotation: true
         property bool ruleTempoBarline: true
+        property bool ruleOpeningTempo: true
+        property bool ruleFirstNoteDynamics: true
     }
 
     onRun: {
@@ -41,7 +43,9 @@ MuseScore {
             "solo-tutti": persistedSettings.ruleSoloTutti,
             "div-unis": persistedSettings.ruleDivUnis,
             "rest-annotation": persistedSettings.ruleRestAnnotation,
-            "tempo-barline": persistedSettings.ruleTempoBarline
+            "tempo-barline": persistedSettings.ruleTempoBarline,
+            "opening-tempo": persistedSettings.ruleOpeningTempo,
+            "first-note-dynamics": persistedSettings.ruleFirstNoteDynamics
         };
     }
 
@@ -110,7 +114,8 @@ MuseScore {
             var issue = issues[i];
             var part = issue.partName ? (issue.partName + ": ") : "";
             var measure = issue.measure > 0 ? (" 小節" + issue.measure) : "";
-            lines.push(part + issue.message + measure);
+            var sev = (issue.severity || "info").toUpperCase();
+            lines.push("[" + sev + "] " + part + issue.message + measure);
         }
         return lines.join("\n");
     }
@@ -321,6 +326,14 @@ MuseScore {
                                 spacing: 2
 
                                 Label {
+                                    text: (model.severity || "info").toUpperCase()
+                                    color: model.severity === "error" ? "#c62828" :
+                                           model.severity === "warning" ? "#ef6c00" : "#2e7d32"
+                                    font.bold: true
+                                    font.pixelSize: 11
+                                }
+
+                                Label {
                                     text: model.message
                                     wrapMode: Text.WordWrap
                                     Layout.fillWidth: true
@@ -378,7 +391,7 @@ MuseScore {
                             spacing: 1
 
                             CheckBox {
-                                text: parent.checker.name
+                                text: "[" + (parent.checker.level || "WARN") + "] " + parent.checker.name
                                 checked: enabledRules[parent.checker.id] !== false
                                 Layout.fillWidth: true
                                 onToggled: {
@@ -392,6 +405,8 @@ MuseScore {
                                     else if (parent.checker.id === "div-unis") persistedSettings.ruleDivUnis = checked;
                                     else if (parent.checker.id === "rest-annotation") persistedSettings.ruleRestAnnotation = checked;
                                     else if (parent.checker.id === "tempo-barline") persistedSettings.ruleTempoBarline = checked;
+                                    else if (parent.checker.id === "opening-tempo") persistedSettings.ruleOpeningTempo = checked;
+                                    else if (parent.checker.id === "first-note-dynamics") persistedSettings.ruleFirstNoteDynamics = checked;
                                 }
                             }
 

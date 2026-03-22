@@ -11,6 +11,7 @@ function isTempoEvent(ev, snapshot) {
 var checker = {
     id: "tempo-barline",
     name: "テンポ変更と複縦線",
+    level: "INFO",
     description: "テンポ変更前の小節に複縦線があるかを確認",
     run: function(snapshot) {
         var issues = [];
@@ -93,7 +94,7 @@ var checker = {
             if (!hasDoubleByMeasure && !hasDoubleByTick) {
                 issues.push({
                     ruleId: "tempo-barline",
-                    severity: "warning",
+                    severity: "info",
                     message: "テンポ変更（" + tm.rawText + "）の前の小節（" +
                         prevMeasure + "小節目）に複縦線がありません",
                     staffIdx: 0,

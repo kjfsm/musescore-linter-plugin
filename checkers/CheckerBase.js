@@ -91,6 +91,7 @@ function createTextPairChecker(config) {
         id: config.id,
         name: config.name,
         description: config.description || "",
+        level: config.level || "WARN",
         run: function(snapshot) {
             var issues = [];
             var parts = buildPartBuckets(snapshot);
