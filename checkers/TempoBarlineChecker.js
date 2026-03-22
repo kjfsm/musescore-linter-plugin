@@ -35,7 +35,7 @@ var checker = {
         for (var e2 = 0; e2 < staff.events.length; e2++) {
             var bev = staff.events[e2];
             if (bev.type === "barline") {
-                barlines[bev.measure] = bev.barlineType;
+                barlines[bev.measure] = bev.barlineKind;
                 barlineEvents.push(bev);
             }
         }
@@ -87,10 +87,9 @@ var checker = {
 
             var prevMeasure = tm.measure - 1;
             var prevBarline = barlines[prevMeasure];
-            var hasDoubleByMeasure = (prevBarline === 2);
-            var hasDoubleByTick = (prevBarlineByTick && prevBarlineByTick.barlineType === 2);
+            var hasDoubleByMeasure = (prevBarline === "double");
+            var hasDoubleByTick = (prevBarlineByTick && prevBarlineByTick.barlineKind === "double");
 
-            // barlineType 2 = double barline (複縦線)
             if (!hasDoubleByMeasure && !hasDoubleByTick) {
                 issues.push({
                     ruleId: "tempo-barline",
