@@ -36,8 +36,19 @@ function resolveAnnotationStaffIdx(ann) {
     return -1;
 }
 
+function normalizeBarlineType(rawBarlineType, E) {
+    if (rawBarlineType === undefined || rawBarlineType === null) return "unknown";
+    if (E && E.BARLINE_DOUBLE !== undefined && E.BARLINE_DOUBLE !== null) {
+        if (rawBarlineType === E.BARLINE_DOUBLE) return "double";
+    } else if (rawBarlineType === 2) {
+        // フォールバック（旧実装との互換）
+        return "double";
+    }
+    return "other";
+}
+
 // E: QML 側から渡される Element 列挙型
-// { CHORD, REST, BAR_LINE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
+// { CHORD, REST, BAR_LINE, BARLINE_DOUBLE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
 function buildSnapshot(score, E) {
     var snapshot = { staves: [], enums: cloneEnumMap(E), unresolvedAnnotations: [] };
     var numStaves = score.nstaves;
@@ -145,6 +156,7 @@ function buildSnapshot(score, E) {
                         staff.events.push({
                             type: "barline",
                             barlineType: barEl.barLineType,
+                            barlineKind: normalizeBarlineType(barEl.barLineType, E),
                             tick: seg.tick,
                             measure: measureNum
                         });
