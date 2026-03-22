@@ -31,6 +31,7 @@ var checker = {
     run: function(snapshot) {
         var issues = [];
         if (!snapshot.staves) return issues;
+        var unresolved = snapshot.unresolvedAnnotations || [];
 
         for (var s = 0; s < snapshot.staves.length; s++) {
             var staff = snapshot.staves[s];
@@ -54,6 +55,19 @@ var checker = {
                 if (isDynamicLikeText(tv, snapshot)) {
                     hasDynamics = true;
                     break;
+                }
+            }
+
+            // 未解決注記（staffIdx: -1）は全体適用として扱う
+            if (!hasDynamics) {
+                for (var u = 0; u < unresolved.length; u++) {
+                    var uev = unresolved[u];
+                    if (uev.tick !== firstChord.tick) continue;
+                    if (uev.type !== "text") continue;
+                    if (isDynamicLikeText(uev, snapshot)) {
+                        hasDynamics = true;
+                        break;
+                    }
                 }
             }
 

@@ -39,7 +39,7 @@ function resolveAnnotationStaffIdx(ann) {
 // E: QML 側から渡される Element 列挙型
 // { CHORD, REST, BAR_LINE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
 function buildSnapshot(score, E) {
-    var snapshot = { staves: [], enums: cloneEnumMap(E) };
+    var snapshot = { staves: [], enums: cloneEnumMap(E), unresolvedAnnotations: [] };
     var numStaves = score.nstaves;
 
     for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
@@ -68,30 +68,45 @@ function buildSnapshot(score, E) {
                     for (var a = 0; a < seg.annotations.length; a++) {
                         var ann = seg.annotations[a];
                         var annStaffIdx = resolveAnnotationStaffIdx(ann);
-                        // staff が判定不能な注記（例: system text）を先頭 staff に寄せる
-                        if (annStaffIdx < 0) annStaffIdx = 0;
                         // plainText はリッチテキストを除去した値（MuseScore 4）
                         var rawText = (ann.plainText !== undefined && ann.plainText !== null)
                             ? ann.plainText : (ann.text || "");
                         // 万が一 HTML タグが残っている場合に除去
                         var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
-                        if (annStaffIdx === staffIdx && cleanText.length > 0) {
+                        if (cleanText.length === 0) continue;
+
+                        var annEvent = {
+                            type: "text",
+                            text: cleanText,
+                            rawText: rawText.replace(/<[^>]*>/g, "").trim(),
+                            tick: seg.tick,
+                            measure: measureNum,
+                            annotationType: (ann.type === E.TEMPO_TEXT) ? "tempo" : "text",
+                            elementType: ann.type,
+                            subtype: ann.subtype,
+                            subStyle: ann.subStyle,
+                            tempo: (ann.tempo !== undefined) ? ann.tempo : null
+                        };
+
+                        if (annStaffIdx < 0) {
+                            // staff が判定不能な注記（例: system text）は未解決注記として保持
+                            // staff ループごとに annotations を走査するため、staff 0 のときだけ取り込む
+                            if (staffIdx === 0) {
+                                annEvent.staffIdx = -1;
+                                annEvent.annotationScope = "unresolved";
+                                snapshot.unresolvedAnnotations.push(annEvent);
+                            }
+                            continue;
+                        }
+
+                        if (annStaffIdx === staffIdx) {
                             console.log("[ScoreLinter] annotation: staff=" + staffIdx
                                 + " m=" + measureNum
                                 + " raw='" + ann.text + "'"
                                 + " clean='" + cleanText + "'");
-                            staff.events.push({
-                                type: "text",
-                                text: cleanText,
-                                rawText: rawText.replace(/<[^>]*>/g, "").trim(),
-                                tick: seg.tick,
-                                measure: measureNum,
-                                annotationType: (ann.type === E.TEMPO_TEXT) ? "tempo" : "text",
-                                elementType: ann.type,
-                                subtype: ann.subtype,
-                                subStyle: ann.subStyle,
-                                tempo: (ann.tempo !== undefined) ? ann.tempo : null
-                            });
+                            annEvent.staffIdx = staffIdx;
+                            annEvent.annotationScope = "staff";
+                            staff.events.push(annEvent);
                         }
                     }
                 }
@@ -157,6 +172,7 @@ function buildSnapshot(score, E) {
         console.log("[ScoreLinter]   staff " + si + " (" + st.partName + "): "
             + st.events.length + " events, " + textCount + " text annotations");
     }
+    console.log("[ScoreLinter] unresolved annotations: " + snapshot.unresolvedAnnotations.length);
 
     return snapshot;
 }
