@@ -1,15 +1,9 @@
 .pragma library
 .import "RulePredicates.js" as RulePredicates
-.import "lexicon.js" as Lexicon
 
 function isDisallowedOnRest(ev, snapshot) {
-    var raw = (ev.rawText || ev.text || "").toLowerCase();
-    var normalized = RulePredicates.normalizeToken(raw);
-
     if (RulePredicates.isDynamicMark(ev, snapshot)) return true;
-    if (Lexicon.REST_DISALLOWED_TEXT_TOKENS[normalized]) return true;
-
-    return raw.indexOf("dynamic") === 0;
+    return false;
 }
 
 var checker = {
