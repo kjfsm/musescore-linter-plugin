@@ -130,104 +130,34 @@ MuseScore {
         return lines.join("\n");
     }
 
-    function resolveAnnotationStaffIdx(ann) {
-        if (!ann) return -1;
-        if (ann.track !== undefined && ann.track !== null && ann.track >= 0) {
-            return Math.floor(ann.track / 4);
-        }
-        if (ann.staffIdx !== undefined && ann.staffIdx !== null && ann.staffIdx >= 0) {
-            return ann.staffIdx;
-        }
-        return -1;
+    function severityColor(severity, variant) {
+        var colors = {
+            error:   { indicator: "#e53935", text: "#c62828" },
+            warning: { indicator: "#fb8c00", text: "#ef6c00" },
+            info:    { indicator: "#43a047", text: "#2e7d32" }
+        };
+        var entry = colors[severity] || colors.info;
+        return entry[variant || "indicator"];
     }
 
     function jumpToIssue(issue) {
         if (!curScore) return;
-
-        var targetTick = issue.tick;
-        var targetStaffIdx = issue.staffIdx;
         var targetMeasure = issue.measure;
-        var selected = false;
+        var targetStaffIdx = issue.staffIdx || 0;
+        if (!targetMeasure || targetMeasure <= 0) return;
 
-        // tick があれば優先して厳密に対象位置を探索する
-        if (targetTick !== undefined && targetTick !== null && targetTick >= 0) {
-            var mTick = curScore.firstMeasure;
-            while (mTick && !selected) {
-                for (var segTick = mTick.firstSegment; segTick; segTick = segTick.nextInMeasure) {
-                    if (segTick.tick !== targetTick) continue;
+        var cursor = curScore.newCursor();
+        cursor.staffIdx = targetStaffIdx;
+        cursor.voice = 0;
+        cursor.rewind(Cursor.SCORE_START);
 
-                    // 1) まず annotation を優先的に選択
-                    if (segTick.annotations) {
-                        var unresolvedAnn = null;
-                        for (var a = 0; a < segTick.annotations.length; a++) {
-                            var ann = segTick.annotations[a];
-                            var annStaffIdx = resolveAnnotationStaffIdx(ann);
-                            if (annStaffIdx === targetStaffIdx) {
-                                curScore.selection.select(ann);
-                                selected = true;
-                                break;
-                            }
-                            // staff が解決できない注記は最後のフォールバック候補にする
-                            if (annStaffIdx < 0 && unresolvedAnn === null) {
-                                unresolvedAnn = ann;
-                            }
-                        }
-                        if (!selected && unresolvedAnn !== null) {
-                            curScore.selection.select(unresolvedAnn);
-                            selected = true;
-                        }
-                    }
-                    if (selected) break;
-
-                    // 2) annotation がなければ該当 staff の要素を選択
-                    var trackAtTick = targetStaffIdx * 4;
-                    var elAtTick = segTick.elementAt(trackAtTick);
-                    if (elAtTick) {
-                        curScore.selection.select(elAtTick);
-                        selected = true;
-                        break;
-                    }
-                }
-                mTick = mTick.nextMeasure;
-            }
+        for (var i = 0; i < targetMeasure - 1; i++) {
+            if (!cursor.nextMeasure()) break;
         }
 
-        // tick で見つからない場合は従来の measure ベースでフォールバック
-        if (!selected && targetMeasure > 0) {
-            var cursor = curScore.newCursor();
-            cursor.rewind(Cursor.SCORE_START);
-            for (var i = 0; i < targetMeasure - 1; i++) {
-                cursor.nextMeasure();
-            }
-            var m = cursor.measure;
-            if (m) {
-                for (var seg = m.firstSegment; seg; seg = seg.nextInMeasure) {
-                    if (seg.annotations) {
-                        for (var j = 0; j < seg.annotations.length; j++) {
-                            var fallbackAnn = seg.annotations[j];
-                            var fallbackStaffIdx = resolveAnnotationStaffIdx(fallbackAnn);
-                            if (fallbackStaffIdx === targetStaffIdx) {
-                                curScore.selection.select(fallbackAnn);
-                                selected = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (selected) break;
-                }
-            }
-            if (!selected && m && m.firstSegment) {
-                var track = targetStaffIdx * 4;
-                var el = m.firstSegment.elementAt(track);
-                if (el) {
-                    curScore.selection.select(el);
-                    selected = true;
-                }
-            }
+        if (cursor.element) {
+            curScore.selection.select(cursor.element);
         }
-
-        // ジャンプ機能は選択位置の移動のみを行い、
-        // ノート入力モードなどの編集状態は変更しない。
     }
 
     ColumnLayout {
@@ -345,8 +275,7 @@ MuseScore {
                                 width: 8
                                 height: 8
                                 radius: 4
-                                color: model.severity === "error" ? "#e53935" :
-                                       model.severity === "warning" ? "#fb8c00" : "#43a047"
+                                color: severityColor(model.severity, "indicator")
                                 Layout.alignment: Qt.AlignTop
                                 Layout.topMargin: 4
                             }
@@ -358,8 +287,7 @@ MuseScore {
 
                                 Label {
                                     text: (model.severity || "info").toUpperCase()
-                                    color: model.severity === "error" ? "#c62828" :
-                                           model.severity === "warning" ? "#ef6c00" : "#2e7d32"
+                                    color: severityColor(model.severity, "text")
                                     font.bold: true
                                     font.pixelSize: 11
                                 }

@@ -41,10 +41,94 @@ function normalizeBarlineType(rawBarlineType, E) {
     if (E && E.BARLINE_DOUBLE !== undefined && E.BARLINE_DOUBLE !== null) {
         if (rawBarlineType === E.BARLINE_DOUBLE) return "double";
     } else if (rawBarlineType === 2) {
-        // フォールバック（旧実装との互換）
         return "double";
     }
     return "other";
+}
+
+function processAnnotations(seg, staffIdx, measureNum, E, staff, snapshot) {
+    if (!seg.annotations) return;
+    for (var a = 0; a < seg.annotations.length; a++) {
+        var ann = seg.annotations[a];
+        var annStaffIdx = resolveAnnotationStaffIdx(ann);
+        var rawText = (ann.plainText !== undefined && ann.plainText !== null)
+            ? ann.plainText : (ann.text || "");
+        var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
+        if (cleanText.length === 0) continue;
+
+        var annEvent = {
+            type: "text",
+            text: cleanText,
+            rawText: rawText.replace(/<[^>]*>/g, "").trim(),
+            tick: seg.tick,
+            measure: measureNum,
+            annotationType: (ann.type === E.TEMPO_TEXT) ? "tempo" : "text",
+            elementType: ann.type,
+            subtype: ann.subtype,
+            subStyle: ann.subStyle,
+            tempo: (ann.tempo !== undefined) ? ann.tempo : null
+        };
+
+        if (annStaffIdx < 0) {
+            // staff が判定不能な注記は staff 0 のときだけ未解決注記として保持
+            if (staffIdx === 0) {
+                annEvent.staffIdx = -1;
+                annEvent.annotationScope = "unresolved";
+                snapshot.unresolvedAnnotations.push(annEvent);
+            }
+            continue;
+        }
+
+        if (annStaffIdx === staffIdx) {
+            annEvent.staffIdx = staffIdx;
+            annEvent.annotationScope = "staff";
+            staff.events.push(annEvent);
+        }
+    }
+}
+
+function processNotesAndRests(seg, staffIdx, measureNum, E, staff) {
+    for (var voice = 0; voice < 4; voice++) {
+        var track = staffIdx * 4 + voice;
+        var el = seg.elementAt(track);
+        if (!el) continue;
+
+        var evType = "other";
+        if (el.type === E.CHORD) evType = "chord";
+        else if (el.type === E.REST) evType = "rest";
+
+        var ev = {
+            type: evType,
+            tick: seg.tick,
+            measure: measureNum,
+            voice: voice
+        };
+
+        if (el.duration) {
+            ev.duration = {
+                numerator: el.duration.numerator,
+                denominator: el.duration.denominator
+            };
+        }
+
+        staff.events.push(ev);
+    }
+}
+
+function processBarlines(seg, staffIdx, measureNum, E, staff) {
+    for (var voice = 0; voice < 4; voice++) {
+        var barEl = seg.elementAt(staffIdx * 4 + voice);
+        if (barEl && barEl.type === E.BAR_LINE) {
+            staff.events.push({
+                type: "barline",
+                barlineType: barEl.barLineType,
+                barlineKind: normalizeBarlineType(barEl.barLineType, E),
+                tick: seg.tick,
+                measure: measureNum
+            });
+            break;
+        }
+    }
 }
 
 // E: QML 側から渡される Element 列挙型
@@ -69,101 +153,10 @@ function buildSnapshot(score, E) {
                 measureEndTick = m.nextMeasure.firstSegment.tick;
             }
             while (seg) {
-                // 現在小節の範囲外に出たら終了
-                if (measureEndTick !== null && seg.tick >= measureEndTick) {
-                    break;
-                }
-
-                // annotations（テキスト系: pizz, arco, con sord. など）
-                if (seg.annotations) {
-                    for (var a = 0; a < seg.annotations.length; a++) {
-                        var ann = seg.annotations[a];
-                        var annStaffIdx = resolveAnnotationStaffIdx(ann);
-                        // plainText はリッチテキストを除去した値（MuseScore 4）
-                        var rawText = (ann.plainText !== undefined && ann.plainText !== null)
-                            ? ann.plainText : (ann.text || "");
-                        // 万が一 HTML タグが残っている場合に除去
-                        var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
-                        if (cleanText.length === 0) continue;
-
-                        var annEvent = {
-                            type: "text",
-                            text: cleanText,
-                            rawText: rawText.replace(/<[^>]*>/g, "").trim(),
-                            tick: seg.tick,
-                            measure: measureNum,
-                            annotationType: (ann.type === E.TEMPO_TEXT) ? "tempo" : "text",
-                            elementType: ann.type,
-                            subtype: ann.subtype,
-                            subStyle: ann.subStyle,
-                            tempo: (ann.tempo !== undefined) ? ann.tempo : null
-                        };
-
-                        if (annStaffIdx < 0) {
-                            // staff が判定不能な注記（例: system text）は未解決注記として保持
-                            // staff ループごとに annotations を走査するため、staff 0 のときだけ取り込む
-                            if (staffIdx === 0) {
-                                annEvent.staffIdx = -1;
-                                annEvent.annotationScope = "unresolved";
-                                snapshot.unresolvedAnnotations.push(annEvent);
-                            }
-                            continue;
-                        }
-
-                        if (annStaffIdx === staffIdx) {
-                            console.log("[ScoreLinter] annotation: staff=" + staffIdx
-                                + " m=" + measureNum
-                                + " raw='" + ann.text + "'"
-                                + " clean='" + cleanText + "'");
-                            annEvent.staffIdx = staffIdx;
-                            annEvent.annotationScope = "staff";
-                            staff.events.push(annEvent);
-                        }
-                    }
-                }
-
-                // 音符・休符（全 voice）
-                for (var v0 = 0; v0 < 4; v0++) {
-                    var track = staffIdx * 4 + v0;
-                    var el = seg.elementAt(track);
-                    if (!el) continue;
-
-                    var evType = "other";
-                    if (el.type === E.CHORD) evType = "chord";
-                    else if (el.type === E.REST) evType = "rest";
-
-                    var ev = {
-                        type: evType,
-                        tick: seg.tick,
-                        measure: measureNum,
-                        voice: v0
-                    };
-
-                    if (el.duration) {
-                        ev.duration = {
-                            numerator: el.duration.numerator,
-                            denominator: el.duration.denominator
-                        };
-                    }
-
-                    staff.events.push(ev);
-                }
-
-                // 小節線（barline）の取得
-                for (var v = 0; v < 4; v++) {
-                    var barEl = seg.elementAt(staffIdx * 4 + v);
-                    if (barEl && barEl.type === E.BAR_LINE) {
-                        staff.events.push({
-                            type: "barline",
-                            barlineType: barEl.barLineType,
-                            barlineKind: normalizeBarlineType(barEl.barLineType, E),
-                            tick: seg.tick,
-                            measure: measureNum
-                        });
-                        break;
-                    }
-                }
-
+                if (measureEndTick !== null && seg.tick >= measureEndTick) break;
+                processAnnotations(seg, staffIdx, measureNum, E, staff, snapshot);
+                processNotesAndRests(seg, staffIdx, measureNum, E, staff);
+                processBarlines(seg, staffIdx, measureNum, E, staff);
                 seg = seg.next;
             }
             measureNum++;
@@ -173,18 +166,6 @@ function buildSnapshot(score, E) {
         snapshot.staves.push(staff);
     }
 
-    // デバッグ用サマリー
     console.log("[ScoreLinter] snapshot: " + snapshot.staves.length + " staves");
-    for (var si = 0; si < snapshot.staves.length; si++) {
-        var st = snapshot.staves[si];
-        var textCount = 0;
-        for (var ei = 0; ei < st.events.length; ei++) {
-            if (st.events[ei].type === "text") textCount++;
-        }
-        console.log("[ScoreLinter]   staff " + si + " (" + st.partName + "): "
-            + st.events.length + " events, " + textCount + " text annotations");
-    }
-    console.log("[ScoreLinter] unresolved annotations: " + snapshot.unresolvedAnnotations.length);
-
     return snapshot;
 }

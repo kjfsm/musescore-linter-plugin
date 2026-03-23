@@ -99,11 +99,11 @@ function buildPartBuckets(snapshot) {
         var deduped = [];
         var seen = {};
         for (var i = 0; i < bucket.events.length; i++) {
-            var bev = bucket.events[i];
-            var currentKey = bev.tick + "|" + bev.text;
-            if (!seen[currentKey]) {
-                deduped.push(bev);
-                seen[currentKey] = true;
+            var ev = bucket.events[i];
+            var dedupKey = ev.tick + "|" + ev.text;
+            if (!seen[dedupKey]) {
+                deduped.push(ev);
+                seen[dedupKey] = true;
             }
         }
 
