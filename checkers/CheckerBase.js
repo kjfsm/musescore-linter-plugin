@@ -117,6 +117,47 @@ function buildPartBuckets(snapshot) {
     return result;
 }
 
+function buildRhythmFingerprintInRange(staff, startTick, endTick) {
+    var parts = [];
+    for (var e = 0; e < staff.events.length; e++) {
+        var ev = staff.events[e];
+        if (ev.voice !== 0) continue;
+        if (ev.type !== "chord" && ev.type !== "rest") continue;
+        if (ev.tick < startTick || ev.tick >= endTick) continue;
+        var durStr = ev.duration
+            ? (ev.duration.numerator + "/" + ev.duration.denominator)
+            : "?";
+        parts.push(ev.tick + ":" + ev.type[0] + ":" + durStr);
+    }
+    return parts.join("|");
+}
+
+function tickToMeasure(staff, tick) {
+    for (var e = 0; e < staff.events.length; e++) {
+        var ev = staff.events[e];
+        if ((ev.type === "chord" || ev.type === "rest") && ev.tick >= tick) {
+            return ev.measure;
+        }
+    }
+    return 1;
+}
+
+var CRES_DECRES_PATTERNS = {
+    cresc: ["cresc", "crescendo"],
+    decresc: ["decresc", "decrescendo", "dim", "diminuendo"]
+};
+
+function isCresDecresText(text) {
+    var t = normalizeToken(text);
+    for (var i = 0; i < CRES_DECRES_PATTERNS.cresc.length; i++) {
+        if (t === CRES_DECRES_PATTERNS.cresc[i]) return "cresc";
+    }
+    for (var j = 0; j < CRES_DECRES_PATTERNS.decresc.length; j++) {
+        if (t === CRES_DECRES_PATTERNS.decresc[j]) return "decresc";
+    }
+    return null;
+}
+
 function createTextPairChecker(config) {
     // config: {
     //   id:           "pizz-arco",

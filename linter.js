@@ -7,6 +7,7 @@
 .import "checkers/TempoBarlineChecker.js" as TempoBarline
 .import "checkers/OpeningTempoChecker.js" as OpeningTempo
 .import "checkers/FirstNoteDynamicsChecker.js" as FirstNoteDynamics
+.import "checkers/CresDecresSyncChecker.js" as CresDecresSync
 
 var allCheckers = [
     PizzArco.checker,
@@ -16,7 +17,8 @@ var allCheckers = [
     RestAnnotation.checker,
     TempoBarline.checker,
     OpeningTempo.checker,
-    FirstNoteDynamics.checker
+    FirstNoteDynamics.checker,
+    CresDecresSync.checker
 ];
 
 function getCheckerList() {

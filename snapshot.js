@@ -133,7 +133,8 @@ function processBarlines(seg, staffIdx, measureNum, E, staff) {
 
 // E: QML 側から渡される Element 列挙型
 // { CHORD, REST, BAR_LINE, BARLINE_DOUBLE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
-function buildSnapshot(score, E) {
+// hairpinData: QML 側で収集済みのヘアピン配列（オプション）
+function buildSnapshot(score, E, hairpinData) {
     var snapshot = { staves: [], enums: cloneEnumMap(E), unresolvedAnnotations: [] };
     var numStaves = score.nstaves;
 
@@ -141,7 +142,8 @@ function buildSnapshot(score, E) {
         var staff = {
             staffIdx: staffIdx,
             partName: getPartName(score, staffIdx),
-            events: []
+            events: [],
+            hairpins: []
         };
 
         var measureNum = 1;
@@ -161,6 +163,15 @@ function buildSnapshot(score, E) {
             }
             measureNum++;
             m = m.nextMeasure;
+        }
+
+        // QML 側で収集済みのヘアピンデータを staff に振り分け
+        if (hairpinData) {
+            for (var h = 0; h < hairpinData.length; h++) {
+                if (hairpinData[h].staffIdx === staffIdx) {
+                    staff.hairpins.push(hairpinData[h]);
+                }
+            }
         }
 
         snapshot.staves.push(staff);

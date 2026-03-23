@@ -26,7 +26,8 @@ MuseScore {
         "rest-annotation": "ruleRestAnnotation",
         "tempo-barline": "ruleTempoBarline",
         "opening-tempo": "ruleOpeningTempo",
-        "first-note-dynamics": "ruleFirstNoteDynamics"
+        "first-note-dynamics": "ruleFirstNoteDynamics",
+        "cres-decres-sync": "ruleCresDecresSync"
     })
 
     Settings {
@@ -40,6 +41,7 @@ MuseScore {
         property bool ruleTempoBarline: true
         property bool ruleOpeningTempo: true
         property bool ruleFirstNoteDynamics: true
+        property bool ruleCresDecresSync: true
     }
 
     onRun: {
@@ -54,6 +56,44 @@ MuseScore {
             rules[ruleId] = persistedSettings[settingsKey];
         }
         enabledRules = rules;
+    }
+
+    function collectHairpins() {
+        var hairpins = [];
+        if (!curScore) return hairpins;
+        try {
+            curScore.selection.selectRange(
+                curScore.firstSegment.tick,
+                curScore.lastSegment.tick + 1,
+                0, curScore.nstaves
+            );
+            var elements = curScore.selection.elements;
+            var seen = {};
+            for (var i = 0; i < elements.length; i++) {
+                var el = elements[i];
+                if (el.type === Element.HAIRPIN_SEGMENT) {
+                    var hp = el.parent;
+                    var startTick = (typeof hp.spannerTick === "object")
+                        ? hp.spannerTick.ticks : hp.spannerTick;
+                    var durTicks = (typeof hp.spannerTicks === "object")
+                        ? hp.spannerTicks.ticks : hp.spannerTicks;
+                    var key = startTick + "|" + hp.track;
+                    if (seen[key]) continue;
+                    seen[key] = true;
+                    hairpins.push({
+                        staffIdx: Math.floor(hp.track / 4),
+                        hairpinType: hp.hairpinType,
+                        startTick: startTick,
+                        endTick: startTick + durTicks
+                    });
+                }
+            }
+            cmd("escape");
+        } catch (e) {
+            console.log("[ScoreLinter] collectHairpins error: " + e);
+        }
+        console.log("[ScoreLinter] collected " + hairpins.length + " hairpins");
+        return hairpins;
     }
 
     function runLinter() {
@@ -75,6 +115,8 @@ MuseScore {
             return;
         }
 
+        var hairpinData = collectHairpins();
+
         var snapshot = Snapshot.buildSnapshot(curScore, {
             CHORD: Element.CHORD,
             REST: Element.REST,
@@ -88,7 +130,7 @@ MuseScore {
             EXPRESSION: Element.EXPRESSION,
             REHEARSAL_MARK: Element.REHEARSAL_MARK,
             DYNAMIC: Element.DYNAMIC
-        });
+        }, hairpinData);
         snapshotText = JSON.stringify(snapshot, null, 2);
 
         var issues = Linter.runAllCheckers(snapshot, enabledRules);
