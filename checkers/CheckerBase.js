@@ -127,12 +127,16 @@ function createTextPairChecker(config) {
                     var ev = part.events[e];
                     if (matchesAny(ev.text, config.onPatterns)) {
                         if (state === "on") {
+                            var previousOnMeasure = lastSwitchEvent ? lastSwitchEvent.measure : null;
+                            var previousOnSuffix = previousOnMeasure !== null
+                                ? "（前回: " + previousOnMeasure + "小節目）"
+                                : "";
                             issues.push({
                                 ruleId: config.id,
                                 severity: "warning",
                                 message: part.partName + ": " +
                                     config.onLabel + " が既に指示済みの状態で再度指示されています（" +
-                                    ev.measure + "小節目）",
+                                    ev.measure + "小節目）" + previousOnSuffix,
                                 staffIdx: part.staffIdx,
                                 partName: part.partName,
                                 measure: ev.measure,
@@ -143,12 +147,16 @@ function createTextPairChecker(config) {
                         lastSwitchEvent = ev;
                     } else if (matchesAny(ev.text, config.offPatterns)) {
                         if (state === "off") {
+                            var previousOffMeasure = lastSwitchEvent ? lastSwitchEvent.measure : null;
+                            var previousOffSuffix = previousOffMeasure !== null
+                                ? "（前回: " + previousOffMeasure + "小節目）"
+                                : "";
                             issues.push({
                                 ruleId: config.id,
                                 severity: "warning",
                                 message: part.partName + ": " +
                                     config.offLabel + " が既に指示済みの状態で再度指示されています（" +
-                                    ev.measure + "小節目）",
+                                    ev.measure + "小節目）" + previousOffSuffix,
                                 staffIdx: part.staffIdx,
                                 partName: part.partName,
                                 measure: ev.measure,
