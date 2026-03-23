@@ -1,5 +1,5 @@
 .pragma library
-.import "CheckerBase.js" as CheckerBase
+.import "RulePredicates.js" as RulePredicates
 
 var checker = {
     id: "opening-tempo",
@@ -10,40 +10,35 @@ var checker = {
         var issues = [];
         if (!snapshot.staves || snapshot.staves.length === 0) return issues;
 
-        var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+        var canonical = RulePredicates.getCanonical(snapshot);
         if (!canonical) return issues;
 
         var staff = snapshot.staves[0];
-        var unresolved = snapshot.unresolvedAnnotations || [];
-        var firstMusicTick = null;
+
+        var firstMusicEvent = RulePredicates.firstEvent(snapshot, function(ev) {
+            return RulePredicates.isKind(ev, canonical.elementKinds.CHORD)
+                || RulePredicates.isKind(ev, canonical.elementKinds.REST);
+        }, staff.staffIdx);
+
+        if (!firstMusicEvent) return issues;
+
         var hasTempoAtOpening = false;
-
-        for (var i = 0; i < staff.events.length; i++) {
-            var ev = staff.events[i];
-            if (ev.kind === canonical.elementKinds.CHORD || ev.kind === canonical.elementKinds.REST) {
-                if (firstMusicTick === null || ev.tick < firstMusicTick) {
-                    firstMusicTick = ev.tick;
-                }
-            }
-        }
-
-        if (firstMusicTick === null) return issues;
 
         for (var j = 0; j < staff.events.length; j++) {
             var tev = staff.events[j];
-            if (!CheckerBase.isTempoEvent(tev, snapshot)) continue;
-            if (tev.tick <= firstMusicTick) {
+            if (!RulePredicates.isTempoMark(tev, snapshot)) continue;
+            if (tev.tick <= firstMusicEvent.tick) {
                 hasTempoAtOpening = true;
                 break;
             }
         }
 
-        // 未解決注記（staffIdx: -1）は全体適用として扱う
         if (!hasTempoAtOpening) {
+            var unresolved = snapshot.unresolvedAnnotations || [];
             for (var u = 0; u < unresolved.length; u++) {
                 var uev = unresolved[u];
-                if (!CheckerBase.isTempoEvent(uev, snapshot)) continue;
-                if (uev.tick <= firstMusicTick) {
+                if (!RulePredicates.isTempoMark(uev, snapshot)) continue;
+                if (uev.tick <= firstMusicEvent.tick) {
                     hasTempoAtOpening = true;
                     break;
                 }
@@ -58,7 +53,7 @@ var checker = {
                 staffIdx: 0,
                 partName: staff.partName,
                 measure: 1,
-                tick: firstMusicTick
+                tick: firstMusicEvent.tick
             });
         }
 
