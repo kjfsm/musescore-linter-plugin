@@ -13,11 +13,21 @@ function matchesAny(text, patterns) {
     return false;
 }
 
-function isType(ev, snapshot, enumName) {
-    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
-    if (!enums) return false;
-    if (enums[enumName] === undefined || enums[enumName] === null) return false;
-    return ev.elementType === enums[enumName];
+function getCanonical(snapshot) {
+    if (snapshot && snapshot.registry && snapshot.registry.canonical) {
+        return snapshot.registry.canonical;
+    }
+    return null;
+}
+
+function isTextualKind(ev, canonical) {
+    if (!canonical) return false;
+    return ev.kind === canonical.elementKinds.TEMPO_TEXT
+        || ev.kind === canonical.elementKinds.STAFF_TEXT
+        || ev.kind === canonical.elementKinds.SYSTEM_TEXT
+        || ev.kind === canonical.elementKinds.EXPRESSION
+        || ev.kind === canonical.elementKinds.REHEARSAL_MARK
+        || ev.kind === canonical.elementKinds.DYNAMIC;
 }
 
 function normalizeToken(rawText) {
@@ -30,7 +40,8 @@ function normalizeToken(rawText) {
 }
 
 function isDynamicLikeText(ev, snapshot) {
-    if (isType(ev, snapshot, "DYNAMIC")) return true;
+    var canonical = getCanonical(snapshot);
+    if (canonical && ev.kind === canonical.elementKinds.DYNAMIC) return true;
 
     var t = (ev.text || "").toLowerCase();
     var raw = (ev.rawText || "").toLowerCase();
@@ -41,15 +52,14 @@ function isDynamicLikeText(ev, snapshot) {
 }
 
 function isTempoEvent(ev, snapshot) {
-    var enums = snapshot && snapshot.enums ? snapshot.enums : null;
-    if (enums && enums.TEMPO_TEXT !== undefined && enums.TEMPO_TEXT !== null) {
-        return ev.elementType === enums.TEMPO_TEXT;
-    }
-    return ev.type === "text" && ev.annotationType === "tempo";
+    var canonical = getCanonical(snapshot);
+    return !!(canonical && ev.kind === canonical.elementKinds.TEMPO_TEXT);
 }
 
 function buildPartBuckets(snapshot) {
     var buckets = {};
+    var canonical = getCanonical(snapshot);
+    if (!canonical) return [];
 
     for (var s = 0; s < snapshot.staves.length; s++) {
         var staff = snapshot.staves[s];
@@ -69,7 +79,7 @@ function buildPartBuckets(snapshot) {
 
         for (var e = 0; e < staff.events.length; e++) {
             var ev = staff.events[e];
-            if (ev.type !== "text") continue;
+            if (!isTextualKind(ev, canonical)) continue;
             buckets[key].events.push({
                 text: ev.text,
                 rawText: ev.rawText,
@@ -99,10 +109,10 @@ function buildPartBuckets(snapshot) {
         var deduped = [];
         var seen = {};
         for (var i = 0; i < bucket.events.length; i++) {
-            var ev = bucket.events[i];
-            var dedupKey = ev.tick + "|" + ev.text;
+            var partEv = bucket.events[i];
+            var dedupKey = partEv.tick + "|" + partEv.text;
             if (!seen[dedupKey]) {
-                deduped.push(ev);
+                deduped.push(partEv);
                 seen[dedupKey] = true;
             }
         }

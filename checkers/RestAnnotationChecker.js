@@ -23,15 +23,15 @@ function isDisallowedOnRest(ev, snapshot) {
 }
 
 function isAnnotationTarget(ev, snapshot) {
-    if (CheckerBase.isType(ev, snapshot, "STAFF_TEXT")) return true;
-    if (CheckerBase.isType(ev, snapshot, "SYSTEM_TEXT")) return true;
-    if (CheckerBase.isType(ev, snapshot, "EXPRESSION")) return true;
-    if (CheckerBase.isType(ev, snapshot, "REHEARSAL_MARK")) return true;
-    if (CheckerBase.isType(ev, snapshot, "DYNAMIC")) return true;
+    var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+    if (!canonical) return false;
 
-    var hasEnum = snapshot && snapshot.enums
-        && (snapshot.enums.STAFF_TEXT !== undefined || snapshot.enums.SYSTEM_TEXT !== undefined);
-    if (!hasEnum) return ev.type === "text";
+    if (ev.kind === canonical.elementKinds.STAFF_TEXT) return true;
+    if (ev.kind === canonical.elementKinds.SYSTEM_TEXT) return true;
+    if (ev.kind === canonical.elementKinds.EXPRESSION) return true;
+    if (ev.kind === canonical.elementKinds.REHEARSAL_MARK) return true;
+    if (ev.kind === canonical.elementKinds.DYNAMIC) return true;
+
     return false;
 }
 
@@ -42,12 +42,15 @@ var checker = {
     description: "休符位置の注記を確認（強弱記号・pizz・arco などは不受理、その他テキストは受理）",
     run: function(snapshot) {
         var issues = [];
+        var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+        if (!canonical) return issues;
+
         for (var s = 0; s < snapshot.staves.length; s++) {
             var staff = snapshot.staves[s];
 
             var restTicks = {};
             for (var e = 0; e < staff.events.length; e++) {
-                if (staff.events[e].type === "rest") {
+                if (staff.events[e].kind === canonical.elementKinds.REST) {
                     restTicks[staff.events[e].tick] = true;
                 }
             }

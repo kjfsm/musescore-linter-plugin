@@ -10,6 +10,9 @@ var checker = {
         var issues = [];
         if (!snapshot.staves || snapshot.staves.length === 0) return issues;
 
+        var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+        if (!canonical) return issues;
+
         var staff = snapshot.staves[0];
         var unresolved = snapshot.unresolvedAnnotations || [];
         var firstMusicTick = null;
@@ -17,7 +20,7 @@ var checker = {
 
         for (var i = 0; i < staff.events.length; i++) {
             var ev = staff.events[i];
-            if (ev.type === "chord" || ev.type === "rest") {
+            if (ev.kind === canonical.elementKinds.CHORD || ev.kind === canonical.elementKinds.REST) {
                 if (firstMusicTick === null || ev.tick < firstMusicTick) {
                     firstMusicTick = ev.tick;
                 }
