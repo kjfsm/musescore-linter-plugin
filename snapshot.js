@@ -27,48 +27,93 @@ function resolveAnnotationStaffIdx(ann) {
     return -1;
 }
 
-function processAnnotations(seg, staffIdx, measureNum, registry, staff, snapshot) {
+function createEmptyIndex() {
+    return {
+        byStaff: {},
+        byTick: {},
+        byKind: {},
+        byStaffAndKind: {}
+    };
+}
+
+function pushIndexedId(map, key, eventId) {
+    if (map[key] === undefined) map[key] = [];
+    map[key].push(eventId);
+}
+
+function appendEvent(snapshot, payload) {
+    var ev = {
+        id: snapshot.events.length,
+        tick: (payload.tick !== undefined && payload.tick !== null) ? payload.tick : 0,
+        measure: (payload.measure !== undefined && payload.measure !== null) ? payload.measure : 0,
+        staffIdx: (payload.staffIdx !== undefined && payload.staffIdx !== null) ? payload.staffIdx : -1,
+        voice: (payload.voice !== undefined && payload.voice !== null) ? payload.voice : -1,
+        kind: payload.kind,
+        subtype: (payload.subtype !== undefined) ? payload.subtype : null,
+        subStyle: (payload.subStyle !== undefined) ? payload.subStyle : null,
+        tempo: (payload.tempo !== undefined) ? payload.tempo : null,
+        textNorm: payload.textNorm || "",
+        textRaw: payload.textRaw || "",
+        scope: payload.scope || "staff",
+        type: payload.type || "other"
+    };
+
+    if (payload.barlineType !== undefined) ev.barlineType = payload.barlineType;
+    if (payload.barlineKind !== undefined) ev.barlineKind = payload.barlineKind;
+    if (payload.duration !== undefined) ev.duration = payload.duration;
+
+    snapshot.events.push(ev);
+
+    pushIndexedId(snapshot.index.byTick, ev.tick, ev.id);
+    pushIndexedId(snapshot.index.byKind, ev.kind, ev.id);
+    pushIndexedId(snapshot.index.byStaff, ev.staffIdx, ev.id);
+
+    if (snapshot.index.byStaffAndKind[ev.staffIdx] === undefined) {
+        snapshot.index.byStaffAndKind[ev.staffIdx] = {};
+    }
+    pushIndexedId(snapshot.index.byStaffAndKind[ev.staffIdx], ev.kind, ev.id);
+
+    if (ev.tick > snapshot.meta.lastTick) {
+        snapshot.meta.lastTick = ev.tick;
+    }
+
+    return ev;
+}
+
+function normalizeText(rawText) {
+    return (rawText || "").replace(/<[^>]*>/g, "").toLowerCase().trim();
+}
+
+function processAnnotations(seg, measureNum, registry, snapshot) {
     if (!seg.annotations) return;
+
     for (var a = 0; a < seg.annotations.length; a++) {
         var ann = seg.annotations[a];
         var annStaffIdx = resolveAnnotationStaffIdx(ann);
         var rawText = (ann.plainText !== undefined && ann.plainText !== null)
             ? ann.plainText : (ann.text || "");
-        var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
+        var cleanText = normalizeText(rawText);
         if (cleanText.length === 0) continue;
 
         var annKind = registry.resolveElementKind(ann.type);
-        var annEvent = {
+        appendEvent(snapshot, {
             type: "text",
             kind: annKind,
-            text: cleanText,
-            rawText: rawText.replace(/<[^>]*>/g, "").trim(),
             tick: seg.tick,
             measure: measureNum,
+            staffIdx: annStaffIdx >= 0 ? annStaffIdx : -1,
+            voice: -1,
             subtype: ann.subtype,
             subStyle: ann.subStyle,
-            tempo: (ann.tempo !== undefined) ? ann.tempo : null
-        };
-
-        if (annStaffIdx < 0) {
-            // staff が判定不能な注記は staff 0 のときだけ未解決注記として保持
-            if (staffIdx === 0) {
-                annEvent.staffIdx = -1;
-                annEvent.annotationScope = "unresolved";
-                snapshot.unresolvedAnnotations.push(annEvent);
-            }
-            continue;
-        }
-
-        if (annStaffIdx === staffIdx) {
-            annEvent.staffIdx = staffIdx;
-            annEvent.annotationScope = "staff";
-            staff.events.push(annEvent);
-        }
+            tempo: (ann.tempo !== undefined) ? ann.tempo : null,
+            textNorm: cleanText,
+            textRaw: rawText.replace(/<[^>]*>/g, "").trim(),
+            scope: annStaffIdx >= 0 ? "staff" : "global"
+        });
     }
 }
 
-function processNotesAndRests(seg, staffIdx, measureNum, registry, staff) {
+function processStaffElements(seg, measureNum, staffIdx, registry, snapshot) {
     var canonical = registry.canonical;
 
     for (var voice = 0; voice < 4; voice++) {
@@ -77,83 +122,170 @@ function processNotesAndRests(seg, staffIdx, measureNum, registry, staff) {
         if (!el) continue;
 
         var kind = registry.resolveElementKind(el.type);
-        var evType = "other";
-        if (kind === canonical.elementKinds.CHORD) evType = "chord";
-        else if (kind === canonical.elementKinds.REST) evType = "rest";
-
-        var ev = {
-            type: evType,
-            kind: kind,
-            tick: seg.tick,
-            measure: measureNum,
-            voice: voice
-        };
-
-        if (el.duration) {
-            ev.duration = {
-                numerator: el.duration.numerator,
-                denominator: el.duration.denominator
+        if (kind === canonical.elementKinds.CHORD || kind === canonical.elementKinds.REST) {
+            var evType = kind === canonical.elementKinds.CHORD ? "chord" : "rest";
+            var payload = {
+                type: evType,
+                kind: kind,
+                tick: seg.tick,
+                measure: measureNum,
+                staffIdx: staffIdx,
+                voice: voice,
+                scope: "staff"
             };
+
+            if (el.duration) {
+                payload.duration = {
+                    numerator: el.duration.numerator,
+                    denominator: el.duration.denominator
+                };
+            }
+
+            appendEvent(snapshot, payload);
+
+            if (snapshot.meta.firstMusicTickByStaff[staffIdx] === null) {
+                snapshot.meta.firstMusicTickByStaff[staffIdx] = seg.tick;
+            }
         }
-
-        staff.events.push(ev);
     }
-}
 
-function processBarlines(seg, staffIdx, measureNum, registry, staff) {
-    var canonical = registry.canonical;
-
-    for (var voice = 0; voice < 4; voice++) {
-        var barEl = seg.elementAt(staffIdx * 4 + voice);
+    for (var v = 0; v < 4; v++) {
+        var barEl = seg.elementAt(staffIdx * 4 + v);
         if (barEl && registry.resolveElementKind(barEl.type) === canonical.elementKinds.BAR_LINE) {
-            staff.events.push({
+            appendEvent(snapshot, {
                 type: "barline",
                 kind: canonical.elementKinds.BAR_LINE,
                 barlineType: barEl.barLineType,
                 barlineKind: registry.resolveBarlineKind(barEl.barLineType),
                 tick: seg.tick,
-                measure: measureNum
+                measure: measureNum,
+                staffIdx: staffIdx,
+                voice: -1,
+                scope: "staff"
             });
             break;
         }
     }
 }
 
-// E: QML 側から渡される Element/BarLineType 列挙型
-function buildSnapshot(score, E) {
-    var registry = EnumRegistry.buildEnumRegistry(E);
-    var snapshot = { staves: [], registry: { canonical: registry.canonical }, unresolvedAnnotations: [] };
-    var numStaves = score.nstaves;
-
-    for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
-        var staff = {
-            staffIdx: staffIdx,
-            partName: getPartName(score, staffIdx),
+function buildLegacyStaves(snapshot) {
+    var staves = [];
+    for (var s = 0; s < snapshot.meta.parts.length; s++) {
+        staves.push({
+            staffIdx: s,
+            partName: snapshot.meta.parts[s].partName,
             events: []
-        };
-
-        var measureNum = 1;
-        var m = score.firstMeasure;
-        while (m) {
-            var seg = m.firstSegment;
-            var measureEndTick = null;
-            if (m.nextMeasure && m.nextMeasure.firstSegment) {
-                measureEndTick = m.nextMeasure.firstSegment.tick;
-            }
-            while (seg) {
-                if (measureEndTick !== null && seg.tick >= measureEndTick) break;
-                processAnnotations(seg, staffIdx, measureNum, registry, staff, snapshot);
-                processNotesAndRests(seg, staffIdx, measureNum, registry, staff);
-                processBarlines(seg, staffIdx, measureNum, registry, staff);
-                seg = seg.next;
-            }
-            measureNum++;
-            m = m.nextMeasure;
-        }
-
-        snapshot.staves.push(staff);
+        });
     }
 
-    console.log("[ScoreLinter] snapshot: " + snapshot.staves.length + " staves");
+    for (var i = 0; i < snapshot.events.length; i++) {
+        var ev = snapshot.events[i];
+        if (ev.staffIdx < 0 || ev.staffIdx >= staves.length) continue;
+
+        var legacyEv = {
+            type: ev.type,
+            kind: ev.kind,
+            tick: ev.tick,
+            measure: ev.measure,
+            voice: ev.voice,
+            subtype: ev.subtype,
+            subStyle: ev.subStyle,
+            tempo: ev.tempo,
+            text: ev.textNorm,
+            rawText: ev.textRaw
+        };
+
+        if (ev.duration !== undefined) legacyEv.duration = ev.duration;
+        if (ev.barlineType !== undefined) legacyEv.barlineType = ev.barlineType;
+        if (ev.barlineKind !== undefined) legacyEv.barlineKind = ev.barlineKind;
+
+        staves[ev.staffIdx].events.push(legacyEv);
+    }
+
+    return staves;
+}
+
+function buildMetaParts(score, numStaves) {
+    var parts = [];
+    for (var i = 0; i < numStaves; i++) {
+        parts.push({
+            staffIdx: i,
+            partName: getPartName(score, i)
+        });
+    }
+    return parts;
+}
+
+// E: QML 側から渡される Element/BarLineType 列挙型
+function buildSnapshot(score, E, options) {
+    var registry = EnumRegistry.buildEnumRegistry(E);
+    var opts = options || {};
+    var includeLegacyStaves = opts.includeLegacyStaves !== false;
+    var numStaves = score.nstaves;
+
+    var snapshot = {
+        events: [],
+        index: createEmptyIndex(),
+        meta: {
+            parts: buildMetaParts(score, numStaves),
+            firstMusicTickByStaff: [],
+            lastTick: 0
+        },
+        registry: { canonical: registry.canonical },
+        unresolvedAnnotations: []
+    };
+
+    for (var s = 0; s < numStaves; s++) {
+        snapshot.meta.firstMusicTickByStaff.push(null);
+    }
+
+    var measureNum = 1;
+    var m = score.firstMeasure;
+    while (m) {
+        var seg = m.firstSegment;
+        var measureEndTick = null;
+        if (m.nextMeasure && m.nextMeasure.firstSegment) {
+            measureEndTick = m.nextMeasure.firstSegment.tick;
+        }
+
+        while (seg) {
+            if (measureEndTick !== null && seg.tick >= measureEndTick) break;
+
+            processAnnotations(seg, measureNum, registry, snapshot);
+            for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
+                processStaffElements(seg, measureNum, staffIdx, registry, snapshot);
+            }
+
+            seg = seg.next;
+        }
+
+        measureNum++;
+        m = m.nextMeasure;
+    }
+
+    if (includeLegacyStaves) {
+        snapshot.staves = buildLegacyStaves(snapshot);
+    }
+
+    for (var i = 0; i < snapshot.events.length; i++) {
+        var ev = snapshot.events[i];
+        if (ev.scope !== "global" || ev.staffIdx !== -1) continue;
+        snapshot.unresolvedAnnotations.push({
+            type: ev.type,
+            kind: ev.kind,
+            text: ev.textNorm,
+            rawText: ev.textRaw,
+            tick: ev.tick,
+            measure: ev.measure,
+            subtype: ev.subtype,
+            subStyle: ev.subStyle,
+            tempo: ev.tempo,
+            staffIdx: -1,
+            annotationScope: "unresolved"
+        });
+    }
+
+    console.log("[ScoreLinter] snapshot(LintIR): events=" + snapshot.events.length
+        + ", staves=" + (snapshot.staves ? snapshot.staves.length : 0));
     return snapshot;
 }
