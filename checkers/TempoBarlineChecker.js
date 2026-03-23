@@ -1,5 +1,5 @@
 .pragma library
-.import "CheckerBase.js" as CheckerBase
+.import "RulePredicates.js" as RulePredicates
 
 var checker = {
     id: "tempo-barline",
@@ -10,22 +10,20 @@ var checker = {
         var issues = [];
         if (snapshot.staves.length === 0) return issues;
 
-        var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+        var canonical = RulePredicates.getCanonical(snapshot);
         if (!canonical) return issues;
 
-        // テンポはスコア全体に共通のため staff 0 のみチェック
         var staff = snapshot.staves[0];
 
-        // テンポ指示と小節線情報を1パスで収集
         var tempoEvents = [];
         var barlines = {};
         var barlineEvents = [];
         for (var e = 0; e < staff.events.length; e++) {
             var ev = staff.events[e];
-            if (CheckerBase.isTempoEvent(ev, snapshot)) {
+            if (RulePredicates.isTempoMark(ev, snapshot)) {
                 tempoEvents.push(ev);
             }
-            if (ev.kind === canonical.elementKinds.BAR_LINE) {
+            if (RulePredicates.isKind(ev, canonical.elementKinds.BAR_LINE)) {
                 barlines[ev.measure] = ev.barlineKind;
                 barlineEvents.push(ev);
             }
@@ -41,7 +39,6 @@ var checker = {
             return a.measure - b.measure;
         });
 
-        // 同 tick 重複を解消
         var uniqueTempoEvents = [];
         var seenTempoTicks = {};
         for (var t0 = 0; t0 < tempoEvents.length; t0++) {
@@ -51,8 +48,6 @@ var checker = {
             uniqueTempoEvents.push(tEv);
         }
 
-        // 各テンポ変更について、前小節に複縦線があるか確認
-        // 曲頭 tick はスキップ
         var firstTempoTick = uniqueTempoEvents.length > 0 ? uniqueTempoEvents[0].tick : null;
         var prevTempoValue = null;
         var barlineCursor = -1;
@@ -67,7 +62,6 @@ var checker = {
             }
             prevTempoValue = tm.tempo;
 
-            // tick 基準で直前の小節線を探索（前進ポインタ）
             while (barlineCursor + 1 < barlineEvents.length
                 && barlineEvents[barlineCursor + 1].tick < tm.tick) {
                 barlineCursor++;

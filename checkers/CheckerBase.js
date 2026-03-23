@@ -1,10 +1,5 @@
 .pragma library
-
-var DYNAMIC_TOKENS = {
-    p: true, pp: true, ppp: true, pppp: true,
-    f: true, ff: true, fff: true, ffff: true,
-    mp: true, mf: true, fp: true, sf: true, sfz: true, sffz: true, rfz: true, fz: true
-};
+.import "RulePredicates.js" as RulePredicates
 
 function matchesAny(text, patterns) {
     for (var i = 0; i < patterns.length; i++) {
@@ -14,46 +9,29 @@ function matchesAny(text, patterns) {
 }
 
 function getCanonical(snapshot) {
-    if (snapshot && snapshot.registry && snapshot.registry.canonical) {
-        return snapshot.registry.canonical;
-    }
-    return null;
-}
-
-function isTextualKind(ev, canonical) {
-    if (!canonical) return false;
-    return ev.kind === canonical.elementKinds.TEMPO_TEXT
-        || ev.kind === canonical.elementKinds.STAFF_TEXT
-        || ev.kind === canonical.elementKinds.SYSTEM_TEXT
-        || ev.kind === canonical.elementKinds.EXPRESSION
-        || ev.kind === canonical.elementKinds.REHEARSAL_MARK
-        || ev.kind === canonical.elementKinds.DYNAMIC;
+    return RulePredicates.getCanonical(snapshot);
 }
 
 function normalizeToken(rawText) {
-    return (rawText || "")
-        .toLowerCase()
-        .replace(/<[^>]*>/g, "")
-        .replace(/\s+/g, "")
-        .replace(/\./g, "")
-        .trim();
+    return RulePredicates.normalizeToken(rawText);
 }
 
+function isDynamicMark(ev, snapshot) {
+    return RulePredicates.isDynamicMark(ev, snapshot);
+}
+
+// backward compatibility
 function isDynamicLikeText(ev, snapshot) {
-    var canonical = getCanonical(snapshot);
-    if (canonical && ev.kind === canonical.elementKinds.DYNAMIC) return true;
-
-    var t = (ev.text || "").toLowerCase();
-    var raw = (ev.rawText || "").toLowerCase();
-    if (t.indexOf("dynamic") === 0 || raw.indexOf("dynamic") === 0) return true;
-
-    var normalized = normalizeToken(raw);
-    return !!DYNAMIC_TOKENS[normalized];
+    return isDynamicMark(ev, snapshot);
 }
 
+function isTempoMark(ev, snapshot) {
+    return RulePredicates.isTempoMark(ev, snapshot);
+}
+
+// backward compatibility
 function isTempoEvent(ev, snapshot) {
-    var canonical = getCanonical(snapshot);
-    return !!(canonical && ev.kind === canonical.elementKinds.TEMPO_TEXT);
+    return isTempoMark(ev, snapshot);
 }
 
 function buildPartBuckets(snapshot) {
@@ -79,7 +57,7 @@ function buildPartBuckets(snapshot) {
 
         for (var e = 0; e < staff.events.length; e++) {
             var ev = staff.events[e];
-            if (!isTextualKind(ev, canonical)) continue;
+            if (!RulePredicates.isTextualKind(ev, canonical)) continue;
             buckets[key].events.push({
                 text: ev.text,
                 rawText: ev.rawText,
@@ -102,10 +80,6 @@ function buildPartBuckets(snapshot) {
             return a.staffIdx - b.staffIdx;
         });
 
-        // 同一パート内で重複して収集される同一注記を除外
-        // NOTE:
-        //   snapshot 側の都合で、同一 tick/text が別 measure として
-        //   重複混入するケースを吸収するため、measure をキーに含めない。
         var deduped = [];
         var seen = {};
         for (var i = 0; i < bucket.events.length; i++) {
@@ -128,16 +102,6 @@ function buildPartBuckets(snapshot) {
 }
 
 function createTextPairChecker(config) {
-    // config: {
-    //   id:           "pizz-arco",
-    //   name:         "Pizz / Arco",
-    //   description:  "説明文",
-    //   onPatterns:   ["pizz.", "pizz", "pizzicato"],
-    //   offPatterns:  ["arco"],
-    //   defaultState: "off",
-    //   onLabel:      "pizz.",
-    //   offLabel:     "arco",
-    // }
     return {
         id: config.id,
         name: config.name,
@@ -189,7 +153,6 @@ function createTextPairChecker(config) {
                     }
                 }
 
-                // 終端チェック: "on" のまま曲が終了している場合
                 if (state === "on" && lastSwitchEvent) {
                     issues.push({
                         ruleId: config.id,
