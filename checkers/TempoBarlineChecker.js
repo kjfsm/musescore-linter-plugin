@@ -6,27 +6,29 @@ var checker = {
     name: "テンポ変更と複縦線",
     level: "INFO",
     description: "テンポ変更前の小節に複縦線があるかを確認",
-    run: function(snapshot) {
+    run: function(ir) {
         var issues = [];
-        if (snapshot.staves.length === 0) return issues;
+        if (!ir.meta || !ir.meta.parts || ir.meta.parts.length === 0) return issues;
 
-        var canonical = RulePredicates.getCanonical(snapshot);
+        var canonical = RulePredicates.getCanonical(ir);
         if (!canonical) return issues;
 
-        var staff = snapshot.staves[0];
-
+        var staff = ir.meta.parts[0];
+        var byStaff = ir.index.byStaffAndKind[staff.staffIdx] || {};
         var tempoEvents = [];
         var barlines = {};
         var barlineEvents = [];
-        for (var e = 0; e < staff.events.length; e++) {
-            var ev = staff.events[e];
-            if (RulePredicates.isTempoMark(ev, snapshot)) {
-                tempoEvents.push(ev);
-            }
-            if (RulePredicates.isKind(ev, canonical.elementKinds.BAR_LINE)) {
-                barlines[ev.measure] = ev.barlineKind;
-                barlineEvents.push(ev);
-            }
+
+        var tempoIds = byStaff[canonical.elementKinds.TEMPO_TEXT] || [];
+        for (var t = 0; t < tempoIds.length; t++) {
+            tempoEvents.push(ir.events[tempoIds[t]]);
+        }
+
+        var barlineIds = byStaff[canonical.elementKinds.BAR_LINE] || [];
+        for (var b = 0; b < barlineIds.length; b++) {
+            var barEv = ir.events[barlineIds[b]];
+            barlines[barEv.measure] = barEv.barlineKind;
+            barlineEvents.push(barEv);
         }
 
         tempoEvents.sort(function(a, b) {
