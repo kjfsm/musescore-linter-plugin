@@ -19,8 +19,26 @@ MuseScore 3 用の **楽譜チェック（Lint）プラグイン**です。
 
 - `ScoreLinter.qml` : プラグイン本体 UI
 - `snapshot.js` : スコア情報を走査し、チェッカー向けスナップショットを生成
+- `enumRegistry.js` : MuseScore API の列挙値を checker 用の canonical enum に正規化
 - `linter.js` : チェッカーの集約・実行
 - `checkers/*.js` : 各ルールの実装
+
+## enum正規化層
+
+`enumRegistry.js` の `buildEnumRegistry(E)` が、QML 側（`ScoreLinter.qml`）から受け取る
+`Element` / `BarLineType` 列挙値を、checker 側で共通利用する canonical enum へ変換します。
+
+- `canonical.elementKinds`
+  - `CHORD / REST / BAR_LINE / TEMPO_TEXT / STAFF_TEXT / SYSTEM_TEXT / EXPRESSION / REHEARSAL_MARK / DYNAMIC`
+- `canonical.barlineKinds`
+  - `DOUBLE / OTHER / UNKNOWN`
+- 変換関数
+  - `resolveElementKind(rawType)`
+  - `resolveBarlineKind(rawBarlineType)`
+
+この層により、MuseScore API の差分（列挙値の変化や一部未解決）を checker 実装から分離できます。
+`BARLINE_DOUBLE === 2` のような数値フォールバックは registry 内部に閉じ込め、各 checker は
+`ev.kind === registry.canonical.*` の比較のみを行います。
 
 ## 使い方
 

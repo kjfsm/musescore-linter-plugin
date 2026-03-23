@@ -9,6 +9,9 @@ var checker = {
     run: function(snapshot) {
         var issues = [];
         if (!snapshot.staves) return issues;
+        var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+        if (!canonical) return issues;
+
         var unresolved = snapshot.unresolvedAnnotations || [];
 
         for (var s = 0; s < snapshot.staves.length; s++) {
@@ -17,7 +20,7 @@ var checker = {
 
             for (var e = 0; e < staff.events.length; e++) {
                 var ev = staff.events[e];
-                if (ev.type !== "chord") continue;
+                if (ev.kind !== canonical.elementKinds.CHORD) continue;
                 if (!firstChord || ev.tick < firstChord.tick) {
                     firstChord = ev;
                 }
@@ -29,7 +32,6 @@ var checker = {
             for (var t = 0; t < staff.events.length; t++) {
                 var tv = staff.events[t];
                 if (tv.tick !== firstChord.tick) continue;
-                if (tv.type !== "text") continue;
                 if (CheckerBase.isDynamicLikeText(tv, snapshot)) {
                     hasDynamics = true;
                     break;
@@ -41,7 +43,6 @@ var checker = {
                 for (var u = 0; u < unresolved.length; u++) {
                     var uev = unresolved[u];
                     if (uev.tick !== firstChord.tick) continue;
-                    if (uev.type !== "text") continue;
                     if (CheckerBase.isDynamicLikeText(uev, snapshot)) {
                         hasDynamics = true;
                         break;

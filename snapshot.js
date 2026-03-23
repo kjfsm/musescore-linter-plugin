@@ -1,14 +1,5 @@
 .pragma library
-
-function cloneEnumMap(E) {
-    var out = {};
-    if (!E) return out;
-    for (var key in E) {
-        if (!E.hasOwnProperty(key)) continue;
-        out[key] = E[key];
-    }
-    return out;
-}
+.import "enumRegistry.js" as EnumRegistry
 
 function getPartName(score, staffIdx) {
     if (!score.parts) return "Staff " + (staffIdx + 1);
@@ -36,17 +27,7 @@ function resolveAnnotationStaffIdx(ann) {
     return -1;
 }
 
-function normalizeBarlineType(rawBarlineType, E) {
-    if (rawBarlineType === undefined || rawBarlineType === null) return "unknown";
-    if (E && E.BARLINE_DOUBLE !== undefined && E.BARLINE_DOUBLE !== null) {
-        if (rawBarlineType === E.BARLINE_DOUBLE) return "double";
-    } else if (rawBarlineType === 2) {
-        return "double";
-    }
-    return "other";
-}
-
-function processAnnotations(seg, staffIdx, measureNum, E, staff, snapshot) {
+function processAnnotations(seg, staffIdx, measureNum, registry, staff, snapshot) {
     if (!seg.annotations) return;
     for (var a = 0; a < seg.annotations.length; a++) {
         var ann = seg.annotations[a];
@@ -56,14 +37,14 @@ function processAnnotations(seg, staffIdx, measureNum, E, staff, snapshot) {
         var cleanText = rawText.replace(/<[^>]*>/g, "").toLowerCase().trim();
         if (cleanText.length === 0) continue;
 
+        var annKind = registry.resolveElementKind(ann.type);
         var annEvent = {
             type: "text",
+            kind: annKind,
             text: cleanText,
             rawText: rawText.replace(/<[^>]*>/g, "").trim(),
             tick: seg.tick,
             measure: measureNum,
-            annotationType: (ann.type === E.TEMPO_TEXT) ? "tempo" : "text",
-            elementType: ann.type,
             subtype: ann.subtype,
             subStyle: ann.subStyle,
             tempo: (ann.tempo !== undefined) ? ann.tempo : null
@@ -87,18 +68,22 @@ function processAnnotations(seg, staffIdx, measureNum, E, staff, snapshot) {
     }
 }
 
-function processNotesAndRests(seg, staffIdx, measureNum, E, staff) {
+function processNotesAndRests(seg, staffIdx, measureNum, registry, staff) {
+    var canonical = registry.canonical;
+
     for (var voice = 0; voice < 4; voice++) {
         var track = staffIdx * 4 + voice;
         var el = seg.elementAt(track);
         if (!el) continue;
 
+        var kind = registry.resolveElementKind(el.type);
         var evType = "other";
-        if (el.type === E.CHORD) evType = "chord";
-        else if (el.type === E.REST) evType = "rest";
+        if (kind === canonical.elementKinds.CHORD) evType = "chord";
+        else if (kind === canonical.elementKinds.REST) evType = "rest";
 
         var ev = {
             type: evType,
+            kind: kind,
             tick: seg.tick,
             measure: measureNum,
             voice: voice
@@ -115,14 +100,17 @@ function processNotesAndRests(seg, staffIdx, measureNum, E, staff) {
     }
 }
 
-function processBarlines(seg, staffIdx, measureNum, E, staff) {
+function processBarlines(seg, staffIdx, measureNum, registry, staff) {
+    var canonical = registry.canonical;
+
     for (var voice = 0; voice < 4; voice++) {
         var barEl = seg.elementAt(staffIdx * 4 + voice);
-        if (barEl && barEl.type === E.BAR_LINE) {
+        if (barEl && registry.resolveElementKind(barEl.type) === canonical.elementKinds.BAR_LINE) {
             staff.events.push({
                 type: "barline",
+                kind: canonical.elementKinds.BAR_LINE,
                 barlineType: barEl.barLineType,
-                barlineKind: normalizeBarlineType(barEl.barLineType, E),
+                barlineKind: registry.resolveBarlineKind(barEl.barLineType),
                 tick: seg.tick,
                 measure: measureNum
             });
@@ -131,10 +119,10 @@ function processBarlines(seg, staffIdx, measureNum, E, staff) {
     }
 }
 
-// E: QML 側から渡される Element 列挙型
-// { CHORD, REST, BAR_LINE, BARLINE_DOUBLE, TEMPO_TEXT, STAFF_TEXT, SYSTEM_TEXT, EXPRESSION, REHEARSAL_MARK, DYNAMIC }
+// E: QML 側から渡される Element/BarLineType 列挙型
 function buildSnapshot(score, E) {
-    var snapshot = { staves: [], enums: cloneEnumMap(E), unresolvedAnnotations: [] };
+    var registry = EnumRegistry.buildEnumRegistry(E);
+    var snapshot = { staves: [], registry: { canonical: registry.canonical }, unresolvedAnnotations: [] };
     var numStaves = score.nstaves;
 
     for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
@@ -154,9 +142,9 @@ function buildSnapshot(score, E) {
             }
             while (seg) {
                 if (measureEndTick !== null && seg.tick >= measureEndTick) break;
-                processAnnotations(seg, staffIdx, measureNum, E, staff, snapshot);
-                processNotesAndRests(seg, staffIdx, measureNum, E, staff);
-                processBarlines(seg, staffIdx, measureNum, E, staff);
+                processAnnotations(seg, staffIdx, measureNum, registry, staff, snapshot);
+                processNotesAndRests(seg, staffIdx, measureNum, registry, staff);
+                processBarlines(seg, staffIdx, measureNum, registry, staff);
                 seg = seg.next;
             }
             measureNum++;

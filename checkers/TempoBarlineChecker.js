@@ -10,6 +10,9 @@ var checker = {
         var issues = [];
         if (snapshot.staves.length === 0) return issues;
 
+        var canonical = snapshot && snapshot.registry ? snapshot.registry.canonical : null;
+        if (!canonical) return issues;
+
         // テンポはスコア全体に共通のため staff 0 のみチェック
         var staff = snapshot.staves[0];
 
@@ -22,7 +25,7 @@ var checker = {
             if (CheckerBase.isTempoEvent(ev, snapshot)) {
                 tempoEvents.push(ev);
             }
-            if (ev.type === "barline") {
+            if (ev.kind === canonical.elementKinds.BAR_LINE) {
                 barlines[ev.measure] = ev.barlineKind;
                 barlineEvents.push(ev);
             }
@@ -73,8 +76,9 @@ var checker = {
 
             var prevMeasure = tm.measure - 1;
             var prevBarline = barlines[prevMeasure];
-            var hasDoubleByMeasure = (prevBarline === "double");
-            var hasDoubleByTick = (prevBarlineByTick && prevBarlineByTick.barlineKind === "double");
+            var hasDoubleByMeasure = (prevBarline === canonical.barlineKinds.DOUBLE);
+            var hasDoubleByTick = (prevBarlineByTick
+                && prevBarlineByTick.barlineKind === canonical.barlineKinds.DOUBLE);
 
             if (!hasDoubleByMeasure && !hasDoubleByTick) {
                 issues.push({
