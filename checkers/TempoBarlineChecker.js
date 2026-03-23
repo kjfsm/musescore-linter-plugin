@@ -13,23 +13,18 @@ var checker = {
         // テンポはスコア全体に共通のため staff 0 のみチェック
         var staff = snapshot.staves[0];
 
-        // テンポ指示のある小節を収集
+        // テンポ指示と小節線情報を1パスで収集
         var tempoEvents = [];
+        var barlines = {};
+        var barlineEvents = [];
         for (var e = 0; e < staff.events.length; e++) {
             var ev = staff.events[e];
             if (CheckerBase.isTempoEvent(ev, snapshot)) {
                 tempoEvents.push(ev);
             }
-        }
-
-        // 小節線情報を収集
-        var barlines = {};
-        var barlineEvents = [];
-        for (var e2 = 0; e2 < staff.events.length; e2++) {
-            var bev = staff.events[e2];
-            if (bev.type === "barline") {
-                barlines[bev.measure] = bev.barlineKind;
-                barlineEvents.push(bev);
+            if (ev.type === "barline") {
+                barlines[ev.measure] = ev.barlineKind;
+                barlineEvents.push(ev);
             }
         }
 
