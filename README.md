@@ -23,6 +23,16 @@ MuseScore 3 用の **楽譜チェック（Lint）プラグイン**です。
 - `linter.js` : チェッカーの集約・実行
 - `checkers/*.js` : 各ルールの実装
 
+## ルール実装の性能ガイド
+
+新しい checker / ルールを追加するときは、**必ず `index` を利用**してください。
+
+- `ir.index.byKind[...]` / `ir.index.byStaffAndKind[...]` / `ir.index.byTick[...]` を起点に、必要なイベントだけ処理する。
+- `ir.events` の全件ループや、`staff.events` を毎回なめる実装は避ける。
+- 共有できる前処理（例: 各 staff の firstChord、tick ごとの注記集合）は `ir.derived` に 1 回だけ計算して再利用する。
+
+この方針により、ルール追加時にチェック時間が直線的に悪化するのを防ぎます。
+
 ## enum正規化層
 
 `enumRegistry.js` の `buildEnumRegistry(E)` が、QML 側（`ScoreLinter.qml`）から受け取る

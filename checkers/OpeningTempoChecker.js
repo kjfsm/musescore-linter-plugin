@@ -6,27 +6,35 @@ var checker = {
     name: "冒頭テンポ表記",
     level: "ERROR",
     description: "曲頭にテンポ表記があるかを確認（未記載は不受理）",
-    run: function(snapshot) {
+    run: function(ir) {
         var issues = [];
-        if (!snapshot.staves || snapshot.staves.length === 0) return issues;
+        if (!ir.meta || !ir.meta.parts || ir.meta.parts.length === 0) return issues;
 
-        var canonical = RulePredicates.getCanonical(snapshot);
+        var canonical = RulePredicates.getCanonical(ir);
         if (!canonical) return issues;
+        var staff = ir.meta.parts[0];
+        var byStaff = ir.index.byStaffAndKind[staff.staffIdx] || {};
 
-        var staff = snapshot.staves[0];
-
-        var firstMusicEvent = RulePredicates.firstEvent(snapshot, function(ev) {
-            return RulePredicates.isKind(ev, canonical.elementKinds.CHORD)
-                || RulePredicates.isKind(ev, canonical.elementKinds.REST);
-        }, staff.staffIdx);
+        var firstMusicEvent = null;
+        var chordIds = byStaff[canonical.elementKinds.CHORD] || [];
+        var restIds = byStaff[canonical.elementKinds.REST] || [];
+        var musicIds = chordIds.concat(restIds);
+        for (var i = 0; i < musicIds.length; i++) {
+            var ev = ir.events[musicIds[i]];
+            if (!firstMusicEvent
+                || ev.tick < firstMusicEvent.tick
+                || (ev.tick === firstMusicEvent.tick && ev.measure < firstMusicEvent.measure)) {
+                firstMusicEvent = ev;
+            }
+        }
 
         if (!firstMusicEvent) return issues;
 
         var hasTempoAtOpening = false;
 
-        for (var j = 0; j < staff.events.length; j++) {
-            var tev = staff.events[j];
-            if (!RulePredicates.isTempoMark(tev, snapshot)) continue;
+        var tempoIds = byStaff[canonical.elementKinds.TEMPO_TEXT] || [];
+        for (var j = 0; j < tempoIds.length; j++) {
+            var tev = ir.events[tempoIds[j]];
             if (tev.tick <= firstMusicEvent.tick) {
                 hasTempoAtOpening = true;
                 break;
@@ -34,10 +42,10 @@ var checker = {
         }
 
         if (!hasTempoAtOpening) {
-            var unresolved = snapshot.unresolvedAnnotations || [];
+            var unresolved = ir.unresolvedAnnotations || [];
             for (var u = 0; u < unresolved.length; u++) {
                 var uev = unresolved[u];
-                if (!RulePredicates.isTempoMark(uev, snapshot)) continue;
+                if (!RulePredicates.isTempoMark(uev, ir)) continue;
                 if (uev.tick <= firstMusicEvent.tick) {
                     hasTempoAtOpening = true;
                     break;

@@ -39,32 +39,39 @@ function buildPartBuckets(snapshot) {
     var canonical = getCanonical(snapshot);
     if (!canonical) return [];
 
-    for (var s = 0; s < snapshot.staves.length; s++) {
-        var staff = snapshot.staves[s];
-        var key = staff.partName || ("Staff " + (staff.staffIdx + 1));
+    var textualKinds = [
+        canonical.elementKinds.TEMPO_TEXT,
+        canonical.elementKinds.STAFF_TEXT,
+        canonical.elementKinds.SYSTEM_TEXT,
+        canonical.elementKinds.EXPRESSION,
+        canonical.elementKinds.REHEARSAL_MARK,
+        canonical.elementKinds.DYNAMIC
+    ];
+
+    var metaParts = (snapshot.meta && snapshot.meta.parts) ? snapshot.meta.parts : [];
+    for (var s = 0; s < metaParts.length; s++) {
+        var staffIdx = metaParts[s].staffIdx;
+        var key = metaParts[s].partName || ("Staff " + (staffIdx + 1));
+        var byStaff = snapshot.index.byStaffAndKind[staffIdx] || {};
 
         if (!buckets[key]) {
-            buckets[key] = {
-                partName: key,
-                staffIdx: staff.staffIdx,
-                events: []
-            };
+            buckets[key] = { partName: key, staffIdx: staffIdx, events: [] };
+        } else if (staffIdx < buckets[key].staffIdx) {
+            buckets[key].staffIdx = staffIdx;
         }
 
-        if (staff.staffIdx < buckets[key].staffIdx) {
-            buckets[key].staffIdx = staff.staffIdx;
-        }
-
-        for (var e = 0; e < staff.events.length; e++) {
-            var ev = staff.events[e];
-            if (!RulePredicates.isTextualKind(ev, canonical)) continue;
-            buckets[key].events.push({
-                text: ev.text,
-                rawText: ev.rawText,
-                tick: ev.tick,
-                measure: ev.measure,
-                staffIdx: staff.staffIdx
-            });
+        for (var k = 0; k < textualKinds.length; k++) {
+            var ids = byStaff[textualKinds[k]] || [];
+            for (var i = 0; i < ids.length; i++) {
+                var ev = snapshot.events[ids[i]];
+                buckets[key].events.push({
+                    text: ev.textNorm,
+                    rawText: ev.textRaw,
+                    tick: ev.tick,
+                    measure: ev.measure,
+                    staffIdx: ev.staffIdx
+                });
+            }
         }
     }
 
