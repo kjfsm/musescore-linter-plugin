@@ -1,5 +1,4 @@
 .pragma library
-.import "lexicon.js" as Lexicon
 
 function getCanonical(ir) {
     if (ir && ir.registry && ir.registry.canonical) {
@@ -36,13 +35,7 @@ function isDynamicMark(ev, ir) {
     var subStyle = (ev && ev.subStyle ? String(ev.subStyle) : "").toLowerCase();
     if (subStyle.indexOf("dynamic") !== -1) return true;
 
-    // 3) 最終フォールバック: text/rawText の語彙判定
-    var t = (ev && ev.text ? ev.text : "").toLowerCase();
-    var raw = (ev && ev.rawText ? ev.rawText : "").toLowerCase();
-    if (t.indexOf("dynamic") === 0 || raw.indexOf("dynamic") === 0) return true;
-
-    var normalized = normalizeToken(raw || t);
-    return !!Lexicon.DYNAMIC_TOKENS[normalized];
+    return false;
 }
 
 function eventsAtTick(ir, tick, staffIdx) {
