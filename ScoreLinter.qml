@@ -62,16 +62,18 @@ MuseScore {
         var hairpins = [];
         if (!curScore) return hairpins;
         try {
-            curScore.selection.selectRange(
-                curScore.firstSegment.tick,
-                curScore.lastSegment.tick + 1,
-                0, curScore.nstaves
-            );
+            // selectRange はスパナーセグメントを返さないため、
+            // cmd("select-all") を使用して全要素（ヘアピン含む）を取得する
+            cmd("select-all");
             var elements = curScore.selection.elements;
+            console.log("[ScoreLinter] select-all returned " + elements.length + " elements");
             var seen = {};
+            // Element.HAIRPIN_SEGMENT が未定義の場合のフォールバック（数値 72）
+            var HAIRPIN_SEG_TYPE = (typeof Element.HAIRPIN_SEGMENT !== "undefined")
+                ? Element.HAIRPIN_SEGMENT : 72;
             for (var i = 0; i < elements.length; i++) {
                 var el = elements[i];
-                if (el.type === Element.HAIRPIN_SEGMENT) {
+                if (el.type === HAIRPIN_SEG_TYPE) {
                     var hp = el.parent;
                     var startTick = (typeof hp.spannerTick === "object")
                         ? hp.spannerTick.ticks : hp.spannerTick;
@@ -87,6 +89,17 @@ MuseScore {
                         endTick: startTick + durTicks
                     });
                 }
+            }
+            // 診断: ヘアピンが見つからない場合、要素タイプの分布をログ出力
+            if (hairpins.length === 0 && elements.length > 0) {
+                var typeCounts = {};
+                for (var j = 0; j < Math.min(elements.length, 200); j++) {
+                    var t = elements[j].type;
+                    typeCounts[t] = (typeCounts[t] || 0) + 1;
+                }
+                console.log("[ScoreLinter] no hairpins found; element type distribution: " +
+                    JSON.stringify(typeCounts));
+                console.log("[ScoreLinter] expected HAIRPIN_SEGMENT type = " + HAIRPIN_SEG_TYPE);
             }
             cmd("escape");
         } catch (e) {
