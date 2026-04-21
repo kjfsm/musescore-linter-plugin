@@ -1,5 +1,8 @@
 .pragma library
 .import "enumRegistry.js" as EnumRegistry
+.import "logger.js" as Logger
+
+var log = Logger.make("snapshot");
 
 function getPartName(score, staffIdx) {
     if (!score.parts) return "Staff " + (staffIdx + 1);
@@ -73,10 +76,7 @@ function appendEvent(snapshot, payload) {
     }
     pushIndexedId(snapshot.index.byStaffAndKind[ev.staffIdx], ev.kind, ev.id);
 
-    if (ev.tick > snapshot.meta.lastTick) {
-        snapshot.meta.lastTick = ev.tick;
-    }
-
+    if (ev.tick > snapshot.meta.lastTick) snapshot.meta.lastTick = ev.tick;
     return ev;
 }
 
@@ -168,43 +168,6 @@ function processStaffElements(seg, measureNum, staffIdx, registry, snapshot) {
     }
 }
 
-function buildLegacyStaves(snapshot) {
-    var staves = [];
-    for (var s = 0; s < snapshot.meta.parts.length; s++) {
-        staves.push({
-            staffIdx: s,
-            partName: snapshot.meta.parts[s].partName,
-            events: []
-        });
-    }
-
-    for (var i = 0; i < snapshot.events.length; i++) {
-        var ev = snapshot.events[i];
-        if (ev.staffIdx < 0 || ev.staffIdx >= staves.length) continue;
-
-        var legacyEv = {
-            type: ev.type,
-            kind: ev.kind,
-            tick: ev.tick,
-            measure: ev.measure,
-            voice: ev.voice,
-            subtype: ev.subtype,
-            subStyle: ev.subStyle,
-            tempo: ev.tempo,
-            text: ev.textNorm,
-            rawText: ev.textRaw
-        };
-
-        if (ev.duration !== undefined) legacyEv.duration = ev.duration;
-        if (ev.barlineType !== undefined) legacyEv.barlineType = ev.barlineType;
-        if (ev.barlineKind !== undefined) legacyEv.barlineKind = ev.barlineKind;
-
-        staves[ev.staffIdx].events.push(legacyEv);
-    }
-
-    return staves;
-}
-
 function buildMetaParts(score, numStaves) {
     var parts = [];
     for (var i = 0; i < numStaves; i++) {
@@ -217,10 +180,8 @@ function buildMetaParts(score, numStaves) {
 }
 
 // E: QML 側から渡される Element/BarLineType 列挙型
-function buildSnapshot(score, E, options) {
+function buildSnapshot(score, E) {
     var registry = EnumRegistry.buildEnumRegistry(E);
-    var opts = options || {};
-    var includeLegacyStaves = opts.includeLegacyStaves !== false;
     var numStaves = score.nstaves;
 
     var snapshot = {
@@ -232,7 +193,7 @@ function buildSnapshot(score, E, options) {
             lastTick: 0
         },
         registry: { canonical: registry.canonical },
-        unresolvedAnnotations: []
+        derived: null
     };
 
     for (var s = 0; s < numStaves; s++) {
@@ -242,50 +203,32 @@ function buildSnapshot(score, E, options) {
     var measureNum = 1;
     var m = score.firstMeasure;
     while (m) {
-        var seg = m.firstSegment;
-        var measureEndTick = null;
-        if (m.nextMeasure && m.nextMeasure.firstSegment) {
-            measureEndTick = m.nextMeasure.firstSegment.tick;
-        }
-
-        while (seg) {
-            if (measureEndTick !== null && seg.tick >= measureEndTick) break;
-
-            processAnnotations(seg, measureNum, registry, snapshot);
-            for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
-                processStaffElements(seg, measureNum, staffIdx, registry, snapshot);
+        try {
+            var seg = m.firstSegment;
+            var measureEndTick = null;
+            if (m.nextMeasure && m.nextMeasure.firstSegment) {
+                measureEndTick = m.nextMeasure.firstSegment.tick;
             }
 
-            seg = seg.next;
+            while (seg) {
+                if (measureEndTick !== null && seg.tick >= measureEndTick) break;
+
+                processAnnotations(seg, measureNum, registry, snapshot);
+                for (var staffIdx = 0; staffIdx < numStaves; staffIdx++) {
+                    processStaffElements(seg, measureNum, staffIdx, registry, snapshot);
+                }
+                seg = seg.next;
+            }
+        } catch (e) {
+            log.warn("measure " + measureNum + " の解析中にエラー: " + e);
         }
 
         measureNum++;
         m = m.nextMeasure;
     }
 
-    if (includeLegacyStaves) {
-        snapshot.staves = buildLegacyStaves(snapshot);
-    }
-
-    for (var i = 0; i < snapshot.events.length; i++) {
-        var ev = snapshot.events[i];
-        if (ev.scope !== "global" || ev.staffIdx !== -1) continue;
-        snapshot.unresolvedAnnotations.push({
-            type: ev.type,
-            kind: ev.kind,
-            text: ev.textNorm,
-            rawText: ev.textRaw,
-            tick: ev.tick,
-            measure: ev.measure,
-            subtype: ev.subtype,
-            subStyle: ev.subStyle,
-            tempo: ev.tempo,
-            staffIdx: -1,
-            annotationScope: "unresolved"
-        });
-    }
-
-    console.log("[ScoreLinter] snapshot(LintIR): events=" + snapshot.events.length
-        + ", staves=" + (snapshot.staves ? snapshot.staves.length : 0));
+    log.info("LintIR を生成: events=" + snapshot.events.length
+        + ", parts=" + snapshot.meta.parts.length
+        + ", lastTick=" + snapshot.meta.lastTick);
     return snapshot;
 }
