@@ -168,3 +168,44 @@ npm test    # node test/runner.js
 - `test/irBuilder.js` で最小の LintIR を組み立てる
 - `test/loader.js` が `.pragma library` / `.import` を剥がして vm で評価（QML ランタイム不要）
 - 新しい checker を追加したら `test/runner.js` にテストケースを追加する
+
+---
+
+## リリースフロー（Changeset）
+
+### 変更内容の記録
+
+機能追加・バグ修正の PR には必ず changeset ファイルを含める。
+
+```bash
+npm run changeset   # patch / minor / major を選択し、変更内容を記述
+```
+
+生成された `.changeset/*.md` をコミットして PR に含める。
+
+### バージョン種別の目安
+
+| 種別 | 用途 |
+|---|---|
+| `patch` | バグ修正・ドキュメント更新・内部リファクタリング |
+| `minor` | 新しい checker の追加・機能追加 |
+| `major` | 破壊的変更（LintIR スキーマ変更など） |
+
+### 自動リリースの流れ
+
+1. changeset 入り PR を main にマージ
+2. GitHub Actions が **「バージョンアップ」PR** を自動作成（`package.json` バージョン bump + `CHANGELOG.md` 更新）
+3. 「バージョンアップ」PR をマージ → GitHub Release（zip 添付）が自動作成される
+
+### ファイル構成（追加分）
+
+```
+.changeset/
+  config.json        Changeset 設定（baseBranch: main）
+  *.md               変更内容の記録ファイル（自動生成）
+scripts/
+  release.js         GitHub Release 作成スクリプト（changesets/action から呼ばれる）
+.github/workflows/
+  ci.yml             push / PR で npm test を実行
+  release.yml        main push 時にリリースフローを実行
+```
