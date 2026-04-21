@@ -1,0 +1,35 @@
+name: リリース
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: リリース
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.js のセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: 依存関係のインストール
+        run: npm install
+
+      - name: Changeset アクションの実行
+        uses: changesets/action@v1
+        with:
+          publish: npm run release
+          title: "バージョンアップ"
+          commit: "chore: バージョンアップ"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
