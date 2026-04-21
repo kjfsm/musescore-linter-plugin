@@ -94,6 +94,30 @@ npm test   # node test/runner.js
 
 `test/runner.js` は `.pragma library` / `.import` を剥がして vm に読み込み、最小 LintIR で各 checker の挙動を検証します。MuseScore を起動せずに回帰テストが可能です。
 
+## CI / リリースフロー
+
+### CI
+
+push または PR をオープンすると GitHub Actions が自動で `npm test` を実行します。
+
+### リリース手順
+
+本プロジェクトは [Changesets](https://github.com/changesets/changesets) でバージョン管理をしています。
+
+1. **変更内容を記録する**（機能追加・バグ修正の PR に含める）
+
+   ```bash
+   npm run changeset
+   # patch / minor / major を選択し、変更内容を入力
+   # .changeset/*.md が生成されるのでコミットに含める
+   ```
+
+2. **main にマージする**
+   - GitHub Actions がバージョン変更用の **「バージョンアップ」PR** を自動作成します。
+
+3. **「バージョンアップ」PR をマージする**
+   - `package.json` のバージョンが自動で更新され、GitHub Release（zip 添付）が作成されます。
+
 ## パフォーマンスガイド
 
 新しい checker を書くときは、`ir.index` を優先的に活用してください。
