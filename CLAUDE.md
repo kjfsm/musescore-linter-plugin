@@ -25,19 +25,37 @@ MuseScore 4 向けの**楽譜チェック（Lint）プラグイン**。
 ## ファイル構成
 
 ```
-ScoreLinter.qml         プラグイン本体・UI（タブ: 問題 / 設定 / スナップショット）
-snapshot.js             楽譜を走査してチェッカー向けスナップショットを生成
-linter.js               チェッカーを集約して実行・結果をソート
-checkers/
-  CheckerBase.js        共通ユーティリティ・on/off ペアチェッカーのファクトリ
-  PizzArcoChecker.js    pizz. / arco の対応チェック
-  SordinoChecker.js     con sord. / senza sord. の対応チェック
-  SoloTuttiChecker.js   solo / tutti の対応チェック
-  DivisiChecker.js      div. / unis. の対応チェック
-  RestAnnotationChecker.js  休符位置への記号チェック
-  TempoBarlineChecker.js    テンポ変更前の複縦線チェック
-  OpeningTempoChecker.js    冒頭テンポ表記チェック
-  FirstNoteDynamicsChecker.js  各パート冒頭ダイナミクスチェック
+ScoreLinter.qml              プラグインエントリ。Snapshot / Linter を呼び出し、タブ UI を組み立てる
+qml/
+  IssuesPanel.qml            問題タブ（バッジフィルタ・検索・パート/ルールフィルタ・空状態）
+  SettingsPanel.qml          設定タブ（checker 一覧から自動生成）
+  SnapshotPanel.qml          スナップショット（LintIR JSON）表示
+  IssueDelegate.qml          問題 1 行の delegate
+  SeverityBadge.qml          severity 色・カウントバッジ（トグル可能）
+src/
+  snapshot.js                スコア走査 → LintIR 生成
+  linter.js                  全 checker を実行しソート / ensureDerived
+  enumRegistry.js            MuseScore enum を canonical 文字列に正規化
+  issue.js                   Issue 型と createIssue / compareIssues
+  checkerRegistry.js         register / getAll / getById
+  logger.js                  タグ付きロガー
+  checkers/
+    index.js                 全 checker を Registry に登録（唯一の同期点）
+    base/
+      predicates.js          共通述語 + buildPartBuckets
+      textPairChecker.js     on/off ペア型 checker のファクトリ
+    pizzArcoChecker.js       on/off ペア型
+    sordinoChecker.js
+    soloTuttiChecker.js
+    divisiChecker.js
+    restAnnotationChecker.js 独立チェック
+    tempoBarlineChecker.js
+    openingTempoChecker.js
+    firstNoteDynamicsChecker.js
+test/
+  runner.js                  Node.js 用テストランナー（npm test で実行）
+  loader.js                  .pragma library / .import を剥がして vm で評価
+  irBuilder.js               テスト用の簡易 LintIR ビルダ
 ```
 
 ---
@@ -54,69 +72,99 @@ checkers/
 3. **弦楽五重奏（Vn1・Vn2・Va・Vc・Cb）で実際に起きやすい**ものを優先する
    - コピペ後の pizz./arco 消し忘れ、div. 忘れ、senza sord. 忘れ、など
 
-### 優先度が高いルール例（弦楽五重奏寄り）
-
-| ルール | 典型的ミス |
-|---|---|
-| pizz. / arco 対応 | pizz. のまま曲が終わる、別パートの arco をコピペして残る |
-| con sord. / senza sord. 対応 | senza sord. を書き忘れる |
-| div. / unis. 対応 | div. のまま後続のパートが書かれ unis. が抜ける |
-| solo / tutti 対応 | solo 区間が閉じられない |
-| 各パート冒頭ダイナミクス | Vn1 からコピーして他パートのダイナミクスを消し忘れ or 書き忘れ |
-| 冒頭テンポ | テンポ表記ごと消してしまう |
-| テンポ変更前の複縦線 | リハーサルマーク直前に複縦線を入れ忘れる |
-| 休符位置への記号 | 休符の上に pizz./arco/強弱記号が付いている |
-
 ### 連桁（Beam）関連
 
 **このプラグインでは対応しない。** 連桁調整は別プラグインで扱う。
 
 ---
 
-## 新しいチェッカーを追加する手順
+## 新しい checker を追加する手順
 
-1. `checkers/` 以下に `XxxChecker.js` を作成する
-   - on/off ペア型なら `CheckerBase.js` の `createTextPairChecker()` を再利用する
-   - 単独チェック型なら `CheckerBase.js` のユーティリティ関数を参照する
-2. `linter.js` の `getCheckerList()` にチェッカーを追加する
-3. `ScoreLinter.qml` に設定トグル（`rule<Name>` の bool）とラベルを追加する
-4. README.md を更新する
+1. `src/checkers/xxxChecker.js` を作成し `var checker = { ... }` を定義
+   - 必須プロパティ: `id, name, description, category, severity, defaultEnabled, run(ir)`
+   - Issue は `src/issue.js` の `createIssue(checker, fields)` 経由で生成
+   - on/off ペア型なら `src/checkers/base/textPairChecker.js` の `createTextPairChecker()` を利用
+2. `src/checkers/index.js` に `import` と `Registry.register(X.checker)` を 1 行ずつ追加（**唯一の同期点**）
+3. `test/runner.js` にテストケースを追加（fixture は `irBuilder.buildIR({...})` で構築）
+4. README の「チェック項目」表を更新
+
+**QML（ScoreLinter.qml / qml/）と Settings の永続化キーは一切触る必要はない。**
+設定 UI は `Linter.getCheckerList()` の結果から自動生成され、ON/OFF は `rulesJson` (JSON 文字列) として保存される。
 
 ---
 
-## スナップショット仕様（概要）
-
-`snapshot.js` が生成するオブジェクト（チェッカーへの入力）:
+## Checker 契約
 
 ```js
 {
-  parts: [...],         // パート名の配列
-  staves: [...],        // スタッフ情報
-  measures: [           // 小節ごとのデータ
-    {
-      measureNumber,
-      startTick,
-      endTick,
-      barlineAtEnd,     // "double" | "other" | null
-      staves: [
-        {
-          staffIdx,
-          partIdx,
-          annotations: [...],   // テキスト注記（tempo, staff text 等）
-          elements: [...]        // 音符・休符
-        }
-      ]
-    }
-  ]
+  id: string,                              // 必須: kebab-case、Registry キー
+  name: string,                            // 必須: UI 表示名
+  description: string,                     // 必須: 設定タブの説明
+  category: "articulation" | "dynamics" | "tempo" | "notation" | ...,  // 必須
+  severity: "error" | "warning" | "info",  // 必須: 検出 issue のデフォルト
+  defaultEnabled: boolean,                 // 必須
+  run: function(ir) -> Issue[]             // 必須
 }
 ```
 
----
+## Issue 契約
 
-## 結果の severity 基準
+```js
+{
+  ruleId: string,
+  severity: "error" | "warning" | "info",
+  category: string,
+  message: string,
+  partName: string,       // global は ""
+  staffIdx: number,       // global は -1
+  measure: number,        // 0 = 不定
+  tick: number,           // 0 = 不定
+  detail: object | null   // 追加情報（前回指示小節など）
+}
+```
+
+## severity 基準
 
 | レベル | 用途 |
 |---|---|
 | `error` | 再生・出版に支障が出るレベルの漏れ（冒頭テンポなし、冒頭ダイナミクスなし等） |
 | `warning` | on/off の対応漏れ（pizz. のまま終わる等） |
 | `info` | あると望ましい記載の漏れ（複縦線等） |
+
+---
+
+## LintIR（概要）
+
+```js
+{
+  events: [ { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw, ... } ],
+  index: {
+    byTick, byKind, byStaff, byStaffAndKind   // staffIdx === -1 は global scope
+  },
+  meta: { parts: [{staffIdx, partName}], firstMusicTickByStaff, lastTick },
+  registry: { canonical: { elementKinds, barlineKinds } },
+  derived: { firstChordByStaff, annotationIdsByTick, globalAnnotationIdsByTick }
+}
+```
+
+`ir.staves` / `ir.unresolvedAnnotations` は廃止。global scope の注記は `ir.index.byStaff[-1]` で参照する。
+
+---
+
+## パフォーマンスガイド
+
+1. **index を使う**: `ir.index.byKind[K]` / `byStaffAndKind[s][K]` / `byTick[t]` から必要なイベントだけを取り出す。`ir.events` の全件ループは避ける。
+2. **derived に乗せる**: 複数 checker が共有する前処理（例: `firstChordByStaff`）は `linter.js` の `ensureDerived` に追加し、`ir.derived.xxx` から参照する。
+3. **例外は catch しない**: 各 checker で try/catch を書く必要はない。`linter.runAllCheckers` が全体で catch し、失敗しても他の checker は走る。
+
+---
+
+## テスト
+
+```bash
+npm test    # node test/runner.js
+```
+
+- `test/irBuilder.js` で最小の LintIR を組み立てる
+- `test/loader.js` が `.pragma library` / `.import` を剥がして vm で評価（QML ランタイム不要）
+- 新しい checker を追加したら `test/runner.js` にテストケースを追加する

@@ -1,0 +1,9 @@
+{
+  "name": "musescore-linter-plugin",
+  "version": "2.0.0",
+  "private": true,
+  "description": "MuseScore 4 向け楽譜チェック（Lint）プラグイン",
+  "scripts": {
+    "test": "node test/runner.js"
+  }
+}
