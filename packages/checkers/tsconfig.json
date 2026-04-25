@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "out",
+    "rootDir": ".",
+    "paths": {
+      "@musescore-linter/core": ["../core/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["typecheck"],
+      "outputs": []
+    },
+    "//#build": {
+      "dependsOn": [
+        "@musescore-linter/core#test",
+        "@musescore-linter/checkers#test"
+      ],
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "packages/core/src/**",
+        "packages/checkers/src/**"
+      ],
+      "outputs": ["dist/**"]
+    }
+  }
+}
