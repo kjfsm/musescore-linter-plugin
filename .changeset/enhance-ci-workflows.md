@@ -1,5 +1,5 @@
 ---
-"musescore-linter-plugin": patch
+"@musescore-linter/core": patch
 ---
 
 CI ワークフローをさらに強化
