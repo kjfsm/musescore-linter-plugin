@@ -10,20 +10,29 @@ Rectangle {
     property bool canJump: !!issue && issue.ruleId !== "" && issue.ruleId !== "internal"
 
     readonly property var palette_: {
-        "error":   { indicator: "#e53935", text: "#c62828" },
-        "warning": { indicator: "#fb8c00", text: "#ef6c00" },
-        "info":    { indicator: "#43a047", text: "#2e7d32" }
+        "error":   { border: "#EF5350", bgHover: "#FFEBEE", tag: "#FFCDD2", tagText: "#C62828" },
+        "warning": { border: "#FFA726", bgHover: "#FFF8E1", tag: "#FFE0B2", tagText: "#E65100" },
+        "info":    { border: "#42A5F5", bgHover: "#E3F2FD", tag: "#BBDEFB", tagText: "#1565C0" }
     }
     readonly property var pal: issue ? (palette_[issue.severity] || palette_.info) : palette_.info
 
     signal jumpRequested(var issue)
 
     width: parent ? parent.width : 0
-    height: content.implicitHeight + 14
-    color: mouseArea.containsMouse ? "#eef3f8" : (alternate ? "#f8f8f8" : "#ffffff")
-    border.color: "#e4e4e4"
-    border.width: 1
-    radius: 3
+    height: layout.implicitHeight + 16
+    color: mouseArea.containsMouse ? pal.bgHover : (alternate ? "#FAFAFA" : "#FFFFFF")
+    radius: 4
+
+    Behavior on color { ColorAnimation { duration: 80 } }
+
+    // 左ボーダー（severity カラー）
+    Rectangle {
+        width: 3
+        height: parent.height
+        radius: 2
+        color: pal.border
+        anchors.left: parent.left
+    }
 
     MouseArea {
         id: mouseArea
@@ -34,53 +43,84 @@ Rectangle {
     }
 
     RowLayout {
-        id: content
-        anchors.fill: parent
-        anchors.margins: 8
-        spacing: 10
-
-        Rectangle {
-            width: 10; height: 10; radius: 5
-            color: pal.indicator
-            Layout.alignment: Qt.AlignTop
-            Layout.topMargin: 4
+        id: layout
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            leftMargin: 12
+            rightMargin: 8
+            topMargin: 8
         }
+        spacing: 8
 
+        // 本文エリア
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 3
+            spacing: 4
 
+            // メタ行: パートタグ + ルールID + 小節番号
             RowLayout {
-                spacing: 6
+                spacing: 5
                 Layout.fillWidth: true
 
-                Label {
-                    text: (issue ? issue.severity : "").toUpperCase()
-                    color: pal.text
-                    font.bold: true
-                    font.pixelSize: 10
+                // パート名タグ
+                Rectangle {
+                    visible: !!issue && issue.partName && issue.partName.length > 0
+                    implicitWidth: partLabel.implicitWidth + 8
+                    implicitHeight: 16
+                    radius: 3
+                    color: pal.tag
+                    Label {
+                        id: partLabel
+                        anchors.centerIn: parent
+                        text: issue ? issue.partName : ""
+                        color: pal.tagText
+                        font.bold: true
+                        font.pixelSize: 10
+                    }
                 }
+
+                // ルール ID
                 Label {
                     visible: !!issue && !!issue.ruleId && issue.ruleId !== "internal"
                     text: issue ? issue.ruleId : ""
-                    color: "#888888"
+                    color: "#9E9E9E"
                     font.pixelSize: 10
+                    font.italic: true
                 }
+
                 Item { Layout.fillWidth: true }
+
+                // 小節番号（右寄せ）
                 Label {
                     visible: !!issue && issue.measure > 0
-                    text: issue ? ("小節 " + issue.measure) : ""
-                    color: "#888888"
+                    text: issue ? ("m." + issue.measure) : ""
+                    color: "#BDBDBD"
                     font.pixelSize: 10
+                    font.family: "monospace"
                 }
             }
 
+            // メッセージ本文
             Label {
                 text: issue ? (issue.message || "") : ""
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
-                font.pixelSize: 13
+                font.pixelSize: 12
+                color: "#212121"
+                bottomPadding: 2
             }
+        }
+
+        // ジャンプアイコン
+        Label {
+            visible: canJump && mouseArea.containsMouse
+            text: "→"
+            color: pal.border
+            font.pixelSize: 14
+            font.bold: true
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 }

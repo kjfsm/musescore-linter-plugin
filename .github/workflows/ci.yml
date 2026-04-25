@@ -7,18 +7,39 @@ on:
     branches: ["**"]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Node.js のセットアップ
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Turborepo キャッシュ
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
 
       - name: 依存関係のインストール
-        run: npm install
+        run: pnpm install --frozen-lockfile
+
+      - name: 型チェック
+        run: pnpm typecheck
 
       - name: テストの実行
-        run: npm test
+        run: pnpm test
+
+      - name: ビルド
+        run: pnpm build

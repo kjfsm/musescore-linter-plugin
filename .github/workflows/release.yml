@@ -17,18 +17,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Node.js のセットアップ
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "22"
+          cache: "pnpm"
 
       - name: 依存関係のインストール
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Changeset アクションの実行
         uses: changesets/action@v1
         with:
-          publish: npm run release
+          publish: pnpm release
           title: "バージョンアップ"
           commit: "chore: バージョンアップ"
         env:

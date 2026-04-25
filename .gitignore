@@ -1,3 +1,7 @@
 node_modules/
 *.zip
 .DS_Store
+.turbo/
+out/
+packages/*/dist/
+packages/*/out/

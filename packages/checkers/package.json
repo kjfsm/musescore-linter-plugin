@@ -1,0 +1,15 @@
+{
+  "name": "@musescore-linter/checkers",
+  "version": "2.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "echo 'no separate build for checkers (bundled by root)'"
+  },
+  "dependencies": {
+    "@musescore-linter/core": "workspace:*"
+  }
+}

@@ -8,22 +8,24 @@ Rectangle {
     property string severity: "info"
     property int count: 0
     property bool active: true
-    property bool showCount: true
 
     readonly property var palette_: {
-        "error":   { bg: "#fdecea", fg: "#c62828", dot: "#e53935", dim: "#f8f8f8" },
-        "warning": { bg: "#fff4e5", fg: "#ef6c00", dot: "#fb8c00", dim: "#f8f8f8" },
-        "info":    { bg: "#e8f5e9", fg: "#2e7d32", dot: "#43a047", dim: "#f8f8f8" }
+        "error":   { bg: "#FFEBEE", fg: "#C62828", dot: "#E53935", inactiveBg: "#F5F5F5", inactiveFg: "#9E9E9E" },
+        "warning": { bg: "#FFF8E1", fg: "#E65100", dot: "#FB8C00", inactiveBg: "#F5F5F5", inactiveFg: "#9E9E9E" },
+        "info":    { bg: "#E3F2FD", fg: "#1565C0", dot: "#1E88E5", inactiveBg: "#F5F5F5", inactiveFg: "#9E9E9E" }
     }
-    readonly property var entry: palette_[severity] || palette_.info
+    readonly property var pal: palette_[severity] || palette_.info
 
-    implicitHeight: 22
-    implicitWidth: rowLayout.implicitWidth + 14
-    radius: 11
-    color: active ? entry.bg : "#f0f0f0"
-    border.color: active ? entry.fg : "#cccccc"
-    border.width: active ? 1 : 1
-    opacity: active ? 1.0 : 0.55
+    implicitHeight: 26
+    implicitWidth: row.implicitWidth + 16
+    radius: 13
+    color: (active && count > 0) ? pal.bg : pal.inactiveBg
+    border.color: (active && count > 0) ? pal.dot : "#E0E0E0"
+    border.width: 1
+    opacity: count === 0 ? 0.5 : 1.0
+
+    Behavior on color { ColorAnimation { duration: 100 } }
+    Behavior on opacity { NumberAnimation { duration: 100 } }
 
     signal clicked()
 
@@ -34,25 +36,39 @@ Rectangle {
     }
 
     RowLayout {
-        id: rowLayout
+        id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 5
 
         Rectangle {
-            width: 8; height: 8; radius: 4
-            color: active ? entry.dot : "#aaaaaa"
+            width: 7; height: 7; radius: 4
+            color: (active && count > 0) ? pal.dot : pal.inactiveFg
         }
         Label {
-            text: severity.toUpperCase()
-            color: active ? entry.fg : "#666666"
+            text: {
+                if (severity === "error")   return "ERROR";
+                if (severity === "warning") return "WARN";
+                return "INFO";
+            }
+            color: (active && count > 0) ? pal.fg : pal.inactiveFg
             font.bold: true
             font.pixelSize: 10
+            font.letterSpacing: 0.5
         }
-        Label {
-            visible: showCount
-            text: count
-            color: active ? entry.fg : "#666666"
-            font.pixelSize: 11
+        Rectangle {
+            visible: count > 0
+            implicitWidth: Math.max(18, countLabel.implicitWidth + 8)
+            implicitHeight: 16
+            radius: 8
+            color: (active && count > 0) ? pal.dot : pal.inactiveFg
+            Label {
+                id: countLabel
+                anchors.centerIn: parent
+                text: count > 99 ? "99+" : count
+                color: "white"
+                font.bold: true
+                font.pixelSize: 10
+            }
         }
     }
 }

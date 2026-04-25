@@ -10,7 +10,7 @@ Item {
     property var parts: []
     property var checkers: []
 
-    // 内部フィルタ状態
+    // フィルタ状態
     property bool showError: true
     property bool showWarning: true
     property bool showInfo: true
@@ -55,8 +55,7 @@ Item {
             var it = arr[i];
             var part = it.partName ? (it.partName + ": ") : "";
             var measure = it.measure > 0 ? (" 小節" + it.measure) : "";
-            var sev = (it.severity || "info").toUpperCase();
-            lines.push("[" + sev + "] " + part + it.message + measure);
+            lines.push("[" + (it.severity || "info").toUpperCase() + "] " + part + it.message + measure);
         }
         return lines.join("\n");
     }
@@ -65,7 +64,7 @@ Item {
         anchors.fill: parent
         spacing: 6
 
-        // ヘッダー: severity バッジ + コピー
+        // ─── フィルタバー（severity バッジ + 検索 + コンボ + コピー） ───
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
@@ -89,33 +88,32 @@ Item {
                 onClicked: showInfo = !showInfo
             }
 
-            Item { Layout.fillWidth: true }
-
-            Button {
-                text: "問題をコピー"
-                enabled: root.issuesList.length > 0
-                onClicked: root.copyRequested(buildCopyText(filteredIssues()))
-            }
-        }
-
-        // フィルタ: 検索 + パート + ルール
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 6
+            // セパレータ
+            Rectangle { width: 1; height: 22; color: "#E0E0E0" }
 
             TextField {
                 id: searchField
                 Layout.fillWidth: true
-                placeholderText: "検索 (メッセージ・パート名)"
+                Layout.minimumWidth: 80
+                placeholderText: "検索…"
                 text: root.searchText
+                leftPadding: 8
+                font.pixelSize: 12
                 onTextChanged: root.searchText = text
+                background: Rectangle {
+                    color: "#F5F5F5"
+                    radius: 4
+                    border.color: searchField.activeFocus ? "#1E88E5" : "#E0E0E0"
+                    border.width: 1
+                }
             }
 
             ComboBox {
                 id: partCombo
-                Layout.preferredWidth: 140
+                Layout.preferredWidth: 110
+                font.pixelSize: 11
                 model: {
-                    var m = ["(全パート)"];
+                    var m = ["パート ▾"];
                     for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i].partName);
                     return m;
                 }
@@ -126,9 +124,10 @@ Item {
 
             ComboBox {
                 id: ruleCombo
-                Layout.preferredWidth: 160
+                Layout.preferredWidth: 120
+                font.pixelSize: 11
                 model: {
-                    var m = ["(全ルール)"];
+                    var m = ["ルール ▾"];
                     for (var i = 0; i < root.checkers.length; i++) m.push(root.checkers[i].id);
                     return m;
                 }
@@ -136,61 +135,104 @@ Item {
                     root.ruleFilter = currentIndex === 0 ? "" : model[currentIndex];
                 }
             }
+
+            Button {
+                text: "コピー"
+                font.pixelSize: 11
+                enabled: root.issuesList.length > 0
+                onClicked: root.copyRequested(buildCopyText(filteredIssues()))
+                background: Rectangle {
+                    color: parent.pressed ? "#E3F2FD" : (parent.hovered ? "#F3F9FF" : "white")
+                    border.color: "#BBDEFB"
+                    border.width: 1
+                    radius: 4
+                }
+            }
         }
 
-        // リスト / 空状態
+        // 区切り線
         Rectangle {
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            color: "transparent"
+            height: 1
+            color: "#EEEEEE"
+        }
 
+        // ─── Issue リスト / 空状態 ───
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            // リスト
             ListView {
                 id: issuesView
                 anchors.fill: parent
                 clip: true
-                spacing: 3
+                spacing: 4
                 model: filteredIssues()
+                visible: filteredIssues().length > 0
+
                 delegate: IssueDelegate {
                     issue: modelData
-                    alternate: index % 2 === 0
+                    alternate: index % 2 !== 0
+                    width: issuesView.width
                     onJumpRequested: root.jumpRequested(issue)
                 }
-                visible: filteredIssues().length > 0
+
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
             }
 
             // 空状態
             ColumnLayout {
                 anchors.centerIn: parent
-                spacing: 6
+                spacing: 10
                 visible: filteredIssues().length === 0
 
                 Label {
                     Layout.alignment: Qt.AlignHCenter
+                    font.pixelSize: 32
                     text: {
-                        if (!root.hasRun) return "「実行」ボタンを押してチェックを開始";
-                        if (root.issuesList.length === 0) return "✓  問題は見つかりませんでした";
-                        return "フィルタ条件に一致する問題はありません";
+                        if (!root.hasRun) return "✎";
+                        if (root.issuesList.length === 0) return "✓";
+                        return "⊘";
                     }
-                    color: root.hasRun && root.issuesList.length === 0 ? "#2e7d32" : "#888888"
-                    font.pixelSize: root.hasRun && root.issuesList.length === 0 ? 16 : 13
-                    font.bold: root.hasRun && root.issuesList.length === 0
+                    color: {
+                        if (!root.hasRun) return "#BDBDBD";
+                        if (root.issuesList.length === 0) return "#4CAF50";
+                        return "#BDBDBD";
+                    }
                 }
 
                 Label {
                     Layout.alignment: Qt.AlignHCenter
-                    visible: root.hasRun && root.issuesList.length > 0
+                    font.pixelSize: 14
+                    font.bold: !root.hasRun || root.issuesList.length === 0
                     text: {
-                        var filters = [];
-                        if (!root.showError) filters.push("ERROR 非表示");
-                        if (!root.showWarning) filters.push("WARNING 非表示");
-                        if (!root.showInfo) filters.push("INFO 非表示");
-                        if (root.partFilter !== "") filters.push("パート: " + root.partFilter);
-                        if (root.ruleFilter !== "") filters.push("ルール: " + root.ruleFilter);
-                        if (root.searchText !== "") filters.push("検索: " + root.searchText);
-                        return filters.length > 0 ? filters.join(" / ") : "";
+                        if (!root.hasRun) return "「実行」ボタンでチェック開始";
+                        if (root.issuesList.length === 0) return "問題は見つかりませんでした";
+                        return "フィルタ条件に一致する問題はありません";
                     }
-                    color: "#aaaaaa"
+                    color: {
+                        if (root.hasRun && root.issuesList.length === 0) return "#388E3C";
+                        return "#9E9E9E";
+                    }
+                }
+
+                // アクティブなフィルタの説明
+                Label {
+                    Layout.alignment: Qt.AlignHCenter
+                    visible: root.hasRun && root.issuesList.length > 0
                     font.pixelSize: 11
+                    color: "#BDBDBD"
+                    text: {
+                        var f = [];
+                        if (!root.showError)   f.push("ERROR 非表示");
+                        if (!root.showWarning) f.push("WARN 非表示");
+                        if (!root.showInfo)    f.push("INFO 非表示");
+                        if (root.partFilter)   f.push("パート: " + root.partFilter);
+                        if (root.ruleFilter)   f.push("ルール: " + root.ruleFilter);
+                        if (root.searchText)   f.push("\"" + root.searchText + "\"");
+                        return f.join("  ·  ");
+                    }
                 }
             }
         }
