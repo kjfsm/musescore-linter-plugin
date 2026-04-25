@@ -1,5 +1,5 @@
 ---
-"musescore-linter-plugin": minor
+"@musescore-linter/core": minor
 ---
 
 TypeScript + pnpm monorepo への全面移行
