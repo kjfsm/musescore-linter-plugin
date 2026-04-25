@@ -1,7 +1,11 @@
-import { buildSnapshot, runAllCheckers, getCheckerList } from "@musescore-linter/core";
 import { registerAll } from "@musescore-linter/checkers";
+import {
+	buildSnapshot,
+	getCheckerList,
+	runAllCheckers,
+} from "@musescore-linter/core";
 
 // バンドルロード時に全チェッカーを登録
 registerAll();
 
-export { buildSnapshot, runAllCheckers, getCheckerList };
+export { buildSnapshot, getCheckerList, runAllCheckers };

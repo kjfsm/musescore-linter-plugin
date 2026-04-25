@@ -11,12 +11,13 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
 jobs:
   release:
     name: リリース
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,10 +35,28 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Changeset アクションの実行
+        id: changesets
         uses: changesets/action@v1
         with:
-          publish: pnpm release
           title: "バージョンアップ"
           commit: "chore: バージョンアップ"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: GitHub Release の作成
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          ZIP="musescore-linter-plugin-${VERSION}.zip"
+
+          if gh release view "${TAG}" > /dev/null 2>&1; then
+            echo "リリース ${TAG} は既に存在します。スキップします。"
+            exit 0
+          fi
+
+          zip -r "${ZIP}" ScoreLinter.qml qml/ src/ README.md
+          gh release create "${TAG}" "${ZIP}" --title "${TAG}" --generate-notes
+          echo "リリース ${TAG} を作成しました。"

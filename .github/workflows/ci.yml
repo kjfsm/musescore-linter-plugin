@@ -13,6 +13,20 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+      - name: 依存関係のインストール
+        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Biome チェック
+        run: pnpm lint
+
   # 型チェックを独立ジョブとして並列実行し、型エラーを早期にフィードバックする
   typecheck:
     runs-on: ubuntu-latest
