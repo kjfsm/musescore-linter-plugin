@@ -5,8 +5,9 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "build": "tsx scripts/build.ts",
+    "pipeline": "turbo run typecheck test build",
     "test": "vitest run",
-    "typecheck": "turbo typecheck",
+    "typecheck": "turbo run typecheck",
     "dev": "vitest",
     "changeset": "changeset",
     "version": "changeset version",

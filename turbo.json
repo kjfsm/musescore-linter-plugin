@@ -5,11 +5,20 @@
       "dependsOn": ["^typecheck"]
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["typecheck"],
       "outputs": []
     },
-    "build": {
-      "dependsOn": ["^build"],
+    "//#build": {
+      "dependsOn": [
+        "@musescore-linter/core#test",
+        "@musescore-linter/checkers#test"
+      ],
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "packages/core/src/**",
+        "packages/checkers/src/**"
+      ],
       "outputs": ["dist/**"]
     }
   }

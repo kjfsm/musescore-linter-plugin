@@ -6,8 +6,7 @@
   "types": "src/index.ts",
   "scripts": {
     "typecheck": "tsc -p tsconfig.check.json",
-    "test": "vitest run",
-    "build": "echo 'no separate build for checkers (bundled by root)'"
+    "test": "vitest run"
   },
   "dependencies": {
     "@musescore-linter/core": "workspace:*"

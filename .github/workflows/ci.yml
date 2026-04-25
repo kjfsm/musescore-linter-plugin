@@ -33,11 +33,5 @@ jobs:
       - name: 依存関係のインストール
         run: pnpm install --frozen-lockfile
 
-      - name: 型チェック
-        run: pnpm typecheck
-
-      - name: テストの実行
-        run: pnpm test
-
-      - name: ビルド
-        run: pnpm build
+      - name: 型チェック・テスト・ビルド
+        run: pnpm pipeline
