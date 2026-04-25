@@ -12,7 +12,8 @@ const zipName = `musescore-linter-plugin-${version}.zip`;
 const zipPath = path.join(ROOT, zipName);
 
 function run(cmd, opts) {
-  return execSync(cmd, { cwd: ROOT, ...opts }).toString().trim();
+  const result = execSync(cmd, { cwd: ROOT, ...opts });
+  return result == null ? "" : result.toString().trim();
 }
 
 // 既存リリースの確認（二重作成防止）
