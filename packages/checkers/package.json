@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
     "build": "echo 'no separate build for checkers (bundled by root)'"
   },

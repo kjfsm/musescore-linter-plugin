@@ -1,9 +1,11 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "outDir": "out",
-    "rootDir": ".",
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
     "paths": {
       "@musescore-linter/core": ["../core/src/index.ts"]
     }
