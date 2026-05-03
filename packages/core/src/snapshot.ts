@@ -1,8 +1,5 @@
 import type {
 	MsAnnotation,
-	MsElement,
-	MsMeasure,
-	MsPart,
 	MsScore,
 	MsSegment,
 } from "@musescore-linter/musescore-api";
