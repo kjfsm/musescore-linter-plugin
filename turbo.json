@@ -13,6 +13,7 @@
 		"//#build": {
 			"description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
 			"dependsOn": [
+				"@musescore-linter/musescore-api#typecheck",
 				"@musescore-linter/core#test",
 				"@musescore-linter/checkers#test"
 			],

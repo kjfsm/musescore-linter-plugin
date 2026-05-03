@@ -45,7 +45,13 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      '@musescore-linter/musescore-api':
+        specifier: workspace:*
+        version: link:../musescore-api
+
+  packages/musescore-api: {}
 
 packages:
 

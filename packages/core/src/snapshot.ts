@@ -1,52 +1,18 @@
+import type {
+	MsAnnotation,
+	MsElement,
+	MsMeasure,
+	MsPart,
+	MsScore,
+	MsSegment,
+} from "@musescore-linter/musescore-api";
 import { buildEnumRegistry, type EnumRegistry } from "./enumRegistry.js";
 import { make } from "./logger.js";
 import type { LintEvent, LintIR, MuseScoreEnums } from "./types.js";
 
 const log = make("snapshot");
 
-// MuseScore API のスコアオブジェクト（QML 経由で渡される）
-interface MuseScoreScore {
-	nstaves: number;
-	parts?: MuseScorePart[];
-	firstMeasure: MuseScoreMeasure | null;
-}
-
-interface MuseScorePart {
-	longName?: string;
-	startTrack: number;
-	endTrack: number;
-}
-
-interface MuseScoreMeasure {
-	firstSegment: MuseScoreSegment | null;
-	nextMeasure: MuseScoreMeasure | null;
-}
-
-interface MuseScoreSegment {
-	tick: number;
-	annotations: MuseScoreAnnotation[];
-	next: MuseScoreSegment | null;
-	elementAt(track: number): MuseScoreElement | null;
-}
-
-interface MuseScoreAnnotation {
-	track?: number;
-	staffIdx?: number;
-	type?: unknown;
-	subtype?: unknown;
-	subStyle?: unknown;
-	tempo?: number;
-	plainText?: string;
-	text?: string;
-}
-
-interface MuseScoreElement {
-	type?: unknown;
-	barLineType?: unknown;
-	duration?: { numerator: number; denominator: number };
-}
-
-function getPartName(score: MuseScoreScore, staffIdx: number): string {
+function getPartName(score: MsScore, staffIdx: number): string {
 	if (!score.parts) return `Staff ${staffIdx + 1}`;
 	let trackOffset = 0;
 	for (const part of score.parts) {
@@ -60,7 +26,7 @@ function getPartName(score: MuseScoreScore, staffIdx: number): string {
 	return `Staff ${staffIdx + 1}`;
 }
 
-function resolveAnnotationStaffIdx(ann: MuseScoreAnnotation): number {
+function resolveAnnotationStaffIdx(ann: MsAnnotation): number {
 	if (ann.track != null && ann.track >= 0) return Math.floor(ann.track / 4);
 	if (ann.staffIdx != null && ann.staffIdx >= 0) return ann.staffIdx;
 	return -1;
@@ -123,7 +89,7 @@ function appendEvent(
 }
 
 function processAnnotations(
-	seg: MuseScoreSegment,
+	seg: MsSegment,
 	measureNum: number,
 	registry: EnumRegistry,
 	ir: LintIR,
@@ -155,7 +121,7 @@ function processAnnotations(
 }
 
 function processStaffElements(
-	seg: MuseScoreSegment,
+	seg: MsSegment,
 	measureNum: number,
 	staffIdx: number,
 	registry: EnumRegistry,
@@ -222,7 +188,7 @@ function processStaffElements(
 }
 
 export function buildSnapshot(
-	score: MuseScoreScore,
+	score: MsScore,
 	E: MuseScoreEnums,
 ): LintIR {
 	const registry = buildEnumRegistry(E);

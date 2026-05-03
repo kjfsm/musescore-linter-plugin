@@ -5,6 +5,5 @@
 		"outDir": "out",
 		"rootDir": "."
 	},
-	"references": [{ "path": "../musescore-api" }],
-	"include": ["src/**/*", "tests/**/*"]
+	"include": ["src/**/*"]
 }
