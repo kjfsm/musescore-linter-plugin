@@ -2,13 +2,16 @@
 	"$schema": "https://turbo.build/schema.json",
 	"tasks": {
 		"typecheck": {
+			"description": "TypeScript の型チェックを実行する。依存パッケージの typecheck が先に完了している必要がある。",
 			"dependsOn": ["^typecheck"]
 		},
 		"test": {
+			"description": "vitest でユニットテストを実行する。typecheck が通過していることが前提。",
 			"dependsOn": ["typecheck"],
 			"outputs": []
 		},
 		"//#build": {
+			"description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
 			"dependsOn": [
 				"@musescore-linter/core#test",
 				"@musescore-linter/checkers#test"
