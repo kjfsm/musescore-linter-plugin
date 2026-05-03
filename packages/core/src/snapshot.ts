@@ -187,10 +187,7 @@ function processStaffElements(
 	}
 }
 
-export function buildSnapshot(
-	score: MsScore,
-	E: MuseScoreEnums,
-): LintIR {
+export function buildSnapshot(score: MsScore, E: MuseScoreEnums): LintIR {
 	const registry = buildEnumRegistry(E);
 	const numStaves = score.nstaves;
 

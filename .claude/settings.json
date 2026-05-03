@@ -1,11 +1,11 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(pnpm *)",
-      "Bash(turbo *)",
-      "Bash(npx turbo *)",
-      "Bash(node *)",
-      "Bash(vitest *)"
-    ]
-  }
+	"permissions": {
+		"allow": [
+			"Bash(pnpm *)",
+			"Bash(turbo *)",
+			"Bash(npx turbo *)",
+			"Bash(node *)",
+			"Bash(vitest *)"
+		]
+	}
 }
