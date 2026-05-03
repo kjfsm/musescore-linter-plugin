@@ -1,11 +1,13 @@
 import { ensureDerived, reset, runAllCheckers } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
+import { divisiChecker } from "../src/divisiChecker.js";
 import { firstNoteDynamicsChecker } from "../src/firstNoteDynamicsChecker.js";
 import { registerAll } from "../src/index.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
 import { pizzArcoChecker } from "../src/pizzArcoChecker.js";
 import { restAnnotationChecker } from "../src/restAnnotationChecker.js";
 import { sordinoChecker } from "../src/sordinoChecker.js";
+import { soloTuttiChecker } from "../src/soloTuttiChecker.js";
 import { tempoBarlineChecker } from "../src/tempoBarlineChecker.js";
 import { BK, buildIR, cleanIR, K } from "./helpers/irBuilder.js";
 
@@ -356,6 +358,150 @@ describe("tempo-barline checker", () => {
 			],
 		});
 		expect(tempoBarlineChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── solo-tutti ─────────────────────────────────────────────────────────────
+
+describe("solo-tutti checker", () => {
+	it("solo のまま曲が終わる → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "solo",
+				textRaw: "solo",
+			},
+		]);
+		expect(soloTuttiChecker.run(ir)).toHaveLength(1);
+	});
+
+	it("solo 連続指示 → warning 1件（前回小節が記録される）", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "solo",
+				textRaw: "solo",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "solo",
+				textRaw: "solo",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 1440,
+				measure: 4,
+				textNorm: "tutti",
+				textRaw: "tutti",
+			},
+		]);
+		const issues = soloTuttiChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].detail?.previousMeasure).toBe(2);
+	});
+
+	it("solo → tutti ペア対応済み → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "solo",
+				textRaw: "solo",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "tutti",
+				textRaw: "tutti",
+			},
+		]);
+		expect(soloTuttiChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── div-unis ────────────────────────────────────────────────────────────────
+
+describe("div-unis checker", () => {
+	it("div. のまま曲が終わる → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "div.",
+				textRaw: "div.",
+			},
+		]);
+		expect(divisiChecker.run(ir)).toHaveLength(1);
+	});
+
+	it("div. 連続指示 → warning 1件（前回小節が記録される）", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "div.",
+				textRaw: "div.",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "div.",
+				textRaw: "div.",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 1440,
+				measure: 4,
+				textNorm: "unis.",
+				textRaw: "unis.",
+			},
+		]);
+		const issues = divisiChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].detail?.previousMeasure).toBe(2);
+	});
+
+	it("div. → unis. ペア対応済み → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "div.",
+				textRaw: "div.",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "unis.",
+				textRaw: "unis.",
+			},
+		]);
+		expect(divisiChecker.run(ir)).toHaveLength(0);
 	});
 });
 
