@@ -8,5 +8,8 @@
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@kjfsm/musescore-plugin-sdk-types": "^0.0.2"
 	}
 }

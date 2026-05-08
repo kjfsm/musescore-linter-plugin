@@ -1,18 +1,12 @@
-import type {
-	MsAnnotation,
-	MsElement,
-	MsMeasure,
-	MsPart,
-	MsScore,
-	MsSegment,
-} from "@musescore-linter/musescore-api";
+import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 import { buildEnumRegistry, type EnumRegistry } from "./enumRegistry.js";
 import { make } from "./logger.js";
 import type { LintEvent, LintIR, MuseScoreEnums } from "./types.js";
 
 const log = make("snapshot");
 
-function getPartName(score: MsScore, staffIdx: number): string {
+function getPartName(score: Score, staffIdx: number): string {
 	if (!score.parts) return `Staff ${staffIdx + 1}`;
 	let trackOffset = 0;
 	for (const part of score.parts) {
@@ -26,7 +20,7 @@ function getPartName(score: MsScore, staffIdx: number): string {
 	return `Staff ${staffIdx + 1}`;
 }
 
-function resolveAnnotationStaffIdx(ann: MsAnnotation): number {
+function resolveAnnotationStaffIdx(ann: TextAnnotation): number {
 	if (ann.track != null && ann.track >= 0) return Math.floor(ann.track / 4);
 	if (ann.staffIdx != null && ann.staffIdx >= 0) return ann.staffIdx;
 	return -1;
@@ -89,7 +83,7 @@ function appendEvent(
 }
 
 function processAnnotations(
-	seg: MsSegment,
+	seg: PluginSegment,
 	measureNum: number,
 	registry: EnumRegistry,
 	ir: LintIR,
@@ -121,7 +115,7 @@ function processAnnotations(
 }
 
 function processStaffElements(
-	seg: MsSegment,
+	seg: PluginSegment,
 	measureNum: number,
 	staffIdx: number,
 	registry: EnumRegistry,
@@ -187,7 +181,7 @@ function processStaffElements(
 	}
 }
 
-export function buildSnapshot(score: MsScore, E: MuseScoreEnums): LintIR {
+export function buildSnapshot(score: Score, E: MuseScoreEnums): LintIR {
 	const registry = buildEnumRegistry(E);
 	const numStaves = score.nstaves;
 
@@ -210,7 +204,7 @@ export function buildSnapshot(score: MsScore, E: MuseScoreEnums): LintIR {
 	let m = score.firstMeasure;
 	while (m) {
 		try {
-			let seg = m.firstSegment;
+			let seg = m.firstSegment as PluginSegment | null;
 			const measureEndTick = m.nextMeasure?.firstSegment?.tick ?? null;
 
 			while (seg) {
@@ -219,7 +213,7 @@ export function buildSnapshot(score: MsScore, E: MuseScoreEnums): LintIR {
 				for (let staffIdx = 0; staffIdx < numStaves; staffIdx++) {
 					processStaffElements(seg, measureNum, staffIdx, registry, ir);
 				}
-				seg = seg.next;
+				seg = seg.next as PluginSegment | null;
 			}
 		} catch (e) {
 			log.warn(`measure ${measureNum} の解析中にエラー: ${e}`);

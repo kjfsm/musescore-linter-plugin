@@ -10,5 +10,8 @@
 	},
 	"dependencies": {
 		"@musescore-linter/musescore-api": "workspace:*"
+	},
+	"devDependencies": {
+		"@kjfsm/musescore-plugin-sdk-types": "^0.0.2"
 	}
 }
