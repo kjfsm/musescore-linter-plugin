@@ -1,5 +1,8 @@
 import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
-import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
+import type {
+	PluginSegment,
+	TextAnnotation,
+} from "@musescore-linter/musescore-api";
 import { buildEnumRegistry, type EnumRegistry } from "./enumRegistry.js";
 import { make } from "./logger.js";
 import type { LintEvent, LintIR, MuseScoreEnums } from "./types.js";
