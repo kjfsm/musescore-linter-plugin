@@ -10,7 +10,6 @@
 		"skipLibCheck": true
 	},
 	"references": [
-		{ "path": "packages/musescore-api" },
 		{ "path": "packages/core" },
 		{ "path": "packages/checkers" }
 	],
