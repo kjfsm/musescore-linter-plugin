@@ -1,3 +1,4 @@
+import { iterateMeasures } from "@kjfsm/musescore-plugin-sdk-helpers";
 import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
 	PluginSegment,
@@ -204,26 +205,20 @@ export function buildSnapshot(score: Score, E: MuseScoreEnums): LintIR {
 	};
 
 	let measureNum = 1;
-	let m = score.firstMeasure;
-	while (m) {
+	for (const m of iterateMeasures(score)) {
 		try {
 			let seg = m.firstSegment as PluginSegment | null;
-			const measureEndTick = m.nextMeasure?.firstSegment?.tick ?? null;
-
 			while (seg) {
-				if (measureEndTick !== null && seg.tick >= measureEndTick) break;
 				processAnnotations(seg, measureNum, registry, ir);
 				for (let staffIdx = 0; staffIdx < numStaves; staffIdx++) {
 					processStaffElements(seg, measureNum, staffIdx, registry, ir);
 				}
-				seg = seg.next as PluginSegment | null;
+				seg = seg.nextInMeasure as PluginSegment | null;
 			}
 		} catch (e) {
 			log.warn(`measure ${measureNum} の解析中にエラー: ${e}`);
 		}
-
 		measureNum++;
-		m = m.nextMeasure;
 	}
 
 	log.info(
