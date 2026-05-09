@@ -31,5 +31,9 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"@kjfsm/musescore-plugin-sdk-helpers": "^0.0.2",
+		"@kjfsm/musescore-plugin-sdk-types": "^0.0.2"
 	}
 }
