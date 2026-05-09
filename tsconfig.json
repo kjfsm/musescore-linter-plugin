@@ -9,9 +9,6 @@
 		"declarationMap": true,
 		"skipLibCheck": true
 	},
-	"references": [
-		{ "path": "packages/core" },
-		{ "path": "packages/checkers" }
-	],
+	"references": [{ "path": "packages/core" }, { "path": "packages/checkers" }],
 	"include": ["src/**/*", "scripts/**/*"]
 }

@@ -35,7 +35,8 @@ export interface ScoreElement extends EngravingItem {
  * `Segment` の `annotations` と `elementAt` を上書きした拡張型。
  * `annotations` の要素を `TextAnnotation`、`elementAt` の戻り値を `ScoreElement` にする。
  */
-export interface PluginSegment extends Omit<Segment, "annotations" | "elementAt"> {
+export interface PluginSegment
+	extends Omit<Segment, "annotations" | "elementAt"> {
 	readonly annotations: TextAnnotation[];
 	elementAt(track: number): ScoreElement | null;
 }

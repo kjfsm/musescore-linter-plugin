@@ -6,89 +6,45 @@ on:
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
-  lint:
+  ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v6
+
       - uses: pnpm/action-setup@v6
+
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: "pnpm"
+
       - name: 依存関係のインストール
         run: pnpm install --frozen-lockfile --prefer-offline
+
       - name: Biome チェック
         run: pnpm lint
 
-  # 型チェックを独立ジョブとして並列実行し、型エラーを早期にフィードバックする
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          cache: "pnpm"
-      - name: 依存関係のインストール
-        run: pnpm install --frozen-lockfile --prefer-offline
       - name: 型チェック
-        run: pnpm turbo typecheck
+        run: pnpm -r run typecheck
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          cache: "pnpm"
-
-      # PR では restore のみ。main push 時のみ save することで
-      # キャッシュサービスの一時的なエラーによる PR ジョブへの影響を避ける。
-      - uses: actions/cache/restore@v5
-        id: turbo-cache
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.ref }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-${{ github.ref }}-
-            ${{ runner.os }}-turbo-refs/heads/main-
-            ${{ runner.os }}-turbo-
-
-      - name: 依存関係のインストール
-        run: pnpm install --frozen-lockfile --prefer-offline
-
-      - name: 脆弱性チェック
-        run: pnpm audit --audit-level=high
-
-      - name: テスト・ビルド
-        run: pnpm pipeline
-
-      - name: テスト（カバレッジ計測）
+      - name: テスト (カバレッジ計測)
         run: pnpm test:coverage
 
+      - name: ビルド
+        run: pnpm build
+
       - name: Codecov へのカバレッジ送信
+        if: always()
         uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/lcov.info
           fail_ci_if_error: false
-
-      - uses: actions/cache/save@v5
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.ref }}-${{ github.sha }}

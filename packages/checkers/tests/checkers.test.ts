@@ -6,8 +6,8 @@ import { registerAll } from "../src/index.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
 import { pizzArcoChecker } from "../src/pizzArcoChecker.js";
 import { restAnnotationChecker } from "../src/restAnnotationChecker.js";
-import { sordinoChecker } from "../src/sordinoChecker.js";
 import { soloTuttiChecker } from "../src/soloTuttiChecker.js";
+import { sordinoChecker } from "../src/sordinoChecker.js";
 import { tempoBarlineChecker } from "../src/tempoBarlineChecker.js";
 import { BK, buildIR, cleanIR, K } from "./helpers/irBuilder.js";
 
