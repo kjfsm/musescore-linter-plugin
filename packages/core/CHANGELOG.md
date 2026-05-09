@@ -1,5 +1,11 @@
 # @musescore-linter/core
 
+## 2.1.1
+
+### Patch Changes
+
+- [#43](https://github.com/kjfsm/musescore-linter-plugin/pull/43) [`bf66404`](https://github.com/kjfsm/musescore-linter-plugin/commit/bf66404524c97a417d997c969c9a9fb5aa76ba78) Thanks [@kjfsm](https://github.com/kjfsm)! - chore: @kjfsm/musescore-plugin-sdk-helpers をインストール
+
 ## 2.1.0
 
 ### Minor Changes
