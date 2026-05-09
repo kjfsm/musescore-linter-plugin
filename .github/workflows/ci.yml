@@ -26,42 +26,20 @@ jobs:
           node-version: "24"
           cache: "pnpm"
 
-      - name: 環境情報
-        run: |
-          set -x
-          node --version
-          pnpm --version
-          pnpm config get store-dir
-          df -h .
-          free -h
-
       - name: 依存関係のインストール
-        run: pnpm install --frozen-lockfile --prefer-offline --reporter=default
-        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Biome チェック
         run: pnpm lint
-        timeout-minutes: 2
 
-      - name: 型チェック (musescore-api)
-        run: pnpm --filter @musescore-linter/musescore-api run typecheck
-        timeout-minutes: 3
-
-      - name: 型チェック (core)
-        run: pnpm --filter @musescore-linter/core run typecheck
-        timeout-minutes: 3
-
-      - name: 型チェック (checkers)
-        run: pnpm --filter @musescore-linter/checkers run typecheck
-        timeout-minutes: 3
+      - name: 型チェック
+        run: pnpm -r run typecheck
 
       - name: テスト (カバレッジ計測)
-        run: pnpm test:coverage -- --reporter=verbose
-        timeout-minutes: 5
+        run: pnpm test:coverage
 
       - name: ビルド
         run: pnpm build
-        timeout-minutes: 3
 
       - name: Codecov へのカバレッジ送信
         if: always()
