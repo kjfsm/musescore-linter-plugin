@@ -1,5 +1,12 @@
 # @musescore-linter/checkers
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [[`bf66404`](https://github.com/kjfsm/musescore-linter-plugin/commit/bf66404524c97a417d997c969c9a9fb5aa76ba78)]:
+  - @musescore-linter/core@2.1.1
+
 ## 2.0.1
 
 ### Patch Changes
