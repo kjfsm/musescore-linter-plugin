@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@kjfsm/musescore-plugin-sdk-helpers':
-        specifier: ^0.0.2
-        version: 0.0.2(@kjfsm/musescore-plugin-sdk-types@0.0.2)
+        specifier: ^0.1.0
+        version: 0.1.0(@kjfsm/musescore-plugin-sdk-types@0.0.2)
       '@kjfsm/musescore-plugin-sdk-types':
         specifier: ^0.0.2
         version: 0.0.2
@@ -54,6 +54,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@kjfsm/musescore-plugin-sdk-helpers':
+        specifier: ^0.1.0
+        version: 0.1.0(@kjfsm/musescore-plugin-sdk-types@0.0.2)
       '@musescore-linter/musescore-api':
         specifier: workspace:*
         version: link:../musescore-api
@@ -553,10 +556,10 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kjfsm/musescore-plugin-sdk-helpers@0.0.2':
-    resolution: {integrity: sha512-Pd3hUHXUqwLKNmvDYxNqvgJfLQtpJiv+a8BFQyNatZfdp56KAzTPKAcUWiNzIty27s/7H7Gi61nNE2i2/d4G0w==}
+  '@kjfsm/musescore-plugin-sdk-helpers@0.1.0':
+    resolution: {integrity: sha512-eRHwv6fQn2W9voqQz+NgLxExTK6mDqWBAHoDGqN2Nwy+Z8nJ4WLCDFcQoyWt6vHF3ylWIqs1eItgGfVsbZE+iA==}
     peerDependencies:
-      '@kjfsm/musescore-plugin-sdk-types': workspace:*
+      '@kjfsm/musescore-plugin-sdk-types': 0.0.2
 
   '@kjfsm/musescore-plugin-sdk-types@0.0.2':
     resolution: {integrity: sha512-XCYSDx/+k4bdFOcQ24Oyh10HC+7JYtv50hZr3rHshS1MDbz9BQnNBKlNqba4i3C4HU3sfA3D+Ei1dGMW5tx0ww==}
@@ -1811,7 +1814,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kjfsm/musescore-plugin-sdk-helpers@0.0.2(@kjfsm/musescore-plugin-sdk-types@0.0.2)':
+  '@kjfsm/musescore-plugin-sdk-helpers@0.1.0(@kjfsm/musescore-plugin-sdk-types@0.0.2)':
     dependencies:
       '@kjfsm/musescore-plugin-sdk-types': 0.0.2
 

@@ -1,9 +1,14 @@
-import { iterateMeasures } from "@kjfsm/musescore-plugin-sdk-helpers";
+import {
+	getAnnotationStaffIdx,
+	getAnnotationText,
+	iterateMeasureSegments,
+	iterateMeasures,
+	iterateStaves,
+	staffVoiceToTrack,
+	trackToStaffIdx,
+} from "@kjfsm/musescore-plugin-sdk-helpers";
 import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
-import type {
-	PluginSegment,
-	TextAnnotation,
-} from "@musescore-linter/musescore-api";
+import type { PluginSegment } from "@musescore-linter/musescore-api";
 import { buildEnumRegistry, type EnumRegistry } from "./enumRegistry.js";
 import { make } from "./logger.js";
 import type { LintEvent, LintIR, MuseScoreEnums } from "./types.js";
@@ -14,7 +19,8 @@ function getPartName(score: Score, staffIdx: number): string {
 	if (!score.parts) return `Staff ${staffIdx + 1}`;
 	let trackOffset = 0;
 	for (const part of score.parts) {
-		const staveCount = part.endTrack / 4 - part.startTrack / 4;
+		const staveCount =
+			trackToStaffIdx(part.endTrack) - trackToStaffIdx(part.startTrack);
 		if (staffIdx >= trackOffset && staffIdx < trackOffset + staveCount) {
 			const name = part.longName ?? "";
 			return name.length > 0 ? name : `Staff ${staffIdx + 1}`;
@@ -22,12 +28,6 @@ function getPartName(score: Score, staffIdx: number): string {
 		trackOffset += staveCount;
 	}
 	return `Staff ${staffIdx + 1}`;
-}
-
-function resolveAnnotationStaffIdx(ann: TextAnnotation): number {
-	if (ann.track != null && ann.track >= 0) return Math.floor(ann.track / 4);
-	if (ann.staffIdx != null && ann.staffIdx >= 0) return ann.staffIdx;
-	return -1;
 }
 
 function pushIndexedId(
@@ -95,11 +95,10 @@ function processAnnotations(
 	if (!seg.annotations) return;
 
 	for (const ann of seg.annotations) {
-		const annStaffIdx = resolveAnnotationStaffIdx(ann);
-		const rawText = ann.plainText ?? ann.text ?? "";
-		const cleanText = normalizeText(rawText);
-		if (cleanText.length === 0) continue;
+		const textRaw = getAnnotationText(ann);
+		if (textRaw.length === 0) continue;
 
+		const annStaffIdx = getAnnotationStaffIdx(ann);
 		const annKind = registry.resolveElementKind(ann.type);
 		appendEvent(ir, {
 			type: "text",
@@ -111,8 +110,8 @@ function processAnnotations(
 			subtype: ann.subtype,
 			subStyle: ann.subStyle,
 			tempo: ann.tempo ?? null,
-			textNorm: cleanText,
-			textRaw: rawText.replace(/<[^>]*>/g, "").trim(),
+			textNorm: textRaw.toLowerCase(),
+			textRaw,
 			scope: annStaffIdx >= 0 ? "staff" : "global",
 		});
 	}
@@ -128,8 +127,7 @@ function processStaffElements(
 	const canonical = registry.canonical;
 
 	for (let voice = 0; voice < 4; voice++) {
-		const track = staffIdx * 4 + voice;
-		const el = seg.elementAt(track);
+		const el = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
 		if (!el) continue;
 
 		const kind = registry.resolveElementKind(el.type);
@@ -163,7 +161,7 @@ function processStaffElements(
 	}
 
 	for (let v = 0; v < 4; v++) {
-		const barEl = seg.elementAt(staffIdx * 4 + v);
+		const barEl = seg.elementAt(staffVoiceToTrack(staffIdx, v));
 		if (
 			barEl &&
 			registry.resolveElementKind(barEl.type) ===
@@ -207,13 +205,11 @@ export function buildSnapshot(score: Score, E: MuseScoreEnums): LintIR {
 	let measureNum = 1;
 	for (const m of iterateMeasures(score)) {
 		try {
-			let seg = m.firstSegment as PluginSegment | null;
-			while (seg) {
+			for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
 				processAnnotations(seg, measureNum, registry, ir);
-				for (let staffIdx = 0; staffIdx < numStaves; staffIdx++) {
+				for (const staffIdx of iterateStaves(score)) {
 					processStaffElements(seg, measureNum, staffIdx, registry, ir);
 				}
-				seg = seg.nextInMeasure as PluginSegment | null;
 			}
 		} catch (e) {
 			log.warn(`measure ${measureNum} の解析中にエラー: ${e}`);
