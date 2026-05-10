@@ -5,7 +5,8 @@ import { getCanonical } from "./base/predicates.js";
 export const finalBarlineChecker: Checker = {
 	id: "final-barline",
 	name: "終止線の確認",
-	description: "曲末の最終 barline が終止線（final barline）になっているかを確認",
+	description:
+		"曲末の最終 barline が終止線（final barline）になっているかを確認",
 	category: "notation",
 	severity: "info",
 	defaultEnabled: true,
