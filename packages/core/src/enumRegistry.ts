@@ -15,6 +15,7 @@ export const CANONICAL: CanonicalKinds = {
 	},
 	barlineKinds: {
 		DOUBLE: "double",
+		FINAL: "final",
 		OTHER: "other",
 		UNKNOWN: "unknown",
 	},
@@ -54,6 +55,12 @@ export function buildEnumRegistry(E: MuseScoreEnums): EnumRegistry {
 
 	function resolveBarlineKind(rawBarlineType: unknown): string {
 		if (rawBarlineType == null) return CANONICAL.barlineKinds.UNKNOWN;
+		if (enums.BARLINE_END != null) {
+			if (rawBarlineType === enums.BARLINE_END)
+				return CANONICAL.barlineKinds.FINAL;
+		} else if (rawBarlineType === 32) {
+			return CANONICAL.barlineKinds.FINAL;
+		}
 		if (enums.BARLINE_DOUBLE != null) {
 			if (rawBarlineType === enums.BARLINE_DOUBLE)
 				return CANONICAL.barlineKinds.DOUBLE;

@@ -100,6 +100,8 @@ MuseScore {
                 BAR_LINE: Element.BAR_LINE,
                 BARLINE_DOUBLE: (typeof BarLineType !== "undefined" && BarLineType.DOUBLE !== undefined)
                     ? BarLineType.DOUBLE : null,
+                BARLINE_END: (typeof BarLineType !== "undefined" && BarLineType.END !== undefined)
+                    ? BarLineType.END : null,
                 TEMPO_TEXT: Element.TEMPO_TEXT,
                 STAFF_TEXT: Element.STAFF_TEXT,
                 SYSTEM_TEXT: Element.SYSTEM_TEXT,
