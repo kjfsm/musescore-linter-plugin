@@ -54,6 +54,7 @@ export interface CanonicalKinds {
 	};
 	barlineKinds: {
 		DOUBLE: string;
+		FINAL: string;
 		OTHER: string;
 		UNKNOWN: string;
 	};
@@ -109,6 +110,7 @@ export interface MuseScoreEnums {
 	REST?: unknown;
 	BAR_LINE?: unknown;
 	BARLINE_DOUBLE?: unknown;
+	BARLINE_END?: unknown;
 	TEMPO_TEXT?: unknown;
 	STAFF_TEXT?: unknown;
 	SYSTEM_TEXT?: unknown;

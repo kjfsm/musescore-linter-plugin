@@ -1,6 +1,8 @@
 import { ensureDerived, reset, runAllCheckers } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 import { divisiChecker } from "../src/divisiChecker.js";
+import { duplicateDynamicsChecker } from "../src/duplicateDynamicsChecker.js";
+import { finalBarlineChecker } from "../src/finalBarlineChecker.js";
 import { firstNoteDynamicsChecker } from "../src/firstNoteDynamicsChecker.js";
 import { registerAll } from "../src/index.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
@@ -9,6 +11,7 @@ import { restAnnotationChecker } from "../src/restAnnotationChecker.js";
 import { soloTuttiChecker } from "../src/soloTuttiChecker.js";
 import { sordinoChecker } from "../src/sordinoChecker.js";
 import { tempoBarlineChecker } from "../src/tempoBarlineChecker.js";
+import { tempoWithoutBpmChecker } from "../src/tempoWithoutBpmChecker.js";
 import { BK, buildIR, cleanIR, K } from "./helpers/irBuilder.js";
 
 function run(
@@ -502,6 +505,191 @@ describe("div-unis checker", () => {
 			},
 		]);
 		expect(divisiChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── tempo-without-bpm ──────────────────────────────────────────────────────
+
+describe("tempo-without-bpm checker", () => {
+	it("BPM 値なしテンポ → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.TEMPO_TEXT,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "allegro",
+					textRaw: "Allegro",
+				},
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+			],
+		});
+		const issues = tempoWithoutBpmChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("BPM 値あり → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.TEMPO_TEXT,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					tempo: 2.0,
+					textNorm: "allegro",
+					textRaw: "Allegro",
+				},
+			],
+		});
+		expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("global scope の BPM なしテンポも検出", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.TEMPO_TEXT,
+					staffIdx: -1,
+					scope: "global",
+					tick: 0,
+					measure: 1,
+					textNorm: "lento",
+					textRaw: "Lento",
+				},
+			],
+		});
+		expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
+	});
+});
+
+// ─── duplicate-dynamics ─────────────────────────────────────────────────────
+
+describe("duplicate-dynamics checker", () => {
+	it("同パートで f → f が連続 → info 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.DYNAMIC,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "f",
+				textRaw: "f",
+			},
+		]);
+		const issues = duplicateDynamicsChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+		expect(issues[0].partName).toBe("Vn1");
+		expect(issues[0].detail?.previousMeasure).toBe(1);
+	});
+
+	it("subtype 同一で textNorm が異なっても重複扱い", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					subtype: 7,
+					textNorm: "f",
+					textRaw: "f",
+				},
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 480,
+					measure: 2,
+					subtype: 7,
+					textNorm: "",
+					textRaw: "",
+				},
+			],
+		});
+		expect(duplicateDynamicsChecker.run(ir)).toHaveLength(1);
+	});
+
+	it("f → p のように変化 → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.DYNAMIC,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "p",
+				textRaw: "p",
+			},
+		]);
+		expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("別パート間では重複判定しない", () => {
+		// cleanIR は staff 0 と staff 1 にそれぞれ "f" を持つが別パートなので 0 件
+		expect(duplicateDynamicsChecker.run(cleanIR())).toHaveLength(0);
+	});
+});
+
+// ─── final-barline ──────────────────────────────────────────────────────────
+
+describe("final-barline checker", () => {
+	it("最終 barline が終止線でない → info 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.BAR_LINE,
+				staff: 0,
+				tick: 1920,
+				measure: 4,
+				barlineKind: BK.OTHER,
+			},
+		]);
+		const issues = finalBarlineChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+		expect(issues[0].measure).toBe(4);
+	});
+
+	it("最終 barline が FINAL → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.BAR_LINE,
+				staff: 0,
+				tick: 1920,
+				measure: 4,
+				barlineKind: BK.FINAL,
+			},
+		]);
+		expect(finalBarlineChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("複縦線がある途中 barline は無視し、最後の barline のみ判定", () => {
+		const ir = cleanIR([
+			{
+				kind: K.BAR_LINE,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				barlineKind: BK.DOUBLE,
+			},
+			{
+				kind: K.BAR_LINE,
+				staff: 0,
+				tick: 1920,
+				measure: 4,
+				barlineKind: BK.FINAL,
+			},
+		]);
+		expect(finalBarlineChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("barline が一つもない → 0件（誤検出を抑制）", () => {
+		expect(finalBarlineChecker.run(cleanIR())).toHaveLength(0);
 	});
 });
 
