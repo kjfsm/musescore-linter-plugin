@@ -3,6 +3,39 @@
 MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 弦楽五重奏（Vn1・Vn2・Va・Vc・Cb）を主眼に、スコア内のテキスト指示・テンポ・ダイナミクスまわりを走査し、記譜ミスや整合性の崩れを一覧表示します。
 
+## インストール方法
+
+### Windows の場合（かんたんインストール）
+
+1. **[最新版の ZIP をダウンロード](https://github.com/kjfsm/musescore-linter-plugin/releases/latest)** します。
+
+2. ダウンロードした ZIP ファイルを右クリックして **「すべて展開」** → 展開先を選んで OK。
+
+3. 展開したフォルダの中にある **`Plugin-installer.bat`** をダブルクリックします。
+
+4. 「以下の場所にプラグインをコピーしますか？」というダイアログが出るので **「はい」** を選択。  
+   → プラグインが自動でコピーされます。
+
+5. **MuseScore 4 を起動**し、メニューから **「プラグイン」→「プラグインマネージャー」** を開きます。
+
+6. 一覧の中から **「Score Linter」** にチェックを入れて「OK」。
+
+7. **「プラグイン」→「Score Linter」** でプラグインが起動します。
+
+> **注意：** インストール済みの場合は上書きするか確認ダイアログが出ます。「はい」で最新版に更新できます。
+
+---
+
+### 手動でインストールする場合 / Windows 以外の場合
+
+1. ZIP ファイルを展開して中のファイルをすべて、MuseScore 4 のプラグインフォルダにコピーします。
+   - **Windows:** `C:\Users\（ユーザー名）\Documents\MuseScore4\Plugins\musescore-linter-plugin\`
+   - **Mac:** `書類/MuseScore4/Plugins/musescore-linter-plugin/`
+2. MuseScore 4 を起動し、**「プラグイン」→「プラグインマネージャー」** で **Score Linter** を有効化します。
+3. **「プラグイン」→「Score Linter」** で起動します。
+
+---
+
 ## チェック項目
 
 | ルール | severity | 目的 |
@@ -67,11 +100,7 @@ test/
 
 ## 使い方
 
-1. 本リポジトリのファイル一式を MuseScore 4 のプラグインディレクトリへ配置します。
-   - 例: `~/Documents/MuseScore4/Plugins/musescore-linter-plugin/`
-2. MuseScore の `プラグイン > プラグインマネージャー` で **Score Linter** を有効化します。
-3. 対象スコアを開き、`プラグイン > Score Linter` を実行します。
-4. 「実行」ボタンでチェックを開始します。
+インストール後、チェックしたいスコアを開いた状態で **「プラグイン」→「Score Linter」** を起動し、「実行」ボタンを押すとチェックが始まります。
 
 ## 設定の永続化
 
