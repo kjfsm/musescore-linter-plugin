@@ -60,6 +60,6 @@ jobs:
             exit 0
           fi
 
-          zip -r "${ZIP}" ScoreLinter.qml dist/ qml/ README.md
+          zip -r "${ZIP}" ScoreLinter.qml dist/ qml/ README.md Plugin-installer.bat Plugin-installer.ps1
           gh release create "${TAG}" "${ZIP}" --title "${TAG}" --generate-notes
           echo "リリース ${TAG} を作成しました。"
