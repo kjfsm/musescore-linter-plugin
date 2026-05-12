@@ -8,6 +8,8 @@ Rectangle {
     property var issue: null
     property bool alternate: false
 
+    signal clicked()
+
     readonly property var palette_: {
         "error":   { border: "#EF5350", bgHover: "#FFEBEE", tag: "#FFCDD2", tagText: "#C62828" },
         "warning": { border: "#FFA726", bgHover: "#FFF8E1", tag: "#FFE0B2", tagText: "#E65100" },
@@ -26,6 +28,8 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
     }
 
     // 左ボーダー（severity カラー）
