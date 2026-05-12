@@ -19,6 +19,7 @@ Item {
     property string ruleFilter: ""
 
     signal copyRequested(string text)
+    signal jumpRequested(var issue)
 
     function countBySeverity(sev) {
         var n = 0;
@@ -174,6 +175,7 @@ Item {
                     issue: modelData
                     alternate: index % 2 !== 0
                     width: issuesView.width
+                    onClicked: root.jumpRequested(modelData)
                 }
 
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }

@@ -126,6 +126,26 @@ MuseScore {
         };
     }
 
+    function jumpToIssue(issue) {
+        if (!curScore || !issue || issue.measure <= 0) return;
+
+        // 小節番号から Measure オブジェクトを取得
+        var m = curScore.firstMeasure;
+        for (var i = 1; i < issue.measure && m; i++) {
+            m = m.nextMeasure;
+        }
+        if (!m || !m.firstSegment) return;
+
+        var staffIdx = (issue.staffIdx !== undefined && issue.staffIdx >= 0) ? issue.staffIdx : 0;
+        var startTick = m.firstSegment.tick;
+        var lastSeg = m.lastSegment;
+        var endTick = lastSeg ? lastSeg.tick + 1 : startTick + 1;
+
+        curScore.startCmd();
+        curScore.selection.selectRange(startTick, endTick, staffIdx, staffIdx + 1);
+        curScore.endCmd();
+    }
+
     function copyToClipboard(text) {
         if (!text || text.length === 0) return;
         clipboardHelper.text = text;
@@ -330,6 +350,7 @@ MuseScore {
                             parts: plugin.parts()
                             checkers: plugin.checkerList
                             onCopyRequested: plugin.copyToClipboard(text)
+                            onJumpRequested: plugin.jumpToIssue(issue)
                         }
                     }
                 }
