@@ -41,11 +41,10 @@ async function main() {
 	const sizeKb = (output.length / 1024).toFixed(1);
 	console.log(`✓ Built dist/bundle.js (${sizeKb} KB)`);
 
-	// ScoreLinter.qml をコピー
-	fs.copyFileSync(
-		path.join(ROOT, "ScoreLinter.qml"),
-		path.join(distDir, "ScoreLinter.qml"),
-	);
+	// ScoreLinter.qml をコピー（dist/ 内では bundle.js は同階層なのでパスを書き換える）
+	const qmlContent = fs.readFileSync(path.join(ROOT, "ScoreLinter.qml"), "utf8")
+		.replace(/import "dist\/bundle\.js"/, 'import "bundle.js"');
+	fs.writeFileSync(path.join(distDir, "ScoreLinter.qml"), qmlContent, "utf8");
 	console.log("✓ Copied ScoreLinter.qml");
 
 	// qml/ ディレクトリをコピー

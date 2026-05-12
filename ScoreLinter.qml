@@ -13,7 +13,7 @@ MuseScore {
     description: "楽譜の問題点を検出・一覧表示するリンター"
     version: "2.0"
     pluginType: "dialog"
-    width: 600
+    width: 720
     height: 680
 
     property var enabledRules: ({})
@@ -141,7 +141,20 @@ MuseScore {
                     if (!cursor.nextMeasure()) break;
                 }
             }
-            if (cursor.element) curScore.selection.select(cursor.element);
+            if (cursor.element) {
+                var elem = cursor.element;
+                curScore.selection.clear();
+                // Chord は直接 select できないので最初の音符を選択する
+                if (elem.notes && elem.notes.length > 0) {
+                    curScore.selection.select(elem.notes[0]);
+                } else {
+                    curScore.selection.select(elem);
+                }
+                // ビューを選択要素にスクロールさせるハック（musescore-todo-list 参考）
+                cmd("reset");
+                cmd("note-input");
+                cmd("note-input");
+            }
         } catch (e) {
             console.warn("[ScoreLinter] jumpToIssue 失敗: " + e);
         }
@@ -342,7 +355,7 @@ MuseScore {
                             hasRun: plugin.hasRun
                             parts: plugin.parts()
                             checkers: plugin.checkerList
-                            onJumpRequested: plugin.jumpToIssue(issue)
+                            onJumpRequested: function(issue) { plugin.jumpToIssue(issue) }
                             onCopyRequested: plugin.copyToClipboard(text)
                         }
                     }
