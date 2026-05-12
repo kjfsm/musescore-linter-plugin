@@ -1,5 +1,11 @@
 # musescore-linter-plugin
 
+## 2.1.2
+
+### Patch Changes
+
+- [`b0d577b`](https://github.com/kjfsm/musescore-linter-plugin/commit/b0d577b998e657fd98f4f38c6eba822f1490c8ee) Thanks [@kjfsm](https://github.com/kjfsm)! - バグ修正
+
 ## 2.1.1
 
 ### Patch Changes
