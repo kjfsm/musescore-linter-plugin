@@ -1,5 +1,16 @@
 # musescore-linter-plugin
 
+## 2.1.1
+
+### Patch Changes
+
+- [#49](https://github.com/kjfsm/musescore-linter-plugin/pull/49) [`d11b5fb`](https://github.com/kjfsm/musescore-linter-plugin/commit/d11b5fb842dafa2e5d68655a39aa84e50090bdc8) Thanks [@kjfsm](https://github.com/kjfsm)! - Qt.labs.settings を QtObject に置き換え、MuseScore 4 での起動エラーを修正
+
+  MuseScore 4 の QML 環境では `Qt.labs.settings` モジュールが利用できないため、
+  プラグインロード時に "module is not installed" エラーが発生していた。
+  `Settings { }` を `QtObject { }` に変更してインメモリ保持に切り替えることで修正。
+  セッション間でのルール設定の永続化はなくなるが、プラグインが正常に起動・動作するようになる。
+
 ## 2.1.0
 
 ### Minor Changes
