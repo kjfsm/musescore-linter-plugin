@@ -12,6 +12,13 @@ export default defineConfig({
 			provider: "v8",
 			reporter: ["text", "lcov"],
 			include: ["packages/*/src/**/*.ts"],
+			// MuseScore ランタイムなしでは実行不可なファイルを除外
+			exclude: ["**/snapshot.ts", "**/enumRegistry.ts"],
+			thresholds: {
+				lines: 85,
+				functions: 85,
+				branches: 60,
+			},
 		},
 	},
 	resolve: {

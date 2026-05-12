@@ -1,0 +1,18 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	"workspaces": {
+		".": {
+			"entry": ["src/bundle-entry.ts"]
+		},
+		"packages/musescore-api": {
+			"project": ["src/**/*.ts"]
+		},
+		"packages/core": {
+			"project": ["src/**/*.ts", "tests/**/*.ts"]
+		},
+		"packages/checkers": {
+			"project": ["src/**/*.ts", "tests/**/*.ts"]
+		}
+	},
+	"ignoreExportsUsedInFile": true
+}

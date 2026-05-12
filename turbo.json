@@ -1,5 +1,11 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalDependencies": [
+		"biome.json",
+		"tsconfig.json",
+		"vitest.config.ts",
+		"pnpm-lock.yaml"
+	],
 	"tasks": {
 		"typecheck": {
 			"description": "TypeScript の型チェックを実行する。依存パッケージの typecheck が先に完了している必要がある。",
