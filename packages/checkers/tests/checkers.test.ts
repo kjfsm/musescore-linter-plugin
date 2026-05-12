@@ -691,6 +691,19 @@ describe("final-barline checker", () => {
 	it("barline が一つもない → 0件（誤検出を抑制）", () => {
 		expect(finalBarlineChecker.run(cleanIR())).toHaveLength(0);
 	});
+
+	it("最終 barline が UNKNOWN（MuseScore 4 が barLineType を返さない場合）→ 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.BAR_LINE,
+				staff: 0,
+				tick: 1920,
+				measure: 4,
+				barlineKind: BK.UNKNOWN,
+			},
+		]);
+		expect(finalBarlineChecker.run(ir)).toHaveLength(0);
+	});
 });
 
 // ─── enabledRules ───────────────────────────────────────────────────────────

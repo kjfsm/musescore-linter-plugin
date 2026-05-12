@@ -25,7 +25,13 @@ export const finalBarlineChecker: Checker = {
 			.map((id) => ir.events[id])
 			.reduce((best, ev) => (ev.tick > best.tick ? ev : best));
 
-		if (lastBarline.barlineKind === canonical.barlineKinds.FINAL) {
+		// barlineKind が UNKNOWN または未設定の場合は MuseScore 4 が barLineType を
+		// 返さない暗黙的な barline（終止線を含む）なので、false positive を避けるため pass する
+		if (
+			!lastBarline.barlineKind ||
+			lastBarline.barlineKind === canonical.barlineKinds.FINAL ||
+			lastBarline.barlineKind === canonical.barlineKinds.UNKNOWN
+		) {
 			return issues;
 		}
 
