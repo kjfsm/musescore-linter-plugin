@@ -32,8 +32,11 @@ jobs:
       - name: Biome チェック
         run: pnpm lint
 
+      - name: 未使用コード検出
+        run: pnpm knip
+
       - name: 型チェック
-        run: pnpm -r run typecheck
+        run: pnpm typecheck
 
       - name: テスト (カバレッジ計測)
         run: pnpm test:coverage

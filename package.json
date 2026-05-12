@@ -10,22 +10,22 @@
 		"test:coverage": "vitest run --coverage",
 		"typecheck": "turbo run typecheck",
 		"dev": "vitest",
+		"knip": "knip",
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"changeset": "changeset",
 		"version": "changeset version"
 	},
-	"dependencies": {
-		"@kjfsm/musescore-plugin-sdk-helpers": "^0.1.0",
-		"@kjfsm/musescore-plugin-sdk-types": "^0.0.2"
-	},
 	"devDependencies": {
+		"@musescore-linter/checkers": "workspace:*",
+		"@musescore-linter/core": "workspace:*",
 		"@biomejs/biome": "^2.4.14",
 		"@changesets/changelog-github": "^0.6.0",
 		"@changesets/cli": "^2.31.0",
 		"@types/node": "^25.7.0",
 		"@vitest/coverage-v8": "^4.1.5",
 		"esbuild": "^0.28.0",
+		"knip": "^6.12.2",
 		"tsx": "^4.21.0",
 		"turbo": "^2.9.8",
 		"typescript": "^6.0.3",

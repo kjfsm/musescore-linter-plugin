@@ -8,15 +8,6 @@ export function isKind(ev: LintEvent, kind: string): boolean {
 	return !!ev && ev.kind === kind;
 }
 
-export function normalizeToken(rawText: string): string {
-	return (rawText ?? "")
-		.toLowerCase()
-		.replace(/<[^>]*>/g, "")
-		.replace(/\s+/g, "")
-		.replace(/\./g, "")
-		.trim();
-}
-
 export function isTempoMark(ev: LintEvent, ir: LintIR): boolean {
 	const canonical = getCanonical(ir);
 	return !!(canonical && isKind(ev, canonical.elementKinds.TEMPO_TEXT));

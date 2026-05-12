@@ -13,6 +13,8 @@ async function main() {
 	const result = await esbuild.build({
 		entryPoints: [path.join(ROOT, "src/bundle-entry.ts")],
 		bundle: true,
+		minify: true,
+		legalComments: "none",
 		format: "iife",
 		globalName: "__bundle__",
 		target: "es2017", // QML の V4 エンジンは ES2017 相当をサポート
