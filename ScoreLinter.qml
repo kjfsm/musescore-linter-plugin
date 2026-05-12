@@ -126,40 +126,6 @@ MuseScore {
         };
     }
 
-    function jumpToIssue(issue) {
-        if (!curScore || !issue) return;
-        try {
-            var cursor = curScore.newCursor();
-            cursor.staffIdx = Math.max(0, issue.staffIdx || 0);
-            cursor.voice = 0;
-            if (typeof cursor.rewindToTick === "function" && issue.tick >= 0) {
-                cursor.rewindToTick(issue.tick);
-            } else {
-                cursor.rewind(Cursor.SCORE_START);
-                var target = Math.max(1, issue.measure || 1);
-                for (var i = 0; i < target - 1; i++) {
-                    if (!cursor.nextMeasure()) break;
-                }
-            }
-            if (cursor.element) {
-                var elem = cursor.element;
-                curScore.selection.clear();
-                // Chord は直接 select できないので最初の音符を選択する
-                if (elem.notes && elem.notes.length > 0) {
-                    curScore.selection.select(elem.notes[0]);
-                } else {
-                    curScore.selection.select(elem);
-                }
-                // ビューを選択要素にスクロールさせるハック（musescore-todo-list 参考）
-                cmd("reset");
-                cmd("note-input");
-                cmd("note-input");
-            }
-        } catch (e) {
-            console.warn("[ScoreLinter] jumpToIssue 失敗: " + e);
-        }
-    }
-
     function copyToClipboard(text) {
         if (!text || text.length === 0) return;
         clipboardHelper.text = text;
@@ -213,6 +179,14 @@ MuseScore {
                         font.pixelSize: 17
                         font.bold: true
                         color: "#212121"
+                    }
+
+                    // ビルド日時
+                    Label {
+                        text: "__BUILD_DATE__"
+                        font.pixelSize: 10
+                        color: "#9E9E9E"
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
                     // 実行後のサマリーバッジ
@@ -355,7 +329,6 @@ MuseScore {
                             hasRun: plugin.hasRun
                             parts: plugin.parts()
                             checkers: plugin.checkerList
-                            onJumpRequested: function(issue) { plugin.jumpToIssue(issue) }
                             onCopyRequested: plugin.copyToClipboard(text)
                         }
                     }
