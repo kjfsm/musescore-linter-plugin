@@ -40,6 +40,24 @@ async function main() {
 
 	const sizeKb = (output.length / 1024).toFixed(1);
 	console.log(`✓ Built dist/bundle.js (${sizeKb} KB)`);
+
+	// ScoreLinter.qml をコピー
+	fs.copyFileSync(
+		path.join(ROOT, "ScoreLinter.qml"),
+		path.join(distDir, "ScoreLinter.qml"),
+	);
+	console.log("✓ Copied ScoreLinter.qml");
+
+	// qml/ ディレクトリをコピー
+	const qmlSrc = path.join(ROOT, "qml");
+	const qmlDst = path.join(distDir, "qml");
+	fs.mkdirSync(qmlDst, { recursive: true });
+	for (const file of fs.readdirSync(qmlSrc)) {
+		if (file.endsWith(".qml")) {
+			fs.copyFileSync(path.join(qmlSrc, file), path.join(qmlDst, file));
+		}
+	}
+	console.log("✓ Copied qml/");
 }
 
 main().catch((e) => {
