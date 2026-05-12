@@ -7,7 +7,6 @@ Rectangle {
 
     property var issue: null
     property bool alternate: false
-    property bool canJump: !!issue && issue.ruleId !== "" && issue.ruleId !== "internal"
 
     readonly property var palette_: {
         "error":   { border: "#EF5350", bgHover: "#FFEBEE", tag: "#FFCDD2", tagText: "#C62828" },
@@ -16,14 +15,18 @@ Rectangle {
     }
     readonly property var pal: issue ? (palette_[issue.severity] || palette_.info) : palette_.info
 
-    signal jumpRequested(var issue)
-
     width: parent ? parent.width : 0
     height: layout.implicitHeight + 16
     color: mouseArea.containsMouse ? pal.bgHover : (alternate ? "#FAFAFA" : "#FFFFFF")
     radius: 4
 
     Behavior on color { ColorAnimation { duration: 80 } }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+    }
 
     // 左ボーダー（severity カラー）
     Rectangle {
@@ -34,93 +37,69 @@ Rectangle {
         anchors.left: parent.left
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: canJump ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onClicked: if (canJump) root.jumpRequested(issue)
-    }
-
-    RowLayout {
+    ColumnLayout {
         id: layout
         anchors {
             left: parent.left
             right: parent.right
             top: parent.top
             leftMargin: 12
-            rightMargin: 8
+            rightMargin: 12
             topMargin: 8
         }
-        spacing: 8
+        spacing: 4
 
-        // 本文エリア
-        ColumnLayout {
+        // 上段: パート名 + 小節番号
+        RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: 8
 
-            // メタ行: パートタグ + ルールID + 小節番号
-            RowLayout {
-                spacing: 5
-                Layout.fillWidth: true
-
-                // パート名タグ
-                Rectangle {
-                    visible: !!issue && issue.partName && issue.partName.length > 0
-                    implicitWidth: partLabel.implicitWidth + 8
-                    implicitHeight: 16
-                    radius: 3
-                    color: pal.tag
-                    Label {
-                        id: partLabel
-                        anchors.centerIn: parent
-                        text: issue ? issue.partName : ""
-                        color: pal.tagText
-                        font.bold: true
-                        font.pixelSize: 10
-                    }
-                }
-
-                // ルール ID
+            // パート名タグ
+            Rectangle {
+                visible: !!issue && issue.partName && issue.partName.length > 0
+                implicitWidth: partLabel.implicitWidth + 10
+                implicitHeight: 20
+                radius: 3
+                color: pal.tag
                 Label {
-                    visible: !!issue && !!issue.ruleId && issue.ruleId !== "internal"
-                    text: issue ? issue.ruleId : ""
-                    color: "#9E9E9E"
-                    font.pixelSize: 10
-                    font.italic: true
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // 小節番号（右寄せ）
-                Label {
-                    visible: !!issue && issue.measure > 0
-                    text: issue ? ("m." + issue.measure) : ""
-                    color: "#BDBDBD"
-                    font.pixelSize: 10
-                    font.family: "monospace"
+                    id: partLabel
+                    anchors.centerIn: parent
+                    text: issue ? issue.partName : ""
+                    color: pal.tagText
+                    font.bold: true
+                    font.pixelSize: 12
                 }
             }
 
-            // メッセージ本文
+            // 小節番号
             Label {
-                text: issue ? (issue.message || "") : ""
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
+                visible: !!issue && issue.measure > 0
+                text: issue ? ("小節 " + issue.measure) : ""
+                color: "#616161"
                 font.pixelSize: 12
-                color: "#212121"
-                bottomPadding: 2
+                font.bold: true
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // ルール ID（右端・薄く）
+            Label {
+                visible: !!issue && !!issue.ruleId && issue.ruleId !== "internal"
+                text: issue ? issue.ruleId : ""
+                color: "#BDBDBD"
+                font.pixelSize: 10
+                font.italic: true
             }
         }
 
-        // ジャンプアイコン
+        // 下段: メッセージ本文
         Label {
-            visible: canJump && mouseArea.containsMouse
-            text: "→"
-            color: pal.border
-            font.pixelSize: 14
-            font.bold: true
-            Layout.alignment: Qt.AlignVCenter
+            text: issue ? (issue.message || "") : ""
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+            font.pixelSize: 12
+            color: "#212121"
+            bottomPadding: 2
         }
     }
 }

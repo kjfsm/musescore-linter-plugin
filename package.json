@@ -15,11 +15,15 @@
 		"changeset": "changeset",
 		"version": "changeset version"
 	},
+	"dependencies": {
+		"@kjfsm/musescore-plugin-sdk-helpers": "^0.1.0",
+		"@kjfsm/musescore-plugin-sdk-types": "^0.0.2"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.14",
 		"@changesets/changelog-github": "^0.6.0",
 		"@changesets/cli": "^2.31.0",
-		"@types/node": "^25.6.0",
+		"@types/node": "^25.7.0",
 		"@vitest/coverage-v8": "^4.1.5",
 		"esbuild": "^0.28.0",
 		"tsx": "^4.21.0",
@@ -31,9 +35,5 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
-	},
-	"dependencies": {
-		"@kjfsm/musescore-plugin-sdk-helpers": "^0.1.0",
-		"@kjfsm/musescore-plugin-sdk-types": "^0.0.2"
 	}
 }

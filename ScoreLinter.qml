@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import Qt.labs.settings 1.0
 import MuseScore 3.0
 
 import "dist/bundle.js" as Bundle
@@ -14,7 +13,7 @@ MuseScore {
     description: "楽譜の問題点を検出・一覧表示するリンター"
     version: "2.0"
     pluginType: "dialog"
-    width: 600
+    width: 720
     height: 680
 
     property var enabledRules: ({})
@@ -40,9 +39,8 @@ MuseScore {
         return n;
     }
 
-    Settings {
+    QtObject {
         id: persistedSettings
-        category: "ScoreLinter"
         property string rulesJson: "{}"
     }
 
@@ -128,27 +126,6 @@ MuseScore {
         };
     }
 
-    function jumpToIssue(issue) {
-        if (!curScore || !issue) return;
-        try {
-            var cursor = curScore.newCursor();
-            cursor.staffIdx = Math.max(0, issue.staffIdx || 0);
-            cursor.voice = 0;
-            if (typeof cursor.rewindToTick === "function" && issue.tick >= 0) {
-                cursor.rewindToTick(issue.tick);
-            } else {
-                cursor.rewind(Cursor.SCORE_START);
-                var target = Math.max(1, issue.measure || 1);
-                for (var i = 0; i < target - 1; i++) {
-                    if (!cursor.nextMeasure()) break;
-                }
-            }
-            if (cursor.element) curScore.selection.select(cursor.element);
-        } catch (e) {
-            console.warn("[ScoreLinter] jumpToIssue 失敗: " + e);
-        }
-    }
-
     function copyToClipboard(text) {
         if (!text || text.length === 0) return;
         clipboardHelper.text = text;
@@ -202,6 +179,14 @@ MuseScore {
                         font.pixelSize: 17
                         font.bold: true
                         color: "#212121"
+                    }
+
+                    // ビルド日時
+                    Label {
+                        text: "__BUILD_DATE__"
+                        font.pixelSize: 10
+                        color: "#9E9E9E"
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
                     // 実行後のサマリーバッジ
@@ -344,7 +329,6 @@ MuseScore {
                             hasRun: plugin.hasRun
                             parts: plugin.parts()
                             checkers: plugin.checkerList
-                            onJumpRequested: plugin.jumpToIssue(issue)
                             onCopyRequested: plugin.copyToClipboard(text)
                         }
                     }

@@ -139,25 +139,31 @@ ScrollView {
                 // カテゴリヘッダー（折りたたみ可能）
                 property bool expanded: true
 
-                RowLayout {
+                Item {
                     Layout.fillWidth: true
-                    spacing: 6
-                    topPadding: 10
-                    bottomPadding: 6
+                    Layout.topMargin: 10
+                    Layout.bottomMargin: 6
+                    implicitHeight: headerRow.implicitHeight
 
-                    Label {
-                        text: section.expanded ? "▾" : "▸"
-                        color: "#9E9E9E"
-                        font.pixelSize: 11
+                    RowLayout {
+                        id: headerRow
+                        anchors.fill: parent
+                        spacing: 6
+
+                        Label {
+                            text: section.expanded ? "▾" : "▸"
+                            color: "#9E9E9E"
+                            font.pixelSize: 11
+                        }
+                        Label {
+                            text: root.categoryLabels[section.catId] || section.catId
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: "#616161"
+                            font.letterSpacing: 0.5
+                        }
+                        Item { Layout.fillWidth: true }
                     }
-                    Label {
-                        text: root.categoryLabels[section.catId] || section.catId
-                        font.pixelSize: 12
-                        font.bold: true
-                        color: "#616161"
-                        font.letterSpacing: 0.5
-                    }
-                    Item { Layout.fillWidth: true }
 
                     MouseArea {
                         anchors.fill: parent
@@ -173,8 +179,8 @@ ScrollView {
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.leftMargin: 16
+                        Layout.bottomMargin: 6
                         spacing: 2
-                        bottomPadding: 6
 
                         RowLayout {
                             spacing: 8
