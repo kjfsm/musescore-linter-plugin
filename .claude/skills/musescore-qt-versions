@@ -1,0 +1,62 @@
+# MuseScore 4 の Qt バージョンとドキュメント調査方法
+
+## MuseScore 4.x と Qt の対応表
+
+| MuseScore | Qt バージョン | 備考 |
+|---|---|---|
+| 4.0 〜 4.3 | Qt **5.15.2** | |
+| 4.4.0 〜 4.5 | Qt **6.2.4** | Qt 5 → Qt 6 移行 |
+| 4.6.0 | Qt **6.9.1** | |
+| 4.6.1 〜 4.6.5 | Qt **6.9.2** | ★ **現在の推奨ターゲット** |
+| 4.7 | Qt **6.9.3 〜 6.10.1** | |
+
+**推奨ターゲット：MuseScore 4.6.5 / Qt 6.9.2**（2026-05-12 時点での最新安定版）
+
+QML を書く際はこのバージョンで動作確認し、ドキュメントも Qt 6.9 を基準に参照する。
+
+## ドキュメントの調べ方
+
+### 1. Qt バージョンを確認する
+
+ターゲットは **Qt 6.9.2**。バージョンごとの対応は上記の表を参照。
+
+バージョンが不明な場合は公式 Wiki を参照：
+- https://github.com/musescore/MuseScore/wiki/Install-Qt-and-Qt-Creator
+
+### 2. Qt 公式ドキュメントを引く
+
+URL パターン：
+```
+https://doc.qt.io/qt-6/qml-qtquick-<type>.html
+https://doc.qt.io/qt-5/qml-qtquick-<type>.html
+```
+
+よく使う QML 型のドキュメント：
+- RowLayout: https://doc.qt.io/qt-6/qml-qtquick-layouts-rowlayout.html
+- ColumnLayout: https://doc.qt.io/qt-6/qml-qtquick-layouts-columnlayout.html
+- Layout（attached プロパティ）: https://doc.qt.io/qt-6/qml-qtquick-layouts-layout.html
+- Item: https://doc.qt.io/qt-6/qml-qtquick-item.html
+- Control（padding 系の親）: https://doc.qt.io/qt-6/qml-qtquick-controls-control.html
+
+Qt 5 を調べる場合は `qt-6` を `qt-5` に置き換える。
+
+### 3. padding vs margin の使い分け（よくある間違い）
+
+`topPadding` / `bottomPadding` 等の `padding` 系プロパティは **`Control` 型にしか存在しない**。
+
+| 型 | padding 系 | Layout.margin 系 |
+|---|---|---|
+| `RowLayout` / `ColumnLayout` | **使えない** | 子アイテムとして親レイアウト内にある場合は使える |
+| `Label` / `TextField` / `Button` | 使える（Control 継承） | 親レイアウト内なら使える |
+| `Rectangle` / `Item` | 使えない | 親レイアウト内なら使える |
+
+**Layout.topMargin などは「子アイテムが親レイアウトに対して自分のマージンを指定する」attached プロパティ。**
+RowLayout 自体が ColumnLayout の子であれば `RowLayout { Layout.topMargin: 10 }` は正しい。
+
+### 4. MuseScore のソースで実際の使われ方を確認する
+
+```
+https://github.com/musescore/MuseScore/search?q=RowLayout&type=code
+```
+
+MuseScore 本体の QML コードは `src/` 以下にあり、同じ Qt バージョンで動くため参考になる。
