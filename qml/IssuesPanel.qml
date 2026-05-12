@@ -175,7 +175,7 @@ Item {
                     issue: modelData
                     alternate: index % 2 !== 0
                     width: issuesView.width
-                    onJumpRequested: root.jumpRequested(issue)
+                    onJumpRequested: function(issue) { root.jumpRequested(issue) }
                 }
 
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
