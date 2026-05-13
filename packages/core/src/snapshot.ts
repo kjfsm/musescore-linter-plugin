@@ -54,7 +54,6 @@ function pushIndexedId(
 	map[k].push(eventId);
 }
 
-
 function appendEvent(
 	ir: LintIR,
 	payload: Partial<LintEvent> & { kind: string },
