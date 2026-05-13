@@ -55,6 +55,7 @@ export interface CanonicalKinds {
 	barlineKinds: {
 		DOUBLE: string;
 		FINAL: string;
+		REPEAT: string;
 		OTHER: string;
 		UNKNOWN: string;
 	};

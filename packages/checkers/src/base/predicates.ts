@@ -15,9 +15,7 @@ export function isTempoMark(ev: LintEvent, ir: LintIR): boolean {
 
 export function isDynamicMark(ev: LintEvent, ir: LintIR): boolean {
 	const canonical = getCanonical(ir);
-	if (canonical && isKind(ev, canonical.elementKinds.DYNAMIC)) return true;
-	const subStyle = (ev?.subStyle ? String(ev.subStyle) : "").toLowerCase();
-	return subStyle.includes("dynamic");
+	return !!(canonical && isKind(ev, canonical.elementKinds.DYNAMIC));
 }
 
 export function matchesAny(text: string, patterns: string[]): boolean {

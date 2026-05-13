@@ -1,10 +1,12 @@
 import {
+	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
 	getTempoBpm,
 	isBarLine,
 	isChord,
 	isDynamic,
+	isExpression,
 	isPlayTechAnnotation,
 	isRehearsalMark,
 	isRest,
@@ -17,13 +19,14 @@ import {
 	parseDynamicText,
 	staffVoiceToTrack,
 	trackToStaffIdx,
+	VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
 import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
 	PluginSegment,
 	TextAnnotation,
 } from "@musescore-linter/musescore-api";
-import { CANONICAL, resolveBarlineKind } from "./enumRegistry.js";
+import { CANONICAL } from "./enumRegistry.js";
 import { make } from "./logger.js";
 import type { LintEvent, LintIR } from "./types.js";
 
@@ -96,6 +99,7 @@ function appendEvent(
 function resolveAnnotationKind(ann: TextAnnotation): string {
 	if (isTempo(ann)) return CANONICAL.elementKinds.TEMPO_TEXT;
 	if (isDynamic(ann)) return CANONICAL.elementKinds.DYNAMIC;
+	if (isExpression(ann)) return CANONICAL.elementKinds.EXPRESSION;
 	if (isStaffText(ann) || isPlayTechAnnotation(ann))
 		return CANONICAL.elementKinds.STAFF_TEXT;
 	if (isSystemText(ann)) return CANONICAL.elementKinds.SYSTEM_TEXT;
@@ -150,7 +154,7 @@ function processStaffElements(
 	staffIdx: number,
 	ir: LintIR,
 ): void {
-	for (let voice = 0; voice < 4; voice++) {
+	for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
 		const el = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
 		if (!el) continue;
 
@@ -183,14 +187,14 @@ function processStaffElements(
 		}
 	}
 
-	for (let v = 0; v < 4; v++) {
+	for (let v = 0; v < VOICES_PER_STAFF; v++) {
 		const barEl = seg.elementAt(staffVoiceToTrack(staffIdx, v));
 		if (barEl && isBarLine(barEl)) {
 			appendEvent(ir, {
 				type: "barline",
 				kind: CANONICAL.elementKinds.BAR_LINE,
 				barlineType: barEl.barlineType,
-				barlineKind: resolveBarlineKind(barEl.barlineType),
+				barlineKind: classifyBarlineKind(barEl.barlineType),
 				tick: seg.tick,
 				measure: measureNum,
 				staffIdx,

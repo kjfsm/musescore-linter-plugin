@@ -16,14 +16,8 @@ export const CANONICAL: CanonicalKinds = {
 	barlineKinds: {
 		DOUBLE: "double",
 		FINAL: "final",
+		REPEAT: "repeat",
 		OTHER: "other",
 		UNKNOWN: "unknown",
 	},
 };
-
-export function resolveBarlineKind(rawBarlineType: unknown): string {
-	if (rawBarlineType == null) return CANONICAL.barlineKinds.UNKNOWN;
-	if (rawBarlineType === 32) return CANONICAL.barlineKinds.FINAL;
-	if (rawBarlineType === 2) return CANONICAL.barlineKinds.DOUBLE;
-	return CANONICAL.barlineKinds.OTHER;
-}
