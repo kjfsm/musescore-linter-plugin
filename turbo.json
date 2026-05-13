@@ -25,11 +25,17 @@
 			],
 			"inputs": [
 				"src/**",
-				"scripts/**",
+				"scripts/build.ts",
 				"packages/core/src/**",
 				"packages/checkers/src/**"
 			],
 			"outputs": ["dist/**"]
+		},
+		"//#package": {
+			"description": "dist/ の成果物を配布用 ZIP にパッケージングする。",
+			"dependsOn": ["//#build"],
+			"inputs": ["dist/**", "README.md", "package.json", "scripts/package.ts"],
+			"outputs": ["musescore-linter-plugin-*.zip"]
 		}
 	}
 }

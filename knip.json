@@ -2,7 +2,7 @@
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"workspaces": {
 		".": {
-			"entry": ["src/bundle-entry.ts"]
+			"entry": ["src/bundle-entry.ts", "scripts/*.ts"]
 		},
 		"packages/musescore-api": {
 			"project": ["src/**/*.ts"]

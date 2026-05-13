@@ -46,6 +46,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: パッケージング (ZIP 作成)
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm run package
+
       - name: GitHub Release の作成
         if: steps.changesets.outputs.hasChangesets == 'false'
         env:
@@ -60,6 +64,5 @@ jobs:
             exit 0
           fi
 
-          zip -r "${ZIP}" ScoreLinter.qml dist/ qml/ README.md Plugin-installer.bat Plugin-installer.ps1
           gh release create "${TAG}" "${ZIP}" --title "${TAG}" --generate-notes
           echo "リリース ${TAG} を作成しました。"
