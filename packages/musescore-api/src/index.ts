@@ -7,9 +7,7 @@ import type { EngravingItem, Segment } from "@kjfsm/musescore-plugin-sdk-types";
  * SDK types に含まれないプロパティのみ補完する。
  * `Segment.annotations` の要素型として使用する。
  */
-export interface TextAnnotation extends EngravingItem {
-	readonly plainText?: string;
-}
+export interface TextAnnotation extends EngravingItem {}
 
 /**
  * `Segment.elementAt()` で返される楽譜要素の拡張型。

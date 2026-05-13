@@ -54,12 +54,6 @@ function pushIndexedId(
 	map[k].push(eventId);
 }
 
-export function normalizeText(rawText: string): string {
-	return (rawText ?? "")
-		.replace(/<[^>]*>/g, "")
-		.toLowerCase()
-		.trim();
-}
 
 function appendEvent(
 	ir: LintIR,
@@ -114,11 +108,7 @@ function resolveAnnotationTextNorm(
 	ann: TextAnnotation,
 	textRaw: string,
 ): string {
-	if (isDynamic(ann)) {
-		const plain = (ann as { plainText?: string }).plainText;
-		const src = plain && plain.length > 0 ? plain : textRaw;
-		return parseDynamicText(src);
-	}
+	if (isDynamic(ann)) return parseDynamicText(textRaw);
 	return textRaw.toLowerCase();
 }
 

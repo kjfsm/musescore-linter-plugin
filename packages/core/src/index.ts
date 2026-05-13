@@ -6,7 +6,7 @@ export { ensureDerived, getCheckerList, runAllCheckers } from "./linter.js";
 export type { Logger } from "./logger.js";
 export { make as makeLogger, setLevel } from "./logger.js";
 
-export { buildSnapshot, normalizeText } from "./snapshot.js";
+export { buildSnapshot } from "./snapshot.js";
 export type {
 	CanonicalKinds,
 	Checker,
