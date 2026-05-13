@@ -92,22 +92,7 @@ MuseScore {
         }
 
         try {
-            var enums = {
-                CHORD: Element.CHORD,
-                REST: Element.REST,
-                BAR_LINE: Element.BAR_LINE,
-                BARLINE_DOUBLE: (typeof BarLineType !== "undefined" && BarLineType.DOUBLE !== undefined)
-                    ? BarLineType.DOUBLE : null,
-                BARLINE_END: (typeof BarLineType !== "undefined" && BarLineType.END !== undefined)
-                    ? BarLineType.END : null,
-                TEMPO_TEXT: Element.TEMPO_TEXT,
-                STAFF_TEXT: Element.STAFF_TEXT,
-                SYSTEM_TEXT: Element.SYSTEM_TEXT,
-                EXPRESSION: Element.EXPRESSION,
-                REHEARSAL_MARK: Element.REHEARSAL_MARK,
-                DYNAMIC: Element.DYNAMIC
-            };
-            var snapshot = Bundle.buildSnapshot(curScore, enums);
+            var snapshot = Bundle.buildSnapshot(curScore);
             snapshotText = JSON.stringify(snapshot, null, 2);
             issuesList = Bundle.runAllCheckers(snapshot, enabledRules);
             hasRun = true;
