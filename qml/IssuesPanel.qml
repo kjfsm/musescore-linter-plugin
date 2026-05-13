@@ -60,6 +60,35 @@ Item {
         return lines.join("\n");
     }
 
+    function buildCopyMarkdown(arr) {
+        if (!arr || arr.length === 0) return "";
+        var lines = ["| 重大度 | パート | 小節 | メッセージ |",
+                     "|--------|--------|------|------------|"];
+        for (var i = 0; i < arr.length; i++) {
+            var it = arr[i];
+            var sev = (it.severity || "info").toUpperCase();
+            var part = it.partName || "（グローバル）";
+            var meas = it.measure > 0 ? String(it.measure) : "-";
+            var msg = (it.message || "").replace(/\|/g, "\\|");
+            lines.push("| " + sev + " | " + part + " | " + meas + " | " + msg + " |");
+        }
+        return lines.join("\n");
+    }
+
+    function buildCopyCsv(arr) {
+        if (!arr || arr.length === 0) return "";
+        var lines = ['"重大度","パート","小節","メッセージ"'];
+        for (var i = 0; i < arr.length; i++) {
+            var it = arr[i];
+            var sev = (it.severity || "info").toUpperCase();
+            var part = it.partName || "";
+            var meas = it.measure > 0 ? String(it.measure) : "";
+            var msg = (it.message || "").replace(/"/g, '""');
+            lines.push('"' + sev + '","' + part + '","' + meas + '","' + msg + '"');
+        }
+        return lines.join("\n");
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 6
@@ -137,15 +166,32 @@ Item {
             }
 
             Button {
-                text: "コピー"
+                id: copyBtn
+                text: "コピー ▾"
                 font.pixelSize: 11
                 enabled: root.issuesList.length > 0
-                onClicked: root.copyRequested(buildCopyText(filteredIssues()))
+                onClicked: copyMenu.open()
                 background: Rectangle {
-                    color: parent.pressed ? "#E3F2FD" : (parent.hovered ? "#F3F9FF" : "white")
+                    color: copyBtn.pressed ? "#E3F2FD" : (copyBtn.hovered ? "#F3F9FF" : "white")
                     border.color: "#BBDEFB"
                     border.width: 1
                     radius: 4
+                }
+
+                Menu {
+                    id: copyMenu
+                    MenuItem {
+                        text: "テキストでコピー"
+                        onTriggered: root.copyRequested(buildCopyText(filteredIssues()))
+                    }
+                    MenuItem {
+                        text: "Markdown 表でコピー"
+                        onTriggered: root.copyRequested(buildCopyMarkdown(filteredIssues()))
+                    }
+                    MenuItem {
+                        text: "CSV でコピー"
+                        onTriggered: root.copyRequested(buildCopyCsv(filteredIssues()))
+                    }
                 }
             }
         }
