@@ -197,6 +197,20 @@ describe("pizz-arco checker", () => {
 		]);
 		expect(pizzArcoChecker.run(ir)).toHaveLength(0);
 	});
+
+	it("pizz. なしで arco のみ → 0件（on 状態未経験の off 指示は不問）", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "arco",
+				textRaw: "arco",
+			},
+		]);
+		expect(pizzArcoChecker.run(ir)).toHaveLength(0);
+	});
 });
 
 // ─── sordino ────────────────────────────────────────────────────────────────
@@ -755,6 +769,34 @@ describe("sul-tasto-ord checker", () => {
 				measure: 3,
 				textNorm: "arco",
 				textRaw: "arco",
+			},
+		]);
+		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("sul tasto なしで arco のみ → 0件（on 状態未経験の off 指示は不問）", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "arco",
+				textRaw: "arco",
+			},
+		]);
+		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("sul tasto なしで ord. のみ → 0件（on 状態未経験の off 指示は不問）", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "ord.",
+				textRaw: "ord.",
 			},
 		]);
 		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
