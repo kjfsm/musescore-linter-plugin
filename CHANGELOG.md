@@ -1,5 +1,17 @@
 # musescore-linter-plugin
 
+## 2.1.3
+
+### Patch Changes
+
+- [#61](https://github.com/kjfsm/musescore-linter-plugin/pull/61) [`efd562f`](https://github.com/kjfsm/musescore-linter-plugin/commit/efd562fe3d9eab206e16edcb46b6d0453a82dbc5) Thanks [@kjfsm](https://github.com/kjfsm)! - ビルドシステムとリリーススクリプトを整理
+
+  - `scripts/package.ts` を追加: `pnpm run package` で配布用 ZIP をローカル生成できるようになった
+  - ZIP 構造を改善: `musescore-linter/` サブフォルダにビルド済みファイルのみをまとめる形式に変更（重複ファイルや存在しないインストーラースクリプトへの参照を除去）
+  - `release.yml` のインラインシェル ZIP 作成を `pnpm run package` 呼び出しに置き換え
+
+- [`46a3d9d`](https://github.com/kjfsm/musescore-linter-plugin/commit/46a3d9dc492d9635ecc3241de86b6a29ee946ec6) Thanks [@kjfsm](https://github.com/kjfsm)! - fix
+
 ## 2.1.2
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @musescore-linter/core
 
+## 2.1.2
+
+### Patch Changes
+
+- [#58](https://github.com/kjfsm/musescore-linter-plugin/pull/58) [`1e9cc57`](https://github.com/kjfsm/musescore-linter-plugin/commit/1e9cc57bdcd871ca8870725f8e406210f9e43e77) Thanks [@kjfsm](https://github.com/kjfsm)! - `@kjfsm/musescore-plugin-sdk-helpers` を v0.1.0 → v1.0.1、`@kjfsm/musescore-plugin-sdk-types` を v0.0.2 → v0.1.0 にアップデート。
+
+  SDK の型安全なヘルパー関数（`isChord`、`isRest`、`isBarLine`、`isTempo` 等）を利用するようリファクタリングし、QML 側から enum マップを渡す必要がなくなった。`buildSnapshot` の引数から `MuseScoreEnums` を削除。
+
 ## 2.1.1
 
 ### Patch Changes
