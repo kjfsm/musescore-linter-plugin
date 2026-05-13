@@ -103,4 +103,3 @@ export interface TextPairCheckerConfig {
 	onLabel: string;
 	offLabel: string;
 }
-

@@ -19,7 +19,10 @@ import {
 	trackToStaffIdx,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
 import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
-import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
+import type {
+	PluginSegment,
+	TextAnnotation,
+} from "@musescore-linter/musescore-api";
 import { CANONICAL, resolveBarlineKind } from "./enumRegistry.js";
 import { make } from "./logger.js";
 import type { LintEvent, LintIR } from "./types.js";
@@ -107,7 +110,10 @@ function resolveAnnotationKind(ann: TextAnnotation): string {
 	return CANONICAL.elementKinds.UNKNOWN;
 }
 
-function resolveAnnotationTextNorm(ann: TextAnnotation, textRaw: string): string {
+function resolveAnnotationTextNorm(
+	ann: TextAnnotation,
+	textRaw: string,
+): string {
 	if (isDynamic(ann)) {
 		const plain = (ann as { plainText?: string }).plainText;
 		const src = plain && plain.length > 0 ? plain : textRaw;
@@ -161,7 +167,9 @@ function processStaffElements(
 
 		if (isChord(el) || isRest(el)) {
 			const evType = isChord(el) ? "chord" : "rest";
-			const kind = isChord(el) ? CANONICAL.elementKinds.CHORD : CANONICAL.elementKinds.REST;
+			const kind = isChord(el)
+				? CANONICAL.elementKinds.CHORD
+				: CANONICAL.elementKinds.REST;
 			appendEvent(ir, {
 				type: evType as "chord" | "rest",
 				kind,
