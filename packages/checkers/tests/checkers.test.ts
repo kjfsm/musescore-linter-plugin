@@ -880,6 +880,79 @@ describe("con-legno-arco checker", () => {
 // ─── rest-annotation（追加ケース）──────────────────────────────────────────
 
 describe("rest-annotation checker（追加ケース）", () => {
+	it("休符に pizz. (STAFF_TEXT) → error 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.TEMPO_TEXT,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					tempo: 2.0,
+					textNorm: "allegro",
+					textRaw: "Allegro",
+				},
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+				{ kind: K.REST, staff: 0, tick: 480, measure: 2 },
+				{
+					kind: K.STAFF_TEXT,
+					staff: 0,
+					tick: 480,
+					measure: 2,
+					textNorm: "pizz.",
+					textRaw: "pizz.",
+				},
+			],
+		});
+		const issues = restAnnotationChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("error");
+	});
+
+	it("音符の位置に pizz. (STAFF_TEXT) → 0件（休符のみ対象）", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.TEMPO_TEXT,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					tempo: 2.0,
+					textNorm: "allegro",
+					textRaw: "Allegro",
+				},
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+				{
+					kind: K.STAFF_TEXT,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "pizz.",
+					textRaw: "pizz.",
+				},
+			],
+		});
+		expect(restAnnotationChecker.run(ir)).toHaveLength(0);
+	});
+
 	it("複数スタッフで複数の違反 → 各スタッフ分を検出", () => {
 		const ir = buildIR({
 			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
@@ -1127,6 +1200,73 @@ describe("coda-segno checker", () => {
 
 	it("何もない → 0件", () => {
 		expect(codaSegnoChecker.run(cleanIR())).toHaveLength(0);
+	});
+
+	it("D.C. al Fine があるが Fine マークなし → error 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.SYSTEM_TEXT,
+				staffIdx: -1,
+				scope: "global",
+				tick: 960,
+				measure: 3,
+				textNorm: "d.c. al fine",
+				textRaw: "D.C. al Fine",
+			},
+		]);
+		const issues = codaSegnoChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].message).toContain("Fine");
+	});
+
+	it("D.S. al Fine があるが Fine マークなし → error 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.SYSTEM_TEXT,
+				staffIdx: -1,
+				scope: "global",
+				tick: 0,
+				measure: 1,
+				textNorm: "segno",
+				textRaw: "Segno",
+			},
+			{
+				kind: K.SYSTEM_TEXT,
+				staffIdx: -1,
+				scope: "global",
+				tick: 960,
+				measure: 3,
+				textNorm: "d.s. al fine",
+				textRaw: "D.S. al Fine",
+			},
+		]);
+		const issues = codaSegnoChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].message).toContain("Fine");
+	});
+
+	it("D.C. al Fine + Fine マークあり → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.SYSTEM_TEXT,
+				staffIdx: -1,
+				scope: "global",
+				tick: 480,
+				measure: 2,
+				textNorm: "fine",
+				textRaw: "Fine",
+			},
+			{
+				kind: K.SYSTEM_TEXT,
+				staffIdx: -1,
+				scope: "global",
+				tick: 960,
+				measure: 3,
+				textNorm: "d.c. al fine",
+				textRaw: "D.C. al Fine",
+			},
+		]);
+		expect(codaSegnoChecker.run(ir)).toHaveLength(0);
 	});
 });
 

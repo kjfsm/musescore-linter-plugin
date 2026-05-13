@@ -41,6 +41,8 @@ export const codaSegnoChecker: Checker = {
 		const segnoMarks: LintEvent[] = [];
 		const codaRefs: LintEvent[] = [];
 		const codaMarks: LintEvent[] = [];
+		const fineRefs: LintEvent[] = [];
+		const fineMarks: LintEvent[] = [];
 
 		for (const ev of textEvents) {
 			const text = ev.textNorm;
@@ -59,6 +61,14 @@ export const codaSegnoChecker: Checker = {
 			// Coda マーク
 			if (text === "coda" || text.includes("𝅌")) {
 				codaMarks.push(ev);
+			}
+			// al Fine 参照（D.C./D.S. al Fine）
+			if (text.includes("al fine")) {
+				fineRefs.push(ev);
+			}
+			// Fine マーク（"al fine" を含まない単体 "fine"）
+			if ((text === "fine" || text === "fine.") && !text.includes("al fine")) {
+				fineMarks.push(ev);
 			}
 		}
 
@@ -97,6 +107,19 @@ export const codaSegnoChecker: Checker = {
 					staffIdx: -1,
 					measure: mark.measure,
 					tick: mark.tick,
+				}),
+			);
+		}
+
+		if (fineRefs.length > 0 && fineMarks.length === 0) {
+			const ref = fineRefs[0];
+			issues.push(
+				createIssue(codaSegnoChecker, {
+					message: `"${ref.textRaw}" がありますが、対応する Fine マークが見つかりません`,
+					partName: "",
+					staffIdx: -1,
+					measure: ref.measure,
+					tick: ref.tick,
 				}),
 			);
 		}
