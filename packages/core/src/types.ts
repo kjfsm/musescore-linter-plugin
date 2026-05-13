@@ -55,6 +55,7 @@ export interface CanonicalKinds {
 	barlineKinds: {
 		DOUBLE: string;
 		FINAL: string;
+		REPEAT: string;
 		OTHER: string;
 		UNKNOWN: string;
 	};
@@ -102,19 +103,4 @@ export interface TextPairCheckerConfig {
 	defaultState: "on" | "off";
 	onLabel: string;
 	offLabel: string;
-}
-
-/** QML 側から渡される MuseScore 列挙型マップ */
-export interface MuseScoreEnums {
-	CHORD?: unknown;
-	REST?: unknown;
-	BAR_LINE?: unknown;
-	BARLINE_DOUBLE?: unknown;
-	BARLINE_END?: unknown;
-	TEMPO_TEXT?: unknown;
-	STAFF_TEXT?: unknown;
-	SYSTEM_TEXT?: unknown;
-	EXPRESSION?: unknown;
-	REHEARSAL_MARK?: unknown;
-	DYNAMIC?: unknown;
 }

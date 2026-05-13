@@ -1,17 +1,34 @@
 import {
+	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
+	getTempoBpm,
+	isBarLine,
+	isChord,
+	isDynamic,
+	isExpression,
+	isPlayTechAnnotation,
+	isRehearsalMark,
+	isRest,
+	isStaffText,
+	isSystemText,
+	isTempo,
 	iterateMeasureSegments,
 	iterateMeasures,
 	iterateStaves,
+	parseDynamicText,
 	staffVoiceToTrack,
 	trackToStaffIdx,
+	VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
 import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
-import type { PluginSegment } from "@musescore-linter/musescore-api";
-import { buildEnumRegistry, type EnumRegistry } from "./enumRegistry.js";
+import type {
+	PluginSegment,
+	TextAnnotation,
+} from "@musescore-linter/musescore-api";
+import { CANONICAL } from "./enumRegistry.js";
 import { make } from "./logger.js";
-import type { LintEvent, LintIR, MuseScoreEnums } from "./types.js";
+import type { LintEvent, LintIR } from "./types.js";
 
 const log = make("snapshot");
 
@@ -38,13 +55,6 @@ function pushIndexedId(
 	const k = String(key);
 	if (!map[k]) map[k] = [];
 	map[k].push(eventId);
-}
-
-export function normalizeText(rawText: string): string {
-	return (rawText ?? "")
-		.replace(/<[^>]*>/g, "")
-		.toLowerCase()
-		.trim();
 }
 
 function appendEvent(
@@ -86,10 +96,28 @@ function appendEvent(
 	return ev;
 }
 
+function resolveAnnotationKind(ann: TextAnnotation): string {
+	if (isTempo(ann)) return CANONICAL.elementKinds.TEMPO_TEXT;
+	if (isDynamic(ann)) return CANONICAL.elementKinds.DYNAMIC;
+	if (isExpression(ann)) return CANONICAL.elementKinds.EXPRESSION;
+	if (isStaffText(ann) || isPlayTechAnnotation(ann))
+		return CANONICAL.elementKinds.STAFF_TEXT;
+	if (isSystemText(ann)) return CANONICAL.elementKinds.SYSTEM_TEXT;
+	if (isRehearsalMark(ann)) return CANONICAL.elementKinds.REHEARSAL_MARK;
+	return CANONICAL.elementKinds.UNKNOWN;
+}
+
+function resolveAnnotationTextNorm(
+	ann: TextAnnotation,
+	textRaw: string,
+): string {
+	if (isDynamic(ann)) return parseDynamicText(textRaw);
+	return textRaw.toLowerCase();
+}
+
 function processAnnotations(
 	seg: PluginSegment,
 	measureNum: number,
-	registry: EnumRegistry,
 	ir: LintIR,
 ): void {
 	if (!seg.annotations) return;
@@ -99,7 +127,10 @@ function processAnnotations(
 		if (textRaw.length === 0) continue;
 
 		const annStaffIdx = getAnnotationStaffIdx(ann);
-		const annKind = registry.resolveElementKind(ann.type);
+		const annKind = resolveAnnotationKind(ann);
+		const textNorm = resolveAnnotationTextNorm(ann, textRaw);
+		const tempo = isTempo(ann) ? getTempoBpm(ann) : null;
+
 		appendEvent(ir, {
 			type: "text",
 			kind: annKind,
@@ -109,8 +140,8 @@ function processAnnotations(
 			voice: -1,
 			subtype: ann.subtype,
 			subStyle: ann.subStyle,
-			tempo: ann.tempo ?? null,
-			textNorm: textRaw.toLowerCase(),
+			tempo,
+			textNorm,
 			textRaw,
 			scope: annStaffIdx >= 0 ? "staff" : "global",
 		});
@@ -121,21 +152,17 @@ function processStaffElements(
 	seg: PluginSegment,
 	measureNum: number,
 	staffIdx: number,
-	registry: EnumRegistry,
 	ir: LintIR,
 ): void {
-	const canonical = registry.canonical;
-
-	for (let voice = 0; voice < 4; voice++) {
+	for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
 		const el = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
 		if (!el) continue;
 
-		const kind = registry.resolveElementKind(el.type);
-		if (
-			kind === canonical.elementKinds.CHORD ||
-			kind === canonical.elementKinds.REST
-		) {
-			const evType = kind === canonical.elementKinds.CHORD ? "chord" : "rest";
+		if (isChord(el) || isRest(el)) {
+			const evType = isChord(el) ? "chord" : "rest";
+			const kind = isChord(el)
+				? CANONICAL.elementKinds.CHORD
+				: CANONICAL.elementKinds.REST;
 			appendEvent(ir, {
 				type: evType as "chord" | "rest",
 				kind,
@@ -160,18 +187,14 @@ function processStaffElements(
 		}
 	}
 
-	for (let v = 0; v < 4; v++) {
+	for (let v = 0; v < VOICES_PER_STAFF; v++) {
 		const barEl = seg.elementAt(staffVoiceToTrack(staffIdx, v));
-		if (
-			barEl &&
-			registry.resolveElementKind(barEl.type) ===
-				canonical.elementKinds.BAR_LINE
-		) {
+		if (barEl && isBarLine(barEl)) {
 			appendEvent(ir, {
 				type: "barline",
-				kind: canonical.elementKinds.BAR_LINE,
-				barlineType: barEl.barLineType,
-				barlineKind: registry.resolveBarlineKind(barEl.barLineType),
+				kind: CANONICAL.elementKinds.BAR_LINE,
+				barlineType: barEl.barlineType,
+				barlineKind: classifyBarlineKind(barEl.barlineType),
 				tick: seg.tick,
 				measure: measureNum,
 				staffIdx,
@@ -183,8 +206,7 @@ function processStaffElements(
 	}
 }
 
-export function buildSnapshot(score: Score, E: MuseScoreEnums): LintIR {
-	const registry = buildEnumRegistry(E);
+export function buildSnapshot(score: Score): LintIR {
 	const numStaves = score.nstaves;
 
 	const ir: LintIR = {
@@ -198,7 +220,7 @@ export function buildSnapshot(score: Score, E: MuseScoreEnums): LintIR {
 			firstMusicTickByStaff: Array(numStaves).fill(null) as (number | null)[],
 			lastTick: 0,
 		},
-		registry: { canonical: registry.canonical },
+		registry: { canonical: CANONICAL },
 		derived: null,
 	};
 
@@ -206,9 +228,9 @@ export function buildSnapshot(score: Score, E: MuseScoreEnums): LintIR {
 	for (const m of iterateMeasures(score)) {
 		try {
 			for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
-				processAnnotations(seg, measureNum, registry, ir);
+				processAnnotations(seg, measureNum, ir);
 				for (const staffIdx of iterateStaves(score)) {
-					processStaffElements(seg, measureNum, staffIdx, registry, ir);
+					processStaffElements(seg, measureNum, staffIdx, ir);
 				}
 			}
 		} catch (e) {
