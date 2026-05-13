@@ -1,5 +1,21 @@
 # musescore-linter-plugin
 
+## 2.1.4
+
+### Patch Changes
+
+- [#62](https://github.com/kjfsm/musescore-linter-plugin/pull/62) [`858190b`](https://github.com/kjfsm/musescore-linter-plugin/commit/858190bc6bff09ced52368986a40ae97c1a6ebf8) Thanks [@kjfsm](https://github.com/kjfsm)! - チェッカー判定条件の修正
+
+  - **restAnnotationChecker**: 休符上の演奏技法テキスト（pizz./arco/con sord. 等）も不受理として検出するよう拡張。これまで DYNAMIC（強弱記号）のみを検出していたが、description に記載のとおり STAFF_TEXT 内の技法指示も対象に加えた。
+  - **codaSegnoChecker**: "D.C./D.S. al Fine" がある場合に Fine マークの存在を確認するチェックを追加。description に記載されていた Fine 対応が未実装だった。
+  - **openingTempoChecker**: 手動の CHORD/REST 全走査を `ir.meta.firstMusicTickByStaff` の参照に置き換えて簡素化。
+
+- [#62](https://github.com/kjfsm/musescore-linter-plugin/pull/62) [`858190b`](https://github.com/kjfsm/musescore-linter-plugin/commit/858190bc6bff09ced52368986a40ae97c1a6ebf8) Thanks [@kjfsm](https://github.com/kjfsm)! - textPairChecker: on 状態未経験の off 指示を誤検出しないよう修正
+
+  "arco" や "ord." は複数チェッカー（sul-tasto-ord / sul-pont-ord / con-legno-arco）の offPatterns に共通して含まれている。pizz.→arco のように別の技法を解除する目的で "arco" を書いた場合、これらのチェッカーが「arco が既に指示済みの状態で再度指示されています」と誤検出していた。
+
+  on 状態を一度も経験していないパートに対しては off 指示の重複を報告しないよう `hasEverBeenOn` フラグを追加。
+
 ## 2.1.3
 
 ### Patch Changes
