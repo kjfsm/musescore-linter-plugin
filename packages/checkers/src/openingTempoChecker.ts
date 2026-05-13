@@ -17,25 +17,15 @@ export const openingTempoChecker: Checker = {
 		if (!canonical) return issues;
 
 		const staff = ir.meta.parts[0];
-		const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
-
-		const chordIds = byStaff[canonical.elementKinds.CHORD] ?? [];
-		const restIds = byStaff[canonical.elementKinds.REST] ?? [];
-		const firstMusicEvent = [...chordIds, ...restIds]
-			.map((id) => ir.events[id])
-			.reduce<(typeof ir.events)[0] | null>((best, ev) => {
-				if (!best) return ev;
-				if (ev.tick < best.tick) return ev;
-				if (ev.tick === best.tick && ev.measure < best.measure) return ev;
-				return best;
-			}, null);
-
-		if (!firstMusicEvent) return issues;
+		const firstMusicTick =
+			ir.meta.firstMusicTickByStaff[staff.staffIdx] ?? null;
+		if (firstMusicTick === null) return issues;
 
 		// staff-scoped tempo
+		const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
 		const tempoIds = byStaff[canonical.elementKinds.TEMPO_TEXT] ?? [];
 		for (const id of tempoIds) {
-			if (ir.events[id].tick <= firstMusicEvent.tick) return issues;
+			if (ir.events[id].tick <= firstMusicTick) return issues;
 		}
 
 		// global scope tempo
@@ -43,7 +33,7 @@ export const openingTempoChecker: Checker = {
 		for (const id of globalIds) {
 			const gev = ir.events[id];
 			if (!isTempoMark(gev, ir)) continue;
-			if (gev.tick <= firstMusicEvent.tick) return issues;
+			if (gev.tick <= firstMusicTick) return issues;
 		}
 
 		issues.push(
@@ -52,7 +42,7 @@ export const openingTempoChecker: Checker = {
 				partName: staff.partName,
 				staffIdx: 0,
 				measure: 1,
-				tick: firstMusicEvent.tick,
+				tick: firstMusicTick,
 			}),
 		);
 		return issues;

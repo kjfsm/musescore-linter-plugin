@@ -46,6 +46,7 @@ export function createTextPairChecker(config: TextPairCheckerConfig): Checker {
 
 			for (const part of parts) {
 				let state = config.defaultState;
+				let hasEverBeenOn = config.defaultState === "on";
 				let lastSwitchEvent: PartBucketEvent | null = null;
 
 				for (const ev of part.events) {
@@ -63,9 +64,10 @@ export function createTextPairChecker(config: TextPairCheckerConfig): Checker {
 							);
 						}
 						state = "on";
+						hasEverBeenOn = true;
 						lastSwitchEvent = ev;
 					} else if (matchesAny(ev.text, config.offPatterns)) {
-						if (state === "off") {
+						if (state === "off" && hasEverBeenOn) {
 							issues.push(
 								buildDuplicateIssue(
 									checker,
