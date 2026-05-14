@@ -25,9 +25,16 @@ export interface PartSpec {
 	partName?: string;
 }
 
+export interface HairpinSpec {
+	staffIdx: number;
+	startTick: number;
+	endTick: number;
+}
+
 export interface IRSpec {
 	parts?: PartSpec[];
 	events?: EventSpec[];
+	hairpins?: HairpinSpec[];
 }
 
 function typeFromKind(kind: string): LintEvent["type"] {
@@ -60,6 +67,7 @@ export function buildIR(spec: IRSpec): LintIR {
 			parts,
 			firstMusicTickByStaff: parts.map(() => null),
 			lastTick: 0,
+			hairpins: (spec.hairpins ?? []).map((h) => ({ ...h })),
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,

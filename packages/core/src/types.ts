@@ -26,10 +26,17 @@ export interface IRIndex {
 	byStaffAndKind: Record<string, Record<string, number[]>>;
 }
 
+export interface HairpinInfo {
+	staffIdx: number;
+	startTick: number;
+	endTick: number;
+}
+
 export interface IRMeta {
 	parts: { staffIdx: number; partName: string }[];
 	firstMusicTickByStaff: (number | null)[];
 	lastTick: number;
+	hairpins: HairpinInfo[];
 }
 
 export interface IRDerived {

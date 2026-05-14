@@ -652,6 +652,86 @@ describe("duplicate-dynamics checker", () => {
 		// cleanIR は staff 0 と staff 1 にそれぞれ "f" を持つが別パートなので 0 件
 		expect(duplicateDynamicsChecker.run(cleanIR())).toHaveLength(0);
 	});
+
+	it("同パートで f → f が連続していてもヘアピンがあれば 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 960,
+					measure: 3,
+					textNorm: "f",
+					textRaw: "f",
+				},
+			],
+			hairpins: [{ staffIdx: 0, startTick: 240, endTick: 720 }],
+		});
+		expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("ヘアピンが別パートにある場合は重複判定する", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+			events: [
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 960,
+					measure: 3,
+					textNorm: "f",
+					textRaw: "f",
+				},
+			],
+			hairpins: [{ staffIdx: 1, startTick: 240, endTick: 720 }],
+		});
+		const issues = duplicateDynamicsChecker.run(ir);
+		expect(issues).toHaveLength(1);
+	});
+
+	it("ヘアピンが2番目のダイナミクス以降に始まる場合は重複判定する", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 480,
+					measure: 2,
+					textNorm: "f",
+					textRaw: "f",
+				},
+			],
+			hairpins: [{ staffIdx: 0, startTick: 480, endTick: 960 }],
+		});
+		const issues = duplicateDynamicsChecker.run(ir);
+		expect(issues).toHaveLength(1);
+	});
 });
 
 // ─── final-barline ──────────────────────────────────────────────────────────

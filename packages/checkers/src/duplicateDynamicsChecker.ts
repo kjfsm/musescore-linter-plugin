@@ -36,20 +36,29 @@ export const duplicateDynamicsChecker: Checker = {
 				.map((id) => ir.events[id])
 				.sort((a, b) => a.tick - b.tick);
 
+			const hairpins = ir.meta.hairpins.filter(
+				(h) => h.staffIdx === part.staffIdx,
+			);
+
 			let prev: LintEvent | null = null;
 			for (const ev of dynEvents) {
 				if (prev !== null && sameDynamic(prev, ev)) {
-					const label = ev.textRaw || ev.textNorm || "(同一)";
-					issues.push(
-						createIssue(duplicateDynamicsChecker, {
-							message: `${part.partName}: ${label} が変化なく連続しています（${ev.measure}小節目、前回: ${prev.measure}小節目）`,
-							partName: part.partName,
-							staffIdx: part.staffIdx,
-							measure: ev.measure,
-							tick: ev.tick,
-							detail: { previousMeasure: prev.measure },
-						}),
+					const hasHairpinBetween = hairpins.some(
+						(h) => h.startTick >= prev!.tick && h.startTick < ev.tick,
 					);
+					if (!hasHairpinBetween) {
+						const label = ev.textRaw || ev.textNorm || "(同一)";
+						issues.push(
+							createIssue(duplicateDynamicsChecker, {
+								message: `${part.partName}: ${label} が変化なく連続しています（${ev.measure}小節目、前回: ${prev.measure}小節目）`,
+								partName: part.partName,
+								staffIdx: part.staffIdx,
+								measure: ev.measure,
+								tick: ev.tick,
+								detail: { previousMeasure: prev.measure },
+							}),
+						);
+					}
 				}
 				prev = ev;
 			}
