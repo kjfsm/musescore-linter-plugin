@@ -2,11 +2,13 @@ import {
 	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
+	getHairpinRange,
 	getTempoBpm,
 	isBarLine,
 	isChord,
 	isDynamic,
 	isExpression,
+	isHairpin,
 	isPlayTechAnnotation,
 	isRehearsalMark,
 	isRest,
@@ -184,6 +186,17 @@ function processStaffElements(
 			if (ir.meta.firstMusicTickByStaff[staffIdx] === null) {
 				ir.meta.firstMusicTickByStaff[staffIdx] = seg.tick;
 			}
+
+			if (isChord(el)) {
+				for (const note of el.notes ?? []) {
+					for (const spanner of note.spannerForward ?? []) {
+						if (isHairpin(spanner)) {
+							const range = getHairpinRange(spanner);
+							ir.meta.hairpins.push({ staffIdx, ...range });
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -219,6 +232,7 @@ export function buildSnapshot(score: Score): LintIR {
 			})),
 			firstMusicTickByStaff: Array(numStaves).fill(null) as (number | null)[],
 			lastTick: 0,
+			hairpins: [],
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,

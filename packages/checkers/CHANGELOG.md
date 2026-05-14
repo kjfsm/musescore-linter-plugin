@@ -1,5 +1,13 @@
 # @musescore-linter/checkers
 
+## 2.1.1
+
+### Patch Changes
+
+- c69f6a5: 重複ダイナミクスチェッカー: 間にヘアピン（クレッシェンド/デクレッシェンド）がある場合は重複判定しないよう修正
+- Updated dependencies [c69f6a5]
+  - @musescore-linter/core@2.1.3
+
 ## 2.1.0
 
 ### Minor Changes
