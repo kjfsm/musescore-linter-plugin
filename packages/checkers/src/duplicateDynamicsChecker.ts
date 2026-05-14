@@ -43,8 +43,9 @@ export const duplicateDynamicsChecker: Checker = {
 			let prev: LintEvent | null = null;
 			for (const ev of dynEvents) {
 				if (prev !== null && sameDynamic(prev, ev)) {
+					const prevTick = prev.tick;
 					const hasHairpinBetween = hairpins.some(
-						(h) => h.startTick >= prev!.tick && h.startTick < ev.tick,
+						(h) => h.startTick >= prevTick && h.startTick < ev.tick,
 					);
 					if (!hasHairpinBetween) {
 						const label = ev.textRaw || ev.textNorm || "(同一)";
