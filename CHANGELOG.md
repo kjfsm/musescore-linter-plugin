@@ -1,5 +1,11 @@
 # musescore-linter-plugin
 
+## 2.1.5
+
+### Patch Changes
+
+- [`729b26f`](https://github.com/kjfsm/musescore-linter-plugin/commit/729b26f719a25cb762b11bd3585111deea2964e8) Thanks [@kjfsm](https://github.com/kjfsm)! - ヘアピンがある区間の重複ダイナミクスを誤検出しないよう修正
+
 ## 2.1.4
 
 ### Patch Changes
