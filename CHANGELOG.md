@@ -1,5 +1,11 @@
 # musescore-linter-plugin
 
+## 2.1.6
+
+### Patch Changes
+
+- [#66](https://github.com/kjfsm/musescore-linter-plugin/pull/66) [`4e0678d`](https://github.com/kjfsm/musescore-linter-plugin/commit/4e0678d71477353f859bb7201fe0993e16f6e061) Thanks [@kjfsm](https://github.com/kjfsm)! - 最新版 ZIP の固定ダウンロード URL を提供するため、リリースに `musescore-linter-plugin.zip` を追加します。
+
 ## 2.1.5
 
 ### Patch Changes
