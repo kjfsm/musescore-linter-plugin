@@ -5,7 +5,8 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 
 ## インストール方法
 
-1. **[最新版の ZIP をダウンロード](https://github.com/kjfsm/musescore-linter-plugin/releases/latest)** し、ZIP を展開します。
+1. **[最新版の ZIP をダウンロード](https://github.com/kjfsm/musescore-linter-plugin/releases/latest/download/musescore-linter-plugin.zip)** し、ZIP を展開します。
+   - ZIP URL: `https://github.com/kjfsm/musescore-linter-plugin/releases/latest/download/musescore-linter-plugin.zip`
 
 2. 展開したフォルダの中身を、MuseScore 4 のプラグインフォルダに配置します。
    - **Windows:** `C:\Users\（ユーザー名）\Documents\MuseScore4\Plugins\musescore-linter-plugin\`

@@ -28,7 +28,10 @@ function main() {
 		fs.readFileSync(path.join(ROOT, "package.json"), "utf8"),
 	) as { version: string };
 	const version = pkg.version;
-	const zipName = `musescore-linter-plugin-${version}.zip`;
+	const zipNames = [
+		`musescore-linter-plugin-${version}.zip`,
+		"musescore-linter-plugin.zip",
+	];
 
 	const distDir = path.join(ROOT, "dist");
 	if (!fs.existsSync(distDir)) {
@@ -46,10 +49,11 @@ function main() {
 	);
 
 	const zipped = zipSync(files);
-	const zipPath = path.join(ROOT, zipName);
-	fs.writeFileSync(zipPath, zipped);
-
-	console.log(`✓ Created ${zipName}`);
+	for (const zipName of zipNames) {
+		const zipPath = path.join(ROOT, zipName);
+		fs.writeFileSync(zipPath, zipped);
+		console.log(`✓ Created ${zipName}`);
+	}
 }
 
 main();
