@@ -1,5 +1,11 @@
 # musescore-linter-plugin
 
+## 2.1.7
+
+### Patch Changes
+
+- [#68](https://github.com/kjfsm/musescore-linter-plugin/pull/68) [`3070002`](https://github.com/kjfsm/musescore-linter-plugin/commit/307000218eba8a74a122b5c9c5c2a52543173393) Thanks [@kjfsm](https://github.com/kjfsm)! - 開発依存パッケージを最新バージョンに更新（Biome 2、TypeScript 6、Vitest 4）。
+
 ## 2.1.6
 
 ### Patch Changes
