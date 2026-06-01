@@ -23,21 +23,21 @@
 		"pre-commit": "pnpm lint"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.15",
+		"@biomejs/biome": "^2.4.16",
 		"@changesets/changelog-github": "^0.7.0",
 		"@changesets/cli": "^2.31.0",
 		"@musescore-linter/checkers": "workspace:*",
 		"@musescore-linter/core": "workspace:*",
-		"@types/node": "^25.8.0",
-		"@vitest/coverage-v8": "^4.1.6",
+		"@types/node": "^25.9.1",
+		"@vitest/coverage-v8": "^4.1.7",
 		"esbuild": "^0.28.0",
 		"fflate": "^0.8.3",
-		"knip": "^6.14.0",
+		"knip": "^6.15.0",
 		"simple-git-hooks": "^2.13.1",
-		"tsx": "^4.22.0",
-		"turbo": "^2.9.14",
+		"tsx": "^4.22.4",
+		"turbo": "^2.9.16",
 		"typescript": "^6.0.3",
-		"vitest": "^4.1.6"
+		"vitest": "^4.1.7"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
