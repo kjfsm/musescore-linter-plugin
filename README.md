@@ -26,6 +26,9 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 | Con sord. / Senza sord. | warning | 弱音器の対応漏れ・重複 |
 | Solo / Tutti | warning | `solo`/`soli` → `tutti` の対応漏れ・重複 |
 | Div. / Unis. | warning | `div.` → `unis.` の対応漏れ・重複 |
+| Sul tasto / Ord. | warning | `sul tasto`（駒から離れた奏法）→ `ord.` 復帰の対応漏れ・重複 |
+| Sul pont. / Ord. | warning | `sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複 |
+| Con legno / Arco | warning | `con legno`（弓の木部奏法）→ `arco` 復帰の対応漏れ・重複 |
 | 休符アノテーション | error | 休符の位置にダイナミクス等が付与されていないか |
 | テンポ変更と複縦線 | info | テンポ変更前の小節に複縦線があるか |
 | 冒頭テンポ表記 | error | 曲頭にテンポ表記があるか |
@@ -33,8 +36,9 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 | BPM 値なしテンポ | warning | テンポ表記に BPM 値が未設定（再生テンポに反映されない） |
 | 重複ダイナミクス | info | 同パートで同じ強弱記号が変化なく連続している箇所 |
 | 終止線の確認 | info | 曲末の最終 barline が終止線になっているか |
+| コーダ/セーニョ整合性 | error | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落） |
 
-検出結果は「問題」タブにリスト表示され、クリックで該当 tick へジャンプします（MuseScore 4 の `Cursor.rewindToTick` 対応）。
+検出結果は「問題」タブにリスト表示され、クリックで該当小節・拍へジャンプします。
 
 ## UI の機能
 
@@ -46,38 +50,58 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 
 ## ファイル構成
 
+pnpm monorepo（`packages/core`・`checkers`・`musescore-api`）です。ビルド・テスト・リリースは Turborepo + Changesets で行います。
+
 ```
-ScoreLinter.qml              プラグインエントリ（薄い）
+ScoreLinter.qml                プラグインエントリ（薄い）
 qml/
-  IssuesPanel.qml            問題タブ（バッジ・検索・フィルタ・空状態）
-  SettingsPanel.qml          設定タブ（checker 一覧から自動生成）
-  SnapshotPanel.qml          スナップショットタブ
-  IssueDelegate.qml          問題 1 行の delegate
-  SeverityBadge.qml          severity 色・カウントのバッジ
+  IssuesPanel.qml              問題タブ（バッジ・検索・フィルタ・空状態）
+  SettingsPanel.qml            設定タブ（checker 一覧から自動生成）
+  SnapshotPanel.qml            スナップショットタブ
+  IssueDelegate.qml            問題 1 行の delegate
+  SeverityBadge.qml            severity 色・カウントのバッジ
 src/
-  snapshot.js                スコアを走査して LintIR を生成
-  linter.js                  全 checker を登録順に実行しソート
-  enumRegistry.js            MuseScore enum の正規化層
-  issue.js                   Issue 型とソートユーティリティ
-  checkerRegistry.js         checker の登録・取得
-  logger.js                  タグ付きロガー
-  checkers/
-    index.js                 全 checker を registry に登録（唯一の同期点）
-    base/
-      predicates.js          共通述語（isDynamicMark 等）と buildPartBuckets
-      textPairChecker.js     on/off ペア型 checker のファクトリ
-    pizzArcoChecker.js       \
-    sordinoChecker.js         > on/off ペア型（4 種）
-    soloTuttiChecker.js       >
-    divisiChecker.js         /
-    restAnnotationChecker.js     独立チェック
-    tempoBarlineChecker.js       独立チェック
-    openingTempoChecker.js       独立チェック
-    firstNoteDynamicsChecker.js  独立チェック
-test/
-  runner.js                  Node.js 用テストランナー
-  loader.js                  .pragma library / .import を剥がしてロード
-  irBuilder.js               簡易 LintIR ビルダ
+  bundle-entry.ts              esbuild の入口（core + checkers を束ね registerAll を呼ぶ）
+packages/
+  core/                        @musescore-linter/core — LintIR・linter・registry
+    src/
+      types.ts                 LintIR / LintEvent / Issue の型定義
+      snapshot.ts              スコアを走査して LintIR を生成（buildSnapshot）
+      linter.ts                全 checker を登録順に実行・ソート（runAllCheckers）
+      checkerRegistry.ts       checker の登録・取得
+      enumRegistry.ts          MuseScore enum を canonical 文字列へ正規化する層
+      issue.ts                 Issue 生成（createIssue）とソート（compareIssues）
+      logger.ts                タグ付きロガー
+  checkers/                    @musescore-linter/checkers — 全 checker
+    src/
+      index.ts                 全 checker を registry に登録（registerAll：唯一の同期点）
+      base/
+        predicates.ts          共通述語（isDynamicMark 等）と buildPartBuckets
+        textPairChecker.ts     on/off ペア型 checker のファクトリ
+      pizzArcoChecker.ts       ┐
+      sordinoChecker.ts        │
+      soloTuttiChecker.ts      │ on/off ペア型（articulation・計 7 種）
+      divisiChecker.ts         │
+      sulTastoOrdChecker.ts    │
+      sulPontOrdChecker.ts     │
+      conLegnoArcoChecker.ts   ┘
+      restAnnotationChecker.ts     休符アノテーション（独立）
+      tempoBarlineChecker.ts       テンポ変更と複縦線（独立）
+      openingTempoChecker.ts       冒頭テンポ表記（独立）
+      firstNoteDynamicsChecker.ts  各パート冒頭ダイナミクス（独立）
+      tempoWithoutBpmChecker.ts    BPM 値なしテンポ（独立）
+      duplicateDynamicsChecker.ts  重複ダイナミクス（独立）
+      finalBarlineChecker.ts       終止線の確認（独立）
+      codaSegnoChecker.ts          コーダ/セーニョ整合性（独立）
+    tests/
+      checkers.test.ts         全 checker の単体テスト（vitest）
+      helpers/irBuilder.ts     テスト用の簡易 LintIR ビルダ
+  musescore-api/               @musescore-linter/musescore-api — SDK 型の薄い拡張層
+    src/
+      index.ts                 SDK 型に不足するプロパティ（duration / annotations 等）を補うブリッジ
+scripts/
+  build.ts                     esbuild で IIFE バンドル + QML を dist/ へ
+  package.ts                   dist/ を ZIP 化（リリース成果物）
 ```
 
 ## 使い方
@@ -91,28 +115,31 @@ test/
 
 ## 新しい checker の追加手順
 
-1. `src/checkers/xxxChecker.js` を作成し `var checker = { ... }` を定義
-   - 必須プロパティ: `id, name, description, category, severity, defaultEnabled, run(ir)`
-   - Issue は `src/issue.js` の `createIssue(checker, fields)` 経由で生成
-   - on/off ペア型なら `src/checkers/base/textPairChecker.js` の `createTextPairChecker()` を利用
-2. `src/checkers/index.js` に `import` と `Registry.register(X.checker)` を 1 行ずつ追加
-3. README のチェック項目表を更新
+詳細は `/checker-add` skill と `.claude/rules/checker-contract.md` を参照。
 
-**QML も `ScoreLinter.qml` も触る必要はありません。**設定 UI は `Linter.getCheckerList()` の結果から自動生成されます。
+1. `packages/checkers/src/xxxChecker.ts` を作成し `export const xxxChecker = { ... }` を定義
+   - 必須プロパティ: `id, name, description, category, severity, defaultEnabled, run(ir)`
+   - Issue は `@musescore-linter/core` の `createIssue(checker, fields)` 経由で生成
+   - on/off ペア型なら `packages/checkers/src/base/textPairChecker.ts` の `createTextPairChecker()` を利用
+2. `packages/checkers/src/index.ts` の `registerAll()` に `import` と `register(xxxChecker)` を 1 行ずつ追加（**唯一の同期点**）
+3. `packages/checkers/tests/checkers.test.ts` にテストを追加（fixture は `tests/helpers/irBuilder.ts` の `buildIR({...})` で構築）
+4. README の「チェック項目」表を更新
+
+**QML も `ScoreLinter.qml` も触る必要はありません。**設定 UI は checker のメタデータ一覧から自動生成されます。
 
 ## テストの実行
 
 ```bash
-npm test   # node test/runner.js
+pnpm test   # 全パッケージで vitest を実行
 ```
 
-`test/runner.js` は `.pragma library` / `.import` を剥がして vm に読み込み、最小 LintIR で各 checker の挙動を検証します。MuseScore を起動せずに回帰テストが可能です。
+各 checker は `tests/helpers/irBuilder.ts` で構築した最小 LintIR に対して挙動を検証します。MuseScore を起動せずに回帰テストが可能です。
 
 ## CI / リリースフロー
 
 ### CI
 
-push または PR をオープンすると GitHub Actions が自動で `npm test` を実行します。
+push または PR をオープンすると GitHub Actions が lint（Biome）・unused 検出（knip）・typecheck・テスト・ビルドを自動実行します。
 
 ### リリース手順
 
@@ -121,7 +148,7 @@ push または PR をオープンすると GitHub Actions が自動で `npm test
 1. **変更内容を記録する**（機能追加・バグ修正の PR に含める）
 
    ```bash
-   npm run changeset
+   pnpm changeset
    # patch / minor / major を選択し、変更内容を入力
    # .changeset/*.md が生成されるのでコミットに含める
    ```
@@ -138,14 +165,14 @@ push または PR をオープンすると GitHub Actions が自動で `npm test
 
 - `ir.index.byKind[K]` / `ir.index.byStaffAndKind[s][K]` / `ir.index.byTick[t]` で必要なイベントだけを取り出す
 - 全 events の線形走査は避ける
-- 共有できる前処理（例: 各 staff の firstChord）は `ir.derived` に 1 回だけ計算して再利用する（`linter.js` の `ensureDerived` に追加）
+- 共有できる前処理（例: 各 staff の firstChord）は `ir.derived` に 1 回だけ計算して再利用する（`packages/core/src/linter.ts` の `ensureDerived` に追加）
 
 ## LintIR の概要
 
-```js
+```ts
 {
   events: [                      // 全イベントの単一配列（source of truth）
-    { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw, ... }
+    { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw, scope, barlineKind?, tempo?, duration?, ... }
   ],
   index: {                       // O(1) 検索用
     byTick:         { [tick]:           [eventId] },
@@ -156,10 +183,11 @@ push または PR をオープンすると GitHub Actions が自動で `npm test
   meta: {
     parts: [{ staffIdx, partName }],
     firstMusicTickByStaff: [tick|null, ...],
-    lastTick: number
+    lastTick: number,
+    hairpins: [{ staffIdx, startTick, endTick }]
   },
   registry: { canonical: { elementKinds, barlineKinds } },
-  derived: {                     // 遅延初期化。linter.js が 1 回だけ構築
+  derived: {                     // 遅延初期化。linter.ts が 1 回だけ構築（_eventsCount で無効化判定）
     firstChordByStaff, annotationIdsByTick, globalAnnotationIdsByTick
   }
 }
@@ -168,11 +196,13 @@ push または PR をオープンすると GitHub Actions が自動で `npm test
 ## 設計メモ
 
 - `staves` / `unresolvedAnnotations` は廃止済み。global scope のイベントは `index.byStaff[-1]` で参照する。
-- MuseScore API の列挙値は `enumRegistry.js` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。
-- Issue 型は `issue.js` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
+- MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。
+- Issue 型は `@musescore-linter/core` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
 - checker 単体で例外が出ても他の checker は実行継続し、`ruleId: "internal"` の issue として UI に表示される。
 
 ## 注意点
 
 - 判定は記譜ルールの補助であり、最終判断は編曲・出版方針に合わせて行ってください。
 - テキストの表記ゆれ（全角/半角、独自略語など）によっては検出できない場合があります。
+</content>
+</invoke>
