@@ -9,7 +9,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@kjfsm/musescore-plugin-sdk-helpers": "^2.0.0",
+		"@kjfsm/musescore-plugin-sdk-helpers": "^2.1.0",
 		"@musescore-linter/musescore-api": "workspace:*"
 	},
 	"devDependencies": {

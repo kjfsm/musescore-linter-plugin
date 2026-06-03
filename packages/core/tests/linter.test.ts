@@ -8,7 +8,13 @@ function minimalIR(): LintIR {
 	return {
 		events: [],
 		index: { byStaff: {}, byTick: {}, byKind: {}, byStaffAndKind: {} },
-		meta: { parts: [], firstMusicTickByStaff: [], lastTick: 0, hairpins: [] },
+		meta: {
+			parts: [],
+			firstMusicTickByStaff: [],
+			lastTick: 0,
+			hairpins: [],
+			slurs: [],
+		},
 		registry: { canonical: CANONICAL },
 		derived: null,
 	};
