@@ -1,4 +1,5 @@
 import { register, reset } from "@musescore-linter/core";
+import { articulationSlurConsistencyChecker } from "./articulationSlurConsistencyChecker.js";
 import { codaSegnoChecker } from "./codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "./conLegnoArcoChecker.js";
 import { divisiChecker } from "./divisiChecker.js";
@@ -24,6 +25,7 @@ export function registerAll(): void {
 	register(sulTastoOrdChecker);
 	register(sulPontOrdChecker);
 	register(conLegnoArcoChecker);
+	register(articulationSlurConsistencyChecker);
 	register(restAnnotationChecker);
 	register(tempoBarlineChecker);
 	register(openingTempoChecker);
@@ -35,6 +37,7 @@ export function registerAll(): void {
 }
 
 export {
+	articulationSlurConsistencyChecker,
 	codaSegnoChecker,
 	conLegnoArcoChecker,
 	divisiChecker,
