@@ -2,6 +2,7 @@ import { register, reset } from "@musescore-linter/core";
 import { articulationSlurConsistencyChecker } from "./articulationSlurConsistencyChecker.js";
 import { codaSegnoChecker } from "./codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "./conLegnoArcoChecker.js";
+import { courtesyAccidentalChecker } from "./courtesyAccidentalChecker.js";
 import { divisiChecker } from "./divisiChecker.js";
 import { duplicateDynamicsChecker } from "./duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "./finalBarlineChecker.js";
@@ -52,12 +53,14 @@ export function registerAll(): void {
 	register(rehearsalMarkOrderChecker);
 	register(repeatBarlineMatchChecker);
 	register(tiePitchMismatchChecker);
+	register(courtesyAccidentalChecker);
 }
 
 export {
 	articulationSlurConsistencyChecker,
 	codaSegnoChecker,
 	conLegnoArcoChecker,
+	courtesyAccidentalChecker,
 	divisiChecker,
 	duplicateDynamicsChecker,
 	finalBarlineChecker,

@@ -1,7 +1,15 @@
-import { ensureDerived, reset, runAllCheckers } from "@musescore-linter/core";
+import {
+	ensureDerived,
+	reset,
+	runAllCheckers,
+	tpcToAlter,
+	tpcToName,
+	tpcToStep,
+} from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "../src/conLegnoArcoChecker.js";
+import { courtesyAccidentalChecker } from "../src/courtesyAccidentalChecker.js";
 import { divisiChecker } from "../src/divisiChecker.js";
 import { duplicateDynamicsChecker } from "../src/duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "../src/finalBarlineChecker.js";
@@ -1930,5 +1938,134 @@ describe("tie-pitch-mismatch checker", () => {
 			],
 		});
 		expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── tpc spelling helpers ─────────────────────────────────────────────────
+
+describe("tpc spelling helpers", () => {
+	it("tpcToStep returns 0=C..6=B", () => {
+		expect(tpcToStep(14)).toBe(0); // C
+		expect(tpcToStep(13)).toBe(3); // F
+		expect(tpcToStep(20)).toBe(3); // F#（同じステップ F）
+		expect(tpcToStep(19)).toBe(6); // B
+	});
+
+	it("tpcToAlter returns the chromatic alteration", () => {
+		expect(tpcToAlter(14)).toBe(0); // C
+		expect(tpcToAlter(20)).toBe(1); // F#
+		expect(tpcToAlter(21)).toBe(1); // C#
+		expect(tpcToAlter(12)).toBe(-1); // Bb
+	});
+
+	it("tpcToName composes letter + accidental", () => {
+		expect(tpcToName(14)).toBe("C");
+		expect(tpcToName(13)).toBe("F");
+		expect(tpcToName(20)).toBe("F#");
+		expect(tpcToName(12)).toBe("Bb");
+	});
+});
+
+// ─── courtesy-accidental ──────────────────────────────────────────────────
+
+describe("courtesy-accidental checker", () => {
+	const fSharp = { pitch: 66, tpc: 20, line: 5, accidentalShown: true };
+	const fNatural = { pitch: 65, tpc: 13, line: 5, accidentalShown: false };
+	const fSharpShown = { pitch: 66, tpc: 20, line: 5, accidentalShown: true };
+
+	it("前小節の F# → 次小節の F（記号なし）→ info 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					notes: [fSharp],
+				},
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 1920,
+					measure: 2,
+					notes: [fNatural],
+				},
+			],
+		});
+		const issues = courtesyAccidentalChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+		expect(issues[0].measure).toBe(2);
+		expect(issues[0].message).toContain("F");
+	});
+
+	it("次小節でも臨時記号が表示されているなら提案しない → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					notes: [fSharp],
+				},
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 1920,
+					measure: 2,
+					notes: [fSharpShown],
+				},
+			],
+		});
+		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("直前の小節でなければ提案しない（小節が離れている）→ 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					notes: [fSharp],
+				},
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 3840,
+					measure: 3,
+					notes: [fNatural],
+				},
+			],
+		});
+		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("前に臨時記号が無ければ提案しない → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 1920,
+					measure: 2,
+					notes: [fNatural],
+				},
+			],
+		});
+		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
 	});
 });

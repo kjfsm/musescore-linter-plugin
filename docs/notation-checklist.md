@@ -138,7 +138,7 @@
 | # | 項目 | タグ | severity | 優先 | 備考 |
 |---|---|---|---|---|---|
 | J1 | 不要な臨時記号（同小節で既に有効） | SDK | info | 中 | 要: 音高/tpc + 小節（拍子） |
-| J2 | 親切記号（courtesy accidental）の欠落 | SDK | info | 低 | 要: 音高/tpc |
+| J2 | 親切記号（courtesy accidental）の提案 | SDK | info | 中 | ✅ `courtesy-accidental`。前小節の臨時記号と次小節の同一譜表位置を突合。checker 実装済み（snapshot 配線は SDK helpers 公開後） |
 | J3 | ダブルシャープ/フラットなど不自然な綴り | SDK | info | 低 | 要: tpc |
 | J4 | 異名同音の不統一（声部間） | SDK | info | 低 | 要: tpc |
 | J5 | 音域逸脱 | MS | – | 対象外 | MuseScore が表示 |
@@ -150,8 +150,8 @@
 データ供給経路は **SDK types/helpers → `packages/musescore-api` ブリッジ → `snapshot.ts` → LintEvent/meta**。
 優先度順に段階導入（採否は次ステップで判断）:
 
-1. **音高（最優先・波及大）**: `Note.pitch`/`Note.tpc` を SDK types で公開 → helpers に `getNotePitches(chord)` →
-   `snapshot.ts` の chord 処理で `ev.pitches` 付与。解放: D6, G2, J1–J4, I2。
+1. **音高（最優先・波及大）**: `Note.pitch`/`Note.tpc` を SDK types で公開 → helpers に `getNotePitches` / `getNoteSpellings` →
+   `snapshot.ts` の chord 処理で `ev.notes`（音高/tpc/譜表位置/臨時記号表示）付与。解放: D6, G2, J1–J4, I2。`tpc` 演算は core の `pitchSpelling.ts`。
 2. **拍子**: `TimeSig` を helper で取得 → `meta.timeSigByMeasure`。解放: F1, F2, F3, J1 の小節境界。
 3. **楽器メタ**: `Part.instrumentId`/移調/MIDI program/有音程フラグを `meta.parts[]` に拡充。解放: H1, H3, H6, D7。
 4. **タイ / グリッサンド**: 既存の `note.spannerForward` 経路で `meta.ties`/`meta.glissandos`。解放: D4, D5, D6, F2, G2, G3。

@@ -21,7 +21,12 @@ export interface EventSpec {
 	stemDirection?: number;
 	beamMode?: number;
 	articulations?: string[];
-	pitches?: number[];
+	notes?: {
+		pitch: number;
+		tpc: number;
+		line: number;
+		accidentalShown: boolean;
+	}[];
 }
 
 export interface PartSpec {
@@ -127,7 +132,7 @@ export function buildIR(spec: IRSpec): LintIR {
 		if (e.stemDirection !== undefined) ev.stemDirection = e.stemDirection;
 		if (e.beamMode !== undefined) ev.beamMode = e.beamMode;
 		if (e.articulations !== undefined) ev.articulations = e.articulations;
-		if (e.pitches !== undefined) ev.pitches = e.pitches;
+		if (e.notes !== undefined) ev.notes = e.notes;
 
 		ir.events.push(ev);
 

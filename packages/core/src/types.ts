@@ -1,5 +1,12 @@
 export type Severity = "error" | "warning" | "info";
 
+export interface NoteInfo {
+	pitch: number; // MIDI 音高（0-127）。不明は -1
+	tpc: number; // tonal pitch class（綴り）。C = 14
+	line: number; // 譜表上の位置（音部記号に応じた音名+オクターブ）
+	accidentalShown: boolean; // この符頭に臨時記号が表示されているか
+}
+
 export interface LintEvent {
 	id: number;
 	tick: number;
@@ -20,7 +27,7 @@ export interface LintEvent {
 	stemDirection?: number; // chord のみ。DirectionV 生値（0 auto / 1 up / 2 down）
 	beamMode?: number; // chord のみ。BeamMode 生値
 	articulations?: string[]; // chord のみ。アーティキュレーション名（"Staccato" 等）
-	pitches?: number[]; // chord のみ。各音符の MIDI 音高（0-127）
+	notes?: NoteInfo[]; // chord のみ。各音符の綴り情報（音高/tpc/譜表位置/臨時記号表示）
 }
 
 export interface IRIndex {
