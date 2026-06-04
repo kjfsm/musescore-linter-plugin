@@ -6,15 +6,22 @@ import { divisiChecker } from "./divisiChecker.js";
 import { duplicateDynamicsChecker } from "./duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "./finalBarlineChecker.js";
 import { firstNoteDynamicsChecker } from "./firstNoteDynamicsChecker.js";
+import { hairpinTargetDynamicChecker } from "./hairpinTargetDynamicChecker.js";
+import { harpTableChecker } from "./harpTableChecker.js";
+import { muteOpenChecker } from "./muteOpenChecker.js";
 import { openingTempoChecker } from "./openingTempoChecker.js";
 import { pizzArcoChecker } from "./pizzArcoChecker.js";
+import { rehearsalMarkOrderChecker } from "./rehearsalMarkOrderChecker.js";
 import { restAnnotationChecker } from "./restAnnotationChecker.js";
+import { simultaneousDynamicsChecker } from "./simultaneousDynamicsChecker.js";
 import { soloTuttiChecker } from "./soloTuttiChecker.js";
 import { sordinoChecker } from "./sordinoChecker.js";
 import { sulPontOrdChecker } from "./sulPontOrdChecker.js";
 import { sulTastoOrdChecker } from "./sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "./tempoBarlineChecker.js";
+import { tempoChangeResolutionChecker } from "./tempoChangeResolutionChecker.js";
 import { tempoWithoutBpmChecker } from "./tempoWithoutBpmChecker.js";
+import { unaCordaChecker } from "./unaCordaChecker.js";
 
 export function registerAll(): void {
 	reset();
@@ -25,15 +32,22 @@ export function registerAll(): void {
 	register(sulTastoOrdChecker);
 	register(sulPontOrdChecker);
 	register(conLegnoArcoChecker);
+	register(muteOpenChecker);
+	register(unaCordaChecker);
+	register(harpTableChecker);
 	register(articulationSlurConsistencyChecker);
 	register(restAnnotationChecker);
 	register(tempoBarlineChecker);
 	register(openingTempoChecker);
 	register(firstNoteDynamicsChecker);
 	register(tempoWithoutBpmChecker);
+	register(tempoChangeResolutionChecker);
 	register(duplicateDynamicsChecker);
+	register(simultaneousDynamicsChecker);
+	register(hairpinTargetDynamicChecker);
 	register(finalBarlineChecker);
 	register(codaSegnoChecker);
+	register(rehearsalMarkOrderChecker);
 }
 
 export {
@@ -44,13 +58,20 @@ export {
 	duplicateDynamicsChecker,
 	finalBarlineChecker,
 	firstNoteDynamicsChecker,
+	hairpinTargetDynamicChecker,
+	harpTableChecker,
+	muteOpenChecker,
 	openingTempoChecker,
 	pizzArcoChecker,
+	rehearsalMarkOrderChecker,
 	restAnnotationChecker,
+	simultaneousDynamicsChecker,
 	soloTuttiChecker,
 	sordinoChecker,
 	sulPontOrdChecker,
 	sulTastoOrdChecker,
 	tempoBarlineChecker,
+	tempoChangeResolutionChecker,
 	tempoWithoutBpmChecker,
+	unaCordaChecker,
 };

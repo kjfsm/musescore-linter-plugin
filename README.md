@@ -29,17 +29,27 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 | Sul tasto / Ord. | warning | `sul tasto`（駒から離れた奏法）→ `ord.` 復帰の対応漏れ・重複 |
 | Sul pont. / Ord. | warning | `sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複 |
 | Con legno / Arco | warning | `con legno`（弓の木部奏法）→ `arco` 復帰の対応漏れ・重複 |
+| Mute / Open | warning | 金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複 |
+| Una corda / Tre corde | warning | ピアノ左ペダル `una corda` → `tre corde` の対応漏れ・重複 |
+| Près de la table / Ord. | warning | ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複 |
 | 同リズム間のスラー/アーティキュレーション | info | 同じ小節で同じリズムのパート間でスラー有無・アーティキュレーションが食い違う |
 | 休符アノテーション | error | 休符の位置にダイナミクス等が付与されていないか |
 | テンポ変更と複縦線 | info | テンポ変更前の小節に複縦線があるか |
 | 冒頭テンポ表記 | error | 曲頭にテンポ表記があるか |
 | 各パート冒頭ダイナミクス | error | 各パートの 1 音目にダイナミクスがあるか |
 | BPM 値なしテンポ | warning | テンポ表記に BPM 値が未設定（再生テンポに反映されない） |
+| テンポ変化の解除漏れ | warning | `rit.`/`accel.` 等が `a tempo`/新テンポで解除されないまま終わる |
 | 重複ダイナミクス | info | 同パートで同じ強弱記号が変化なく連続している箇所 |
+| 同時ダイナミクスの衝突 | warning | 同じ位置に異なる強弱記号が同時に付いている |
+| ヘアピンの到達先ダイナミクス | warning | crescendo/diminuendo の終端に到達先のダイナミクスが無い |
 | 終止線の確認 | info | 曲末の最終 barline が終止線になっているか |
 | コーダ/セーニョ整合性 | error | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落） |
+| リハーサルマークの順序 | info | リハーサルマークの順序逆転・重複 |
 
 検出結果は「問題」タブにリスト表示され、クリックで該当小節・拍へジャンプします。
+
+> 今後追加しうるチェック項目の網羅カタログ（実装可否・優先度・必要な SDK 拡張つき）は
+> [`docs/notation-checklist.md`](./docs/notation-checklist.md) を参照。
 
 ## UI の機能
 

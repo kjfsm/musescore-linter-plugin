@@ -6,16 +6,23 @@ import { divisiChecker } from "../src/divisiChecker.js";
 import { duplicateDynamicsChecker } from "../src/duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "../src/finalBarlineChecker.js";
 import { firstNoteDynamicsChecker } from "../src/firstNoteDynamicsChecker.js";
+import { hairpinTargetDynamicChecker } from "../src/hairpinTargetDynamicChecker.js";
+import { harpTableChecker } from "../src/harpTableChecker.js";
 import { registerAll } from "../src/index.js";
+import { muteOpenChecker } from "../src/muteOpenChecker.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
 import { pizzArcoChecker } from "../src/pizzArcoChecker.js";
+import { rehearsalMarkOrderChecker } from "../src/rehearsalMarkOrderChecker.js";
 import { restAnnotationChecker } from "../src/restAnnotationChecker.js";
+import { simultaneousDynamicsChecker } from "../src/simultaneousDynamicsChecker.js";
 import { soloTuttiChecker } from "../src/soloTuttiChecker.js";
 import { sordinoChecker } from "../src/sordinoChecker.js";
 import { sulPontOrdChecker } from "../src/sulPontOrdChecker.js";
 import { sulTastoOrdChecker } from "../src/sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "../src/tempoBarlineChecker.js";
+import { tempoChangeResolutionChecker } from "../src/tempoChangeResolutionChecker.js";
 import { tempoWithoutBpmChecker } from "../src/tempoWithoutBpmChecker.js";
+import { unaCordaChecker } from "../src/unaCordaChecker.js";
 import { BK, buildIR, cleanIR, K, quintetIR } from "./helpers/irBuilder.js";
 
 function run(
@@ -1453,5 +1460,355 @@ describe("enabledRules", () => {
 			"first-note-dynamics": false,
 		});
 		expect(issues.filter((i) => i.ruleId === "pizz-arco")).toHaveLength(1);
+	});
+});
+
+// ─── mute-open ────────────────────────────────────────────────────────────
+
+describe("mute-open checker", () => {
+	it("mute のまま曲が終わる → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "straight mute",
+				textRaw: "straight mute",
+			},
+		]);
+		const issues = muteOpenChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("mute → open で解除 → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "mute",
+				textRaw: "mute",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "open",
+				textRaw: "open",
+			},
+		]);
+		expect(muteOpenChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── una-corda ────────────────────────────────────────────────────────────
+
+describe("una-corda checker", () => {
+	it("una corda のまま曲が終わる → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "una corda",
+				textRaw: "una corda",
+			},
+		]);
+		expect(unaCordaChecker.run(ir)).toHaveLength(1);
+	});
+
+	it("una corda → tre corde で解除 → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "una corda",
+				textRaw: "una corda",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "tre corde",
+				textRaw: "tre corde",
+			},
+		]);
+		expect(unaCordaChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── harp-table ───────────────────────────────────────────────────────────
+
+describe("harp-table checker", () => {
+	it("près de la table のまま曲が終わる → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "près de la table",
+				textRaw: "près de la table",
+			},
+		]);
+		expect(harpTableChecker.run(ir)).toHaveLength(1);
+	});
+
+	it("près de la table → ordinario で解除 → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "près de la table",
+				textRaw: "près de la table",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "ordinario",
+				textRaw: "ordinario",
+			},
+		]);
+		expect(harpTableChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── tempo-change-resolution ──────────────────────────────────────────────
+
+describe("tempo-change-resolution checker", () => {
+	it("rit. が解除されないまま → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "rit.",
+				textRaw: "rit.",
+			},
+		]);
+		const issues = tempoChangeResolutionChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("rit. → a tempo で解除 → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "rit.",
+				textRaw: "rit.",
+			},
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				textNorm: "a tempo",
+				textRaw: "a tempo",
+			},
+		]);
+		expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("accel. → 後続の新しいテンポ表記でも解除とみなす → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "accel.",
+				textRaw: "accel.",
+			},
+			{
+				kind: K.TEMPO_TEXT,
+				staff: 0,
+				tick: 960,
+				measure: 3,
+				tempo: 2.5,
+				textNorm: "presto",
+				textRaw: "Presto",
+			},
+		]);
+		expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── simultaneous-dynamics ────────────────────────────────────────────────
+
+describe("simultaneous-dynamics checker", () => {
+	it("同じ位置に f と p が同時 → warning 1件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.DYNAMIC,
+				staff: 0,
+				tick: 0,
+				measure: 1,
+				textNorm: "p",
+				textRaw: "p",
+			},
+		]);
+		const issues = simultaneousDynamicsChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("同じ位置に同じ強弱が重なるだけなら衝突扱いしない → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.DYNAMIC,
+				staff: 0,
+				tick: 0,
+				measure: 1,
+				textNorm: "f",
+				textRaw: "f",
+			},
+		]);
+		expect(simultaneousDynamicsChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── hairpin-target-dynamic ───────────────────────────────────────────────
+
+describe("hairpin-target-dynamic checker", () => {
+	it("ヘアピン終端にダイナミクスが無い → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+			],
+			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+		});
+		const issues = hairpinTargetDynamicChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("ヘアピン終端にダイナミクスがある → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 480,
+					measure: 2,
+					textNorm: "ff",
+					textRaw: "ff",
+				},
+			],
+			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+		});
+		expect(hairpinTargetDynamicChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── rehearsal-mark-order ─────────────────────────────────────────────────
+
+describe("rehearsal-mark-order checker", () => {
+	it("A → B → C は昇順 → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 0,
+					measure: 1,
+					textRaw: "A",
+				},
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 480,
+					measure: 2,
+					textRaw: "B",
+				},
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 960,
+					measure: 3,
+					textRaw: "C",
+				},
+			],
+		});
+		expect(rehearsalMarkOrderChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("B → A は順序逆転 → info 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 0,
+					measure: 1,
+					textRaw: "B",
+				},
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 480,
+					measure: 2,
+					textRaw: "A",
+				},
+			],
+		});
+		const issues = rehearsalMarkOrderChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+	});
+
+	it("A → A は重複 → 1件（順序判定は重ねない）", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 0,
+					measure: 1,
+					textRaw: "A",
+				},
+				{
+					kind: K.REHEARSAL_MARK,
+					staffIdx: -1,
+					scope: "global",
+					tick: 480,
+					measure: 2,
+					textRaw: "A",
+				},
+			],
+		});
+		const issues = rehearsalMarkOrderChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].message).toContain("重複");
 	});
 });
