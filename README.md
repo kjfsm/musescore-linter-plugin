@@ -45,11 +45,15 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 | 終止線の確認 | info | 曲末の最終 barline が終止線になっているか |
 | コーダ/セーニョ整合性 | error | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落） |
 | リハーサルマークの順序 | info | リハーサルマークの順序逆転・重複 |
+| リピート小節線の対応 | warning | リピート開始(‖:)に対応する終了(:‖)が無い（終了のみは曲頭反復として許容） |
+| 異音程のタイ | warning | 異なる音高をタイで結んでいる（スラーの書き間違いの可能性） |
 
 検出結果は「問題」タブにリスト表示され、クリックで該当小節・拍へジャンプします。
 
 > 今後追加しうるチェック項目の網羅カタログ（実装可否・優先度・必要な SDK 拡張つき）は
-> [`docs/notation-checklist.md`](./docs/notation-checklist.md) を参照。
+> [`docs/notation-checklist.md`](./docs/notation-checklist.md)、
+> 音高・拍子・楽器情報を IR に載せる段階プランは
+> [`docs/sdk-extension-plan.md`](./docs/sdk-extension-plan.md) を参照。
 
 ## UI の機能
 

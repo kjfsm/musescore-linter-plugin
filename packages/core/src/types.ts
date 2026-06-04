@@ -20,6 +20,7 @@ export interface LintEvent {
 	stemDirection?: number; // chord のみ。DirectionV 生値（0 auto / 1 up / 2 down）
 	beamMode?: number; // chord のみ。BeamMode 生値
 	articulations?: string[]; // chord のみ。アーティキュレーション名（"Staccato" 等）
+	pitches?: number[]; // chord のみ。各音符の MIDI 音高（0-127）
 }
 
 export interface IRIndex {
@@ -42,12 +43,23 @@ export interface SlurInfo {
 	endTick: number;
 }
 
+export interface TieInfo {
+	staffIdx: number;
+	voice: number;
+	startTick: number;
+	endTick: number;
+	// タイ両端ノートの MIDI 音高。端点が欠落/無音程の場合は null。
+	startPitch: number | null;
+	endPitch: number | null;
+}
+
 export interface IRMeta {
 	parts: { staffIdx: number; partName: string }[];
 	firstMusicTickByStaff: (number | null)[];
 	lastTick: number;
 	hairpins: HairpinInfo[];
 	slurs: SlurInfo[];
+	ties: TieInfo[];
 }
 
 export interface IRDerived {
@@ -79,7 +91,9 @@ export interface CanonicalKinds {
 	barlineKinds: {
 		DOUBLE: string;
 		FINAL: string;
-		REPEAT: string;
+		REPEAT_START: string;
+		REPEAT_END: string;
+		REPEAT_BOTH: string;
 		OTHER: string;
 		UNKNOWN: string;
 	};

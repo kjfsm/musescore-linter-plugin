@@ -21,6 +21,7 @@ export interface EventSpec {
 	stemDirection?: number;
 	beamMode?: number;
 	articulations?: string[];
+	pitches?: number[];
 }
 
 export interface PartSpec {
@@ -41,11 +42,21 @@ export interface SlurSpec {
 	endTick: number;
 }
 
+export interface TieSpec {
+	staffIdx: number;
+	voice: number;
+	startTick: number;
+	endTick: number;
+	startPitch: number | null;
+	endPitch: number | null;
+}
+
 export interface IRSpec {
 	parts?: PartSpec[];
 	events?: EventSpec[];
 	hairpins?: HairpinSpec[];
 	slurs?: SlurSpec[];
+	ties?: TieSpec[];
 }
 
 function typeFromKind(kind: string): LintEvent["type"] {
@@ -80,6 +91,7 @@ export function buildIR(spec: IRSpec): LintIR {
 			lastTick: 0,
 			hairpins: (spec.hairpins ?? []).map((h) => ({ ...h })),
 			slurs: (spec.slurs ?? []).map((s) => ({ ...s })),
+			ties: (spec.ties ?? []).map((t) => ({ ...t })),
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,
@@ -115,6 +127,7 @@ export function buildIR(spec: IRSpec): LintIR {
 		if (e.stemDirection !== undefined) ev.stemDirection = e.stemDirection;
 		if (e.beamMode !== undefined) ev.beamMode = e.beamMode;
 		if (e.articulations !== undefined) ev.articulations = e.articulations;
+		if (e.pitches !== undefined) ev.pitches = e.pitches;
 
 		ir.events.push(ev);
 

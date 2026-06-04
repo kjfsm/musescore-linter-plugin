@@ -13,6 +13,7 @@ import { muteOpenChecker } from "../src/muteOpenChecker.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
 import { pizzArcoChecker } from "../src/pizzArcoChecker.js";
 import { rehearsalMarkOrderChecker } from "../src/rehearsalMarkOrderChecker.js";
+import { repeatBarlineMatchChecker } from "../src/repeatBarlineMatchChecker.js";
 import { restAnnotationChecker } from "../src/restAnnotationChecker.js";
 import { simultaneousDynamicsChecker } from "../src/simultaneousDynamicsChecker.js";
 import { soloTuttiChecker } from "../src/soloTuttiChecker.js";
@@ -22,6 +23,7 @@ import { sulTastoOrdChecker } from "../src/sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "../src/tempoBarlineChecker.js";
 import { tempoChangeResolutionChecker } from "../src/tempoChangeResolutionChecker.js";
 import { tempoWithoutBpmChecker } from "../src/tempoWithoutBpmChecker.js";
+import { tiePitchMismatchChecker } from "../src/tiePitchMismatchChecker.js";
 import { unaCordaChecker } from "../src/unaCordaChecker.js";
 import { BK, buildIR, cleanIR, K, quintetIR } from "./helpers/irBuilder.js";
 
@@ -1810,5 +1812,123 @@ describe("rehearsal-mark-order checker", () => {
 		const issues = rehearsalMarkOrderChecker.run(ir);
 		expect(issues).toHaveLength(1);
 		expect(issues[0].message).toContain("重複");
+	});
+});
+
+// ─── repeat-barline-match ─────────────────────────────────────────────────
+
+describe("repeat-barline-match checker", () => {
+	const repeatBar = (tick: number, measure: number, kind: string) => ({
+		kind: K.BAR_LINE,
+		staff: 0,
+		tick,
+		measure,
+		barlineKind: kind,
+	});
+
+	it("開始リピートに終了が無い → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				repeatBar(0, 1, BK.REPEAT_START),
+			],
+		});
+		const issues = repeatBarlineMatchChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("開始 → 終了 で対応 → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				repeatBar(0, 1, BK.REPEAT_START),
+				repeatBar(1920, 2, BK.REPEAT_END),
+			],
+		});
+		expect(repeatBarlineMatchChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("終了リピート単独（曲頭からの反復）は許容 → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [repeatBar(1920, 2, BK.REPEAT_END)],
+		});
+		expect(repeatBarlineMatchChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("開始 → 開始終了(both) は both が新たな未対応の開始になる → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				repeatBar(0, 1, BK.REPEAT_START),
+				repeatBar(1920, 2, BK.REPEAT_BOTH),
+			],
+		});
+		const issues = repeatBarlineMatchChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].measure).toBe(2);
+	});
+});
+
+// ─── tie-pitch-mismatch ───────────────────────────────────────────────────
+
+describe("tie-pitch-mismatch checker", () => {
+	it("異なる音高のタイ → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+			ties: [
+				{
+					staffIdx: 0,
+					voice: 0,
+					startTick: 0,
+					endTick: 480,
+					startPitch: 60,
+					endPitch: 62,
+				},
+			],
+		});
+		const issues = tiePitchMismatchChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+		expect(issues[0].measure).toBe(1);
+	});
+
+	it("同じ音高のタイ → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+			ties: [
+				{
+					staffIdx: 0,
+					voice: 0,
+					startTick: 0,
+					endTick: 480,
+					startPitch: 60,
+					endPitch: 60,
+				},
+			],
+		});
+		expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("端点の音高が不明(null)なら判定しない → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+			ties: [
+				{
+					staffIdx: 0,
+					voice: 0,
+					startTick: 0,
+					endTick: 480,
+					startPitch: 60,
+					endPitch: null,
+				},
+			],
+		});
+		expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
 	});
 });

@@ -80,7 +80,7 @@
 | D3 | スラーが単一音（start==end） | NOW | info | 中 | | `meta.slurs` |
 | D4 | グリッサンド/タイの端点が休符 | SDK | warning | 中 | | 要: タイ/グリッサンド span |
 | D5 | タイの途中音に新ダイナミクス/アーティキュレーション | SDK | warning | 中 | | 要: タイ情報 |
-| D6 | 異音程をタイで結んでいる（スラーにすべき） | SDK | error | 高 | | 要: 音高 + タイ |
+| D6 | 異音程をタイで結んでいる（スラーにすべき） | SDK | warning | 高 | ✅ | `tie-pitch-mismatch`。checker は実装済み（snapshot 配線は SDK helpers 公開後・`docs/sdk-extension-plan.md`） |
 | D7 | 移調楽器の記譜音と実音の取り違え | SDK | warning | 中 | | 要: 移調情報（音域自体は MS） |
 
 ## E. 構造 / 反復 / リハーサルマーク / 小節線
@@ -89,7 +89,7 @@
 |---|---|---|---|---|---|---|
 | E1 | 終止線の確認 | NOW | info | – | ✅ | 既存 `final-barline` |
 | E2 | コーダ/セーニョ整合 | NOW | error | – | ✅ | 既存 `coda-segno` |
-| E3 | リピート開始/終了の対応 | SDK | warning | 高 | | 現状 IR は `repeat` に一括。要: barline 種別（開始/終了）の正規化（enumRegistry 拡張） |
+| E3 | リピート開始/終了の対応 | SDK | warning | 高 | ✅ | `repeat-barline-match`。SDK `classifyBarlineKind` を start/end/both に細分し実装。snapshot は既存経路（新 helpers 公開後に発火） |
 | E4 | リハーサルマークの順序（昇順・欠番） | NOW | info | 中 | ✅ | このバッチ `rehearsal-mark-order`（E5 重複も統合） |
 | E5 | リハーサルマーク重複 | NOW | info | 低 | ✅ | E4 に統合 |
 | E6 | セクション境界（二重線）前後のリハーサルマーク有無 | NOW | info | 低 | | |

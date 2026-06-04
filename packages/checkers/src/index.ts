@@ -12,6 +12,7 @@ import { muteOpenChecker } from "./muteOpenChecker.js";
 import { openingTempoChecker } from "./openingTempoChecker.js";
 import { pizzArcoChecker } from "./pizzArcoChecker.js";
 import { rehearsalMarkOrderChecker } from "./rehearsalMarkOrderChecker.js";
+import { repeatBarlineMatchChecker } from "./repeatBarlineMatchChecker.js";
 import { restAnnotationChecker } from "./restAnnotationChecker.js";
 import { simultaneousDynamicsChecker } from "./simultaneousDynamicsChecker.js";
 import { soloTuttiChecker } from "./soloTuttiChecker.js";
@@ -21,6 +22,7 @@ import { sulTastoOrdChecker } from "./sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "./tempoBarlineChecker.js";
 import { tempoChangeResolutionChecker } from "./tempoChangeResolutionChecker.js";
 import { tempoWithoutBpmChecker } from "./tempoWithoutBpmChecker.js";
+import { tiePitchMismatchChecker } from "./tiePitchMismatchChecker.js";
 import { unaCordaChecker } from "./unaCordaChecker.js";
 
 export function registerAll(): void {
@@ -48,6 +50,8 @@ export function registerAll(): void {
 	register(finalBarlineChecker);
 	register(codaSegnoChecker);
 	register(rehearsalMarkOrderChecker);
+	register(repeatBarlineMatchChecker);
+	register(tiePitchMismatchChecker);
 }
 
 export {
@@ -64,6 +68,7 @@ export {
 	openingTempoChecker,
 	pizzArcoChecker,
 	rehearsalMarkOrderChecker,
+	repeatBarlineMatchChecker,
 	restAnnotationChecker,
 	simultaneousDynamicsChecker,
 	soloTuttiChecker,
@@ -73,5 +78,6 @@ export {
 	tempoBarlineChecker,
 	tempoChangeResolutionChecker,
 	tempoWithoutBpmChecker,
+	tiePitchMismatchChecker,
 	unaCordaChecker,
 };

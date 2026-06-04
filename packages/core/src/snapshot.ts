@@ -245,6 +245,7 @@ export function buildSnapshot(score: Score): LintIR {
 			lastTick: 0,
 			hairpins: [],
 			slurs: [],
+			ties: [],
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,

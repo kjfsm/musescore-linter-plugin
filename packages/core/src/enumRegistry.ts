@@ -16,7 +16,10 @@ export const CANONICAL: CanonicalKinds = {
 	barlineKinds: {
 		DOUBLE: "double",
 		FINAL: "final",
-		REPEAT: "repeat",
+		// SDK helpers の classifyBarlineKind が返す文字列と一致させる
+		REPEAT_START: "repeat_start",
+		REPEAT_END: "repeat_end",
+		REPEAT_BOTH: "repeat_both",
 		OTHER: "other",
 		UNKNOWN: "unknown",
 	},
