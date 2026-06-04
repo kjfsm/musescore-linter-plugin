@@ -18,6 +18,9 @@ export interface EventSpec {
 	scope?: "staff" | "global";
 	subtype?: unknown;
 	subStyle?: unknown;
+	stemDirection?: number;
+	beamMode?: number;
+	articulations?: string[];
 }
 
 export interface PartSpec {
@@ -31,10 +34,18 @@ export interface HairpinSpec {
 	endTick: number;
 }
 
+export interface SlurSpec {
+	staffIdx: number;
+	voice: number;
+	startTick: number;
+	endTick: number;
+}
+
 export interface IRSpec {
 	parts?: PartSpec[];
 	events?: EventSpec[];
 	hairpins?: HairpinSpec[];
+	slurs?: SlurSpec[];
 }
 
 function typeFromKind(kind: string): LintEvent["type"] {
@@ -68,6 +79,7 @@ export function buildIR(spec: IRSpec): LintIR {
 			firstMusicTickByStaff: parts.map(() => null),
 			lastTick: 0,
 			hairpins: (spec.hairpins ?? []).map((h) => ({ ...h })),
+			slurs: (spec.slurs ?? []).map((s) => ({ ...s })),
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,
@@ -100,6 +112,9 @@ export function buildIR(spec: IRSpec): LintIR {
 
 		if (e.barlineKind !== undefined) ev.barlineKind = e.barlineKind;
 		if (e.duration !== undefined) ev.duration = e.duration;
+		if (e.stemDirection !== undefined) ev.stemDirection = e.stemDirection;
+		if (e.beamMode !== undefined) ev.beamMode = e.beamMode;
+		if (e.articulations !== undefined) ev.articulations = e.articulations;
 
 		ir.events.push(ev);
 

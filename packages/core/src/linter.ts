@@ -2,7 +2,7 @@ import { getAll } from "./checkerRegistry.js";
 import { CANONICAL } from "./enumRegistry.js";
 import { compareIssues } from "./issue.js";
 import { make } from "./logger.js";
-import type { Checker, IRDerived, Issue, LintIR } from "./types.js";
+import type { Checker, IRDerived, Issue, LintEvent, LintIR } from "./types.js";
 
 const log = make("linter");
 
@@ -16,6 +16,9 @@ export function ensureDerived(ir: LintIR): void {
 		firstChordByStaff: {},
 		annotationIdsByTick: {},
 		globalAnnotationIdsByTick: {},
+		articulationsByChordId: {},
+		slursByStaff: {},
+		rhythmByStaffMeasure: {},
 	};
 
 	const chordKind = canonical.elementKinds.CHORD;
@@ -54,6 +57,41 @@ export function ensureDerived(ir: LintIR): void {
 		if (!derived.globalAnnotationIdsByTick[k])
 			derived.globalAnnotationIdsByTick[k] = [];
 		derived.globalAnnotationIdsByTick[k].push(gev.id);
+	}
+
+	for (const id of chordIds) {
+		const aev = ir.events[id];
+		if (aev.articulations && aev.articulations.length > 0) {
+			derived.articulationsByChordId[aev.id] = aev.articulations;
+		}
+	}
+
+	for (const slur of ir.meta?.slurs ?? []) {
+		if (!derived.slursByStaff[slur.staffIdx])
+			derived.slursByStaff[slur.staffIdx] = [];
+		derived.slursByStaff[slur.staffIdx].push(slur);
+	}
+	for (const k of Object.keys(derived.slursByStaff)) {
+		derived.slursByStaff[Number(k)].sort((a, b) => a.startTick - b.startTick);
+	}
+
+	const restKind = canonical.elementKinds.REST;
+	const rhythmGroups: Record<string, LintEvent[]> = {};
+	for (const id of [...chordIds, ...(ir.index?.byKind?.[restKind] ?? [])]) {
+		const rev = ir.events[id];
+		if (rev.staffIdx < 0) continue;
+		const key = `${rev.staffIdx}:${rev.measure}:${rev.voice}`;
+		if (!rhythmGroups[key]) rhythmGroups[key] = [];
+		rhythmGroups[key].push(rev);
+	}
+	for (const key of Object.keys(rhythmGroups)) {
+		const evs = rhythmGroups[key].sort((a, b) => a.tick - b.tick);
+		derived.rhythmByStaffMeasure[key] = evs
+			.map(
+				(e) =>
+					`${e.tick}/${e.duration?.numerator ?? 0}/${e.duration?.denominator ?? 0}`,
+			)
+			.join(",");
 	}
 
 	ir.derived = derived;

@@ -17,6 +17,9 @@ export interface LintEvent {
 	barlineType?: unknown;
 	barlineKind?: string;
 	duration?: { numerator: number; denominator: number };
+	stemDirection?: number; // chord のみ。DirectionV 生値（0 auto / 1 up / 2 down）
+	beamMode?: number; // chord のみ。BeamMode 生値
+	articulations?: string[]; // chord のみ。アーティキュレーション名（"Staccato" 等）
 }
 
 export interface IRIndex {
@@ -32,11 +35,19 @@ export interface HairpinInfo {
 	endTick: number;
 }
 
+export interface SlurInfo {
+	staffIdx: number;
+	voice: number;
+	startTick: number;
+	endTick: number;
+}
+
 export interface IRMeta {
 	parts: { staffIdx: number; partName: string }[];
 	firstMusicTickByStaff: (number | null)[];
 	lastTick: number;
 	hairpins: HairpinInfo[];
+	slurs: SlurInfo[];
 }
 
 export interface IRDerived {
@@ -44,6 +55,12 @@ export interface IRDerived {
 	firstChordByStaff: Record<number, { tick: number; measure: number }>;
 	annotationIdsByTick: Record<string, number[]>;
 	globalAnnotationIdsByTick: Record<string, number[]>;
+	// chord イベント id → アーティキュレーション名
+	articulationsByChordId: Record<number, string[]>;
+	// staffIdx → スラー（startTick 昇順）
+	slursByStaff: Record<number, SlurInfo[]>;
+	// `${staffIdx}:${measure}:${voice}` → リズム署名（声部横断の同リズム判定キー）
+	rhythmByStaffMeasure: Record<string, string>;
 }
 
 export interface CanonicalKinds {

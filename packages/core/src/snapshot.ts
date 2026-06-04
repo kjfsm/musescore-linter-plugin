@@ -2,7 +2,9 @@ import {
 	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
+	getArticulationNames,
 	getHairpinRange,
+	getSpannerRange,
 	getTempoBpm,
 	isBarLine,
 	isChord,
@@ -12,6 +14,7 @@ import {
 	isPlayTechAnnotation,
 	isRehearsalMark,
 	isRest,
+	isSlur,
 	isStaffText,
 	isSystemText,
 	isTempo,
@@ -165,7 +168,7 @@ function processStaffElements(
 			const kind = isChord(el)
 				? CANONICAL.elementKinds.CHORD
 				: CANONICAL.elementKinds.REST;
-			appendEvent(ir, {
+			const ev = appendEvent(ir, {
 				type: evType as "chord" | "rest",
 				kind,
 				tick: seg.tick,
@@ -188,11 +191,19 @@ function processStaffElements(
 			}
 
 			if (isChord(el)) {
+				ev.stemDirection = el.stemDirection;
+				ev.beamMode = el.beamMode;
+				ev.articulations = getArticulationNames(el);
 				for (const note of el.notes ?? []) {
 					for (const spanner of note.spannerForward ?? []) {
 						if (isHairpin(spanner)) {
-							const range = getHairpinRange(spanner);
-							ir.meta.hairpins.push({ staffIdx, ...range });
+							ir.meta.hairpins.push({ staffIdx, ...getHairpinRange(spanner) });
+						} else if (isSlur(spanner)) {
+							ir.meta.slurs.push({
+								staffIdx,
+								voice,
+								...getSpannerRange(spanner),
+							});
 						}
 					}
 				}
@@ -233,6 +244,7 @@ export function buildSnapshot(score: Score): LintIR {
 			firstMusicTickByStaff: Array(numStaves).fill(null) as (number | null)[],
 			lastTick: 0,
 			hairpins: [],
+			slurs: [],
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,

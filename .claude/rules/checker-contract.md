@@ -55,7 +55,9 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
 
 ```js
 {
-  events: [ { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw, ... } ],
+  events: [ { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw,
+              // chord のみ: stemDirection?, beamMode?, articulations?: string[]
+              ... } ],
   index: {
     byTick,         // tick → Event[]
     byKind,         // kind → Event[]
@@ -63,9 +65,18 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
     byStaffAndKind  // staffIdx → kind → Event[]
     // staffIdx === -1 は global scope（全パート共通の注記）
   },
-  meta: { parts: [{staffIdx, partName}], firstMusicTickByStaff, lastTick },
+  meta: {
+    parts: [{staffIdx, partName}], firstMusicTickByStaff, lastTick,
+    hairpins: [{staffIdx, startTick, endTick}],
+    slurs:    [{staffIdx, voice, startTick, endTick}],
+  },
   registry: { canonical: { elementKinds, barlineKinds } },
-  derived: { firstChordByStaff, annotationIdsByTick, globalAnnotationIdsByTick }
+  derived: {
+    firstChordByStaff, annotationIdsByTick, globalAnnotationIdsByTick,
+    articulationsByChordId,   // chord イベント id → アーティキュレーション名[]
+    slursByStaff,             // staffIdx → SlurInfo[]（startTick 昇順）
+    rhythmByStaffMeasure,     // `${staffIdx}:${measure}:${voice}` → リズム署名
+  }
 }
 ```
 
