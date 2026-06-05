@@ -44,6 +44,18 @@ export const tempoChangeResolutionChecker: Checker = {
 		const partsByStaff: Record<number, string> = {};
 		for (const p of ir.meta?.parts ?? []) partsByStaff[p.staffIdx] = p.partName;
 
+		// 曲尾のリタルダンド等は a tempo 不要なので、最後の音楽小節は判定対象外にする
+		let lastMusicMeasure = 0;
+		for (const kind of [
+			canonical.elementKinds.CHORD,
+			canonical.elementKinds.REST,
+		]) {
+			for (const id of ir.index.byKind[kind] ?? []) {
+				const m = ir.events[id].measure;
+				if (m > lastMusicMeasure) lastMusicMeasure = m;
+			}
+		}
+
 		const isNewTempoMark = (ev: LintEvent): boolean =>
 			ev.kind === canonical.elementKinds.TEMPO_TEXT &&
 			ev.tempo !== null &&
@@ -63,6 +75,8 @@ export const tempoChangeResolutionChecker: Checker = {
 				}
 			}
 			if (resolved) continue;
+			// 最後の音楽小節にある rit./accel. は「曲尾の最終的なテンポ変化」とみなし除外
+			if (lastMusicMeasure > 0 && ev.measure >= lastMusicMeasure) continue;
 
 			const partName =
 				ev.staffIdx >= 0 ? (partsByStaff[ev.staffIdx] ?? "") : "";

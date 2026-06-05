@@ -1598,7 +1598,7 @@ describe("harp-table checker", () => {
 // ─── tempo-change-resolution ──────────────────────────────────────────────
 
 describe("tempo-change-resolution checker", () => {
-	it("rit. が解除されないまま → warning 1件", () => {
+	it("rit. が曲中で解除されないまま → warning 1件", () => {
 		const ir = cleanIR([
 			{
 				kind: K.STAFF_TEXT,
@@ -1608,10 +1608,28 @@ describe("tempo-change-resolution checker", () => {
 				textNorm: "rit.",
 				textRaw: "rit.",
 			},
+			// rit. より後に音楽（小節 3）があるので「曲尾の最終 rit.」ではない
+			{ kind: K.CHORD, staff: 0, tick: 1920, measure: 3 },
 		]);
 		const issues = tempoChangeResolutionChecker.run(ir);
 		expect(issues).toHaveLength(1);
 		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("曲尾の rit.（最後の音楽小節）は誤検出しない → 0件", () => {
+		const ir = cleanIR([
+			{
+				kind: K.STAFF_TEXT,
+				staff: 0,
+				tick: 480,
+				measure: 2,
+				textNorm: "rit.",
+				textRaw: "rit.",
+			},
+			// rit. と同じ最終小節までしか音楽が無い → 曲尾の最終的なテンポ変化
+			{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+		]);
+		expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
 	});
 
 	it("rit. → a tempo で解除 → 0件", () => {
@@ -1697,7 +1715,23 @@ describe("simultaneous-dynamics checker", () => {
 // ─── hairpin-target-dynamic ───────────────────────────────────────────────
 
 describe("hairpin-target-dynamic checker", () => {
-	it("ヘアピン終端にダイナミクスが無い → warning 1件", () => {
+	it("曲中のヘアピン終端にダイナミクスが無い → info 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+				// ヘアピン終端(480)より後に音楽(960)があるので「曲尾のヘアピン」ではない
+				{ kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
+			],
+			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+		});
+		const issues = hairpinTargetDynamicChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+	});
+
+	it("曲尾まで伸びるヘアピン（dim. al niente 等）は誤検出しない → 0件", () => {
 		const ir = buildIR({
 			parts: [{ partName: "Vn1" }],
 			events: [
@@ -1706,9 +1740,8 @@ describe("hairpin-target-dynamic checker", () => {
 			],
 			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
 		});
-		const issues = hairpinTargetDynamicChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
+		// lastTick === 480、ヘアピン終端も 480 → 曲尾のヘアピンとして除外
+		expect(hairpinTargetDynamicChecker.run(ir)).toHaveLength(0);
 	});
 
 	it("ヘアピン終端にダイナミクスがある → 0件", () => {

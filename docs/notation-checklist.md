@@ -37,7 +37,7 @@
 | # | 項目 | タグ | severity | 優先 | 状態 | 備考 |
 |---|---|---|---|---|---|---|
 | A1 | 休符にダイナミクス | NOW | error | – | ✅ | 既存 `rest-annotation` |
-| A2 | ヘアピン（cresc/dim）の到達先ダイナミクスが無い | NOW | warning | 高 | ✅ | このバッチ `hairpin-target-dynamic` |
+| A2 | ヘアピン（cresc/dim）の到達先ダイナミクスが無い | NOW | info | 高 | ✅ | `hairpin-target-dynamic`（曲尾のヘアピンは除外して誤検出を低減） |
 | A3 | ヘアピンが休符上で開始/終了 | NOW | warning | 中 | | hairpin tick と rest tick 照合 |
 | A4 | `cresc.`/`dim.`/`decresc.` テキストの後に強弱変化が無い | NOW | info | 中 | | text→後続 dynamic |
 | A5 | 同一 tick・同 staff に異なるダイナミクスが同時 | NOW | warning | 中 | ✅ | このバッチ `simultaneous-dynamics` |
@@ -48,7 +48,7 @@
 
 | # | 項目 | タグ | severity | 優先 | 状態 | 備考 |
 |---|---|---|---|---|---|---|
-| B1 | `rit.`/`rall.`/`accel.` の後に `a tempo`/新テンポが無い | NOW | warning | 高 | ✅ | このバッチ `tempo-change-resolution`（後続の新テンポ表記も解除とみなす） |
+| B1 | `rit.`/`rall.`/`accel.` の後に `a tempo`/新テンポが無い | NOW | warning | 高 | ✅ | `tempo-change-resolution`（後続の新テンポも解除とみなす／曲尾の最終 rit. は除外） |
 | B2 | 冒頭テンポ表記 | NOW | error | – | ✅ | 既存 `opening-tempo` |
 | B3 | BPM 値なしテンポ | NOW | warning | – | ✅ | 既存 `tempo-without-bpm` |
 | B4 | テンポ変更前の複縦線 | NOW | info | – | ✅ | 既存 `tempo-barline` |

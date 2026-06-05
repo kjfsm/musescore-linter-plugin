@@ -30,9 +30,9 @@ export const hairpinTargetDynamicChecker: Checker = {
 	id: "hairpin-target-dynamic",
 	name: "ヘアピンの到達先ダイナミクス",
 	description:
-		"crescendo/diminuendo(ヘアピン)の終端に到達先のダイナミクスが無い箇所を検出",
+		"crescendo/diminuendo(ヘアピン)の終端に到達先のダイナミクスが無い箇所を検出（曲尾のヘアピンは除外）",
 	category: "dynamics",
-	severity: "warning",
+	severity: "info",
 	defaultEnabled: true,
 	run(ir: LintIR): Issue[] {
 		const issues: Issue[] = [];
@@ -40,11 +40,14 @@ export const hairpinTargetDynamicChecker: Checker = {
 		if (!canonical) return issues;
 
 		const dynamicKind = canonical.elementKinds.DYNAMIC;
+		const lastTick = ir.meta?.lastTick ?? 0;
 		const partsByStaff: Record<number, string> = {};
 		for (const p of ir.meta?.parts ?? []) partsByStaff[p.staffIdx] = p.partName;
 
 		for (const hp of ir.meta?.hairpins ?? []) {
 			if (hasDynamicAtTick(ir, hp.staffIdx, dynamicKind, hp.endTick)) continue;
+			// 曲尾まで伸びるヘアピン（dim. al niente 等）は到達先ダイナミクスを持たないのが普通
+			if (hp.endTick >= lastTick) continue;
 
 			const partName = partsByStaff[hp.staffIdx] ?? "";
 			const measure = measureAtTick(ir, hp.endTick);
