@@ -4,8 +4,10 @@ import {
 	getAnnotationText,
 	getArticulationNames,
 	getHairpinRange,
+	getNoteSpellings,
 	getSpannerRange,
 	getTempoBpm,
+	getTiePitches,
 	isBarLine,
 	isChord,
 	isDynamic,
@@ -194,7 +196,19 @@ function processStaffElements(
 				ev.stemDirection = el.stemDirection;
 				ev.beamMode = el.beamMode;
 				ev.articulations = getArticulationNames(el);
+				ev.notes = getNoteSpellings(el);
 				for (const note of el.notes ?? []) {
+					const tie = note.tieForward;
+					if (tie) {
+						const tiePitches = getTiePitches(tie);
+						ir.meta.ties.push({
+							staffIdx,
+							voice,
+							...getSpannerRange(tie),
+							startPitch: tiePitches?.startPitch ?? null,
+							endPitch: tiePitches?.endPitch ?? null,
+						});
+					}
 					for (const spanner of note.spannerForward ?? []) {
 						if (isHairpin(spanner)) {
 							ir.meta.hairpins.push({ staffIdx, ...getHairpinRange(spanner) });
@@ -245,6 +259,7 @@ export function buildSnapshot(score: Score): LintIR {
 			lastTick: 0,
 			hairpins: [],
 			slurs: [],
+			ties: [],
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,
