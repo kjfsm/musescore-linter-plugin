@@ -63,8 +63,8 @@ importers:
   packages/core:
     dependencies:
       '@kjfsm/musescore-plugin-sdk-helpers':
-        specifier: ^2.1.0
-        version: 2.1.0(@kjfsm/musescore-plugin-sdk-types@1.0.0)
+        specifier: ^2.2.0
+        version: 2.2.0(@kjfsm/musescore-plugin-sdk-types@1.0.0)
       '@musescore-linter/musescore-api':
         specifier: workspace:*
         version: link:../musescore-api
@@ -408,8 +408,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kjfsm/musescore-plugin-sdk-helpers@2.1.0':
-    resolution: {integrity: sha512-iz/i4P6yJPuBaAv4OHCNF6WReWK0InlTW9YpvcXBYtOTzIDCPG9RsswOB+E8sMWNklGTtEPshhCLW6I34OJK1A==}
+  '@kjfsm/musescore-plugin-sdk-helpers@2.2.0':
+    resolution: {integrity: sha512-2kHFS8acQxmGlf4w5KurT6kOeSQUnJW0keZDSun0rNbrZZ1bVLEao+/W83krgaY8S+jJQMvop8S1yEkeQgEUgQ==}
     peerDependencies:
       '@kjfsm/musescore-plugin-sdk-types': 1.0.0
 
@@ -1876,7 +1876,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kjfsm/musescore-plugin-sdk-helpers@2.1.0(@kjfsm/musescore-plugin-sdk-types@1.0.0)':
+  '@kjfsm/musescore-plugin-sdk-helpers@2.2.0(@kjfsm/musescore-plugin-sdk-types@1.0.0)':
     dependencies:
       '@kjfsm/musescore-plugin-sdk-types': 1.0.0
 

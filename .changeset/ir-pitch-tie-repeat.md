@@ -12,4 +12,4 @@ LintIR を音高・タイ・リピート種別へ拡張し、SDK 拡張を前提
 - 新チェッカー **異音程のタイ**（`tie-pitch-mismatch`・notation・warning）— 異なる音高をタイで結んでいる箇所を検出。
 - 新チェッカー **親切臨時記号の提案**（`courtesy-accidental`・notation・info）— 前小節で臨時記号が付いた音が次小節で記号なしで再び現れる箇所に親切記号を提案。
 
-> snapshot（実スコア走査）からの音高・タイ抽出の配線は、SDK helpers の新バージョン公開後に行う（`docs/sdk-extension-plan.md` の残作業）。それまで 3 チェッカーはテスト fixture でのみ検証済みで、実スコアでは発火しない。
+- `@kjfsm/musescore-plugin-sdk-helpers` を `^2.2.0` に更新し、`snapshot` で `getNoteSpellings` / `getTiePitches` を用いて `ev.notes` / `meta.ties` を実際に埋めるよう配線。これにより 3 チェッカーは実スコアでも発火する。
