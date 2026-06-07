@@ -22,3 +22,4 @@ export type {
 	TextPairCheckerConfig,
 	TieInfo,
 } from "./types.js";
+export { compareVersions, isNewerVersion } from "./version.js";
