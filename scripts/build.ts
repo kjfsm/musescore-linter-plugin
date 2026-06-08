@@ -7,7 +7,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 
 // QML から呼ばれる公開 API
-const EXPORTS = ["buildSnapshot", "runAllCheckers", "getCheckerList"];
+const EXPORTS = [
+	"buildSnapshot",
+	"runAllCheckers",
+	"getCheckerList",
+	"compareVersions",
+	"isNewerVersion",
+];
 
 async function main() {
 	const result = await esbuild.build({
@@ -44,6 +50,10 @@ async function main() {
 	console.log(`✓ Built dist/bundle.js (${sizeKb} KB)`);
 
 	// ScoreLinter.qml をコピー（dist/ 内では bundle.js は同階層なのでパスを書き換える）
+	// バージョンは package.json を単一情報源とし、ビルド時に注入する
+	const pkg = JSON.parse(
+		fs.readFileSync(path.join(ROOT, "package.json"), "utf8"),
+	) as { version: string };
 	const buildDate = new Date().toLocaleString("ja-JP", {
 		year: "numeric",
 		month: "2-digit",
@@ -55,6 +65,7 @@ async function main() {
 	const qmlContent = fs
 		.readFileSync(path.join(ROOT, "ScoreLinter.qml"), "utf8")
 		.replace(/import "dist\/bundle\.js"/, 'import "bundle.js"')
+		.replace(/__PLUGIN_VERSION__/g, pkg.version)
 		.replace("__BUILD_DATE__", `ver. ${buildDate}`);
 	fs.writeFileSync(path.join(distDir, "ScoreLinter.qml"), qmlContent, "utf8");
 	console.log("✓ Copied ScoreLinter.qml");

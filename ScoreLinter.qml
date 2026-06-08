@@ -11,16 +11,29 @@ MuseScore {
 
     menuPath: "Plugins.Score Linter"
     description: "楽譜の問題点を検出・一覧表示するリンター"
-    version: "2.0"
+    version: "__PLUGIN_VERSION__"
     pluginType: "dialog"
     width: 720
     height: 680
+
+    // バージョンは build 時に package.json から注入される（単一情報源）
+    readonly property string pluginVersion: "__PLUGIN_VERSION__"
+    // アップデート確認用 GitHub リポジトリ
+    readonly property string repoSlug: "kjfsm/musescore-linter-plugin"
+    readonly property string releasesPageUrl: "https://github.com/" + repoSlug + "/releases/latest"
+    readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/musescore-linter-plugin.zip"
 
     property var enabledRules: ({})
     property var issuesList: []
     property var checkerList: []
     property string snapshotText: ""
     property bool hasRun: false
+
+    // ─── アップデート確認の状態 ───
+    // idle / checking / upToDate / available / error
+    property string updateState: "idle"
+    property string latestVersion: ""
+    property string updateMessage: ""
 
     // 実行統計
     readonly property int errorCount: {
@@ -149,6 +162,57 @@ MuseScore {
         return [];
     }
 
+    // ─── アップデート確認 ───────────────────────────────────────────────────
+    // GitHub Releases API から最新版を取得し、現在版と比較する。
+    // 比較ロジックは bundle 側（Bundle.isNewerVersion）に集約してテスト可能にしている。
+    // UI 層なのでネットワーク/parse 失敗は握りつぶしてエラー表示に倒す（never-catch は Checker 内限定）。
+    function checkForUpdate() {
+        updateState = "checking";
+        updateMessage = "";
+        latestVersion = "";
+
+        var req = new XMLHttpRequest();
+        var url = "https://api.github.com/repos/" + repoSlug + "/releases/latest";
+        try {
+            req.open("GET", url, true);
+            req.setRequestHeader("Accept", "application/vnd.github+json");
+            // GitHub API は User-Agent 必須
+            req.setRequestHeader("User-Agent", "musescore-linter-plugin");
+            req.onreadystatechange = function() {
+                if (req.readyState !== XMLHttpRequest.DONE) return;
+                try {
+                    if (req.status !== 200) {
+                        plugin.updateState = "error";
+                        plugin.updateMessage = "更新を確認できませんでした (HTTP " + req.status + ")。時間をおいて再度お試しください。";
+                        return;
+                    }
+                    var data = JSON.parse(req.responseText);
+                    var tag = (data && data.tag_name) ? String(data.tag_name) : "";
+                    if (tag.length === 0) {
+                        plugin.updateState = "error";
+                        plugin.updateMessage = "最新バージョン情報を取得できませんでした。";
+                        return;
+                    }
+                    plugin.latestVersion = tag;
+                    if (Bundle.isNewerVersion(plugin.pluginVersion, tag)) {
+                        plugin.updateState = "available";
+                    } else {
+                        plugin.updateState = "upToDate";
+                    }
+                } catch (e) {
+                    plugin.updateState = "error";
+                    plugin.updateMessage = "応答の解析に失敗しました。";
+                    console.warn("[ScoreLinter] update parse 失敗: " + e);
+                }
+            };
+            req.send();
+        } catch (e) {
+            updateState = "error";
+            updateMessage = "更新を確認できませんでした。ネットワーク接続を確認してください。";
+            console.warn("[ScoreLinter] checkForUpdate 失敗: " + e);
+        }
+    }
+
     // ─── UI ───────────────────────────────────────────────────────────────
 
     Rectangle {
@@ -186,9 +250,9 @@ MuseScore {
                         color: "#212121"
                     }
 
-                    // ビルド日時
+                    // バージョン / ビルド日時
                     Label {
-                        text: "__BUILD_DATE__"
+                        text: "v" + plugin.pluginVersion + "  ·  __BUILD_DATE__"
                         font.pixelSize: 10
                         color: "#9E9E9E"
                         Layout.alignment: Qt.AlignVCenter
@@ -240,6 +304,30 @@ MuseScore {
 
                     Item { Layout.fillWidth: true }
 
+                    // アップデート確認ボタン
+                    Button {
+                        text: plugin.updateState === "checking" ? "確認中…" : "アップデート確認"
+                        font.pixelSize: 12
+                        enabled: plugin.updateState !== "checking"
+                        implicitHeight: 34
+                        onClicked: plugin.checkForUpdate()
+                        background: Rectangle {
+                            color: parent.enabled ? (parent.hovered ? "#EEEEEE" : "#F5F5F5") : "#FAFAFA"
+                            border.color: "#E0E0E0"
+                            border.width: 1
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            font: parent.font
+                            color: parent.enabled ? "#424242" : "#BDBDBD"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 8
+                            rightPadding: 8
+                        }
+                    }
+
                     // 実行ボタン
                     Button {
                         text: "実行"
@@ -262,6 +350,19 @@ MuseScore {
                         }
                     }
                 }
+            }
+
+            // ─── アップデート通知バナー ───
+            UpdateBanner {
+                Layout.fillWidth: true
+                updateState: plugin.updateState
+                currentVersion: plugin.pluginVersion
+                latestVersion: plugin.latestVersion
+                errorMessage: plugin.updateMessage
+                onDownloadRequested: Qt.openUrlExternally(plugin.latestZipUrl)
+                onReleasePageRequested: Qt.openUrlExternally(plugin.releasesPageUrl)
+                onOpenFolderRequested: Qt.openUrlExternally(Qt.resolvedUrl("."))
+                onDismissRequested: plugin.updateState = "idle"
             }
 
             // ─── タブバー ───
