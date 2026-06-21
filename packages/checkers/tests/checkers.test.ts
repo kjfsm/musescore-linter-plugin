@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "../src/conLegnoArcoChecker.js";
 import { courtesyAccidentalChecker } from "../src/courtesyAccidentalChecker.js";
+import { crescTextResolutionChecker } from "../src/crescTextResolutionChecker.js";
 import { divisiChecker } from "../src/divisiChecker.js";
 import { duplicateDynamicsChecker } from "../src/duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "../src/finalBarlineChecker.js";
@@ -24,8 +25,10 @@ import { rehearsalMarkOrderChecker } from "../src/rehearsalMarkOrderChecker.js";
 import { repeatBarlineMatchChecker } from "../src/repeatBarlineMatchChecker.js";
 import { restAnnotationChecker } from "../src/restAnnotationChecker.js";
 import { simultaneousDynamicsChecker } from "../src/simultaneousDynamicsChecker.js";
+import { slurSingleNoteChecker } from "../src/slurSingleNoteChecker.js";
 import { soloTuttiChecker } from "../src/soloTuttiChecker.js";
 import { sordinoChecker } from "../src/sordinoChecker.js";
+import { spannerOnRestChecker } from "../src/spannerOnRestChecker.js";
 import { sulPontOrdChecker } from "../src/sulPontOrdChecker.js";
 import { sulTastoOrdChecker } from "../src/sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "../src/tempoBarlineChecker.js";
@@ -2100,5 +2103,159 @@ describe("courtesy-accidental checker", () => {
 			],
 		});
 		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── spanner-on-rest ─────────────────────────────────────────────────────────
+
+describe("spanner-on-rest checker", () => {
+	it("ヘアピンの終了端点が休符上 → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{ kind: K.REST, staff: 0, tick: 480, measure: 1 },
+			],
+			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+		});
+		const issues = spannerOnRestChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("warning");
+	});
+
+	it("スラーの開始端点が休符上 → warning 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.REST, staff: 0, tick: 0, measure: 1 },
+				{ kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
+			],
+			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
+		});
+		const issues = spannerOnRestChecker.run(ir);
+		expect(issues).toHaveLength(1);
+	});
+
+	it("端点が音符上 → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{ kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
+			],
+			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+		});
+		expect(spannerOnRestChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("同 tick に voice 違いの音符と休符が共存 → 0件（音符優先）", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, voice: 0, tick: 0, measure: 1 },
+				{ kind: K.CHORD, staff: 0, voice: 0, tick: 480, measure: 1 },
+				{ kind: K.REST, staff: 0, voice: 1, tick: 480, measure: 1 },
+			],
+			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+		});
+		expect(spannerOnRestChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── slur-single-note ────────────────────────────────────────────────────────
+
+describe("slur-single-note checker", () => {
+	it("単一音スラー（start==end）→ info 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 0 }],
+		});
+		const issues = slurSingleNoteChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+	});
+
+	it("複数音スラー（start<end）→ 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
+		});
+		expect(slurSingleNoteChecker.run(ir)).toHaveLength(0);
+	});
+});
+
+// ─── cresc-text-resolution ───────────────────────────────────────────────────
+
+describe("cresc-text-resolution checker", () => {
+	it("cresc. の後に強弱記号なし → info 1件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "cresc.",
+					textRaw: "cresc.",
+				},
+			],
+		});
+		const issues = crescTextResolutionChecker.run(ir);
+		expect(issues).toHaveLength(1);
+		expect(issues[0].severity).toBe("info");
+	});
+
+	it("cresc. の後に同 staff の強弱記号 → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "cresc.",
+					textRaw: "cresc.",
+				},
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 480,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+			],
+		});
+		expect(crescTextResolutionChecker.run(ir)).toHaveLength(0);
+	});
+
+	it("cresc. の後に global scope の強弱記号 → 0件", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }],
+			events: [
+				{
+					kind: K.DYNAMIC,
+					staff: 0,
+					tick: 0,
+					measure: 1,
+					textNorm: "cresc.",
+					textRaw: "cresc.",
+				},
+				{
+					kind: K.DYNAMIC,
+					scope: "global",
+					tick: 480,
+					measure: 1,
+					textNorm: "f",
+					textRaw: "f",
+				},
+			],
+		});
+		expect(crescTextResolutionChecker.run(ir)).toHaveLength(0);
 	});
 });

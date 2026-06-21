@@ -38,8 +38,8 @@
 |---|---|---|---|---|---|---|
 | A1 | 休符にダイナミクス | NOW | error | – | ✅ | 既存 `rest-annotation` |
 | A2 | ヘアピン（cresc/dim）の到達先ダイナミクスが無い | NOW | info | 高 | ✅ | `hairpin-target-dynamic`（曲尾のヘアピンは除外して誤検出を低減） |
-| A3 | ヘアピンが休符上で開始/終了 | NOW | warning | 中 | | hairpin tick と rest tick 照合 |
-| A4 | `cresc.`/`dim.`/`decresc.` テキストの後に強弱変化が無い | NOW | info | 中 | | text→後続 dynamic |
+| A3 | ヘアピンが休符上で開始/終了 | NOW | warning | 中 | ✅ | `spanner-on-rest`（D2 と統合。同 tick に音符があれば許容） |
+| A4 | `cresc.`/`dim.`/`decresc.` テキストの後に強弱変化が無い | NOW | info | 中 | ✅ | `cresc-text-resolution`（後続 tick or global の強弱記号で解決とみなす） |
 | A5 | 同一 tick・同 staff に異なるダイナミクスが同時 | NOW | warning | 中 | ✅ | このバッチ `simultaneous-dynamics` |
 | A6 | 重複ダイナミクス | NOW | info | – | ✅ | 既存 `duplicate-dynamics` |
 | A7 | `sf`/`fp`/`sfz` 等が文脈なく単独連続 | NOW | info | 低 | | textNorm パターン |
@@ -76,8 +76,8 @@
 | # | 項目 | タグ | severity | 優先 | 状態 | 備考 |
 |---|---|---|---|---|---|---|
 | D1 | 休符に奏法テキスト/ダイナミクス | NOW | error | – | ✅ | 既存 `rest-annotation`。語彙拡充の余地 |
-| D2 | 休符にスラー/ヘアピンの端点 | NOW | warning | 中 | | A3 と連動 |
-| D3 | スラーが単一音（start==end） | NOW | info | 中 | | `meta.slurs` |
+| D2 | 休符にスラー/ヘアピンの端点 | NOW | warning | 中 | ✅ | `spanner-on-rest`（A3 と統合） |
+| D3 | スラーが単一音（start==end） | NOW | info | 中 | ✅ | `slur-single-note`。`meta.slurs` の start==end |
 | D4 | グリッサンド/タイの端点が休符 | SDK | warning | 中 | | 要: タイ/グリッサンド span |
 | D5 | タイの途中音に新ダイナミクス/アーティキュレーション | SDK | warning | 中 | | 要: タイ情報 |
 | D6 | 異音程をタイで結んでいる（スラーにすべき） | SDK | warning | 高 | ✅ | `tie-pitch-mismatch`。helpers 2.2.0 + snapshot 配線済みで実スコア発火 |
