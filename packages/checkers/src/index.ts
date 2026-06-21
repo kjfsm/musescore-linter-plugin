@@ -3,6 +3,7 @@ import { articulationSlurConsistencyChecker } from "./articulationSlurConsistenc
 import { codaSegnoChecker } from "./codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "./conLegnoArcoChecker.js";
 import { courtesyAccidentalChecker } from "./courtesyAccidentalChecker.js";
+import { crescTextResolutionChecker } from "./crescTextResolutionChecker.js";
 import { divisiChecker } from "./divisiChecker.js";
 import { duplicateDynamicsChecker } from "./duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "./finalBarlineChecker.js";
@@ -16,8 +17,10 @@ import { rehearsalMarkOrderChecker } from "./rehearsalMarkOrderChecker.js";
 import { repeatBarlineMatchChecker } from "./repeatBarlineMatchChecker.js";
 import { restAnnotationChecker } from "./restAnnotationChecker.js";
 import { simultaneousDynamicsChecker } from "./simultaneousDynamicsChecker.js";
+import { slurSingleNoteChecker } from "./slurSingleNoteChecker.js";
 import { soloTuttiChecker } from "./soloTuttiChecker.js";
 import { sordinoChecker } from "./sordinoChecker.js";
+import { spannerOnRestChecker } from "./spannerOnRestChecker.js";
 import { sulPontOrdChecker } from "./sulPontOrdChecker.js";
 import { sulTastoOrdChecker } from "./sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "./tempoBarlineChecker.js";
@@ -54,6 +57,9 @@ export function registerAll(): void {
 	register(repeatBarlineMatchChecker);
 	register(tiePitchMismatchChecker);
 	register(courtesyAccidentalChecker);
+	register(spannerOnRestChecker);
+	register(slurSingleNoteChecker);
+	register(crescTextResolutionChecker);
 }
 
 export {
@@ -61,6 +67,7 @@ export {
 	codaSegnoChecker,
 	conLegnoArcoChecker,
 	courtesyAccidentalChecker,
+	crescTextResolutionChecker,
 	divisiChecker,
 	duplicateDynamicsChecker,
 	finalBarlineChecker,
@@ -74,8 +81,10 @@ export {
 	repeatBarlineMatchChecker,
 	restAnnotationChecker,
 	simultaneousDynamicsChecker,
+	slurSingleNoteChecker,
 	soloTuttiChecker,
 	sordinoChecker,
+	spannerOnRestChecker,
 	sulPontOrdChecker,
 	sulTastoOrdChecker,
 	tempoBarlineChecker,
