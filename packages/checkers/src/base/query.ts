@@ -52,6 +52,14 @@ export function articulationsOf(ir: LintIR, chordId: number): string[] {
 	return ir.derived?.articulationsByChordId?.[chordId] ?? [];
 }
 
+/**
+ * MuseScore の subtypeName() は符尾方向により「上スタッカート」「下スタッカート」等の
+ * 配置違いバリアントを返すが、音楽的には同一の記号なので比較時は接頭辞を除去して同一視する。
+ */
+export function normalizeArticulationName(name: string): string {
+	return name.replace(/^[上下]/, "");
+}
+
 /** tick が staff/voice のスラーに含まれるか。 */
 export function slurCoversTick(
 	ir: LintIR,

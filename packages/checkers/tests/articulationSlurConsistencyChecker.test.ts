@@ -89,6 +89,60 @@ describe("articulation-slur-consistency", () => {
 		expect(run(ir)).toHaveLength(1);
 	});
 
+	it("上/下スタッカートなど配置違いは同一視して検出しない", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vc" }, { partName: "Cb" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					duration: q,
+					articulations: ["上スタッカート"],
+				},
+				{
+					kind: K.CHORD,
+					staff: 1,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					duration: q,
+					articulations: ["下スタッカート"],
+				},
+			],
+		});
+		expect(run(ir)).toHaveLength(0);
+	});
+
+	it("正規化しても異なるアーティキュレーションなら検出する", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vc" }, { partName: "Cb" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					duration: q,
+					articulations: ["上スタッカート"],
+				},
+				{
+					kind: K.CHORD,
+					staff: 1,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					duration: q,
+					articulations: ["上アクセント"],
+				},
+			],
+		});
+		expect(run(ir)).toHaveLength(1);
+	});
+
 	it("リズムが異なるパートは比較しない", () => {
 		const ir = buildIR({
 			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],

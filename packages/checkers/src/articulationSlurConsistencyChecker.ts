@@ -4,6 +4,7 @@ import { getCanonical } from "./base/predicates.js";
 import {
 	articulationsOf,
 	chordsIn,
+	normalizeArticulationName,
 	slurCoversTick,
 	staffGroupsSharingRhythm,
 } from "./base/query.js";
@@ -18,7 +19,10 @@ const VOICE = 0;
 function profileOf(ir: LintIR, staffIdx: number, measure: number): string {
 	return chordsIn(ir, staffIdx, measure, VOICE)
 		.map((ch) => {
-			const arts = articulationsOf(ir, ch.id).slice().sort().join("+");
+			const arts = articulationsOf(ir, ch.id)
+				.map(normalizeArticulationName)
+				.sort()
+				.join("+");
 			const slur = slurCoversTick(ir, staffIdx, VOICE, ch.tick) ? "S" : "-";
 			return `${ch.tick}:${slur}:${arts}`;
 		})
