@@ -1,5 +1,42 @@
 # @musescore-linter/checkers
 
+## 2.2.0
+
+### Minor Changes
+
+- [#86](https://github.com/kjfsm/musescore-linter-plugin/pull/86) [`e67f280`](https://github.com/kjfsm/musescore-linter-plugin/commit/e67f280cbc93ecb6e7735d66e1c32951eb83875e) Thanks [@kjfsm](https://github.com/kjfsm)! - 新規 Checker を 3 つ追加（現行 LintIR のみで実装、SDK 拡張不要）:
+
+  - **spanner-on-rest**（warning）: ヘアピン(cresc./dim.)やスラーの端点が休符上にある箇所を検出。同 tick に音符があれば許容。
+  - **slur-single-note**（info）: スラーが単一音（開始 tick == 終了 tick）に掛かっている箇所を検出。
+  - **cresc-text-resolution**（info）: テキスト式 cresc./dim. の後に到達先の強弱記号が現れない箇所を検出。
+
+### Patch Changes
+
+- [#91](https://github.com/kjfsm/musescore-linter-plugin/pull/91) [`df33366`](https://github.com/kjfsm/musescore-linter-plugin/commit/df33366ec561d2f51a8533e03922b66fcfa585d1) Thanks [@kjfsm](https://github.com/kjfsm)! - `buildSnapshot` の呼び出し契約バグを修正し、SDK の版安全ヘルパを活用するようにした。
+
+  **重大バグ修正（`@musescore-linter/core`）**: `ScoreLinter.qml` が `buildSnapshot(curScore, NoteType, BarLineType)` と
+  3 引数フラットで呼んでいたが、実際のシグネチャは `(score, hostEnums)` の 2 引数だった。結果 `hostEnums` に
+  `NoteType` オブジェクト自体が渡り、`hostEnums.noteType` / `hostEnums.barLineType` が `undefined` になっていた。
+  `isGraceNote(chord, undefined)` が各小節の解析で例外を投げ、`buildSnapshot` 内の per-measure `try/catch` が
+  握りつぶすため、**スナップショットが実質空になり全 checker が何も検出しない**状態になっていた
+  （`[#90](https://github.com/kjfsm/musescore-linter-plugin/issues/90)` で混入・リリース済み）。QML 側の呼び出しを `buildSnapshot(curScore, { noteType, barLineType }, plugin)`
+  に修正。
+
+  **SDK の版安全ヘルパを活用**:
+
+  - `buildSnapshot` に第 3 引数 `host?: MuseScore` を追加。渡すと SDK の `checkHostVersion` で型の生成元
+    MuseScore バージョンと実行版を照合し、結果を `ir.meta.hostVersion`（`{ ok, generatedTag, running, message? }`）
+    に記録する。不一致時は QML 側が警告 issue として結果リストに出す。
+  - `hostEnums`（`NoteType`/`BarLineType`）を SDK の `strictEnum` で包み、実行中の版に存在しないメンバへの
+    アクセスを「静かな undefined」ではなく例外にする（Proxy 非対応環境ではフォールバック）。
+
+  **内部重複の解消（`@musescore-linter/checkers`）**: 4 checker に重複していた `measureAtTick` と、6 checker に
+  重複していた part 名マップ構築を `packages/checkers/src/base/query.ts` の `measureAtTick` / `buildPartNameMap`
+  に一本化。挙動は不変。
+
+- Updated dependencies [[`df33366`](https://github.com/kjfsm/musescore-linter-plugin/commit/df33366ec561d2f51a8533e03922b66fcfa585d1), [`df33366`](https://github.com/kjfsm/musescore-linter-plugin/commit/df33366ec561d2f51a8533e03922b66fcfa585d1)]:
+  - @musescore-linter/core@2.2.0
+
 ## 2.1.2
 
 ### Patch Changes
