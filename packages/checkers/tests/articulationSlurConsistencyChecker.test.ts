@@ -168,4 +168,30 @@ describe("articulation-slur-consistency", () => {
 		});
 		expect(run(ir)).toHaveLength(0);
 	});
+
+	it("同じ長さでも一方が休符なら同じリズムとみなさない", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+			events: [
+				{
+					kind: K.CHORD,
+					staff: 0,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					duration: q,
+					articulations: ["Staccato"],
+				},
+				{
+					kind: K.REST,
+					staff: 1,
+					voice: 0,
+					tick: 0,
+					measure: 1,
+					duration: q,
+				},
+			],
+		});
+		expect(run(ir)).toHaveLength(0);
+	});
 });

@@ -89,7 +89,7 @@ export function ensureDerived(ir: LintIR): void {
 		derived.rhythmByStaffMeasure[key] = evs
 			.map(
 				(e) =>
-					`${e.tick}/${e.duration?.numerator ?? 0}/${e.duration?.denominator ?? 0}`,
+					`${e.tick}/${e.duration?.numerator ?? 0}/${e.duration?.denominator ?? 0}/${e.kind}`,
 			)
 			.join(",");
 	}
