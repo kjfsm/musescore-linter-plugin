@@ -10,6 +10,6 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@kjfsm/musescore-plugin-sdk-types": "^1.1.0"
+		"@kjfsm/musescore-plugin-sdk-types": "^2.0.0"
 	}
 }

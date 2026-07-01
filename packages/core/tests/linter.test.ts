@@ -14,6 +14,7 @@ function minimalIR(): LintIR {
 			lastTick: 0,
 			hairpins: [],
 			slurs: [],
+			ties: [],
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,
@@ -102,5 +103,49 @@ describe("ensureDerived", () => {
 		const derived1 = ir.derived;
 		ensureDerived(ir);
 		expect(ir.derived).toBe(derived1);
+	});
+
+	it("rhythmByStaffMeasure は同じ長さでも chord と rest を区別する", () => {
+		const ir = minimalIR();
+		ir.events.push(
+			{
+				id: 0,
+				tick: 0,
+				measure: 1,
+				staffIdx: 0,
+				voice: 0,
+				kind: CANONICAL.elementKinds.CHORD,
+				type: "chord",
+				textNorm: "",
+				textRaw: "",
+				scope: "staff",
+				subtype: null,
+				subStyle: null,
+				tempo: null,
+				duration: { numerator: 1, denominator: 4 },
+			},
+			{
+				id: 1,
+				tick: 0,
+				measure: 1,
+				staffIdx: 1,
+				voice: 0,
+				kind: CANONICAL.elementKinds.REST,
+				type: "rest",
+				textNorm: "",
+				textRaw: "",
+				scope: "staff",
+				subtype: null,
+				subStyle: null,
+				tempo: null,
+				duration: { numerator: 1, denominator: 4 },
+			},
+		);
+		ir.index.byKind[CANONICAL.elementKinds.CHORD] = [0];
+		ir.index.byKind[CANONICAL.elementKinds.REST] = [1];
+		ensureDerived(ir);
+		expect(ir.derived?.rhythmByStaffMeasure["0:1:0"]).not.toBe(
+			ir.derived?.rhythmByStaffMeasure["1:1:0"],
+		);
 	});
 });

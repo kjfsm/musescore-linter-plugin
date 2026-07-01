@@ -6,13 +6,24 @@ import type {
 export type Severity = "error" | "warning" | "info";
 
 /**
- * QML から `buildSnapshot(curScore, NoteType, BarLineType)` で渡す実行時 enum セット。
- * 値を TypeScript の定数に焼き込まず、実行中の MuseScore が提供する enum を使うことで
- * バージョン差の再採番による誤判定を防ぐ。
+ * QML から `buildSnapshot(curScore, { noteType: NoteType, barLineType: BarLineType }, plugin)` で
+ * 渡す実行時 enum セット。値を TypeScript の定数に焼き込まず、実行中の MuseScore が提供する
+ * enum を使うことでバージョン差の再採番による誤判定を防ぐ。
  */
 export interface HostEnums {
 	noteType: NoteTypeEnum;
 	barLineType: BarLineTypeEnum;
+}
+
+/**
+ * 型の生成元 MuseScore バージョン（`generatedFrom.tag`）と実行中の版の照合結果。
+ * `buildSnapshot` にホスト（`MuseScore { }` オブジェクト）を渡したときのみ設定される。
+ */
+export interface HostVersionInfo {
+	ok: boolean;
+	generatedTag: string; // 例: "v4.7.3"
+	running: string; // 例: "4.7"
+	message?: string; // !ok のときのみ設定
 }
 
 export interface NoteInfo {
@@ -82,6 +93,8 @@ export interface IRMeta {
 	hairpins: HairpinInfo[];
 	slurs: SlurInfo[];
 	ties: TieInfo[];
+	// `buildSnapshot` にホストを渡したときのみ設定される版照合結果（診断用。checker は参照しない）。
+	hostVersion?: HostVersionInfo;
 }
 
 export interface IRDerived {

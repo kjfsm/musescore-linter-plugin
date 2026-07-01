@@ -1,6 +1,7 @@
 import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 import { getCanonical } from "./base/predicates.js";
+import { buildPartNameMap } from "./base/query.js";
 
 // 漸次的テンポ変化(rit. / rall. / accel. / allarg. 等)が解除されないまま放置されていないかを検査する。
 // 解除は「a tempo / tempo primo / l'istesso tempo 等のテキスト」または「後続の新しいテンポ表記」とみなす。
@@ -41,8 +42,7 @@ export const tempoChangeResolutionChecker: Checker = {
 		}
 		events.sort((a, b) => a.tick - b.tick);
 
-		const partsByStaff: Record<number, string> = {};
-		for (const p of ir.meta?.parts ?? []) partsByStaff[p.staffIdx] = p.partName;
+		const partsByStaff = buildPartNameMap(ir);
 
 		// 曲尾のリタルダンド等は a tempo 不要なので、最後の音楽小節は判定対象外にする
 		let lastMusicMeasure = 0;
@@ -79,7 +79,7 @@ export const tempoChangeResolutionChecker: Checker = {
 			if (lastMusicMeasure > 0 && ev.measure >= lastMusicMeasure) continue;
 
 			const partName =
-				ev.staffIdx >= 0 ? (partsByStaff[ev.staffIdx] ?? "") : "";
+				ev.staffIdx >= 0 ? (partsByStaff.get(ev.staffIdx) ?? "") : "";
 			const label = (ev.textRaw || ev.textNorm).trim();
 			issues.push(
 				createIssue(tempoChangeResolutionChecker, {

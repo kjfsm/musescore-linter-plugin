@@ -1,6 +1,25 @@
 import type { LintEvent, LintIR } from "@musescore-linter/core";
 import { getCanonical } from "./predicates.js";
 
+/** tick に対応する小節番号。見つからなければ 0。 */
+export function measureAtTick(ir: LintIR, tick: number): number {
+	const ids = ir.index.byTick[String(tick)] ?? [];
+	for (const id of ids) {
+		const ev = ir.events[id];
+		if (ev.measure > 0) return ev.measure;
+	}
+	return 0;
+}
+
+/** staffIdx → partName のマップ。ir.meta.parts から構築する。 */
+export function buildPartNameMap(ir: LintIR): Map<number, string> {
+	const map = new Map<number, string>();
+	for (const part of ir.meta?.parts ?? []) {
+		map.set(part.staffIdx, part.partName);
+	}
+	return map;
+}
+
 /** (staff, measure, voice) の chord イベントを tick 昇順で返す。 */
 export function chordsIn(
 	ir: LintIR,
@@ -31,6 +50,14 @@ export function rhythmSignature(
 /** chord イベントに付いたアーティキュレーション名（無ければ []）。 */
 export function articulationsOf(ir: LintIR, chordId: number): string[] {
 	return ir.derived?.articulationsByChordId?.[chordId] ?? [];
+}
+
+/**
+ * MuseScore の subtypeName() は符尾方向により「上スタッカート」「下スタッカート」等の
+ * 配置違いバリアントを返すが、音楽的には同一の記号なので比較時は接頭辞を除去して同一視する。
+ */
+export function normalizeArticulationName(name: string): string {
+	return name.replace(/^[上下]/, "");
 }
 
 /** tick が staff/voice のスラーに含まれるか。 */

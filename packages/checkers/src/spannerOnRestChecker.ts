@@ -1,19 +1,11 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 import { getCanonical } from "./base/predicates.js";
+import { buildPartNameMap, measureAtTick } from "./base/query.js";
 
 // ヘアピン(cresc./dim.)やスラーの開始/終了 tick が、その staff で
 // 「休符のみが存在し音符(chord)が無い」位置にある誤りを検出する。
 // スパナーの端点は原則として音符に掛かるべきで、休符上の端点は浄書ミスであることが多い。
-function measureAtTick(ir: LintIR, tick: number): number {
-	const ids = ir.index.byTick[String(tick)] ?? [];
-	for (const id of ids) {
-		const ev = ir.events[id];
-		if (ev.measure > 0) return ev.measure;
-	}
-	return 0;
-}
-
 function tickSet(ir: LintIR, staffIdx: number, kind: string): Set<number> {
 	const ids = ir.index.byStaffAndKind[staffIdx]?.[kind] ?? [];
 	return new Set(ids.map((id) => ir.events[id].tick));
@@ -35,8 +27,7 @@ export const spannerOnRestChecker: Checker = {
 		const restKind = canonical.elementKinds.REST;
 		const chordKind = canonical.elementKinds.CHORD;
 
-		const partsByStaff: Record<number, string> = {};
-		for (const p of ir.meta?.parts ?? []) partsByStaff[p.staffIdx] = p.partName;
+		const partsByStaff = buildPartNameMap(ir);
 
 		// staff ごとに rest/chord の tick 集合を遅延構築してキャッシュ
 		const restCache: Record<number, Set<number>> = {};
@@ -57,7 +48,7 @@ export const spannerOnRestChecker: Checker = {
 			tick: number,
 			detail: Record<string, unknown>,
 		): void => {
-			const partName = partsByStaff[staffIdx] ?? "";
+			const partName = partsByStaff.get(staffIdx) ?? "";
 			const measure = measureAtTick(ir, tick);
 			issues.push(
 				createIssue(spannerOnRestChecker, {

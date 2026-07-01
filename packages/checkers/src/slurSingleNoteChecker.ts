@@ -1,17 +1,9 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+import { buildPartNameMap, measureAtTick } from "./base/query.js";
 
 // スラーが単一音（開始 tick == 終了 tick）に掛かっている箇所を検出する。
 // スラーは複数音を繋ぐフレージング記号であり、単一音のスラーは記譜ミスの可能性が高い。
-function measureAtTick(ir: LintIR, tick: number): number {
-	const ids = ir.index.byTick[String(tick)] ?? [];
-	for (const id of ids) {
-		const ev = ir.events[id];
-		if (ev.measure > 0) return ev.measure;
-	}
-	return 0;
-}
-
 export const slurSingleNoteChecker: Checker = {
 	id: "slur-single-note",
 	name: "単一音スラー",
@@ -23,13 +15,12 @@ export const slurSingleNoteChecker: Checker = {
 	run(ir: LintIR): Issue[] {
 		const issues: Issue[] = [];
 
-		const partsByStaff: Record<number, string> = {};
-		for (const p of ir.meta?.parts ?? []) partsByStaff[p.staffIdx] = p.partName;
+		const partsByStaff = buildPartNameMap(ir);
 
 		for (const slur of ir.meta?.slurs ?? []) {
 			if (slur.startTick !== slur.endTick) continue;
 
-			const partName = partsByStaff[slur.staffIdx] ?? "";
+			const partName = partsByStaff.get(slur.staffIdx) ?? "";
 			const measure = measureAtTick(ir, slur.startTick);
 			issues.push(
 				createIssue(slurSingleNoteChecker, {
