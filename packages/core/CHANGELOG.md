@@ -1,5 +1,35 @@
 # @musescore-linter/core
 
+## 2.2.0
+
+### Minor Changes
+
+- [#91](https://github.com/kjfsm/musescore-linter-plugin/pull/91) [`df33366`](https://github.com/kjfsm/musescore-linter-plugin/commit/df33366ec561d2f51a8533e03922b66fcfa585d1) Thanks [@kjfsm](https://github.com/kjfsm)! - `buildSnapshot` の呼び出し契約バグを修正し、SDK の版安全ヘルパを活用するようにした。
+
+  **重大バグ修正（`@musescore-linter/core`）**: `ScoreLinter.qml` が `buildSnapshot(curScore, NoteType, BarLineType)` と
+  3 引数フラットで呼んでいたが、実際のシグネチャは `(score, hostEnums)` の 2 引数だった。結果 `hostEnums` に
+  `NoteType` オブジェクト自体が渡り、`hostEnums.noteType` / `hostEnums.barLineType` が `undefined` になっていた。
+  `isGraceNote(chord, undefined)` が各小節の解析で例外を投げ、`buildSnapshot` 内の per-measure `try/catch` が
+  握りつぶすため、**スナップショットが実質空になり全 checker が何も検出しない**状態になっていた
+  （`[#90](https://github.com/kjfsm/musescore-linter-plugin/issues/90)` で混入・リリース済み）。QML 側の呼び出しを `buildSnapshot(curScore, { noteType, barLineType }, plugin)`
+  に修正。
+
+  **SDK の版安全ヘルパを活用**:
+
+  - `buildSnapshot` に第 3 引数 `host?: MuseScore` を追加。渡すと SDK の `checkHostVersion` で型の生成元
+    MuseScore バージョンと実行版を照合し、結果を `ir.meta.hostVersion`（`{ ok, generatedTag, running, message? }`）
+    に記録する。不一致時は QML 側が警告 issue として結果リストに出す。
+  - `hostEnums`（`NoteType`/`BarLineType`）を SDK の `strictEnum` で包み、実行中の版に存在しないメンバへの
+    アクセスを「静かな undefined」ではなく例外にする（Proxy 非対応環境ではフォールバック）。
+
+  **内部重複の解消（`@musescore-linter/checkers`）**: 4 checker に重複していた `measureAtTick` と、6 checker に
+  重複していた part 名マップ構築を `packages/checkers/src/base/query.ts` の `measureAtTick` / `buildPartNameMap`
+  に一本化。挙動は不変。
+
+### Patch Changes
+
+- [#91](https://github.com/kjfsm/musescore-linter-plugin/pull/91) [`df33366`](https://github.com/kjfsm/musescore-linter-plugin/commit/df33366ec561d2f51a8533e03922b66fcfa585d1) Thanks [@kjfsm](https://github.com/kjfsm)! - SDK の enum が「値を持たない型のみ」になる破壊的変更（`@kjfsm/musescore-plugin-sdk-types@2.0.0` / `@kjfsm/musescore-plugin-sdk-helpers@4.0.0`）に追従。`snapshot.ts` にあったローカル回避実装 `classifyBarlineKindRuntime`（SDK 側の焼き込み比較を避けるための重複実装）を削除し、SDK が実行時 enum 対応に更新された `classifyBarlineKind` を直接呼ぶように変更。挙動・出力は不変。
+
 ## 2.1.4
 
 ### Patch Changes
