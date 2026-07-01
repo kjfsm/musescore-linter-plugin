@@ -1,4 +1,5 @@
 import {
+	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
 	getArticulationNames,
@@ -28,7 +29,7 @@ import {
 	trackToStaffIdx,
 	VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { BarLineTypeEnum, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
 	PluginSegment,
 	TextAnnotation,
@@ -52,18 +53,6 @@ function getPartName(score: Score, staffIdx: number): string {
 		trackOffset += staveCount;
 	}
 	return `Staff ${staffIdx + 1}`;
-}
-
-// `classifyBarlineKind`（SDK helper）は静的 enum 定数で比較するため、MuseScore の
-// バージョン差で BarLineType が再採番された場合に誤判定する恐れがある。
-// 実行時 BarLineType を受け取るこちらの関数で比較することで安全にする。
-function classifyBarlineKindRuntime(type: number, rt: BarLineTypeEnum): string {
-	if (type === rt.END || type === rt.REVERSE_END) return "final";
-	if (type === rt.DOUBLE) return "double";
-	if (type === rt.START_REPEAT) return "repeat_start";
-	if (type === rt.END_REPEAT) return "repeat_end";
-	if (type === rt.END_START_REPEAT) return "repeat_both";
-	return "other";
 }
 
 function pushIndexedId(
@@ -248,8 +237,8 @@ function processStaffElements(
 				type: "barline",
 				kind: CANONICAL.elementKinds.BAR_LINE,
 				barlineType: barEl.barlineType,
-				barlineKind: classifyBarlineKindRuntime(
-					barEl.barlineType as number,
+				barlineKind: classifyBarlineKind(
+					barEl.barlineType,
 					hostEnums.barLineType,
 				),
 				tick: seg.tick,
