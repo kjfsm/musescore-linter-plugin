@@ -1,16 +1,16 @@
 import { ensureDerived, type LintIR } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
-import { articulationSlurConsistencyChecker } from "../src/articulationSlurConsistencyChecker.js";
+import { slurTieArticulationConsistencyChecker } from "../src/slurTieArticulationConsistencyChecker.js";
 import { buildIR, K } from "./helpers/irBuilder.js";
 
 const run = (ir: LintIR) => {
 	ensureDerived(ir);
-	return articulationSlurConsistencyChecker.run(ir);
+	return slurTieArticulationConsistencyChecker.run(ir);
 };
 
 const q = { numerator: 1, denominator: 4 };
 
-describe("articulation-slur-consistency", () => {
+describe("slur-tie-articulation-consistency", () => {
 	it("同リズムで記号が一致していれば検出しない", () => {
 		const ir = buildIR({
 			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
@@ -87,6 +87,56 @@ describe("articulation-slur-consistency", () => {
 			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
 		});
 		expect(run(ir)).toHaveLength(1);
+	});
+
+	it("同リズムでタイ被覆が食い違うと検出する", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, voice: 0, tick: 0, measure: 1, duration: q },
+				{ kind: K.CHORD, staff: 1, voice: 0, tick: 0, measure: 1, duration: q },
+			],
+			ties: [
+				{
+					staffIdx: 0,
+					voice: 0,
+					startTick: 0,
+					endTick: 480,
+					startPitch: 60,
+					endPitch: 60,
+				},
+			],
+		});
+		expect(run(ir)).toHaveLength(1);
+	});
+
+	it("同リズムでタイ被覆が一致していれば検出しない", () => {
+		const ir = buildIR({
+			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+			events: [
+				{ kind: K.CHORD, staff: 0, voice: 0, tick: 0, measure: 1, duration: q },
+				{ kind: K.CHORD, staff: 1, voice: 0, tick: 0, measure: 1, duration: q },
+			],
+			ties: [
+				{
+					staffIdx: 0,
+					voice: 0,
+					startTick: 0,
+					endTick: 480,
+					startPitch: 60,
+					endPitch: 60,
+				},
+				{
+					staffIdx: 1,
+					voice: 0,
+					startTick: 0,
+					endTick: 480,
+					startPitch: 57,
+					endPitch: 57,
+				},
+			],
+		});
+		expect(run(ir)).toHaveLength(0);
 	});
 
 	it("上/下スタッカートなど配置違いは同一視して検出しない", () => {

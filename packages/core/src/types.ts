@@ -106,6 +106,8 @@ export interface IRDerived {
 	articulationsByChordId: Record<number, string[]>;
 	// staffIdx → スラー（startTick 昇順）
 	slursByStaff: Record<number, SlurInfo[]>;
+	// staffIdx → タイ（startTick 昇順）
+	tiesByStaff: Record<number, TieInfo[]>;
 	// `${staffIdx}:${measure}:${voice}` → リズム署名（声部横断の同リズム判定キー）
 	rhythmByStaffMeasure: Record<string, string>;
 }

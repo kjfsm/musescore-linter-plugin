@@ -18,6 +18,7 @@ export function ensureDerived(ir: LintIR): void {
 		globalAnnotationIdsByTick: {},
 		articulationsByChordId: {},
 		slursByStaff: {},
+		tiesByStaff: {},
 		rhythmByStaffMeasure: {},
 	};
 
@@ -73,6 +74,15 @@ export function ensureDerived(ir: LintIR): void {
 	}
 	for (const k of Object.keys(derived.slursByStaff)) {
 		derived.slursByStaff[Number(k)].sort((a, b) => a.startTick - b.startTick);
+	}
+
+	for (const tie of ir.meta?.ties ?? []) {
+		if (!derived.tiesByStaff[tie.staffIdx])
+			derived.tiesByStaff[tie.staffIdx] = [];
+		derived.tiesByStaff[tie.staffIdx].push(tie);
+	}
+	for (const k of Object.keys(derived.tiesByStaff)) {
+		derived.tiesByStaff[Number(k)].sort((a, b) => a.startTick - b.startTick);
 	}
 
 	const restKind = canonical.elementKinds.REST;
