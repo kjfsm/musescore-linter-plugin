@@ -69,6 +69,10 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
     parts: [{staffIdx, partName}], firstMusicTickByStaff, lastTick,
     hairpins: [{staffIdx, startTick, endTick}],
     slurs:    [{staffIdx, voice, startTick, endTick}],
+    ties:     [{staffIdx, voice, startTick, endTick, startPitch, endPitch}],
+    // buildSnapshot にホスト（MuseScore { } オブジェクト）を渡したときのみ設定される。
+    // 型の生成元 MuseScore バージョンとの照合結果（診断用）。checker からは通常参照しない。
+    hostVersion: { ok, generatedTag, running, message? },
   },
   registry: { canonical: { elementKinds, barlineKinds } },
   derived: {

@@ -1,4 +1,5 @@
 import {
+	checkHostVersion,
 	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
@@ -26,19 +27,51 @@ import {
 	iterateStaves,
 	parseDynamicText,
 	staffVoiceToTrack,
+	strictEnum,
 	trackToStaffIdx,
 	VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
 	PluginSegment,
 	TextAnnotation,
 } from "@musescore-linter/musescore-api";
 import { CANONICAL } from "./enumRegistry.js";
 import { make } from "./logger.js";
-import type { HostEnums, LintEvent, LintIR } from "./types.js";
+import type { HostEnums, HostVersionInfo, LintEvent, LintIR } from "./types.js";
 
 const log = make("snapshot");
+
+// MuseScore 4.4+（Qt6 の V4 エンジン）は ES6 Proxy をサポートする（.claude/skills/musescore-qt-versions
+// の対応表参照）。念のためガードし、非対応環境では生の enum のまま渡す（strictEnum の恩恵は失うが
+// 通常の判定は動く）。
+function wrapHostEnums(hostEnums: HostEnums): HostEnums {
+	if (typeof Proxy === "undefined") return hostEnums;
+	return {
+		noteType: strictEnum("NoteType", hostEnums.noteType),
+		barLineType: strictEnum("BarLineType", hostEnums.barLineType),
+	};
+}
+
+// 型の生成元 MuseScore バージョン（generatedFrom.tag）と実行中の版を照合する。host が渡された
+// ときのみ実行（QML から plugin オブジェクトを渡す想定）。
+function buildHostVersionInfo(
+	host: MuseScore | undefined,
+): HostVersionInfo | undefined {
+	if (!host) return undefined;
+	const running = `${host.mscoreMajorVersion}.${host.mscoreMinorVersion}`;
+	const check = checkHostVersion(host);
+	if (check.ok) {
+		return { ok: true, generatedTag: generatedFrom.tag, running };
+	}
+	return {
+		ok: false,
+		generatedTag: generatedFrom.tag,
+		running,
+		message: check.message,
+	};
+}
 
 function getPartName(score: Score, staffIdx: number): string {
 	if (!score.parts) return `Staff ${staffIdx + 1}`;
@@ -252,8 +285,13 @@ function processStaffElements(
 	}
 }
 
-export function buildSnapshot(score: Score, hostEnums: HostEnums): LintIR {
+export function buildSnapshot(
+	score: Score,
+	hostEnums: HostEnums,
+	host?: MuseScore,
+): LintIR {
 	const numStaves = score.nstaves;
+	const wrappedHostEnums = wrapHostEnums(hostEnums);
 
 	const ir: LintIR = {
 		events: [],
@@ -268,6 +306,7 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums): LintIR {
 			hairpins: [],
 			slurs: [],
 			ties: [],
+			hostVersion: buildHostVersionInfo(host),
 		},
 		registry: { canonical: CANONICAL },
 		derived: null,
@@ -279,7 +318,7 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums): LintIR {
 			for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
 				processAnnotations(seg, measureNum, ir);
 				for (const staffIdx of iterateStaves(score)) {
-					processStaffElements(seg, measureNum, staffIdx, ir, hostEnums);
+					processStaffElements(seg, measureNum, staffIdx, ir, wrappedHostEnums);
 				}
 			}
 		} catch (e) {

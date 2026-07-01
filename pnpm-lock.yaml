@@ -65,13 +65,12 @@ importers:
       '@kjfsm/musescore-plugin-sdk-helpers':
         specifier: ^4.0.0
         version: 4.0.0(@kjfsm/musescore-plugin-sdk-types@2.0.0)
-      '@musescore-linter/musescore-api':
-        specifier: workspace:*
-        version: link:../musescore-api
-    devDependencies:
       '@kjfsm/musescore-plugin-sdk-types':
         specifier: ^2.0.0
         version: 2.0.0
+      '@musescore-linter/musescore-api':
+        specifier: workspace:*
+        version: link:../musescore-api
 
   packages/musescore-api:
     devDependencies:

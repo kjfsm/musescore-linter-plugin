@@ -1,18 +1,10 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+import { buildPartNameMap, measureAtTick } from "./base/query.js";
 
 // 異なる音高どうしをタイで結んでいる箇所を検出する。
 // タイは同じ音高をつなぐ記号であり、異音程はスラーの書き間違いであることが多い。
 // （音高データは meta.ties に SDK 経由で載る。snapshot 側の配線が前提。）
-function measureAtTick(ir: LintIR, tick: number): number {
-	const ids = ir.index.byTick[String(tick)] ?? [];
-	for (const id of ids) {
-		const ev = ir.events[id];
-		if (ev.measure > 0) return ev.measure;
-	}
-	return 0;
-}
-
 export const tiePitchMismatchChecker: Checker = {
 	id: "tie-pitch-mismatch",
 	name: "異音程のタイ",
@@ -24,14 +16,13 @@ export const tiePitchMismatchChecker: Checker = {
 	run(ir: LintIR): Issue[] {
 		const issues: Issue[] = [];
 
-		const partsByStaff: Record<number, string> = {};
-		for (const p of ir.meta?.parts ?? []) partsByStaff[p.staffIdx] = p.partName;
+		const partsByStaff = buildPartNameMap(ir);
 
 		for (const tie of ir.meta?.ties ?? []) {
 			if (tie.startPitch === null || tie.endPitch === null) continue;
 			if (tie.startPitch === tie.endPitch) continue;
 
-			const partName = partsByStaff[tie.staffIdx] ?? "";
+			const partName = partsByStaff.get(tie.staffIdx) ?? "";
 			const measure = measureAtTick(ir, tie.startTick);
 			issues.push(
 				createIssue(tiePitchMismatchChecker, {

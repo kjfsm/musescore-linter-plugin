@@ -105,11 +105,21 @@ MuseScore {
         }
 
         try {
-            // `NoteType` / `BarLineType` は MuseScore オブジェクトのプロパティ（実行時に値を解決する enum）。
-            // 値を焼き込まず、実行時の enum を引数で渡す。
-            var snapshot = Bundle.buildSnapshot(curScore, NoteType, BarLineType);
+            // `NoteType` / `BarLineType` は MuseScore オブジェクトのプロパティ（実行時に値を解決する
+            // enum）。値を焼き込まず、実行時の enum を hostEnums として渡す。`plugin`（このルート
+            // オブジェクト自身）も渡すと、型の生成元 MuseScore バージョンとの照合・実行時 enum の
+            // 未知メンバ検出（strictEnum）を Bundle 側（SDK ヘルパ）が行い、結果を
+            // snapshot.meta.hostVersion に記録する。
+            var hostEnums = { noteType: NoteType, barLineType: BarLineType };
+            var snapshot = Bundle.buildSnapshot(curScore, hostEnums, plugin);
             snapshotText = JSON.stringify(snapshot, null, 2);
-            issuesList = Bundle.runAllCheckers(snapshot, enabledRules);
+
+            var issues = [];
+            var hv = snapshot.meta && snapshot.meta.hostVersion;
+            if (hv && !hv.ok) {
+                issues.push(internalWarning(hv.message));
+            }
+            issuesList = issues.concat(Bundle.runAllCheckers(snapshot, enabledRules));
             hasRun = true;
             tabBar.currentIndex = 0;
         } catch (e) {
@@ -122,6 +132,13 @@ MuseScore {
     function internalIssue(msg) {
         return {
             ruleId: "internal", severity: "error", category: "internal",
+            message: msg, partName: "", staffIdx: -1, measure: 0, tick: 0, detail: null
+        };
+    }
+
+    function internalWarning(msg) {
+        return {
+            ruleId: "internal-version-mismatch", severity: "warning", category: "internal",
             message: msg, partName: "", staffIdx: -1, measure: 0, tick: 0, detail: null
         };
     }

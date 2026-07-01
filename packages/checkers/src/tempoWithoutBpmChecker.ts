@@ -1,6 +1,7 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 import { getCanonical } from "./base/predicates.js";
+import { buildPartNameMap } from "./base/query.js";
 
 export const tempoWithoutBpmChecker: Checker = {
 	id: "tempo-without-bpm",
@@ -16,10 +17,7 @@ export const tempoWithoutBpmChecker: Checker = {
 		if (!canonical) return issues;
 
 		const tempoIds = ir.index.byKind[canonical.elementKinds.TEMPO_TEXT] ?? [];
-		const partsByStaff = new Map<number, string>();
-		for (const part of ir.meta?.parts ?? []) {
-			partsByStaff.set(part.staffIdx, part.partName);
-		}
+		const partsByStaff = buildPartNameMap(ir);
 
 		for (const id of tempoIds) {
 			const ev = ir.events[id];

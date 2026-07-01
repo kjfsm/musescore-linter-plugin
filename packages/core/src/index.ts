@@ -12,6 +12,7 @@ export type {
 	CanonicalKinds,
 	Checker,
 	HostEnums,
+	HostVersionInfo,
 	IRDerived,
 	IRIndex,
 	IRMeta,
