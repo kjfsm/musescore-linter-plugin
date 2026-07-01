@@ -1,4 +1,19 @@
+import type {
+	BarLineTypeEnum,
+	NoteTypeEnum,
+} from "@kjfsm/musescore-plugin-sdk-types";
+
 export type Severity = "error" | "warning" | "info";
+
+/**
+ * QML から `buildSnapshot(curScore, NoteType, BarLineType)` で渡す実行時 enum セット。
+ * 値を TypeScript の定数に焼き込まず、実行中の MuseScore が提供する enum を使うことで
+ * バージョン差の再採番による誤判定を防ぐ。
+ */
+export interface HostEnums {
+	noteType: NoteTypeEnum;
+	barLineType: BarLineTypeEnum;
+}
 
 export interface NoteInfo {
 	pitch: number; // MIDI 音高（0-127）。不明は -1

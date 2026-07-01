@@ -11,6 +11,7 @@ export { buildSnapshot } from "./snapshot.js";
 export type {
 	CanonicalKinds,
 	Checker,
+	HostEnums,
 	IRDerived,
 	IRIndex,
 	IRMeta,

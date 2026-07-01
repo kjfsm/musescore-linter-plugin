@@ -105,7 +105,9 @@ MuseScore {
         }
 
         try {
-            var snapshot = Bundle.buildSnapshot(curScore);
+            // `NoteType` / `BarLineType` は MuseScore オブジェクトのプロパティ（実行時に値を解決する enum）。
+            // 値を焼き込まず、実行時の enum を引数で渡す。
+            var snapshot = Bundle.buildSnapshot(curScore, NoteType, BarLineType);
             snapshotText = JSON.stringify(snapshot, null, 2);
             issuesList = Bundle.runAllCheckers(snapshot, enabledRules);
             hasRun = true;
