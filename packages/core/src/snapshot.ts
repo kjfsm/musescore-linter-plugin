@@ -1,5 +1,4 @@
 import {
-	classifyBarlineKind,
 	getAnnotationStaffIdx,
 	getAnnotationText,
 	getArticulationNames,
@@ -12,6 +11,7 @@ import {
 	isChord,
 	isDynamic,
 	isExpression,
+	isGraceNote,
 	isHairpin,
 	isPlayTechAnnotation,
 	isRehearsalMark,
@@ -28,14 +28,14 @@ import {
 	trackToStaffIdx,
 	VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { BarLineTypeEnum, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
 	PluginSegment,
 	TextAnnotation,
 } from "@musescore-linter/musescore-api";
 import { CANONICAL } from "./enumRegistry.js";
 import { make } from "./logger.js";
-import type { LintEvent, LintIR } from "./types.js";
+import type { HostEnums, LintEvent, LintIR } from "./types.js";
 
 const log = make("snapshot");
 
@@ -52,6 +52,18 @@ function getPartName(score: Score, staffIdx: number): string {
 		trackOffset += staveCount;
 	}
 	return `Staff ${staffIdx + 1}`;
+}
+
+// `classifyBarlineKind`（SDK helper）は静的 enum 定数で比較するため、MuseScore の
+// バージョン差で BarLineType が再採番された場合に誤判定する恐れがある。
+// 実行時 BarLineType を受け取るこちらの関数で比較することで安全にする。
+function classifyBarlineKindRuntime(type: number, rt: BarLineTypeEnum): string {
+	if (type === rt.END || type === rt.REVERSE_END) return "final";
+	if (type === rt.DOUBLE) return "double";
+	if (type === rt.START_REPEAT) return "repeat_start";
+	if (type === rt.END_REPEAT) return "repeat_end";
+	if (type === rt.END_START_REPEAT) return "repeat_both";
+	return "other";
 }
 
 function pushIndexedId(
@@ -160,10 +172,14 @@ function processStaffElements(
 	measureNum: number,
 	staffIdx: number,
 	ir: LintIR,
+	hostEnums: HostEnums,
 ): void {
 	for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
 		const el = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
 		if (!el) continue;
+
+		// グレースノートは LintIR に含めない（拍位置のタイミングを持たないため）
+		if (isChord(el) && isGraceNote(el, hostEnums.noteType)) continue;
 
 		if (isChord(el) || isRest(el)) {
 			const evType = isChord(el) ? "chord" : "rest";
@@ -232,7 +248,10 @@ function processStaffElements(
 				type: "barline",
 				kind: CANONICAL.elementKinds.BAR_LINE,
 				barlineType: barEl.barlineType,
-				barlineKind: classifyBarlineKind(barEl.barlineType),
+				barlineKind: classifyBarlineKindRuntime(
+					barEl.barlineType as number,
+					hostEnums.barLineType,
+				),
 				tick: seg.tick,
 				measure: measureNum,
 				staffIdx,
@@ -244,7 +263,7 @@ function processStaffElements(
 	}
 }
 
-export function buildSnapshot(score: Score): LintIR {
+export function buildSnapshot(score: Score, hostEnums: HostEnums): LintIR {
 	const numStaves = score.nstaves;
 
 	const ir: LintIR = {
@@ -271,7 +290,7 @@ export function buildSnapshot(score: Score): LintIR {
 			for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
 				processAnnotations(seg, measureNum, ir);
 				for (const staffIdx of iterateStaves(score)) {
-					processStaffElements(seg, measureNum, staffIdx, ir);
+					processStaffElements(seg, measureNum, staffIdx, ir, hostEnums);
 				}
 			}
 		} catch (e) {

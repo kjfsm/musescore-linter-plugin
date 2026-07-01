@@ -4,24 +4,15 @@ import type { EngravingItem, Segment } from "@kjfsm/musescore-plugin-sdk-types";
 
 /**
  * MuseScore テキスト系要素（StaffText / TempoText / Dynamic 等）。
- * SDK types に含まれないプロパティのみ補完する。
  * `Segment.annotations` の要素型として使用する。
  */
 export interface TextAnnotation extends EngravingItem {}
 
 /**
- * `Segment.elementAt()` で返される楽譜要素の拡張型。
- * Chord/Rest の `duration` プロパティを補完する。
+ * `Segment` の `annotations` を上書きした拡張型。
+ * SDK v1.1.0 で `DurationElement.duration` が正式追加されたため `elementAt` の
+ * オーバーライドは不要になり、SDK の `Segment.elementAt(): EngravingItem | null` を継承する。
  */
-export interface ScoreElement extends EngravingItem {
-	readonly duration?: { numerator: number; denominator: number };
-}
-
-/**
- * `Segment` の `annotations` と `elementAt` を上書きした拡張型。
- */
-export interface PluginSegment
-	extends Omit<Segment, "annotations" | "elementAt"> {
+export interface PluginSegment extends Omit<Segment, "annotations"> {
 	readonly annotations: TextAnnotation[];
-	elementAt(track: number): ScoreElement | null;
 }
