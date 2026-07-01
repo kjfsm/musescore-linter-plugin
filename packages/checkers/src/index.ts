@@ -1,5 +1,4 @@
 import { register, reset } from "@musescore-linter/core";
-import { articulationSlurConsistencyChecker } from "./articulationSlurConsistencyChecker.js";
 import { codaSegnoChecker } from "./codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "./conLegnoArcoChecker.js";
 import { courtesyAccidentalChecker } from "./courtesyAccidentalChecker.js";
@@ -18,6 +17,7 @@ import { repeatBarlineMatchChecker } from "./repeatBarlineMatchChecker.js";
 import { restAnnotationChecker } from "./restAnnotationChecker.js";
 import { simultaneousDynamicsChecker } from "./simultaneousDynamicsChecker.js";
 import { slurSingleNoteChecker } from "./slurSingleNoteChecker.js";
+import { slurTieArticulationConsistencyChecker } from "./slurTieArticulationConsistencyChecker.js";
 import { soloTuttiChecker } from "./soloTuttiChecker.js";
 import { sordinoChecker } from "./sordinoChecker.js";
 import { spannerOnRestChecker } from "./spannerOnRestChecker.js";
@@ -41,7 +41,7 @@ export function registerAll(): void {
 	register(muteOpenChecker);
 	register(unaCordaChecker);
 	register(harpTableChecker);
-	register(articulationSlurConsistencyChecker);
+	register(slurTieArticulationConsistencyChecker);
 	register(restAnnotationChecker);
 	register(tempoBarlineChecker);
 	register(openingTempoChecker);
@@ -63,7 +63,6 @@ export function registerAll(): void {
 }
 
 export {
-	articulationSlurConsistencyChecker,
 	codaSegnoChecker,
 	conLegnoArcoChecker,
 	courtesyAccidentalChecker,
@@ -82,6 +81,7 @@ export {
 	restAnnotationChecker,
 	simultaneousDynamicsChecker,
 	slurSingleNoteChecker,
+	slurTieArticulationConsistencyChecker,
 	soloTuttiChecker,
 	sordinoChecker,
 	spannerOnRestChecker,

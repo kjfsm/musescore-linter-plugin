@@ -108,7 +108,7 @@
 
 | # | 項目 | タグ | severity | 優先 | 状態 | 備考 |
 |---|---|---|---|---|---|---|
-| G1 | 同リズム間のスラー/アーティキュレーション整合 | NOW | info | – | ✅ | 既存 `articulation-slur-consistency` |
+| G1 | 同リズム間のスラー/タイ/アーティキュレーション整合 | NOW | info | – | ✅ | 既存 `slur-tie-articulation-consistency`（タイも比較対象） |
 | G2 | スラーとタイの混同（同度連結なのにスラー） | SDK | warning | 中 | | D6 と同根 |
 | G3 | アーティキュレーションがタイ中間音に付く | SDK | info | 低 | | 要: タイ |
 

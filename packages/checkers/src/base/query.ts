@@ -73,6 +73,19 @@ export function slurCoversTick(
 	);
 }
 
+/** tick が staff/voice のタイに含まれるか。 */
+export function tieCoversTick(
+	ir: LintIR,
+	staffIdx: number,
+	voice: number,
+	tick: number,
+): boolean {
+	const ties = ir.derived?.tiesByStaff?.[staffIdx] ?? [];
+	return ties.some(
+		(t) => t.voice === voice && t.startTick <= tick && tick < t.endTick,
+	);
+}
+
 /** measure/voice で同じリズム署名を持つ staffIdx のグループ（サイズ >= 2）を返す。 */
 export function staffGroupsSharingRhythm(
 	ir: LintIR,

@@ -43,7 +43,7 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 | Mute / Open | warning | 金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複 |
 | Una corda / Tre corde | warning | ピアノ左ペダル `una corda` → `tre corde` の対応漏れ・重複 |
 | Près de la table / Ord. | warning | ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複 |
-| 同リズム間のスラー/アーティキュレーション | info | 同じ小節で同じリズムのパート間でスラー有無・アーティキュレーションが食い違う |
+| 同リズム間のスラー/タイ/アーティキュレーション | info | 同じ小節で同じリズムのパート間でスラー・タイの有無やアーティキュレーションが食い違う |
 | 休符アノテーション | error | 休符の位置にダイナミクス等が付与されていないか |
 | テンポ変更と複縦線 | info | テンポ変更前の小節に複縦線があるか |
 | 冒頭テンポ表記 | error | 曲頭にテンポ表記があるか |
