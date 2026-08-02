@@ -31,6 +31,10 @@ export default defineConfig({
 				__dirname,
 				"packages/checkers/src/index.ts",
 			),
+			"@musescore-linter/source-musescore": path.join(
+				__dirname,
+				"packages/source-musescore/src/index.ts",
+			),
 		},
 	},
 });

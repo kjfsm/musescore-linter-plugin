@@ -23,6 +23,9 @@ importers:
       '@musescore-linter/core':
         specifier: workspace:*
         version: link:packages/core
+      '@musescore-linter/source-musescore':
+        specifier: workspace:*
+        version: link:packages/source-musescore
       '@types/node':
         specifier: ^25.8.0
         version: 25.8.0
@@ -60,7 +63,15 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/core:
+  packages/core: {}
+
+  packages/musescore-api:
+    devDependencies:
+      '@kjfsm/musescore-plugin-sdk-types':
+        specifier: ^2.0.0
+        version: 2.0.0
+
+  packages/source-musescore:
     dependencies:
       '@kjfsm/musescore-plugin-sdk-helpers':
         specifier: ^4.0.0
@@ -68,15 +79,12 @@ importers:
       '@kjfsm/musescore-plugin-sdk-types':
         specifier: ^2.0.0
         version: 2.0.0
+      '@musescore-linter/core':
+        specifier: workspace:*
+        version: link:../core
       '@musescore-linter/musescore-api':
         specifier: workspace:*
         version: link:../musescore-api
-
-  packages/musescore-api:
-    devDependencies:
-      '@kjfsm/musescore-plugin-sdk-types':
-        specifier: ^2.0.0
-        version: 2.0.0
 
 packages:
 

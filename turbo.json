@@ -21,13 +21,15 @@
 			"dependsOn": [
 				"@musescore-linter/musescore-api#typecheck",
 				"@musescore-linter/core#test",
-				"@musescore-linter/checkers#test"
+				"@musescore-linter/checkers#test",
+				"@musescore-linter/source-musescore#test"
 			],
 			"inputs": [
 				"src/**",
 				"scripts/build.ts",
 				"packages/core/src/**",
-				"packages/checkers/src/**"
+				"packages/checkers/src/**",
+				"packages/source-musescore/src/**"
 			],
 			"outputs": ["dist/**"]
 		},

@@ -34,14 +34,18 @@ import {
 import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
+	HostVersionInfo,
+	LintEvent,
+	LintIR,
+} from "@musescore-linter/core";
+import { CANONICAL, makeLogger } from "@musescore-linter/core";
+import type {
 	PluginSegment,
 	TextAnnotation,
 } from "@musescore-linter/musescore-api";
-import { CANONICAL } from "./enumRegistry.js";
-import { make } from "./logger.js";
-import type { HostEnums, HostVersionInfo, LintEvent, LintIR } from "./types.js";
+import type { HostEnums } from "./types.js";
 
-const log = make("snapshot");
+const log = makeLogger("snapshot");
 
 // MuseScore 4.4+（Qt6 の V4 エンジン）は ES6 Proxy をサポートする（.claude/skills/musescore-qt-versions
 // の対応表参照）。念のためガードし、非対応環境では生の enum のまま渡す（strictEnum の恩恵は失うが

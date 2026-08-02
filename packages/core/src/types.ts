@@ -1,23 +1,10 @@
-import type {
-	BarLineTypeEnum,
-	NoteTypeEnum,
-} from "@kjfsm/musescore-plugin-sdk-types";
-
 export type Severity = "error" | "warning" | "info";
-
-/**
- * QML から `buildSnapshot(curScore, { noteType: NoteType, barLineType: BarLineType }, plugin)` で
- * 渡す実行時 enum セット。値を TypeScript の定数に焼き込まず、実行中の MuseScore が提供する
- * enum を使うことでバージョン差の再採番による誤判定を防ぐ。
- */
-export interface HostEnums {
-	noteType: NoteTypeEnum;
-	barLineType: BarLineTypeEnum;
-}
 
 /**
  * 型の生成元 MuseScore バージョン（`generatedFrom.tag`）と実行中の版の照合結果。
  * `buildSnapshot` にホスト（`MuseScore { }` オブジェクト）を渡したときのみ設定される。
+ * MuseScore 経路（`@musescore-linter/source-musescore`）でのみ埋まる診断用フィールドで、
+ * 他のソース（MusicXML 等）からの IR では常に undefined。
  */
 export interface HostVersionInfo {
 	ok: boolean;

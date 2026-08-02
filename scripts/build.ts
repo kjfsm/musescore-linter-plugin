@@ -32,6 +32,10 @@ async function main() {
 				ROOT,
 				"packages/checkers/src/index.ts",
 			),
+			"@musescore-linter/source-musescore": path.join(
+				ROOT,
+				"packages/source-musescore/src/index.ts",
+			),
 		},
 	});
 

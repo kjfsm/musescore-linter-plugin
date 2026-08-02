@@ -28,6 +28,7 @@
 		"@changesets/cli": "^2.31.0",
 		"@musescore-linter/checkers": "workspace:*",
 		"@musescore-linter/core": "workspace:*",
+		"@musescore-linter/source-musescore": "workspace:*",
 		"@types/node": "^25.8.0",
 		"@vitest/coverage-v8": "^4.1.6",
 		"esbuild": "^0.28.0",
