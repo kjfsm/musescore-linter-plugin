@@ -18,6 +18,9 @@
 		},
 		"packages/source-musicxml": {
 			"project": ["src/**/*.ts", "tests/**/*.ts"]
+		},
+		"packages/cli": {
+			"project": ["src/**/*.ts", "tests/**/*.ts"]
 		}
 	},
 	"ignoreExportsUsedInFile": true

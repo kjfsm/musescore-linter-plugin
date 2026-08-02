@@ -39,6 +39,10 @@ export default defineConfig({
 				__dirname,
 				"packages/source-musicxml/src/index.ts",
 			),
+			"@musescore-linter/cli": path.join(
+				__dirname,
+				"packages/cli/src/index.ts",
+			),
 		},
 	},
 });

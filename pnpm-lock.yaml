@@ -63,6 +63,18 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/cli:
+    dependencies:
+      '@musescore-linter/checkers':
+        specifier: workspace:*
+        version: link:../checkers
+      '@musescore-linter/core':
+        specifier: workspace:*
+        version: link:../core
+      '@musescore-linter/source-musicxml':
+        specifier: workspace:*
+        version: link:../source-musicxml
+
   packages/core: {}
 
   packages/musescore-api:

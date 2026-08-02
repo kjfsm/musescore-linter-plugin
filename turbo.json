@@ -33,6 +33,21 @@
 			],
 			"outputs": ["dist/**"]
 		},
+		"//#build:cli": {
+			"description": "esbuild で musescore-lint CLI を dist-cli/ へ単一ファイルにバンドルする。QML 向けの //#build とは独立。",
+			"dependsOn": [
+				"@musescore-linter/cli#test",
+				"@musescore-linter/source-musicxml#test"
+			],
+			"inputs": [
+				"scripts/build-cli.ts",
+				"packages/cli/**",
+				"packages/core/src/**",
+				"packages/checkers/src/**",
+				"packages/source-musicxml/src/**"
+			],
+			"outputs": ["dist-cli/**"]
+		},
 		"//#package": {
 			"description": "dist/ の成果物を配布用 ZIP にパッケージングする。",
 			"dependsOn": ["//#build"],
