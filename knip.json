@@ -23,5 +23,11 @@
 			"project": ["src/**/*.ts", "tests/**/*.ts"]
 		}
 	},
-	"ignoreExportsUsedInFile": true
+	"ignoreExportsUsedInFile": true,
+	"ignore": [
+		// 外部から取り込んだスキル定義。プロジェクトのコードではないので
+		// 未使用ファイル判定の対象外にする（.oxfmtrc.json の ignorePatterns と同じ理由）。
+		".agents/**",
+		".claude/**"
+	]
 }
