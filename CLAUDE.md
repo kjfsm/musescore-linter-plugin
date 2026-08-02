@@ -4,8 +4,11 @@
 
 ## 概要
 
-MuseScore 4 向け静的解析プラグイン。pnpm monorepo（packages/core・checkers・musescore-api）。
-ビルド・テスト・リリースは Turborepo + Changesets。
+MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テスト・リリースは Turborepo + Changesets。
+
+**LintIR を作る側と使う側が分離している**のが構成の要点。`core`（LintIR・linter・checker registry）と
+`checkers` は MuseScore に依存しない。MuseScore を触るのは `source-musescore` だけで、
+`source-musicxml` は MusicXML から同じ LintIR を作る。`cli` は `musescore-lint` コマンド。
 
 コマンド・ディレクトリ構成・ライブラリ一覧は [README.md](./README.md) 参照。
 
@@ -48,5 +51,6 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo（packages/core・
 
 - `main` への直 push（必ずブランチ + PR）
 - Checker 内で例外を catch（linter が全体でハンドリングする）
-- `packages/core/src/lintIR.ts` を checker 側から直接変更
+- `packages/core/src/types.ts`（LintIR の型定義）を checker 側から直接変更
+- `core` / `checkers` に MuseScore SDK への依存を持ち込む（入力ソース側の責務）
 - `.claude/` の直接編集（`.claude-next/` 経由で変更後にコピー）

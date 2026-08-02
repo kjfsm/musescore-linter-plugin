@@ -1,0 +1,144 @@
+name: 楽譜の Lint
+
+# .mscz を MuseScore の CLI で MusicXML に変換し、musescore-lint にかける。
+#
+# MuseScore 4 は CLI 実行でも Qt の xcb プラットフォームを要求し、
+# QT_QPA_PLATFORM=offscreen を指定しても起動に失敗する（本体の既知の挙動）。
+# そのため xvfb-run で仮想ディスプレイを与える必要がある。
+# また Linux 版の公式配布は AppImage のみで、runner には FUSE が無いので
+# --appimage-extract で展開したバイナリを直接叩く。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scores/**"
+      - "packages/cli/**"
+      - "packages/source-musicxml/**"
+      - ".github/workflows/score-lint.yml"
+  pull_request:
+    paths:
+      - "scores/**"
+      - "packages/cli/**"
+      - "packages/source-musicxml/**"
+      - ".github/workflows/score-lint.yml"
+  workflow_dispatch:
+    inputs:
+      musescore_version:
+        description: "使用する MuseScore Studio のバージョン"
+        required: false
+        default: "4.7.4.260706075"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  # 変換結果が版によって変わるため、MuseScore のバージョンは固定する
+  MUSESCORE_VERSION: ${{ inputs.musescore_version || '4.7.4.260706075' }}
+  SCORES_DIR: scores
+  CONVERTED_DIR: build/scores-musicxml
+
+jobs:
+  lint-scores:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: 依存関係のインストール
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: CLI のビルド
+        run: pnpm build:cli
+
+      - name: MuseScore の実行に必要なライブラリ
+        run: |
+          sudo apt-get update -qq
+          # libEGL / libOpenGL / xcb-cursor が無いと mscore4portable が起動できない
+          sudo apt-get install -y --no-install-recommends \
+            xvfb libegl1 libopengl0 libxcb-cursor0 libnss3 libasound2t64
+
+      - name: MuseScore AppImage のキャッシュ
+        id: musescore-cache
+        uses: actions/cache@v4
+        with:
+          path: build/musescore
+          key: musescore-${{ env.MUSESCORE_VERSION }}-ubuntu-24.04
+
+      - name: MuseScore AppImage の取得と展開
+        if: steps.musescore-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${MUSESCORE_VERSION}"
+          # 4.7.4.260706075 のうち先頭 3 つがリリースタグ（v4.7.4）、4 つ目はビルド番号
+          TAG="v$(echo "$VERSION" | cut -d. -f1-3)"
+          FILE="MuseScore-Studio-${VERSION}-x86_64.AppImage"
+          URL="https://github.com/musescore/MuseScore/releases/download/${TAG}/${FILE}"
+
+          mkdir -p build
+          echo "取得: ${URL}"
+          curl -sSL --retry 3 --fail -o build/musescore.AppImage "$URL"
+          chmod +x build/musescore.AppImage
+          # runner には FUSE が無いため、マウントせず中身を展開して使う
+          (cd build && ./musescore.AppImage --appimage-extract > /dev/null)
+          mv build/squashfs-root build/musescore
+          rm -f build/musescore.AppImage
+
+      - name: ツールチェーンの自己確認（fixture の .mscz を変換して解析）
+        run: |
+          set -euo pipefail
+          mkdir -p build/selfcheck
+          xvfb-run -a build/musescore/AppRun \
+            -o build/selfcheck/duet.musicxml \
+            packages/source-musicxml/tests/fixtures/duet.mscz
+          test -s build/selfcheck/duet.musicxml
+          ./dist-cli/musescore-lint.mjs --fail-on=none build/selfcheck/duet.musicxml
+
+      - name: .mscz を MusicXML へ一括変換
+        id: convert
+        run: |
+          set -euo pipefail
+          COUNT=$(pnpm exec tsx scripts/make-conversion-job.ts \
+            "$SCORES_DIR" "$CONVERTED_DIR" build/conversion-job.json)
+          echo "count=${COUNT}" >> "$GITHUB_OUTPUT"
+          if [ "$COUNT" -gt 0 ]; then
+            xvfb-run -a build/musescore/AppRun -j build/conversion-job.json
+          fi
+
+      - name: 楽譜の解析
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          # MuseScore から変換したものと、直接コミットされた MusicXML の両方を対象にする
+          FILES=("$CONVERTED_DIR"/*.musicxml "$SCORES_DIR"/**/*.musicxml "$SCORES_DIR"/**/*.mxl)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "::notice::解析対象の楽譜がありません（${SCORES_DIR}/ に .mscz / .musicxml / .mxl を置いてください）"
+            exit 0
+          fi
+          echo "${#FILES[@]} 件を解析します"
+          ./dist-cli/musescore-lint.mjs --format=github --fail-on=error "${FILES[@]}"
+
+      - name: 解析結果（人間向け）
+        if: always() && steps.convert.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          FILES=("$CONVERTED_DIR"/*.musicxml "$SCORES_DIR"/**/*.musicxml "$SCORES_DIR"/**/*.mxl)
+          if [ ${#FILES[@]} -gt 0 ]; then
+            {
+              echo '```'
+              ./dist-cli/musescore-lint.mjs --no-color --fail-on=none "${FILES[@]}"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
