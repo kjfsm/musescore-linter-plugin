@@ -220,7 +220,7 @@ pnpm lint:score score.musicxml             # ビルドせずに直接実行（ts
 
 MusicXML をドラッグ&ドロップすると、その場で同じ checker が走ります。MuseScore も Node も要りません。
 
-**アップロードしたファイルはサーバーに送信されません。** このサイトは Cloudflare Workers の
+**読み込んだファイルはサーバーに送信されません。** このサイトは Cloudflare Workers の
 static assets だけで構成されており、`wrangler.jsonc` に `main` を書いていないため
 **リクエストを受け取る Worker スクリプトが存在しません**。受け取る側のコードが無い、というのが
 「送信されない」ことの根拠です。
