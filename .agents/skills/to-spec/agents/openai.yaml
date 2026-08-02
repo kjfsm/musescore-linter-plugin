@@ -1,0 +1,5 @@
+interface:
+  display_name: "スペックにする"
+  short_description: "会話をスペックに変換する"
+policy:
+  allow_implicit_invocation: false

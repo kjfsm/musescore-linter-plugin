@@ -1,0 +1,3 @@
+interface:
+  display_name: "委譲"
+  short_description: "大量出力を子コンテキストへ押し出し、モデル階層を選ぶ"

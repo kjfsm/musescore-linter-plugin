@@ -1,0 +1,5 @@
+interface:
+  display_name: "実装する"
+  short_description: "スペックやチケットから作業をビルドする"
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  display_name: "スキルのセットアップ"
+  short_description: "このリポジトリをスキル向けに設定する"
+policy:
+  allow_implicit_invocation: false

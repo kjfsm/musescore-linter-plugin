@@ -1,0 +1,3 @@
+interface:
+  display_name: "検証ループ"
+  short_description: "完了と宣言する前にクリーンランを取る"
