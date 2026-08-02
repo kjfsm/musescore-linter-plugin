@@ -1,7 +1,9 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"globalDependencies": [
-		"biome.json",
+		".oxlintrc.json",
+		".oxfmtrc.json",
+		".editorconfig",
 		"tsconfig.json",
 		"vitest.config.ts",
 		"pnpm-lock.yaml"
