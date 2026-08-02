@@ -15,6 +15,9 @@
 		},
 		"packages/source-musescore": {
 			"project": ["src/**/*.ts", "tests/**/*.ts"]
+		},
+		"packages/source-musicxml": {
+			"project": ["src/**/*.ts", "tests/**/*.ts"]
 		}
 	},
 	"ignoreExportsUsedInFile": true
