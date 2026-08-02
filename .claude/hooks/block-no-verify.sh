@@ -19,9 +19,9 @@ if printf '%s' "$command" | grep -Eq -- '(--no-verify|--no-gpg-sign|commit\.gpgs
 	cat >&2 <<EOF
 ブロック: pre-commit フックの skip は禁止です。
 コマンド: $command
-理由: biome check / typecheck が pre-commit で動いている。skip するとフォーマット / 型エラーが
-      残ったままコミットされる。
-対応: フックが失敗するなら根本原因（型エラー / lint エラー）を直す。どうしても skip が
+理由: pre-commit で pnpm lint（oxlint + oxfmt --check）が動いている。skip すると
+      lint エラーや未整形のコードが残ったままコミットされる。
+対応: フックが失敗するなら根本原因を直す（未整形なら pnpm lint:fix）。どうしても skip が
       必要なら user に明示的に確認を取る。
 詳細: CLAUDE.md「やってはいけないこと」
 EOF
