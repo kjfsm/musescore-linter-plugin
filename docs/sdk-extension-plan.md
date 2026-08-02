@@ -18,23 +18,25 @@ CLAUDE.md の「不足機能をプラグイン側で回避実装しない」に�
 
 ## 段階プラン
 
-| Tier | 追加データ | SDK 側 | プラグイン側 | 解放されるチェック |
-|---|---|---|---|---|
-| 1 | **音高 / タイ / 綴り** | `getNotePitches` / `getNoteSpellings` / `isTie` / `getTiePitches`（追加済み） | `LintEvent.notes` / `meta.ties`、core `pitchSpelling`、snapshot 配線 | D6 異音程タイ、J2 親切臨時記号、（将来）J1/J3/J4 |
-| 2 | **リピート種別** | `classifyBarlineKind` を start/end/both に細分（変更済み） | `barlineKinds` 細分、snapshot は既存経路 | E3 リピート対応 |
-| 3 | **拍子** | `getMeasureTimeSig`（既存）を利用 | `meta.timeSigByMeasure`、snapshot 配線 | F1 拍頭の休符、F2/F3 |
-| 4 | **楽器メタ** | `Part.instrumentId`/`hasPitchedStaff`/`Staff.transpose`（生成型に既存）。必要なら `getInstrumentInfo` helper | `meta.parts[]` に楽器種別/移調 | H1, H3, H6, D7 |
-| 5 | **グリッサンド / 連符 / 歌詞** | `isGlissando` 等の type guard | `meta.glissandos` 等 | D4, I2, F4, H7, H8 |
-| 6 | **臨時記号の綴り** | `getNoteSpellings`（tpc 同梱・追加済み） | `LintEvent.notes[].tpc` + core `pitchSpelling`（J2 で配線済み） | J1, J3, J4 |
+| Tier | 追加データ                     | SDK 側                                                                                                       | プラグイン側                                                         | 解放されるチェック                               |
+| ---- | ------------------------------ | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------ |
+| 1    | **音高 / タイ / 綴り**         | `getNotePitches` / `getNoteSpellings` / `isTie` / `getTiePitches`（追加済み）                                | `LintEvent.notes` / `meta.ties`、core `pitchSpelling`、snapshot 配線 | D6 異音程タイ、J2 親切臨時記号、（将来）J1/J3/J4 |
+| 2    | **リピート種別**               | `classifyBarlineKind` を start/end/both に細分（変更済み）                                                   | `barlineKinds` 細分、snapshot は既存経路                             | E3 リピート対応                                  |
+| 3    | **拍子**                       | `getMeasureTimeSig`（既存）を利用                                                                            | `meta.timeSigByMeasure`、snapshot 配線                               | F1 拍頭の休符、F2/F3                             |
+| 4    | **楽器メタ**                   | `Part.instrumentId`/`hasPitchedStaff`/`Staff.transpose`（生成型に既存）。必要なら `getInstrumentInfo` helper | `meta.parts[]` に楽器種別/移調                                       | H1, H3, H6, D7                                   |
+| 5    | **グリッサンド / 連符 / 歌詞** | `isGlissando` 等の type guard                                                                                | `meta.glissandos` 等                                                 | D4, I2, F4, H7, H8                               |
+| 6    | **臨時記号の綴り**             | `getNoteSpellings`（tpc 同梱・追加済み）                                                                     | `LintEvent.notes[].tpc` + core `pitchSpelling`（J2 で配線済み）      | J1, J3, J4                                       |
 
 ## このバッチで完了した範囲（Tier 1 + 2 の土台）
 
 ### SDK 側（musescore-plugin-sdk・要リリース）
+
 - `getNotePitches(chord)` / `getNoteSpellings(chord)` / `isTie(el)` / `getTiePitches(tie)` を追加。
 - `classifyBarlineKind` を `repeat` → `repeat_start` / `repeat_end` / `repeat_both` に細分。
 - changeset 追加済み（helpers: minor）。
 
 ### プラグイン側（本リポジトリ・現行 IR だけで完結する部分）
+
 - `LintEvent.notes?`（`NoteInfo`: 音高/tpc/譜表位置/臨時記号表示）、`IRMeta.ties`（`TieInfo`）を追加（`types.ts`）。
 - `barlineKinds` を `REPEAT_START/END/BOTH` に細分（`enumRegistry.ts` / `types.ts`）。
 - TPC 演算 `tpcToStep` / `tpcToAlter` / `tpcToName` を core の `pitchSpelling.ts` に追加（checker から利用）。
@@ -56,20 +58,20 @@ CLAUDE.md の「不足機能をプラグイン側で回避実装しない」に�
 // snapshot.ts、isChord(el) ブロック内（既存の el.notes ループに追記）
 ev.notes = getNoteSpellings(el); // { pitch, tpc, line, accidentalShown }[]
 for (const note of el.notes ?? []) {
-  const tie = note.tieForward; // SDK Note.tieForward: Tie | null
-  if (tie) {
-    const range = getSpannerRange(tie);
-    const p = getTiePitches(tie);
-    ir.meta.ties.push({
-      staffIdx,
-      voice,
-      startTick: range.startTick,
-      endTick: range.endTick,
-      startPitch: p?.startPitch ?? null,
-      endPitch: p?.endPitch ?? null,
-    });
-  }
-  // 既存の spannerForward（hairpin/slur）処理は据え置き
+	const tie = note.tieForward; // SDK Note.tieForward: Tie | null
+	if (tie) {
+		const range = getSpannerRange(tie);
+		const p = getTiePitches(tie);
+		ir.meta.ties.push({
+			staffIdx,
+			voice,
+			startTick: range.startTick,
+			endTick: range.endTick,
+			startPitch: p?.startPitch ?? null,
+			endPitch: p?.endPitch ?? null,
+		});
+	}
+	// 既存の spannerForward（hairpin/slur）処理は据え置き
 }
 ```
 

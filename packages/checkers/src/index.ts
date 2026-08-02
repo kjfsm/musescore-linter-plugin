@@ -1,4 +1,5 @@
 import { register, reset } from "@musescore-linter/core";
+
 import { codaSegnoChecker } from "./codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "./conLegnoArcoChecker.js";
 import { courtesyAccidentalChecker } from "./courtesyAccidentalChecker.js";

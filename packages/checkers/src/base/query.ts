@@ -1,4 +1,5 @@
 import type { LintEvent, LintIR } from "@musescore-linter/core";
+
 import { getCanonical } from "./predicates.js";
 
 /** tick に対応する小節番号。見つからなければ 0。 */

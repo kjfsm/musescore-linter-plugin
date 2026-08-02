@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { buildPartNameMap, measureAtTick } from "./base/query.js";
 
 // 異なる音高どうしをタイで結んでいる箇所を検出する。

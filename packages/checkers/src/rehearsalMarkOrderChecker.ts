@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 
 // リハーサルマーク(A, B, C... または 1, 2, 3...)が昇順に並んでいるか、重複が無いかを検査する。

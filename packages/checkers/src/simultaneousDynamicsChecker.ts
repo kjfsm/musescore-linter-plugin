@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 
 // 同一パート・同一 tick に異なるダイナミクスが同時に置かれている矛盾を検出する。

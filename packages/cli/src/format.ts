@@ -1,4 +1,5 @@
 import type { Issue, Severity } from "@musescore-linter/core";
+
 import type { FailOn } from "./args.js";
 
 export interface FileResult {

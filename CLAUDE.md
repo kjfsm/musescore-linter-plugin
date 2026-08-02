@@ -14,13 +14,13 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 
 ## ドキュメント案内（タスク別）
 
-| タスク | 最初に読む |
-|---|---|
-| **新 Checker 追加** | `.claude/rules/checker-contract.md` + `/checker-add` skill |
-| **Qt API 調査** | `/musescore-qt-versions` skill |
-| **テスト方針** | `.claude/rules/testing.md` |
-| **エラー処理** | `.claude/rules/error-handling.md` |
-| **ドキュメント点検** | `/docs-audit` skill |
+| タスク               | 最初に読む                                                 |
+| -------------------- | ---------------------------------------------------------- |
+| **新 Checker 追加**  | `.claude/rules/checker-contract.md` + `/checker-add` skill |
+| **Qt API 調査**      | `/musescore-qt-versions` skill                             |
+| **テスト方針**       | `.claude/rules/testing.md`                                 |
+| **エラー処理**       | `.claude/rules/error-handling.md`                          |
+| **ドキュメント点検** | `/docs-audit` skill                                        |
 
 ## 自動注入される規約（`.claude/rules/`）
 

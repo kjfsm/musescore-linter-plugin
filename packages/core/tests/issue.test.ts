@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { compareIssues, createIssue } from "../src/issue.js";
 import type { Checker, Issue } from "../src/types.js";
 

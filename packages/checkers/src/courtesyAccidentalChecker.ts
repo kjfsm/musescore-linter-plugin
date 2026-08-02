@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue, tpcToAlter, tpcToName } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 
 // 親切（cautionary / courtesy）臨時記号の提案。

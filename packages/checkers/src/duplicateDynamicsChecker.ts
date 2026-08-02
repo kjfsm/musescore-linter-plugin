@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 
 function sameDynamic(a: LintEvent, b: LintEvent): boolean {

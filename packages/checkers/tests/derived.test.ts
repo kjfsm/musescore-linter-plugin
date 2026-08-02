@@ -1,5 +1,6 @@
 import { ensureDerived } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
+
 import { buildIR, K } from "./helpers/irBuilder.js";
 
 describe("ensureDerived — Tier 1 relations", () => {

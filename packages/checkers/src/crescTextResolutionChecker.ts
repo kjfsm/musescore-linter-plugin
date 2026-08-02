@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 
 // テキスト式の cresc./dim. の後に到達先の強弱記号が現れない箇所を検出する。

@@ -43,6 +43,7 @@ import type {
 	PluginSegment,
 	TextAnnotation,
 } from "@musescore-linter/musescore-api";
+
 import type { HostEnums } from "./types.js";
 
 const log = makeLogger("snapshot");

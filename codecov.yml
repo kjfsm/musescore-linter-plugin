@@ -7,16 +7,16 @@ coverage:
     project:
       default:
         target: 80%
-        threshold: 1%  # 1% の誤差まで許容
+        threshold: 1% # 1% の誤差まで許容
     # PR の差分（パッチ）カバレッジ
     patch:
       default:
-        target: auto   # ベースコミットのカバレッジと比較
+        target: auto # ベースコミットのカバレッジと比較
         threshold: 0%
 
 comment:
   layout: "diff, files"
-  behavior: default    # 初回は新規コメント、以降は更新
+  behavior: default # 初回は新規コメント、以降は更新
 
 # カバレッジ計測から除外するパス
 ignore:

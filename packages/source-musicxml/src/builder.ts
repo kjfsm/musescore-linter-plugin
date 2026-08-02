@@ -8,6 +8,7 @@ import type {
 	TieSpec,
 } from "@musescore-linter/core";
 import { buildIR, CANONICAL } from "@musescore-linter/core";
+
 import { articulationNameOf } from "./articulations.js";
 import {
 	durationFromDivisions,

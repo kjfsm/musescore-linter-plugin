@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
+
 import { EXIT_ERROR, run } from "./run.js";
 
 function main(): void {
