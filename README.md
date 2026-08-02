@@ -81,7 +81,20 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 
 ## ファイル構成
 
-pnpm monorepo（`packages/core`・`checkers`・`musescore-api`）です。ビルド・テスト・リリースは Turborepo + Changesets で行います。
+pnpm monorepo です。ビルド・テスト・リリースは Turborepo + Changesets で行います。
+
+LintIR を **作る側**（入力ソース）と **使う側**（checker）が分かれているのが構成の要点です。
+`core` は MuseScore に依存せず、MuseScore を触るのは `source-musescore` だけ。同じ LintIR を
+MusicXML からも組み立てられるので、29 個の checker は QML プラグインからも CLI からもそのまま動きます。
+
+| パッケージ | 役割 | MuseScore 依存 |
+|---|---|---|
+| `core` | LintIR の型・linter・registry・issue・irBuilder | なし |
+| `checkers` | 全 checker（`core` のみに依存） | なし |
+| `source-musescore` | MuseScore の `curScore` から LintIR を作る（`buildSnapshot`） | あり |
+| `source-musicxml` | MusicXML / .mxl から LintIR を作る（`buildIRFromMusicXML`） | なし |
+| `musescore-api` | SDK 型の薄いブリッジ | 型のみ |
+| `cli` | `musescore-lint` コマンド | なし |
 
 ```
 ScoreLinter.qml                プラグインエントリ（薄い）
@@ -98,7 +111,7 @@ packages/
   core/                        @musescore-linter/core — LintIR・linter・registry
     src/
       types.ts                 LintIR / LintEvent / Issue の型定義
-      snapshot.ts              スコアを走査して LintIR を生成（buildSnapshot）
+      irBuilder.ts             spec から LintIR を組み立てる汎用ビルダ（buildIR）
       linter.ts                全 checker を登録順に実行・ソート（runAllCheckers）
       checkerRegistry.ts       checker の登録・取得
       enumRegistry.ts          MuseScore enum を canonical 文字列へ正規化する層
@@ -131,14 +144,74 @@ packages/
   musescore-api/               @musescore-linter/musescore-api — SDK 型の薄い拡張層
     src/
       index.ts                 SDK 型に不足するプロパティ（duration / annotations 等）を補うブリッジ
+  source-musescore/            @musescore-linter/source-musescore — MuseScore → LintIR
+    src/
+      snapshot.ts              スコアを走査して LintIR を生成（buildSnapshot）
+      types.ts                 HostEnums（実行中の MuseScore の enum を受け取る）
+  source-musicxml/             @musescore-linter/source-musicxml — MusicXML → LintIR
+    src/
+      builder.ts               score-partwise を走査して LintIR を生成
+      xml.ts                   出現順を保持する XML パース（fast-xml-parser）
+      pitch.ts                 step/alter/octave → MIDI 音高・tpc・譜表位置
+      duration.ts              <type> と付点 → 全音符 1 の既約分数
+      articulations.ts         MusicXML の記号名 → MuseScore の名前
+      mxl.ts                   圧縮 MusicXML（.mxl）の展開
+  cli/                         @musescore-linter/cli — musescore-lint コマンド
+    src/
+      main.ts                  エントリ（shebang 付き）
+      run.ts                   解析の実行と終了コードの決定
+      args.ts                  引数解析
+      format.ts                pretty / json / github の出力整形
 scripts/
   build.ts                     esbuild で IIFE バンドル + QML を dist/ へ
+  build-cli.ts                 esbuild で CLI を dist-cli/ へ単一ファイル化
   package.ts                   dist/ を ZIP 化（リリース成果物）
+  make-conversion-job.ts       MuseScore の一括変換ジョブ JSON を生成（CI 用）
 ```
 
 ## 使い方
 
 インストール後、チェックしたいスコアを開いた状態で **「プラグイン」→「Score Linter」** を起動し、「実行」ボタンを押すとチェックが始まります。
+
+## CLI（MusicXML / .mxl）
+
+MuseScore を起動せずに、MusicXML から同じ checker をかけられます。
+
+```bash
+pnpm build:cli                             # dist-cli/musescore-lint.mjs を作る
+./dist-cli/musescore-lint.mjs score.musicxml
+
+pnpm lint:score score.musicxml             # ビルドせずに直接実行（tsx）
+```
+
+```
+--format=<pretty|json|github>  出力形式（既定: pretty。github は Actions のアノテーション）
+--json                         --format=json の別名
+--dump-ir                      issue ではなく LintIR を JSON 出力
+                               （1 ファイルなら LintIR そのもの、複数なら [{ file, ir }] の配列）
+--rule=<id> / --no-rule=<id>   checker の絞り込み（複数指定可）
+--fail-on=<error|warning|info|none>
+                               この severity 以上で終了コード 1（既定: error）
+--list-rules                   checker の一覧
+```
+
+終了コードは 0（閾値以上の issue なし）/ 1（あり）/ 2（実行エラー）です。
+
+`--dump-ir` の出力は、UI のスナップショットタブがコピーする LintIR と同じ形式なので、
+**MuseScore 経路と MusicXML 経路の突き合わせ**に使えます。
+
+### MusicXML 経路の既知の差分
+
+- `tempo-without-bpm` はほぼ発火しません。MuseScore は MusicXML 書き出し時にテンポ表記へ
+  `<sound tempo>` を必ず付けるため、BPM 未設定という状態が MusicXML に残らないためです。
+- アーティキュレーション名は英語の MuseScore 名（`Staccato` 等）になります。日本語 UI の
+  MuseScore が返す名前とは文字列が異なりますが、これを使う
+  `slur-tie-articulation-consistency` は同一 IR 内のパート間比較しかしないため判定は変わりません。
+- `NoteInfo.line`（譜表位置）は「最上線を 0、下方向へ 1 ステップ +1」で算出します。MuseScore
+  内部の採番と原点が違う可能性がありますが、これを使う `courtesy-accidental` は同一譜表内の
+  一致判定しかしないため判定は変わりません。
+- MuseScore で書き出した MusicXML は、MuseScore 自身が記譜を正規化したあとの姿です
+  （例: 異音程のタイは取り込み時に `let-ring` へ変換され、`tie-pitch-mismatch` は出なくなる）。
 
 ## 設定の永続化
 
@@ -172,6 +245,27 @@ pnpm test   # 全パッケージで vitest を実行
 ### CI
 
 push または PR をオープンすると GitHub Actions が lint（Biome）・unused 検出（knip）・typecheck・テスト・ビルドを自動実行します。
+
+### 楽譜の Lint（`.github/workflows/score-lint.yml`）
+
+`scores/` に置いた `.mscz` を MuseScore の CLI で MusicXML に変換し、`musescore-lint` にかけます。
+`.musicxml` / `.mxl` を直接置いた場合は変換せずそのまま解析します。error があればワークフローが
+失敗し、issue は PR にアノテーションとして表示されます。
+
+セットアップ上の注意点（いずれも実際に検証済み）:
+
+- **MuseScore 4 は `QT_QPA_PLATFORM=offscreen` では起動しません。** CLI 実行でも Qt の xcb
+  プラットフォームを要求するため、`xvfb-run` で仮想ディスプレイを与える必要があります。
+- **Linux 版の公式配布は AppImage のみで、runner には FUSE がありません。**
+  `--appimage-extract` で展開したバイナリを直接実行します。
+- `libegl1` / `libopengl0` / `libxcb-cursor0` が無いと起動に失敗します。
+- 変換結果は MuseScore の版で変わるため、バージョンを固定してキャッシュしています。
+
+```bash
+# 手元で同じことをする場合
+xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
+./dist-cli/musescore-lint.mjs out.musicxml
+```
 
 ### リリース手順
 
