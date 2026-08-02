@@ -1,0 +1,3 @@
+interface:
+  display_name: "リファクタ計画のリクエスト"
+  short_description: "安全な段階的リファクタを計画する"

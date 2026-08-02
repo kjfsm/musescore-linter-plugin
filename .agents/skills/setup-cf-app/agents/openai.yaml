@@ -1,0 +1,3 @@
+interface:
+  display_name: "CF アプリのセットアップ"
+  short_description: "Cloudflare Workers のフルスタックアプリを立ち上げる"

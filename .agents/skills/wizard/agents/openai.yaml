@@ -1,0 +1,5 @@
+interface:
+  display_name: "ウィザード"
+  short_description: "対話式のセットアップウィザードを生成する"
+policy:
+  allow_implicit_invocation: false

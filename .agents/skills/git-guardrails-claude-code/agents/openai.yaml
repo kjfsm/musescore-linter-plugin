@@ -1,0 +1,3 @@
+interface:
+  display_name: "Git ガードレール(Claude Code)"
+  short_description: "危険な git コマンドをブロックする"

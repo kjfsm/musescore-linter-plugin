@@ -1,0 +1,3 @@
+interface:
+  display_name: "AI 効率"
+  short_description: "大量のファイル移動・リネームを機械的に処理する"

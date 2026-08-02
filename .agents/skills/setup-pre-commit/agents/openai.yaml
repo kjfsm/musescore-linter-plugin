@@ -1,0 +1,3 @@
+interface:
+  display_name: "pre-commit のセットアップ"
+  short_description: "コミット前の品質チェックを追加する"

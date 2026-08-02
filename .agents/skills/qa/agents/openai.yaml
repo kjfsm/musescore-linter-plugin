@@ -1,0 +1,3 @@
+interface:
+  display_name: "QA"
+  short_description: "会話しながらイシューを起票する QA セッション"
