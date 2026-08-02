@@ -188,6 +188,7 @@ pnpm lint:score score.musicxml             # ビルドせずに直接実行（ts
 --format=<pretty|json|github>  出力形式（既定: pretty。github は Actions のアノテーション）
 --json                         --format=json の別名
 --dump-ir                      issue ではなく LintIR を JSON 出力
+                               （1 ファイルなら LintIR そのもの、複数なら [{ file, ir }] の配列）
 --rule=<id> / --no-rule=<id>   checker の絞り込み（複数指定可）
 --fail-on=<error|warning|info|none>
                                この severity 以上で終了コード 1（既定: error）

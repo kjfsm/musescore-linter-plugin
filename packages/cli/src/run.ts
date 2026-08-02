@@ -1,5 +1,5 @@
 import { registerAll } from "@musescore-linter/checkers";
-import type { Issue, LintIR } from "@musescore-linter/core";
+import type { LintIR } from "@musescore-linter/core";
 import {
 	getCheckerList,
 	reset,
@@ -154,13 +154,4 @@ function renderResults(
 		default:
 			return formatPretty(results, options.color);
 	}
-}
-
-/** テストから checker レジストリを共有せずに issue を得るための補助。 */
-export function lintMusicXML(
-	bytes: Uint8Array,
-	enabledRules: Record<string, boolean> = {},
-): Issue[] {
-	registerCheckers();
-	return runAllCheckers(buildIRFromBytes(bytes), enabledRules);
 }

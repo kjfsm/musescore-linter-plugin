@@ -654,12 +654,13 @@ class PartWalker {
 		const kind = barlineKindOf(node);
 		if (kind === BK.UNKNOWN) return;
 
-		// location 既定は right。右小節線の位置は小節長が確定してから解決する。
+		// location 既定は right。右小節線の位置は小節長が確定してから解決するので、
+		// localTick は使わず atMeasureEnd に委ねる。左小節線は小節頭（localTick 0）。
 		const atEnd = (attr(node, "location") ?? "right") !== "left";
 		for (let s = 0; s < this.ctx.staffCount; s++) {
 			this.draft.events.push({
 				measureIdx: this.measureIdx,
-				localTick: atEnd ? 0 : 0,
+				localTick: 0,
 				atMeasureEnd: atEnd,
 				value: {
 					kind: K.BAR_LINE,

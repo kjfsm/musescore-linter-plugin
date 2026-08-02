@@ -163,6 +163,8 @@ export const HELP_TEXT = `musescore-lint — MusicXML の楽譜を静的解析�
                                  github は GitHub Actions のアノテーション形式
   --json                         --format=json の別名
   --dump-ir                      issue ではなく LintIR を JSON 出力する
+                                 （ファイル 1 つなら LintIR そのもの、複数なら
+                                   [{ file, ir }, ...] の配列になる）
   --rule=<id>                    指定した checker だけを有効にする（複数指定可）
   --no-rule=<id>                 指定した checker を無効にする（複数指定可）
   --fail-on=<error|warning|info|none>
