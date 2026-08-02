@@ -1,5 +1,14 @@
 export { getAll, getById, register, reset } from "./checkerRegistry.js";
 export { CANONICAL } from "./enumRegistry.js";
+export type {
+	EventSpec,
+	HairpinSpec,
+	IRSpec,
+	PartSpec,
+	SlurSpec,
+	TieSpec,
+} from "./irBuilder.js";
+export { buildIR } from "./irBuilder.js";
 export type { IssueFields } from "./issue.js";
 export { compareIssues, createIssue } from "./issue.js";
 export { ensureDerived, getCheckerList, runAllCheckers } from "./linter.js";
