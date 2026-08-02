@@ -1,5 +1,6 @@
 import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import { describe, expect, it } from "vitest";
+
 import { buildSnapshot } from "../src/snapshot.js";
 import type { HostEnums } from "../src/types.js";
 

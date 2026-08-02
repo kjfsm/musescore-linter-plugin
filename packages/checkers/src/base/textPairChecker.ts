@@ -5,6 +5,7 @@ import type {
 	TextPairCheckerConfig,
 } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import {
 	buildPartBuckets,
 	matchesAny,

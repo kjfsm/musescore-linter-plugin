@@ -1,5 +1,6 @@
 import { ensureDerived, type LintIR } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
+
 import { slurTieArticulationConsistencyChecker } from "../src/slurTieArticulationConsistencyChecker.js";
 import { buildIR, K } from "./helpers/irBuilder.js";
 

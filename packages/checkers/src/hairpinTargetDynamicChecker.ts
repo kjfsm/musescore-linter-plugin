@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 import { buildPartNameMap, measureAtTick } from "./base/query.js";
 

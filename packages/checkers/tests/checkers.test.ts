@@ -7,6 +7,7 @@ import {
 	tpcToStep,
 } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
+
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "../src/conLegnoArcoChecker.js";
 import { courtesyAccidentalChecker } from "../src/courtesyAccidentalChecker.js";

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+
 import { register, reset } from "../src/checkerRegistry.js";
 import { CANONICAL } from "../src/enumRegistry.js";
 import { ensureDerived, runAllCheckers } from "../src/linter.js";

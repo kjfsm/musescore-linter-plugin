@@ -15,8 +15,8 @@
 		"turbo:typecheck": "turbo run typecheck",
 		"dev": "vitest",
 		"knip": "knip",
-		"lint": "biome check",
-		"lint:fix": "biome check --write",
+		"lint": "oxlint && oxfmt --check",
+		"lint:fix": "oxlint --fix && oxfmt",
 		"changeset": "changeset",
 		"version": "changeset version",
 		"prepare": "simple-git-hooks"
@@ -25,7 +25,6 @@
 		"pre-commit": "pnpm lint"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.15",
 		"@changesets/changelog-github": "^0.7.0",
 		"@changesets/cli": "^2.31.0",
 		"@musescore-linter/checkers": "workspace:*",
@@ -36,6 +35,8 @@
 		"esbuild": "^0.28.0",
 		"fflate": "^0.8.3",
 		"knip": "^6.14.0",
+		"oxfmt": "0.61.0",
+		"oxlint": "^1.76.0",
 		"simple-git-hooks": "^2.13.1",
 		"tsx": "^4.22.0",
 		"turbo": "^2.9.14",

@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { CANONICAL } from "@musescore-linter/core";
 import { zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
+
 import { buildIRFromBytes } from "../src/index.js";
 import { isZip } from "../src/mxl.js";
 

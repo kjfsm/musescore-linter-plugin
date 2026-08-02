@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
 import type { Issue, LintIR } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
+
 import { formatGithub, formatPretty, meetsThreshold } from "../src/format.js";
 import {
 	EXIT_ERROR,
@@ -221,7 +223,7 @@ describe("format", () => {
 
 	it("pretty は色なしなら ANSI を含まない", () => {
 		const text = formatPretty([{ file: "a.musicxml", issues }], false);
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI エスケープが無いことの確認
+		// oxlint-disable-next-line no-control-regex -- ANSI エスケープが無いことの確認
 		expect(text).not.toMatch(/\[/);
 		expect(text).toContain("m.1");
 		expect(text).toContain("[opening-tempo]");

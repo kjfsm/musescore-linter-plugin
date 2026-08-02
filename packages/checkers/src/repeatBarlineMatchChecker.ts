@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical } from "./base/predicates.js";
 
 // リピート開始(‖:)に対応する終了(:‖)が無い箇所を検出する。

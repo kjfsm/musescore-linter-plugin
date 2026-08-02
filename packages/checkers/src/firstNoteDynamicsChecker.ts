@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical, isDynamicMark } from "./base/predicates.js";
 
 export const firstNoteDynamicsChecker: Checker = {

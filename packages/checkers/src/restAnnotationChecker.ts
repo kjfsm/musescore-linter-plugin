@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { getCanonical, isDynamicMark, isKind } from "./base/predicates.js";
 
 // 休符に付与してはいけない演奏技法テキスト（textNorm の完全一致）

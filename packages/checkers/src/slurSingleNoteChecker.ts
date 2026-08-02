@@ -1,5 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
+
 import { buildPartNameMap, measureAtTick } from "./base/query.js";
 
 // スラーが単一音（開始 tick == 終了 tick）に掛かっている箇所を検出する。

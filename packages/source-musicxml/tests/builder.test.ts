@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
 import type { LintEvent, LintIR } from "@musescore-linter/core";
 import { CANONICAL, tpcToAlter, tpcToName } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
+
 import { buildIRFromMusicXML, TICKS_PER_QUARTER } from "../src/builder.js";
 
 const K = CANONICAL.elementKinds;

@@ -7,6 +7,7 @@ import {
 	setLevel,
 } from "@musescore-linter/core";
 import { buildIRFromBytes } from "@musescore-linter/source-musicxml";
+
 import {
 	assertKnownRules,
 	HELP_TEXT,
