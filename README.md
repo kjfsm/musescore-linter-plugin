@@ -85,7 +85,11 @@ pnpm monorepo です。ビルド・テスト・リリースは Turborepo + Chang
 
 LintIR を **作る側**（入力ソース）と **使う側**（checker）が分かれているのが構成の要点です。
 `core` は MuseScore に依存せず、MuseScore を触るのは `source-musescore` だけ。同じ LintIR を
-MusicXML からも組み立てられるので、29 個の checker は QML プラグインからも CLI からもそのまま動きます。
+MusicXML からも組み立てられるので、29 個の checker は QML プラグインからも CLI からも
+Web 版からもそのまま動きます。
+
+`packages/*` はビルド不要の再利用ライブラリで、成果物を作るのはルートの `scripts/*.ts`（esbuild）です。
+Vite を使うのは `apps/*` のフロントエンドだけ、という線引きにしています。
 
 | パッケージ         | 役割                                                          | MuseScore 依存 |
 | ------------------ | ------------------------------------------------------------- | -------------- |
@@ -95,6 +99,7 @@ MusicXML からも組み立てられるので、29 個の checker は QML プラ
 | `source-musicxml`  | MusicXML / .mxl から LintIR を作る（`buildIRFromMusicXML`）   | なし           |
 | `musescore-api`    | SDK 型の薄いブリッジ                                          | 型のみ         |
 | `cli`              | `musescore-lint` コマンド                                     | なし           |
+| `apps/web`         | ブラウザ完結の Web 版（React + shadcn/ui）                    | なし           |
 
 ```
 ScoreLinter.qml                プラグインエントリ（薄い）
@@ -162,6 +167,17 @@ packages/
       run.ts                   解析の実行と終了コードの決定
       args.ts                  引数解析
       format.ts                pretty / json / github の出力整形
+apps/
+  web/                         ブラウザ完結の Web 版（Cloudflare Workers static assets）
+    src/
+      App.tsx                  状態の集約（ParsedFile[] と enabledRules の 2 つだけ）
+      lib/lint.ts              parseFile（重い）/ lintParsed（軽い）を分離
+      lib/rules.ts             checker のカテゴリ分けと localStorage 永続化
+      lib/rows.ts              表示用の整形（cli の format.ts を再利用）
+      components/              Dropzone / ResultTable / RulePanel / PrivacyNote
+      components/ui/           shadcn/ui の生成コード
+    public/_headers            CSP などのセキュリティヘッダ
+    wrangler.jsonc             main を持たない assets-only Worker
 scripts/
   build.ts                     esbuild で IIFE バンドル + QML を dist/ へ
   build-cli.ts                 esbuild で CLI を dist-cli/ へ単一ファイル化
@@ -199,6 +215,36 @@ pnpm lint:score score.musicxml             # ビルドせずに直接実行（ts
 
 `--dump-ir` の出力は、UI のスナップショットタブがコピーする LintIR と同じ形式なので、
 **MuseScore 経路と MusicXML 経路の突き合わせ**に使えます。
+
+## Web 版（ブラウザ完結）
+
+MusicXML をドラッグ&ドロップすると、その場で同じ checker が走ります。MuseScore も Node も要りません。
+
+**アップロードしたファイルはサーバーに送信されません。** このサイトは Cloudflare Workers の
+static assets だけで構成されており、`wrangler.jsonc` に `main` を書いていないため
+**リクエストを受け取る Worker スクリプトが存在しません**。受け取る側のコードが無い、というのが
+「送信されない」ことの根拠です。
+
+加えて配信時のセキュリティヘッダで `connect-src 'none'` を指定しているため、ページからの
+fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。バンドルにネットワーク
+API が含まれていないことは CI でも検査しています（`.github/workflows/ci.yml`）。
+
+```bash
+pnpm dev:web        # Vite の開発サーバー（_headers は再現されない）
+pnpm build:web      # apps/web/dist を生成
+pnpm preview:web    # wrangler dev。_headers が適用された状態で確認できる
+pnpm deploy:web     # Cloudflare へデプロイ（手動）
+```
+
+CSP の `style-src 'self'`（`'unsafe-inline'` なし）を維持するため、UI には制約があります。
+
+- `style` 属性・インライン `<script>` を書かない
+- インラインスタイルを注入する Radix 系（Popover / Select / Dialog / Tooltip / Accordion）を使わない。
+  折りたたみはネイティブ `<details>` で代替する
+- Vite の `build.modulePreload.polyfill` は `false`（既定ではインライン `<script>` を吐く）
+
+対応形式は `.musicxml` / `.xml` / `.mxl` です。`.mscz` は MuseScore 独自形式のため読めません
+（MuseScore から MusicXML で書き出してください）。
 
 ### MusicXML 経路の既知の差分
 

@@ -10,3 +10,6 @@ packages/*/out/
 *.tsbuildinfo
 dist
 dist-cli/
+
+# wrangler dev のローカル状態（miniflare のキャッシュ・SQLite）
+.wrangler/

@@ -9,6 +9,9 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 **LintIR を作る側と使う側が分離している**のが構成の要点。`core`（LintIR・linter・checker registry）と
 `checkers` は MuseScore に依存しない。MuseScore を触るのは `source-musescore` だけで、
 `source-musicxml` は MusicXML から同じ LintIR を作る。`cli` は `musescore-lint` コマンド。
+`apps/web` はブラウザ完結の Web 版（React + shadcn/ui）で、`main` を持たない assets-only Worker
+として Cloudflare へ配信する。**サーバー処理を足してはいけない**（「ファイルを送信しない」という
+保証がこの構成に依存している）。UI の CSP 制約は README「Web 版」節を参照。
 
 コマンド・ディレクトリ構成・ライブラリ一覧は [README.md](./README.md) 参照。
 
@@ -53,4 +56,6 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 - Checker 内で例外を catch（linter が全体でハンドリングする）
 - `packages/core/src/types.ts`（LintIR の型定義）を checker 側から直接変更
 - `core` / `checkers` に MuseScore SDK への依存を持ち込む（入力ソース側の責務）
+- `apps/web` に Worker スクリプト（`wrangler.jsonc` の `main`）やサーバー通信を足す
+- `apps/web` で `style` 属性・インライン `<script>` を書く（CSP で落ちる。README「Web 版」節）
 - `.claude/` の直接編集（`.claude-next/` 経由で変更後にコピー）

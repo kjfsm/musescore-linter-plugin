@@ -12,6 +12,7 @@ export {
 	formatJson,
 	formatPretty,
 	meetsThreshold,
+	stripPartPrefix,
 } from "./format.js";
 export type { RunIO } from "./run.js";
 export { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, run } from "./run.js";
