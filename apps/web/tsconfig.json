@@ -1,22 +1,20 @@
 {
-	"extends": "../../tsconfig.json",
-	"compilerOptions": {
-		"noEmit": true,
-		"jsx": "react-jsx",
-		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		// ルートの types: ["node"] を打ち消す。ブラウザ向けコードに process /
-		// Buffer / node:fs を書けなくするための検知装置なので消さないこと。
-		// （tests/ は node:fs を使うので tsconfig.node.json 側で見る）
-		"types": [],
-		"paths": {
-			"@/*": ["./src/*"],
-			"@musescore-linter/core": ["../../packages/core/src/index.ts"],
-			"@musescore-linter/checkers": ["../../packages/checkers/src/index.ts"],
-			"@musescore-linter/source-musicxml": [
-				"../../packages/source-musicxml/src/index.ts"
-			],
-			"@musescore-linter/cli": ["../../packages/cli/src/index.ts"]
-		}
-	},
-	"include": ["src/**/*"]
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // ルートの types: ["node"] を打ち消す。ブラウザ向けコードに process /
+    // Buffer / node:fs を書けなくするための検知装置なので消さないこと。
+    // （tests/ は node:fs を使うので tsconfig.node.json 側で見る）
+    "types": [],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@musescore-linter/core": ["../../packages/core/src/index.ts"],
+      "@musescore-linter/checkers": ["../../packages/checkers/src/index.ts"],
+      "@musescore-linter/source-musicxml": ["../../packages/source-musicxml/src/index.ts"],
+      "@musescore-linter/cli": ["../../packages/cli/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"]
 }

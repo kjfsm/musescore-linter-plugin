@@ -1,19 +1,17 @@
 {
-	// vite.config.ts と tests/ 向け。こちらは node:path / node:fs を使うので
-	// types: ["node"] を継承したまま使う。
-	"extends": "../../tsconfig.json",
-	"compilerOptions": {
-		"noEmit": true,
-		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		"paths": {
-			"@/*": ["./src/*"],
-			"@musescore-linter/core": ["../../packages/core/src/index.ts"],
-			"@musescore-linter/checkers": ["../../packages/checkers/src/index.ts"],
-			"@musescore-linter/source-musicxml": [
-				"../../packages/source-musicxml/src/index.ts"
-			],
-			"@musescore-linter/cli": ["../../packages/cli/src/index.ts"]
-		}
-	},
-	"include": ["vite.config.ts", "tests/**/*"]
+  // vite.config.ts と tests/ 向け。こちらは node:path / node:fs を使うので
+  // types: ["node"] を継承したまま使う。
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@musescore-linter/core": ["../../packages/core/src/index.ts"],
+      "@musescore-linter/checkers": ["../../packages/checkers/src/index.ts"],
+      "@musescore-linter/source-musicxml": ["../../packages/source-musicxml/src/index.ts"],
+      "@musescore-linter/cli": ["../../packages/cli/src/index.ts"]
+    }
+  },
+  "include": ["vite.config.ts", "tests/**/*"]
 }

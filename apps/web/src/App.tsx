@@ -11,90 +11,80 @@ import { loadEnabledRules, saveEnabledRules } from "@/lib/rules";
 const SEVERITIES = ["error", "warning", "info"] as const;
 
 export function App() {
-	const [parsed, setParsed] = useState<ParsedFile[]>([]);
-	const [enabledRules, setEnabledRules] = useState<Record<string, boolean>>(
-		() => loadEnabledRules(localStorage),
-	);
-	const [busy, setBusy] = useState(false);
+  const [parsed, setParsed] = useState<ParsedFile[]>([]);
+  const [enabledRules, setEnabledRules] = useState<Record<string, boolean>>(() =>
+    loadEnabledRules(localStorage),
+  );
+  const [busy, setBusy] = useState(false);
 
-	useEffect(() => {
-		saveEnabledRules(localStorage, enabledRules);
-	}, [enabledRules]);
+  useEffect(() => {
+    saveEnabledRules(localStorage, enabledRules);
+  }, [enabledRules]);
 
-	// パースは重いが lint は軽いので、ルールを切り替えたときは IR を使い回して
-	// checker だけ流し直す。
-	const results = useMemo(
-		() => lintParsed(parsed, enabledRules),
-		[parsed, enabledRules],
-	);
-	const counts = useMemo(() => summarize(results), [results]);
+  // パースは重いが lint は軽いので、ルールを切り替えたときは IR を使い回して
+  // checker だけ流し直す。
+  const results = useMemo(() => lintParsed(parsed, enabledRules), [parsed, enabledRules]);
+  const counts = useMemo(() => summarize(results), [results]);
 
-	const handleFiles = useCallback(async (files: File[]) => {
-		setBusy(true);
-		// state 更新を描画させてから重い処理に入る（メインスレッドで解析するため）
-		await new Promise((resolve) => setTimeout(resolve, 0));
-		try {
-			const next = await Promise.all(
-				files.map(async (file) =>
-					parseFile(file.name, new Uint8Array(await file.arrayBuffer())),
-				),
-			);
-			setParsed(next);
-		} finally {
-			setBusy(false);
-		}
-	}, []);
+  const handleFiles = useCallback(async (files: File[]) => {
+    setBusy(true);
+    // state 更新を描画させてから重い処理に入る（メインスレッドで解析するため）
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    try {
+      const next = await Promise.all(
+        files.map(async (file) => parseFile(file.name, new Uint8Array(await file.arrayBuffer()))),
+      );
+      setParsed(next);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 
-	const hasFiles = parsed.length > 0;
+  const hasFiles = parsed.length > 0;
 
-	return (
-		<div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8">
-			<header className="flex flex-col gap-1">
-				<h1 className="text-2xl font-semibold">MuseScore Linter</h1>
-				<p className="text-muted-foreground">
-					MusicXML
-					を読み込むと、記譜の抜けや対応漏れをブラウザ内でチェックします。
-				</p>
-			</header>
+  return (
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold">MuseScore Linter</h1>
+        <p className="text-muted-foreground">
+          MusicXML を読み込むと、記譜の抜けや対応漏れをブラウザ内でチェックします。
+        </p>
+      </header>
 
-			<PrivacyNote />
+      <PrivacyNote />
 
-			<Dropzone onFiles={handleFiles} busy={busy} />
+      <Dropzone onFiles={handleFiles} busy={busy} />
 
-			<RulePanel enabledRules={enabledRules} onChange={setEnabledRules} />
+      <RulePanel enabledRules={enabledRules} onChange={setEnabledRules} />
 
-			{busy && <p className="text-sm text-muted-foreground">解析中…</p>}
+      {busy && <p className="text-sm text-muted-foreground">解析中…</p>}
 
-			{!busy && hasFiles && (
-				<>
-					<div className="flex flex-wrap items-center gap-2">
-						<span className="text-sm text-muted-foreground">
-							{parsed.length} ファイル
-						</span>
-						{SEVERITIES.map((severity) => (
-							<span key={severity} className="flex items-center gap-1 text-sm">
-								<SeverityBadge severity={severity} />
-								{counts[severity]}
-							</span>
-						))}
-					</div>
-					<ResultTable parsed={parsed} results={results} />
-				</>
-			)}
+      {!busy && hasFiles && (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">{parsed.length} ファイル</span>
+            {SEVERITIES.map((severity) => (
+              <span key={severity} className="flex items-center gap-1 text-sm">
+                <SeverityBadge severity={severity} />
+                {counts[severity]}
+              </span>
+            ))}
+          </div>
+          <ResultTable parsed={parsed} results={results} />
+        </>
+      )}
 
-			<footer className="border-t pt-4 text-sm text-muted-foreground">
-				<p>
-					判定は記譜ルールの補助です。最終判断は編曲・出版方針に合わせて行ってください。
-				</p>
-				<p>
-					<a
-						className="underline underline-offset-4"
-						href="https://github.com/kjfsm/musescore-linter-plugin"
-					>
-						ソースコード（GitHub）
-					</a>
-				</p>
-			</footer>
-		</div>
-	);
+      <footer className="border-t pt-4 text-sm text-muted-foreground">
+        <p>判定は記譜ルールの補助です。最終判断は編曲・出版方針に合わせて行ってください。</p>
+        <p>
+          <a
+            className="underline underline-offset-4"
+            href="https://github.com/kjfsm/musescore-linter-plugin"
+          >
+            ソースコード（GitHub）
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
 }

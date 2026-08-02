@@ -58,20 +58,20 @@ CLAUDE.md の「不足機能をプラグイン側で回避実装しない」に�
 // snapshot.ts、isChord(el) ブロック内（既存の el.notes ループに追記）
 ev.notes = getNoteSpellings(el); // { pitch, tpc, line, accidentalShown }[]
 for (const note of el.notes ?? []) {
-	const tie = note.tieForward; // SDK Note.tieForward: Tie | null
-	if (tie) {
-		const range = getSpannerRange(tie);
-		const p = getTiePitches(tie);
-		ir.meta.ties.push({
-			staffIdx,
-			voice,
-			startTick: range.startTick,
-			endTick: range.endTick,
-			startPitch: p?.startPitch ?? null,
-			endPitch: p?.endPitch ?? null,
-		});
-	}
-	// 既存の spannerForward（hairpin/slur）処理は据え置き
+  const tie = note.tieForward; // SDK Note.tieForward: Tie | null
+  if (tie) {
+    const range = getSpannerRange(tie);
+    const p = getTiePitches(tie);
+    ir.meta.ties.push({
+      staffIdx,
+      voice,
+      startTick: range.startTick,
+      endTick: range.endTick,
+      startPitch: p?.startPitch ?? null,
+      endPitch: p?.endPitch ?? null,
+    });
+  }
+  // 既存の spannerForward（hairpin/slur）処理は据え置き
 }
 ```
 

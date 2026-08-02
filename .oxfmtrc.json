@@ -1,31 +1,15 @@
 {
-	"$schema": "./node_modules/oxfmt/configuration_schema.json",
-	"useTabs": true,
-	"tabWidth": 2,
-	"printWidth": 80,
-	"singleQuote": false,
-	"jsxSingleQuote": false,
-	"quoteProps": "as-needed",
-	"trailingComma": "all",
-	"semi": true,
-	"arrowParens": "always",
-	"bracketSameLine": false,
-	"bracketSpacing": true,
-	// biome の assist.actions.source.organizeImports: "on" 相当。
-	// oxfmt の既定は off なので明示的に有効化する（--migrate biome は移行しない）。
-	"sortImports": true,
-	// 既定は true だが、package.json のキー順を並べ替えるのはフォーマットではなく
-	// 規約変更なので無効化する（biome は並べ替えていなかった）。
-	"sortPackageJson": false,
-	"ignorePatterns": [
-		// biome と違い oxfmt は Markdown / YAML も整形する。以下は「自分たちが書いたもの」
-		// ではないため対象から外す。
-		//
-		// 外部から取り込んだスキル定義（skills-lock.json で同期される）
-		".agents/**",
-		// CLAUDE.md の規約上 .claude-next/ 経由でしか変更してはいけない
-		".claude/**",
-		// changesets が生成するので、整形すると次回生成時に差分が復活する
-		"**/CHANGELOG.md"
-	]
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": false,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "semi": true,
+  "arrowParens": "always",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  // biome の assist.actions.source.organizeImports: "on" 相当。
+  // oxfmt の既定は off なので明示的に有効化する（--migrate biome は移行しない）。
+  "sortImports": true,
+  "ignorePatterns": [".agents/**", ".claude/**", "**/CHANGELOG.md"]
 }

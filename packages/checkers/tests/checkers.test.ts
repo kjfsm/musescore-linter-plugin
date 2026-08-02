@@ -1,10 +1,10 @@
 import {
-	ensureDerived,
-	reset,
-	runAllCheckers,
-	tpcToAlter,
-	tpcToName,
-	tpcToStep,
+  ensureDerived,
+  reset,
+  runAllCheckers,
+  tpcToAlter,
+  tpcToName,
+  tpcToStep,
 } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
@@ -39,2224 +39,2204 @@ import { tiePitchMismatchChecker } from "../src/tiePitchMismatchChecker.js";
 import { unaCordaChecker } from "../src/unaCordaChecker.js";
 import { BK, buildIR, cleanIR, K, quintetIR } from "./helpers/irBuilder.js";
 
-function run(
-	ir: ReturnType<typeof buildIR>,
-	enabledRules: Record<string, boolean> = {},
-) {
-	reset();
-	registerAll();
-	ensureDerived(ir);
-	return runAllCheckers(ir, enabledRules);
+function run(ir: ReturnType<typeof buildIR>, enabledRules: Record<string, boolean> = {}) {
+  reset();
+  registerAll();
+  ensureDerived(ir);
+  return runAllCheckers(ir, enabledRules);
 }
 
 // ─── クリーン fixture ───────────────────────────────────────────────────────
 
 describe("clean fixture", () => {
-	it("全 checker が 0 件", () => {
-		const issues = run(cleanIR());
-		expect(issues).toHaveLength(0);
-	});
+  it("全 checker が 0 件", () => {
+    const issues = run(cleanIR());
+    expect(issues).toHaveLength(0);
+  });
 });
 
 // ─── opening-tempo ──────────────────────────────────────────────────────────
 
 describe("opening-tempo checker", () => {
-	it("冒頭テンポなし → error 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-		});
-		ensureDerived(ir);
-		const issues = openingTempoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("error");
-	});
+  it("冒頭テンポなし → error 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+    });
+    ensureDerived(ir);
+    const issues = openingTempoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("error");
+  });
 
-	it("global scope の tempo があれば pass", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staffIdx: -1,
-					scope: "global",
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-		});
-		expect(openingTempoChecker.run(ir)).toHaveLength(0);
-	});
+  it("global scope の tempo があれば pass", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staffIdx: -1,
+          scope: "global",
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+    });
+    expect(openingTempoChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── first-note-dynamics ────────────────────────────────────────────────────
 
 describe("first-note-dynamics checker", () => {
-	it("Vn2 の1音目にダイナミクスなし → error 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 1, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-		});
-		ensureDerived(ir);
-		const issues = firstNoteDynamicsChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].partName).toBe("Vn2");
-	});
+  it("Vn2 の1音目にダイナミクスなし → error 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 1, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+    });
+    ensureDerived(ir);
+    const issues = firstNoteDynamicsChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].partName).toBe("Vn2");
+  });
 });
 
 // ─── pizz-arco ──────────────────────────────────────────────────────────────
 
 describe("pizz-arco checker", () => {
-	it("pizz. のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "pizz.",
-				textRaw: "pizz.",
-			},
-		]);
-		const issues = pizzArcoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("pizz. のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "pizz.",
+        textRaw: "pizz.",
+      },
+    ]);
+    const issues = pizzArcoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("pizz. 連続指示 → warning 1件（前回小節が記録される）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "pizz.",
-				textRaw: "pizz.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "pizz.",
-				textRaw: "pizz.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 1440,
-				measure: 4,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		const issues = pizzArcoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].detail?.previousMeasure).toBe(2);
-	});
+  it("pizz. 連続指示 → warning 1件（前回小節が記録される）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "pizz.",
+        textRaw: "pizz.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "pizz.",
+        textRaw: "pizz.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 1440,
+        measure: 4,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    const issues = pizzArcoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].detail?.previousMeasure).toBe(2);
+  });
 
-	it("pizz. → arco ペア対応済み → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "pizz.",
-				textRaw: "pizz.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		expect(pizzArcoChecker.run(ir)).toHaveLength(0);
-	});
+  it("pizz. → arco ペア対応済み → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "pizz.",
+        textRaw: "pizz.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    expect(pizzArcoChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("pizz. なしで arco のみ → 0件（on 状態未経験の off 指示は不問）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		expect(pizzArcoChecker.run(ir)).toHaveLength(0);
-	});
+  it("pizz. なしで arco のみ → 0件（on 状態未経験の off 指示は不問）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    expect(pizzArcoChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── sordino ────────────────────────────────────────────────────────────────
 
 describe("sordino checker", () => {
-	it("con sord. のまま終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "con sord.",
-				textRaw: "con sord.",
-			},
-		]);
-		expect(sordinoChecker.run(ir)).toHaveLength(1);
-	});
+  it("con sord. のまま終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "con sord.",
+        textRaw: "con sord.",
+      },
+    ]);
+    expect(sordinoChecker.run(ir)).toHaveLength(1);
+  });
 
-	it("con sord. → senza sord. で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "con sord.",
-				textRaw: "con sord.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "senza sord.",
-				textRaw: "senza sord.",
-			},
-		]);
-		expect(sordinoChecker.run(ir)).toHaveLength(0);
-	});
+  it("con sord. → senza sord. で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "con sord.",
+        textRaw: "con sord.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "senza sord.",
+        textRaw: "senza sord.",
+      },
+    ]);
+    expect(sordinoChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── rest-annotation ────────────────────────────────────────────────────────
 
 describe("rest-annotation checker", () => {
-	it("休符の位置に強弱記号 → error 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{ kind: K.REST, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 480,
-					measure: 2,
-					textNorm: "p",
-					textRaw: "p",
-				},
-			],
-		});
-		expect(restAnnotationChecker.run(ir)).toHaveLength(1);
-	});
+  it("休符の位置に強弱記号 → error 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        { kind: K.REST, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "p",
+          textRaw: "p",
+        },
+      ],
+    });
+    expect(restAnnotationChecker.run(ir)).toHaveLength(1);
+  });
 });
 
 // ─── tempo-barline ──────────────────────────────────────────────────────────
 
 describe("tempo-barline checker", () => {
-	it("テンポ変更前に複縦線なし → info 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 960,
-					measure: 3,
-					tempo: 3.0,
-					textNorm: "presto",
-					textRaw: "Presto",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
-			],
-		});
-		const issues = tempoBarlineChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-	});
+  it("テンポ変更前に複縦線なし → info 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 960,
+          measure: 3,
+          tempo: 3.0,
+          textNorm: "presto",
+          textRaw: "Presto",
+        },
+        { kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
+      ],
+    });
+    const issues = tempoBarlineChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+  });
 
-	it("テンポ変更前に複縦線あり → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.BAR_LINE,
-					staff: 0,
-					tick: 958,
-					measure: 2,
-					barlineKind: BK.DOUBLE,
-				},
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 960,
-					measure: 3,
-					tempo: 3.0,
-					textNorm: "presto",
-					textRaw: "Presto",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
-			],
-		});
-		expect(tempoBarlineChecker.run(ir)).toHaveLength(0);
-	});
+  it("テンポ変更前に複縦線あり → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.BAR_LINE,
+          staff: 0,
+          tick: 958,
+          measure: 2,
+          barlineKind: BK.DOUBLE,
+        },
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 960,
+          measure: 3,
+          tempo: 3.0,
+          textNorm: "presto",
+          textRaw: "Presto",
+        },
+        { kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
+      ],
+    });
+    expect(tempoBarlineChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── solo-tutti ─────────────────────────────────────────────────────────────
 
 describe("solo-tutti checker", () => {
-	it("solo のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "solo",
-				textRaw: "solo",
-			},
-		]);
-		expect(soloTuttiChecker.run(ir)).toHaveLength(1);
-	});
+  it("solo のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "solo",
+        textRaw: "solo",
+      },
+    ]);
+    expect(soloTuttiChecker.run(ir)).toHaveLength(1);
+  });
 
-	it("solo 連続指示 → warning 1件（前回小節が記録される）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "solo",
-				textRaw: "solo",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "solo",
-				textRaw: "solo",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 1440,
-				measure: 4,
-				textNorm: "tutti",
-				textRaw: "tutti",
-			},
-		]);
-		const issues = soloTuttiChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].detail?.previousMeasure).toBe(2);
-	});
+  it("solo 連続指示 → warning 1件（前回小節が記録される）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "solo",
+        textRaw: "solo",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "solo",
+        textRaw: "solo",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 1440,
+        measure: 4,
+        textNorm: "tutti",
+        textRaw: "tutti",
+      },
+    ]);
+    const issues = soloTuttiChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].detail?.previousMeasure).toBe(2);
+  });
 
-	it("solo → tutti ペア対応済み → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "solo",
-				textRaw: "solo",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "tutti",
-				textRaw: "tutti",
-			},
-		]);
-		expect(soloTuttiChecker.run(ir)).toHaveLength(0);
-	});
+  it("solo → tutti ペア対応済み → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "solo",
+        textRaw: "solo",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "tutti",
+        textRaw: "tutti",
+      },
+    ]);
+    expect(soloTuttiChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── div-unis ────────────────────────────────────────────────────────────────
 
 describe("div-unis checker", () => {
-	it("div. のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "div.",
-				textRaw: "div.",
-			},
-		]);
-		expect(divisiChecker.run(ir)).toHaveLength(1);
-	});
+  it("div. のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "div.",
+        textRaw: "div.",
+      },
+    ]);
+    expect(divisiChecker.run(ir)).toHaveLength(1);
+  });
 
-	it("div. 連続指示 → warning 1件（前回小節が記録される）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "div.",
-				textRaw: "div.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "div.",
-				textRaw: "div.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 1440,
-				measure: 4,
-				textNorm: "unis.",
-				textRaw: "unis.",
-			},
-		]);
-		const issues = divisiChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].detail?.previousMeasure).toBe(2);
-	});
+  it("div. 連続指示 → warning 1件（前回小節が記録される）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "div.",
+        textRaw: "div.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "div.",
+        textRaw: "div.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 1440,
+        measure: 4,
+        textNorm: "unis.",
+        textRaw: "unis.",
+      },
+    ]);
+    const issues = divisiChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].detail?.previousMeasure).toBe(2);
+  });
 
-	it("div. → unis. ペア対応済み → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "div.",
-				textRaw: "div.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "unis.",
-				textRaw: "unis.",
-			},
-		]);
-		expect(divisiChecker.run(ir)).toHaveLength(0);
-	});
+  it("div. → unis. ペア対応済み → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "div.",
+        textRaw: "div.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "unis.",
+        textRaw: "unis.",
+      },
+    ]);
+    expect(divisiChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── tempo-without-bpm ──────────────────────────────────────────────────────
 
 describe("tempo-without-bpm checker", () => {
-	it("BPM 値なしテンポ → warning 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-			],
-		});
-		const issues = tempoWithoutBpmChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("BPM 値なしテンポ → warning 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+      ],
+    });
+    const issues = tempoWithoutBpmChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("BPM 値あり → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-			],
-		});
-		expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(0);
-	});
+  it("BPM 値あり → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+      ],
+    });
+    expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("global scope の BPM なしテンポも検出", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staffIdx: -1,
-					scope: "global",
-					tick: 0,
-					measure: 1,
-					textNorm: "lento",
-					textRaw: "Lento",
-				},
-			],
-		});
-		expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
-	});
+  it("global scope の BPM なしテンポも検出", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staffIdx: -1,
+          scope: "global",
+          tick: 0,
+          measure: 1,
+          textNorm: "lento",
+          textRaw: "Lento",
+        },
+      ],
+    });
+    expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
+  });
 });
 
 // ─── duplicate-dynamics ─────────────────────────────────────────────────────
 
 describe("duplicate-dynamics checker", () => {
-	it("同パートで f → f が連続 → info 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.DYNAMIC,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "f",
-				textRaw: "f",
-			},
-		]);
-		const issues = duplicateDynamicsChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-		expect(issues[0].partName).toBe("Vn1");
-		expect(issues[0].detail?.previousMeasure).toBe(1);
-	});
+  it("同パートで f → f が連続 → info 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.DYNAMIC,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "f",
+        textRaw: "f",
+      },
+    ]);
+    const issues = duplicateDynamicsChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+    expect(issues[0].partName).toBe("Vn1");
+    expect(issues[0].detail?.previousMeasure).toBe(1);
+  });
 
-	it("subtype 同一で textNorm が異なっても重複扱い", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					subtype: 7,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 480,
-					measure: 2,
-					subtype: 7,
-					textNorm: "",
-					textRaw: "",
-				},
-			],
-		});
-		expect(duplicateDynamicsChecker.run(ir)).toHaveLength(1);
-	});
+  it("subtype 同一で textNorm が異なっても重複扱い", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          subtype: 7,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          subtype: 7,
+          textNorm: "",
+          textRaw: "",
+        },
+      ],
+    });
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(1);
+  });
 
-	it("f → p のように変化 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.DYNAMIC,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "p",
-				textRaw: "p",
-			},
-		]);
-		expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
-	});
+  it("f → p のように変化 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.DYNAMIC,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "p",
+        textRaw: "p",
+      },
+    ]);
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("別パート間では重複判定しない", () => {
-		// cleanIR は staff 0 と staff 1 にそれぞれ "f" を持つが別パートなので 0 件
-		expect(duplicateDynamicsChecker.run(cleanIR())).toHaveLength(0);
-	});
+  it("別パート間では重複判定しない", () => {
+    // cleanIR は staff 0 と staff 1 にそれぞれ "f" を持つが別パートなので 0 件
+    expect(duplicateDynamicsChecker.run(cleanIR())).toHaveLength(0);
+  });
 
-	it("同パートで f → f が連続していてもヘアピンがあれば 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 960,
-					measure: 3,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-			hairpins: [{ staffIdx: 0, startTick: 240, endTick: 720 }],
-		});
-		expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
-	});
+  it("同パートで f → f が連続していてもヘアピンがあれば 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 960,
+          measure: 3,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 240, endTick: 720 }],
+    });
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("ヘアピンが別パートにある場合は重複判定する", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
-			events: [
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 960,
-					measure: 3,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-			hairpins: [{ staffIdx: 1, startTick: 240, endTick: 720 }],
-		});
-		const issues = duplicateDynamicsChecker.run(ir);
-		expect(issues).toHaveLength(1);
-	});
+  it("ヘアピンが別パートにある場合は重複判定する", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 960,
+          measure: 3,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+      hairpins: [{ staffIdx: 1, startTick: 240, endTick: 720 }],
+    });
+    const issues = duplicateDynamicsChecker.run(ir);
+    expect(issues).toHaveLength(1);
+  });
 
-	it("ヘアピンが2番目のダイナミクス以降に始まる場合は重複判定する", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 480,
-					measure: 2,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-			hairpins: [{ staffIdx: 0, startTick: 480, endTick: 960 }],
-		});
-		const issues = duplicateDynamicsChecker.run(ir);
-		expect(issues).toHaveLength(1);
-	});
+  it("ヘアピンが2番目のダイナミクス以降に始まる場合は重複判定する", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 480, endTick: 960 }],
+    });
+    const issues = duplicateDynamicsChecker.run(ir);
+    expect(issues).toHaveLength(1);
+  });
 });
 
 // ─── final-barline ──────────────────────────────────────────────────────────
 
 describe("final-barline checker", () => {
-	it("最終 barline が終止線でない → info 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.BAR_LINE,
-				staff: 0,
-				tick: 1920,
-				measure: 4,
-				barlineKind: BK.OTHER,
-			},
-		]);
-		const issues = finalBarlineChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-		expect(issues[0].measure).toBe(4);
-	});
+  it("最終 barline が終止線でない → info 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.BAR_LINE,
+        staff: 0,
+        tick: 1920,
+        measure: 4,
+        barlineKind: BK.OTHER,
+      },
+    ]);
+    const issues = finalBarlineChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+    expect(issues[0].measure).toBe(4);
+  });
 
-	it("最終 barline が FINAL → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.BAR_LINE,
-				staff: 0,
-				tick: 1920,
-				measure: 4,
-				barlineKind: BK.FINAL,
-			},
-		]);
-		expect(finalBarlineChecker.run(ir)).toHaveLength(0);
-	});
+  it("最終 barline が FINAL → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.BAR_LINE,
+        staff: 0,
+        tick: 1920,
+        measure: 4,
+        barlineKind: BK.FINAL,
+      },
+    ]);
+    expect(finalBarlineChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("複縦線がある途中 barline は無視し、最後の barline のみ判定", () => {
-		const ir = cleanIR([
-			{
-				kind: K.BAR_LINE,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				barlineKind: BK.DOUBLE,
-			},
-			{
-				kind: K.BAR_LINE,
-				staff: 0,
-				tick: 1920,
-				measure: 4,
-				barlineKind: BK.FINAL,
-			},
-		]);
-		expect(finalBarlineChecker.run(ir)).toHaveLength(0);
-	});
+  it("複縦線がある途中 barline は無視し、最後の barline のみ判定", () => {
+    const ir = cleanIR([
+      {
+        kind: K.BAR_LINE,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        barlineKind: BK.DOUBLE,
+      },
+      {
+        kind: K.BAR_LINE,
+        staff: 0,
+        tick: 1920,
+        measure: 4,
+        barlineKind: BK.FINAL,
+      },
+    ]);
+    expect(finalBarlineChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("barline が一つもない → 0件（誤検出を抑制）", () => {
-		expect(finalBarlineChecker.run(cleanIR())).toHaveLength(0);
-	});
+  it("barline が一つもない → 0件（誤検出を抑制）", () => {
+    expect(finalBarlineChecker.run(cleanIR())).toHaveLength(0);
+  });
 });
 
 // ─── sul-tasto-ord ──────────────────────────────────────────────────────────
 
 describe("sul-tasto-ord checker", () => {
-	it("sul tasto のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "sul tasto",
-				textRaw: "sul tasto",
-			},
-		]);
-		const issues = sulTastoOrdChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("sul tasto のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "sul tasto",
+        textRaw: "sul tasto",
+      },
+    ]);
+    const issues = sulTastoOrdChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("sul tasto → ord. で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "sul tasto",
-				textRaw: "sul tasto",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "ord.",
-				textRaw: "ord.",
-			},
-		]);
-		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
-	});
+  it("sul tasto → ord. で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "sul tasto",
+        textRaw: "sul tasto",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "ord.",
+        textRaw: "ord.",
+      },
+    ]);
+    expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("sul tasto → arco で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "sul tasto",
-				textRaw: "sul tasto",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
-	});
+  it("sul tasto → arco で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "sul tasto",
+        textRaw: "sul tasto",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("sul tasto なしで arco のみ → 0件（on 状態未経験の off 指示は不問）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
-	});
+  it("sul tasto なしで arco のみ → 0件（on 状態未経験の off 指示は不問）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("sul tasto なしで ord. のみ → 0件（on 状態未経験の off 指示は不問）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "ord.",
-				textRaw: "ord.",
-			},
-		]);
-		expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
-	});
+  it("sul tasto なしで ord. のみ → 0件（on 状態未経験の off 指示は不問）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "ord.",
+        textRaw: "ord.",
+      },
+    ]);
+    expect(sulTastoOrdChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── sul-pont-ord ────────────────────────────────────────────────────────────
 
 describe("sul-pont-ord checker", () => {
-	it("sul pont. のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "sul pont.",
-				textRaw: "sul pont.",
-			},
-		]);
-		const issues = sulPontOrdChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("sul pont. のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "sul pont.",
+        textRaw: "sul pont.",
+      },
+    ]);
+    const issues = sulPontOrdChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("sul ponticello → ord. で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "sul ponticello",
-				textRaw: "sul ponticello",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "ord.",
-				textRaw: "ord.",
-			},
-		]);
-		expect(sulPontOrdChecker.run(ir)).toHaveLength(0);
-	});
+  it("sul ponticello → ord. で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "sul ponticello",
+        textRaw: "sul ponticello",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "ord.",
+        textRaw: "ord.",
+      },
+    ]);
+    expect(sulPontOrdChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── con-legno-arco ──────────────────────────────────────────────────────────
 
 describe("con-legno-arco checker", () => {
-	it("con legno のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "con legno",
-				textRaw: "con legno",
-			},
-		]);
-		const issues = conLegnoArcoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("con legno のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "con legno",
+        textRaw: "con legno",
+      },
+    ]);
+    const issues = conLegnoArcoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("col legno → arco で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "col legno",
-				textRaw: "col legno",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		expect(conLegnoArcoChecker.run(ir)).toHaveLength(0);
-	});
+  it("col legno → arco で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "col legno",
+        textRaw: "col legno",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    expect(conLegnoArcoChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("con legno 連続指示 → warning 1件（前回小節が記録される）", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "con legno",
-				textRaw: "con legno",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "con legno",
-				textRaw: "con legno",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 1440,
-				measure: 4,
-				textNorm: "arco",
-				textRaw: "arco",
-			},
-		]);
-		const issues = conLegnoArcoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].detail?.previousMeasure).toBe(2);
-	});
+  it("con legno 連続指示 → warning 1件（前回小節が記録される）", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "con legno",
+        textRaw: "con legno",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "con legno",
+        textRaw: "con legno",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 1440,
+        measure: 4,
+        textNorm: "arco",
+        textRaw: "arco",
+      },
+    ]);
+    const issues = conLegnoArcoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].detail?.previousMeasure).toBe(2);
+  });
 });
 
 // ─── rest-annotation（追加ケース）──────────────────────────────────────────
 
 describe("rest-annotation checker（追加ケース）", () => {
-	it("休符に pizz. (STAFF_TEXT) → error 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{ kind: K.REST, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.STAFF_TEXT,
-					staff: 0,
-					tick: 480,
-					measure: 2,
-					textNorm: "pizz.",
-					textRaw: "pizz.",
-				},
-			],
-		});
-		const issues = restAnnotationChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("error");
-	});
+  it("休符に pizz. (STAFF_TEXT) → error 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        { kind: K.REST, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.STAFF_TEXT,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "pizz.",
+          textRaw: "pizz.",
+        },
+      ],
+    });
+    const issues = restAnnotationChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("error");
+  });
 
-	it("音符の位置に pizz. (STAFF_TEXT) → 0件（休符のみ対象）", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{
-					kind: K.STAFF_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "pizz.",
-					textRaw: "pizz.",
-				},
-			],
-		});
-		expect(restAnnotationChecker.run(ir)).toHaveLength(0);
-	});
+  it("音符の位置に pizz. (STAFF_TEXT) → 0件（休符のみ対象）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        {
+          kind: K.STAFF_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "pizz.",
+          textRaw: "pizz.",
+        },
+      ],
+    });
+    expect(restAnnotationChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("複数スタッフで複数の違反 → 各スタッフ分を検出", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.REST, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.REST, staff: 1, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{
-					kind: K.DYNAMIC,
-					staff: 1,
-					tick: 0,
-					measure: 1,
-					textNorm: "p",
-					textRaw: "p",
-				},
-			],
-		});
-		const issues = restAnnotationChecker.run(ir);
-		expect(issues).toHaveLength(2);
-		const partNames = issues.map((i) => i.partName).sort();
-		expect(partNames).toEqual(["Vn1", "Vn2"]);
-	});
+  it("複数スタッフで複数の違反 → 各スタッフ分を検出", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.REST, staff: 0, tick: 0, measure: 1 },
+        { kind: K.REST, staff: 1, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 1,
+          tick: 0,
+          measure: 1,
+          textNorm: "p",
+          textRaw: "p",
+        },
+      ],
+    });
+    const issues = restAnnotationChecker.run(ir);
+    expect(issues).toHaveLength(2);
+    const partNames = issues.map((i) => i.partName).sort();
+    expect(partNames).toEqual(["Vn1", "Vn2"]);
+  });
 
-	it("音符の位置にダイナミクス → 0件（休符のみ対象）", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-		});
-		expect(restAnnotationChecker.run(ir)).toHaveLength(0);
-	});
+  it("音符の位置にダイナミクス → 0件（休符のみ対象）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+    });
+    expect(restAnnotationChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── tempo-barline（追加ケース）────────────────────────────────────────────
 
 describe("tempo-barline checker（追加ケース）", () => {
-	it("同テンポ値への変更はスキップされる（テンポ同一なら info を出さない）", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 960,
-					measure: 3,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
-			],
-		});
-		expect(tempoBarlineChecker.run(ir)).toHaveLength(0);
-	});
+  it("同テンポ値への変更はスキップされる（テンポ同一なら info を出さない）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 960,
+          measure: 3,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
+      ],
+    });
+    expect(tempoBarlineChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("テンポ変更が2回あり両方複縦線なし → info 2件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					tempo: 2.0,
-					textNorm: "allegro",
-					textRaw: "Allegro",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 960,
-					measure: 3,
-					tempo: 3.0,
-					textNorm: "presto",
-					textRaw: "Presto",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
-				{ kind: K.CHORD, staff: 0, tick: 1440, measure: 4 },
-				{
-					kind: K.TEMPO_TEXT,
-					staff: 0,
-					tick: 1920,
-					measure: 5,
-					tempo: 1.5,
-					textNorm: "andante",
-					textRaw: "Andante",
-				},
-				{ kind: K.CHORD, staff: 0, tick: 1920, measure: 5 },
-			],
-		});
-		const issues = tempoBarlineChecker.run(ir);
-		expect(issues).toHaveLength(2);
-	});
+  it("テンポ変更が2回あり両方複縦線なし → info 2件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: 2.0,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 960,
+          measure: 3,
+          tempo: 3.0,
+          textNorm: "presto",
+          textRaw: "Presto",
+        },
+        { kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
+        { kind: K.CHORD, staff: 0, tick: 1440, measure: 4 },
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 1920,
+          measure: 5,
+          tempo: 1.5,
+          textNorm: "andante",
+          textRaw: "Andante",
+        },
+        { kind: K.CHORD, staff: 0, tick: 1920, measure: 5 },
+      ],
+    });
+    const issues = tempoBarlineChecker.run(ir);
+    expect(issues).toHaveLength(2);
+  });
 });
 
 // ─── coda-segno ──────────────────────────────────────────────────────────────
 
 describe("coda-segno checker", () => {
-	it("D.S. があるが Segno なし → error 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "d.s.",
-				textRaw: "D.S.",
-			},
-		]);
-		const issues = codaSegnoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("error");
-	});
+  it("D.S. があるが Segno なし → error 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "d.s.",
+        textRaw: "D.S.",
+      },
+    ]);
+    const issues = codaSegnoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("error");
+  });
 
-	it("D.S. al Coda があるが Segno も Coda もなし → error 2件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "d.s. al coda",
-				textRaw: "D.S. al Coda",
-			},
-		]);
-		const issues = codaSegnoChecker.run(ir);
-		expect(issues).toHaveLength(2);
-	});
+  it("D.S. al Coda があるが Segno も Coda もなし → error 2件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "d.s. al coda",
+        textRaw: "D.S. al Coda",
+      },
+    ]);
+    const issues = codaSegnoChecker.run(ir);
+    expect(issues).toHaveLength(2);
+  });
 
-	it("Coda があるが al Coda 参照なし → error 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "coda",
-				textRaw: "Coda",
-			},
-		]);
-		const issues = codaSegnoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain("al Coda");
-	});
+  it("Coda があるが al Coda 参照なし → error 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "coda",
+        textRaw: "Coda",
+      },
+    ]);
+    const issues = codaSegnoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain("al Coda");
+  });
 
-	it("D.S. al Coda + Segno + Coda すべて揃っている → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 0,
-				measure: 1,
-				textNorm: "segno",
-				textRaw: "Segno",
-			},
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "d.s. al coda",
-				textRaw: "D.S. al Coda",
-			},
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 1440,
-				measure: 4,
-				textNorm: "coda",
-				textRaw: "Coda",
-			},
-		]);
-		expect(codaSegnoChecker.run(ir)).toHaveLength(0);
-	});
+  it("D.S. al Coda + Segno + Coda すべて揃っている → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 0,
+        measure: 1,
+        textNorm: "segno",
+        textRaw: "Segno",
+      },
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "d.s. al coda",
+        textRaw: "D.S. al Coda",
+      },
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 1440,
+        measure: 4,
+        textNorm: "coda",
+        textRaw: "Coda",
+      },
+    ]);
+    expect(codaSegnoChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("何もない → 0件", () => {
-		expect(codaSegnoChecker.run(cleanIR())).toHaveLength(0);
-	});
+  it("何もない → 0件", () => {
+    expect(codaSegnoChecker.run(cleanIR())).toHaveLength(0);
+  });
 
-	it("D.C. al Fine があるが Fine マークなし → error 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "d.c. al fine",
-				textRaw: "D.C. al Fine",
-			},
-		]);
-		const issues = codaSegnoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain("Fine");
-	});
+  it("D.C. al Fine があるが Fine マークなし → error 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "d.c. al fine",
+        textRaw: "D.C. al Fine",
+      },
+    ]);
+    const issues = codaSegnoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain("Fine");
+  });
 
-	it("D.S. al Fine があるが Fine マークなし → error 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 0,
-				measure: 1,
-				textNorm: "segno",
-				textRaw: "Segno",
-			},
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "d.s. al fine",
-				textRaw: "D.S. al Fine",
-			},
-		]);
-		const issues = codaSegnoChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain("Fine");
-	});
+  it("D.S. al Fine があるが Fine マークなし → error 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 0,
+        measure: 1,
+        textNorm: "segno",
+        textRaw: "Segno",
+      },
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "d.s. al fine",
+        textRaw: "D.S. al Fine",
+      },
+    ]);
+    const issues = codaSegnoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain("Fine");
+  });
 
-	it("D.C. al Fine + Fine マークあり → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 480,
-				measure: 2,
-				textNorm: "fine",
-				textRaw: "Fine",
-			},
-			{
-				kind: K.SYSTEM_TEXT,
-				staffIdx: -1,
-				scope: "global",
-				tick: 960,
-				measure: 3,
-				textNorm: "d.c. al fine",
-				textRaw: "D.C. al Fine",
-			},
-		]);
-		expect(codaSegnoChecker.run(ir)).toHaveLength(0);
-	});
+  it("D.C. al Fine + Fine マークあり → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 480,
+        measure: 2,
+        textNorm: "fine",
+        textRaw: "Fine",
+      },
+      {
+        kind: K.SYSTEM_TEXT,
+        staffIdx: -1,
+        scope: "global",
+        tick: 960,
+        measure: 3,
+        textNorm: "d.c. al fine",
+        textRaw: "D.C. al Fine",
+      },
+    ]);
+    expect(codaSegnoChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── irBuilder（quintetIR ヘルパー）────────────────────────────────────────
 
 describe("irBuilder quintetIR ヘルパー", () => {
-	it("quintetIR は Vn1/Vn2/Va/Vc/Cb の 5 スタッフを持つ", () => {
-		const ir = quintetIR();
-		expect(ir.meta.parts).toHaveLength(5);
-		expect(ir.meta.parts.map((p) => p.partName)).toEqual([
-			"Vn1",
-			"Vn2",
-			"Va",
-			"Vc",
-			"Cb",
-		]);
-	});
+  it("quintetIR は Vn1/Vn2/Va/Vc/Cb の 5 スタッフを持つ", () => {
+    const ir = quintetIR();
+    expect(ir.meta.parts).toHaveLength(5);
+    expect(ir.meta.parts.map((p) => p.partName)).toEqual(["Vn1", "Vn2", "Va", "Vc", "Cb"]);
+  });
 
-	it("quintetIR は全チェッカーをパスする", () => {
-		const ir = quintetIR();
-		ensureDerived(ir);
-		const issues = run(ir);
-		expect(issues).toHaveLength(0);
-	});
+  it("quintetIR は全チェッカーをパスする", () => {
+    const ir = quintetIR();
+    ensureDerived(ir);
+    const issues = run(ir);
+    expect(issues).toHaveLength(0);
+  });
 });
 
 // ─── enabledRules ───────────────────────────────────────────────────────────
 
 describe("enabledRules", () => {
-	it("off にした checker は実行されない", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
-		});
-		const issues = run(ir, {
-			"opening-tempo": false,
-			"first-note-dynamics": false,
-		});
-		expect(issues.filter((i) => i.ruleId === "opening-tempo")).toHaveLength(0);
-		expect(
-			issues.filter((i) => i.ruleId === "first-note-dynamics"),
-		).toHaveLength(0);
-	});
+  it("off にした checker は実行されない", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+    });
+    const issues = run(ir, {
+      "opening-tempo": false,
+      "first-note-dynamics": false,
+    });
+    expect(issues.filter((i) => i.ruleId === "opening-tempo")).toHaveLength(0);
+    expect(issues.filter((i) => i.ruleId === "first-note-dynamics")).toHaveLength(0);
+  });
 
-	it("複数ルールを off にしても他のチェッカーは動く", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.STAFF_TEXT,
-					staff: 0,
-					tick: 480,
-					measure: 2,
-					textNorm: "pizz.",
-					textRaw: "pizz.",
-				},
-			],
-		});
-		const issues = run(ir, {
-			"opening-tempo": false,
-			"first-note-dynamics": false,
-		});
-		expect(issues.filter((i) => i.ruleId === "pizz-arco")).toHaveLength(1);
-	});
+  it("複数ルールを off にしても他のチェッカーは動く", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.STAFF_TEXT,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "pizz.",
+          textRaw: "pizz.",
+        },
+      ],
+    });
+    const issues = run(ir, {
+      "opening-tempo": false,
+      "first-note-dynamics": false,
+    });
+    expect(issues.filter((i) => i.ruleId === "pizz-arco")).toHaveLength(1);
+  });
 });
 
 // ─── mute-open ────────────────────────────────────────────────────────────
 
 describe("mute-open checker", () => {
-	it("mute のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "straight mute",
-				textRaw: "straight mute",
-			},
-		]);
-		const issues = muteOpenChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("mute のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "straight mute",
+        textRaw: "straight mute",
+      },
+    ]);
+    const issues = muteOpenChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("mute → open で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "mute",
-				textRaw: "mute",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "open",
-				textRaw: "open",
-			},
-		]);
-		expect(muteOpenChecker.run(ir)).toHaveLength(0);
-	});
+  it("mute → open で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "mute",
+        textRaw: "mute",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "open",
+        textRaw: "open",
+      },
+    ]);
+    expect(muteOpenChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── una-corda ────────────────────────────────────────────────────────────
 
 describe("una-corda checker", () => {
-	it("una corda のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "una corda",
-				textRaw: "una corda",
-			},
-		]);
-		expect(unaCordaChecker.run(ir)).toHaveLength(1);
-	});
+  it("una corda のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "una corda",
+        textRaw: "una corda",
+      },
+    ]);
+    expect(unaCordaChecker.run(ir)).toHaveLength(1);
+  });
 
-	it("una corda → tre corde で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "una corda",
-				textRaw: "una corda",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "tre corde",
-				textRaw: "tre corde",
-			},
-		]);
-		expect(unaCordaChecker.run(ir)).toHaveLength(0);
-	});
+  it("una corda → tre corde で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "una corda",
+        textRaw: "una corda",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "tre corde",
+        textRaw: "tre corde",
+      },
+    ]);
+    expect(unaCordaChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── harp-table ───────────────────────────────────────────────────────────
 
 describe("harp-table checker", () => {
-	it("près de la table のまま曲が終わる → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "près de la table",
-				textRaw: "près de la table",
-			},
-		]);
-		expect(harpTableChecker.run(ir)).toHaveLength(1);
-	});
+  it("près de la table のまま曲が終わる → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "près de la table",
+        textRaw: "près de la table",
+      },
+    ]);
+    expect(harpTableChecker.run(ir)).toHaveLength(1);
+  });
 
-	it("près de la table → ordinario で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "près de la table",
-				textRaw: "près de la table",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "ordinario",
-				textRaw: "ordinario",
-			},
-		]);
-		expect(harpTableChecker.run(ir)).toHaveLength(0);
-	});
+  it("près de la table → ordinario で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "près de la table",
+        textRaw: "près de la table",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "ordinario",
+        textRaw: "ordinario",
+      },
+    ]);
+    expect(harpTableChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── tempo-change-resolution ──────────────────────────────────────────────
 
 describe("tempo-change-resolution checker", () => {
-	it("rit. が曲中で解除されないまま → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "rit.",
-				textRaw: "rit.",
-			},
-			// rit. より後に音楽（小節 3）があるので「曲尾の最終 rit.」ではない
-			{ kind: K.CHORD, staff: 0, tick: 1920, measure: 3 },
-		]);
-		const issues = tempoChangeResolutionChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("rit. が曲中で解除されないまま → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "rit.",
+        textRaw: "rit.",
+      },
+      // rit. より後に音楽（小節 3）があるので「曲尾の最終 rit.」ではない
+      { kind: K.CHORD, staff: 0, tick: 1920, measure: 3 },
+    ]);
+    const issues = tempoChangeResolutionChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("曲尾の rit.（最後の音楽小節）は誤検出しない → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "rit.",
-				textRaw: "rit.",
-			},
-			// rit. と同じ最終小節までしか音楽が無い → 曲尾の最終的なテンポ変化
-			{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-		]);
-		expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
-	});
+  it("曲尾の rit.（最後の音楽小節）は誤検出しない → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "rit.",
+        textRaw: "rit.",
+      },
+      // rit. と同じ最終小節までしか音楽が無い → 曲尾の最終的なテンポ変化
+      { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+    ]);
+    expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("rit. → a tempo で解除 → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "rit.",
-				textRaw: "rit.",
-			},
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				textNorm: "a tempo",
-				textRaw: "a tempo",
-			},
-		]);
-		expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
-	});
+  it("rit. → a tempo で解除 → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "rit.",
+        textRaw: "rit.",
+      },
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "a tempo",
+        textRaw: "a tempo",
+      },
+    ]);
+    expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("accel. → 後続の新しいテンポ表記でも解除とみなす → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.STAFF_TEXT,
-				staff: 0,
-				tick: 480,
-				measure: 2,
-				textNorm: "accel.",
-				textRaw: "accel.",
-			},
-			{
-				kind: K.TEMPO_TEXT,
-				staff: 0,
-				tick: 960,
-				measure: 3,
-				tempo: 2.5,
-				textNorm: "presto",
-				textRaw: "Presto",
-			},
-		]);
-		expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
-	});
+  it("accel. → 後続の新しいテンポ表記でも解除とみなす → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "accel.",
+        textRaw: "accel.",
+      },
+      {
+        kind: K.TEMPO_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        tempo: 2.5,
+        textNorm: "presto",
+        textRaw: "Presto",
+      },
+    ]);
+    expect(tempoChangeResolutionChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── simultaneous-dynamics ────────────────────────────────────────────────
 
 describe("simultaneous-dynamics checker", () => {
-	it("同じ位置に f と p が同時 → warning 1件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.DYNAMIC,
-				staff: 0,
-				tick: 0,
-				measure: 1,
-				textNorm: "p",
-				textRaw: "p",
-			},
-		]);
-		const issues = simultaneousDynamicsChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("同じ位置に f と p が同時 → warning 1件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.DYNAMIC,
+        staff: 0,
+        tick: 0,
+        measure: 1,
+        textNorm: "p",
+        textRaw: "p",
+      },
+    ]);
+    const issues = simultaneousDynamicsChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("同じ位置に同じ強弱が重なるだけなら衝突扱いしない → 0件", () => {
-		const ir = cleanIR([
-			{
-				kind: K.DYNAMIC,
-				staff: 0,
-				tick: 0,
-				measure: 1,
-				textNorm: "f",
-				textRaw: "f",
-			},
-		]);
-		expect(simultaneousDynamicsChecker.run(ir)).toHaveLength(0);
-	});
+  it("同じ位置に同じ強弱が重なるだけなら衝突扱いしない → 0件", () => {
+    const ir = cleanIR([
+      {
+        kind: K.DYNAMIC,
+        staff: 0,
+        tick: 0,
+        measure: 1,
+        textNorm: "f",
+        textRaw: "f",
+      },
+    ]);
+    expect(simultaneousDynamicsChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── hairpin-target-dynamic ───────────────────────────────────────────────
 
 describe("hairpin-target-dynamic checker", () => {
-	it("曲中のヘアピン終端にダイナミクスが無い → info 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-				// ヘアピン終端(480)より後に音楽(960)があるので「曲尾のヘアピン」ではない
-				{ kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
-			],
-			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
-		});
-		const issues = hairpinTargetDynamicChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-	});
+  it("曲中のヘアピン終端にダイナミクスが無い → info 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+        // ヘアピン終端(480)より後に音楽(960)があるので「曲尾のヘアピン」ではない
+        { kind: K.CHORD, staff: 0, tick: 960, measure: 3 },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    const issues = hairpinTargetDynamicChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+  });
 
-	it("曲尾まで伸びるヘアピン（dim. al niente 等）は誤検出しない → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-			],
-			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
-		});
-		// lastTick === 480、ヘアピン終端も 480 → 曲尾のヘアピンとして除外
-		expect(hairpinTargetDynamicChecker.run(ir)).toHaveLength(0);
-	});
+  it("曲尾まで伸びるヘアピン（dim. al niente 等）は誤検出しない → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    // lastTick === 480、ヘアピン終端も 480 → 曲尾のヘアピンとして除外
+    expect(hairpinTargetDynamicChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("ヘアピン終端にダイナミクスがある → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 480,
-					measure: 2,
-					textNorm: "ff",
-					textRaw: "ff",
-				},
-			],
-			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
-		});
-		expect(hairpinTargetDynamicChecker.run(ir)).toHaveLength(0);
-	});
+  it("ヘアピン終端にダイナミクスがある → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 2 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "ff",
+          textRaw: "ff",
+        },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    expect(hairpinTargetDynamicChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── rehearsal-mark-order ─────────────────────────────────────────────────
 
 describe("rehearsal-mark-order checker", () => {
-	it("A → B → C は昇順 → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 0,
-					measure: 1,
-					textRaw: "A",
-				},
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 480,
-					measure: 2,
-					textRaw: "B",
-				},
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 960,
-					measure: 3,
-					textRaw: "C",
-				},
-			],
-		});
-		expect(rehearsalMarkOrderChecker.run(ir)).toHaveLength(0);
-	});
+  it("A → B → C は昇順 → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 0,
+          measure: 1,
+          textRaw: "A",
+        },
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 480,
+          measure: 2,
+          textRaw: "B",
+        },
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 960,
+          measure: 3,
+          textRaw: "C",
+        },
+      ],
+    });
+    expect(rehearsalMarkOrderChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("B → A は順序逆転 → info 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 0,
-					measure: 1,
-					textRaw: "B",
-				},
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 480,
-					measure: 2,
-					textRaw: "A",
-				},
-			],
-		});
-		const issues = rehearsalMarkOrderChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-	});
+  it("B → A は順序逆転 → info 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 0,
+          measure: 1,
+          textRaw: "B",
+        },
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 480,
+          measure: 2,
+          textRaw: "A",
+        },
+      ],
+    });
+    const issues = rehearsalMarkOrderChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+  });
 
-	it("A → A は重複 → 1件（順序判定は重ねない）", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 0,
-					measure: 1,
-					textRaw: "A",
-				},
-				{
-					kind: K.REHEARSAL_MARK,
-					staffIdx: -1,
-					scope: "global",
-					tick: 480,
-					measure: 2,
-					textRaw: "A",
-				},
-			],
-		});
-		const issues = rehearsalMarkOrderChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].message).toContain("重複");
-	});
+  it("A → A は重複 → 1件（順序判定は重ねない）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 0,
+          measure: 1,
+          textRaw: "A",
+        },
+        {
+          kind: K.REHEARSAL_MARK,
+          staffIdx: -1,
+          scope: "global",
+          tick: 480,
+          measure: 2,
+          textRaw: "A",
+        },
+      ],
+    });
+    const issues = rehearsalMarkOrderChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain("重複");
+  });
 });
 
 // ─── repeat-barline-match ─────────────────────────────────────────────────
 
 describe("repeat-barline-match checker", () => {
-	const repeatBar = (tick: number, measure: number, kind: string) => ({
-		kind: K.BAR_LINE,
-		staff: 0,
-		tick,
-		measure,
-		barlineKind: kind,
-	});
+  const repeatBar = (tick: number, measure: number, kind: string) => ({
+    kind: K.BAR_LINE,
+    staff: 0,
+    tick,
+    measure,
+    barlineKind: kind,
+  });
 
-	it("開始リピートに終了が無い → warning 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				repeatBar(0, 1, BK.REPEAT_START),
-			],
-		});
-		const issues = repeatBarlineMatchChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("開始リピートに終了が無い → warning 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }, repeatBar(0, 1, BK.REPEAT_START)],
+    });
+    const issues = repeatBarlineMatchChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("開始 → 終了 で対応 → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				repeatBar(0, 1, BK.REPEAT_START),
-				repeatBar(1920, 2, BK.REPEAT_END),
-			],
-		});
-		expect(repeatBarlineMatchChecker.run(ir)).toHaveLength(0);
-	});
+  it("開始 → 終了 で対応 → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [repeatBar(0, 1, BK.REPEAT_START), repeatBar(1920, 2, BK.REPEAT_END)],
+    });
+    expect(repeatBarlineMatchChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("終了リピート単独（曲頭からの反復）は許容 → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [repeatBar(1920, 2, BK.REPEAT_END)],
-		});
-		expect(repeatBarlineMatchChecker.run(ir)).toHaveLength(0);
-	});
+  it("終了リピート単独（曲頭からの反復）は許容 → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [repeatBar(1920, 2, BK.REPEAT_END)],
+    });
+    expect(repeatBarlineMatchChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("開始 → 開始終了(both) は both が新たな未対応の開始になる → warning 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				repeatBar(0, 1, BK.REPEAT_START),
-				repeatBar(1920, 2, BK.REPEAT_BOTH),
-			],
-		});
-		const issues = repeatBarlineMatchChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].measure).toBe(2);
-	});
+  it("開始 → 開始終了(both) は both が新たな未対応の開始になる → warning 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [repeatBar(0, 1, BK.REPEAT_START), repeatBar(1920, 2, BK.REPEAT_BOTH)],
+    });
+    const issues = repeatBarlineMatchChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].measure).toBe(2);
+  });
 });
 
 // ─── tie-pitch-mismatch ───────────────────────────────────────────────────
 
 describe("tie-pitch-mismatch checker", () => {
-	it("異なる音高のタイ → warning 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
-			ties: [
-				{
-					staffIdx: 0,
-					voice: 0,
-					startTick: 0,
-					endTick: 480,
-					startPitch: 60,
-					endPitch: 62,
-				},
-			],
-		});
-		const issues = tiePitchMismatchChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-		expect(issues[0].measure).toBe(1);
-	});
+  it("異なる音高のタイ → warning 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+      ties: [
+        {
+          staffIdx: 0,
+          voice: 0,
+          startTick: 0,
+          endTick: 480,
+          startPitch: 60,
+          endPitch: 62,
+        },
+      ],
+    });
+    const issues = tiePitchMismatchChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+    expect(issues[0].measure).toBe(1);
+  });
 
-	it("同じ音高のタイ → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
-			ties: [
-				{
-					staffIdx: 0,
-					voice: 0,
-					startTick: 0,
-					endTick: 480,
-					startPitch: 60,
-					endPitch: 60,
-				},
-			],
-		});
-		expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
-	});
+  it("同じ音高のタイ → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+      ties: [
+        {
+          staffIdx: 0,
+          voice: 0,
+          startTick: 0,
+          endTick: 480,
+          startPitch: 60,
+          endPitch: 60,
+        },
+      ],
+    });
+    expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("端点の音高が不明(null)なら判定しない → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
-			ties: [
-				{
-					staffIdx: 0,
-					voice: 0,
-					startTick: 0,
-					endTick: 480,
-					startPitch: 60,
-					endPitch: null,
-				},
-			],
-		});
-		expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
-	});
+  it("端点の音高が不明(null)なら判定しない → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+      ties: [
+        {
+          staffIdx: 0,
+          voice: 0,
+          startTick: 0,
+          endTick: 480,
+          startPitch: 60,
+          endPitch: null,
+        },
+      ],
+    });
+    expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── tpc spelling helpers ─────────────────────────────────────────────────
 
 describe("tpc spelling helpers", () => {
-	it("tpcToStep returns 0=C..6=B", () => {
-		expect(tpcToStep(14)).toBe(0); // C
-		expect(tpcToStep(13)).toBe(3); // F
-		expect(tpcToStep(20)).toBe(3); // F#（同じステップ F）
-		expect(tpcToStep(19)).toBe(6); // B
-	});
+  it("tpcToStep returns 0=C..6=B", () => {
+    expect(tpcToStep(14)).toBe(0); // C
+    expect(tpcToStep(13)).toBe(3); // F
+    expect(tpcToStep(20)).toBe(3); // F#（同じステップ F）
+    expect(tpcToStep(19)).toBe(6); // B
+  });
 
-	it("tpcToAlter returns the chromatic alteration", () => {
-		expect(tpcToAlter(14)).toBe(0); // C
-		expect(tpcToAlter(20)).toBe(1); // F#
-		expect(tpcToAlter(21)).toBe(1); // C#
-		expect(tpcToAlter(12)).toBe(-1); // Bb
-	});
+  it("tpcToAlter returns the chromatic alteration", () => {
+    expect(tpcToAlter(14)).toBe(0); // C
+    expect(tpcToAlter(20)).toBe(1); // F#
+    expect(tpcToAlter(21)).toBe(1); // C#
+    expect(tpcToAlter(12)).toBe(-1); // Bb
+  });
 
-	it("tpcToName composes letter + accidental", () => {
-		expect(tpcToName(14)).toBe("C");
-		expect(tpcToName(13)).toBe("F");
-		expect(tpcToName(20)).toBe("F#");
-		expect(tpcToName(12)).toBe("Bb");
-	});
+  it("tpcToName composes letter + accidental", () => {
+    expect(tpcToName(14)).toBe("C");
+    expect(tpcToName(13)).toBe("F");
+    expect(tpcToName(20)).toBe("F#");
+    expect(tpcToName(12)).toBe("Bb");
+  });
 });
 
 // ─── courtesy-accidental ──────────────────────────────────────────────────
 
 describe("courtesy-accidental checker", () => {
-	const fSharp = { pitch: 66, tpc: 20, line: 5, accidentalShown: true };
-	const fNatural = { pitch: 65, tpc: 13, line: 5, accidentalShown: false };
-	const fSharpShown = { pitch: 66, tpc: 20, line: 5, accidentalShown: true };
+  const fSharp = { pitch: 66, tpc: 20, line: 5, accidentalShown: true };
+  const fNatural = { pitch: 65, tpc: 13, line: 5, accidentalShown: false };
+  const fSharpShown = { pitch: 66, tpc: 20, line: 5, accidentalShown: true };
 
-	it("前小節の F# → 次小節の F（記号なし）→ info 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 0,
-					measure: 1,
-					notes: [fSharp],
-				},
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 1920,
-					measure: 2,
-					notes: [fNatural],
-				},
-			],
-		});
-		const issues = courtesyAccidentalChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-		expect(issues[0].measure).toBe(2);
-		expect(issues[0].message).toContain("F");
-	});
+  it("前小節の F# → 次小節の F（記号なし）→ info 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 0,
+          measure: 1,
+          notes: [fSharp],
+        },
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 1920,
+          measure: 2,
+          notes: [fNatural],
+        },
+      ],
+    });
+    const issues = courtesyAccidentalChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+    expect(issues[0].measure).toBe(2);
+    expect(issues[0].message).toContain("F");
+  });
 
-	it("次小節でも臨時記号が表示されているなら提案しない → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 0,
-					measure: 1,
-					notes: [fSharp],
-				},
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 1920,
-					measure: 2,
-					notes: [fSharpShown],
-				},
-			],
-		});
-		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
-	});
+  it("次小節でも臨時記号が表示されているなら提案しない → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 0,
+          measure: 1,
+          notes: [fSharp],
+        },
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 1920,
+          measure: 2,
+          notes: [fSharpShown],
+        },
+      ],
+    });
+    expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("直前の小節でなければ提案しない（小節が離れている）→ 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 0,
-					measure: 1,
-					notes: [fSharp],
-				},
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 3840,
-					measure: 3,
-					notes: [fNatural],
-				},
-			],
-		});
-		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
-	});
+  it("直前の小節でなければ提案しない（小節が離れている）→ 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 0,
+          measure: 1,
+          notes: [fSharp],
+        },
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 3840,
+          measure: 3,
+          notes: [fNatural],
+        },
+      ],
+    });
+    expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("前に臨時記号が無ければ提案しない → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.CHORD,
-					staff: 0,
-					voice: 0,
-					tick: 1920,
-					measure: 2,
-					notes: [fNatural],
-				},
-			],
-		});
-		expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
-	});
+  it("前に臨時記号が無ければ提案しない → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.CHORD,
+          staff: 0,
+          voice: 0,
+          tick: 1920,
+          measure: 2,
+          notes: [fNatural],
+        },
+      ],
+    });
+    expect(courtesyAccidentalChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── spanner-on-rest ─────────────────────────────────────────────────────────
 
 describe("spanner-on-rest checker", () => {
-	it("ヘアピンの終了端点が休符上 → warning 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.REST, staff: 0, tick: 480, measure: 1 },
-			],
-			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
-		});
-		const issues = spannerOnRestChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("warning");
-	});
+  it("ヘアピンの終了端点が休符上 → warning 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        { kind: K.REST, staff: 0, tick: 480, measure: 1 },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    const issues = spannerOnRestChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
 
-	it("スラーの開始端点が休符上 → warning 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.REST, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
-			],
-			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
-		});
-		const issues = spannerOnRestChecker.run(ir);
-		expect(issues).toHaveLength(1);
-	});
+  it("スラーの開始端点が休符上 → warning 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.REST, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
+      ],
+      slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
+    });
+    const issues = spannerOnRestChecker.run(ir);
+    expect(issues).toHaveLength(1);
+  });
 
-	it("端点が音符上 → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
-			],
-			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
-		});
-		expect(spannerOnRestChecker.run(ir)).toHaveLength(0);
-	});
+  it("端点が音符上 → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    expect(spannerOnRestChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("同 tick に voice 違いの音符と休符が共存 → 0件（音符優先）", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, voice: 0, tick: 0, measure: 1 },
-				{ kind: K.CHORD, staff: 0, voice: 0, tick: 480, measure: 1 },
-				{ kind: K.REST, staff: 0, voice: 1, tick: 480, measure: 1 },
-			],
-			hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
-		});
-		expect(spannerOnRestChecker.run(ir)).toHaveLength(0);
-	});
+  it("同 tick に voice 違いの音符と休符が共存 → 0件（音符優先）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, voice: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, voice: 0, tick: 480, measure: 1 },
+        { kind: K.REST, staff: 0, voice: 1, tick: 480, measure: 1 },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    expect(spannerOnRestChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── slur-single-note ────────────────────────────────────────────────────────
 
 describe("slur-single-note checker", () => {
-	it("単一音スラー（start==end）→ info 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
-			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 0 }],
-		});
-		const issues = slurSingleNoteChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-	});
+  it("単一音スラー（start==end）→ info 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+      slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 0 }],
+    });
+    const issues = slurSingleNoteChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+  });
 
-	it("複数音スラー（start<end）→ 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
-			slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
-		});
-		expect(slurSingleNoteChecker.run(ir)).toHaveLength(0);
-	});
+  it("複数音スラー（start<end）→ 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 }],
+      slurs: [{ staffIdx: 0, voice: 0, startTick: 0, endTick: 480 }],
+    });
+    expect(slurSingleNoteChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── cresc-text-resolution ───────────────────────────────────────────────────
 
 describe("cresc-text-resolution checker", () => {
-	it("cresc. の後に強弱記号なし → info 1件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{ kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "cresc.",
-					textRaw: "cresc.",
-				},
-			],
-		});
-		const issues = crescTextResolutionChecker.run(ir);
-		expect(issues).toHaveLength(1);
-		expect(issues[0].severity).toBe("info");
-	});
+  it("cresc. の後に強弱記号なし → info 1件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "cresc.",
+          textRaw: "cresc.",
+        },
+      ],
+    });
+    const issues = crescTextResolutionChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+  });
 
-	it("cresc. の後に同 staff の強弱記号 → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "cresc.",
-					textRaw: "cresc.",
-				},
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 480,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-		});
-		expect(crescTextResolutionChecker.run(ir)).toHaveLength(0);
-	});
+  it("cresc. の後に同 staff の強弱記号 → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "cresc.",
+          textRaw: "cresc.",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+    });
+    expect(crescTextResolutionChecker.run(ir)).toHaveLength(0);
+  });
 
-	it("cresc. の後に global scope の強弱記号 → 0件", () => {
-		const ir = buildIR({
-			parts: [{ partName: "Vn1" }],
-			events: [
-				{
-					kind: K.DYNAMIC,
-					staff: 0,
-					tick: 0,
-					measure: 1,
-					textNorm: "cresc.",
-					textRaw: "cresc.",
-				},
-				{
-					kind: K.DYNAMIC,
-					scope: "global",
-					tick: 480,
-					measure: 1,
-					textNorm: "f",
-					textRaw: "f",
-				},
-			],
-		});
-		expect(crescTextResolutionChecker.run(ir)).toHaveLength(0);
-	});
+  it("cresc. の後に global scope の強弱記号 → 0件", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "cresc.",
+          textRaw: "cresc.",
+        },
+        {
+          kind: K.DYNAMIC,
+          scope: "global",
+          tick: 480,
+          measure: 1,
+          textNorm: "f",
+          textRaw: "f",
+        },
+      ],
+    });
+    expect(crescTextResolutionChecker.run(ir)).toHaveLength(0);
+  });
 });

@@ -1,20 +1,20 @@
 {
-	"$schema": "../../node_modules/wrangler/config-schema.json",
-	"name": "musescore-linter-web",
-	// wrangler 同梱の workerd がサポートする範囲内にすること。
-	// 先の日付にすると `Compatibility date ... is in the future` で dev が起動しない。
-	"compatibility_date": "2026-07-30",
-	// `main` を書かない = assets-only Worker。リクエストを受け取るコードが
-	// 一切デプロイされないので、「アップロードしたファイルは送信されない」が
-	// 実装の努力ではなく構成から従う。
-	//
-	// この構成では `assets.binding` を書いてはいけない（`main` がある場合のみ有効）。
-	"assets": {
-		"directory": "./dist",
-		"html_handling": "auto-trailing-slash",
-		// 1 ページの静的サイトなので single-page-application（存在しないパスに
-		// 200 + index.html を返す）ではなく 404 を返す。
-		"not_found_handling": "404-page",
-	},
-	"workers_dev": true,
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "musescore-linter-web",
+  // wrangler 同梱の workerd がサポートする範囲内にすること。
+  // 先の日付にすると `Compatibility date ... is in the future` で dev が起動しない。
+  "compatibility_date": "2026-07-30",
+  // `main` を書かない = assets-only Worker。リクエストを受け取るコードが
+  // 一切デプロイされないので、「アップロードしたファイルは送信されない」が
+  // 実装の努力ではなく構成から従う。
+  //
+  // この構成では `assets.binding` を書いてはいけない（`main` がある場合のみ有効）。
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    // 1 ページの静的サイトなので single-page-application（存在しないパスに
+    // 200 + index.html を返す）ではなく 404 を返す。
+    "not_found_handling": "404-page",
+  },
+  "workers_dev": true,
 }

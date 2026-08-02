@@ -1,16 +1,16 @@
 {
-	"name": "@musescore-linter/source-musicxml",
-	"version": "1.0.0",
-	"private": true,
-	"main": "src/index.ts",
-	"types": "src/index.ts",
-	"scripts": {
-		"typecheck": "tsc --noEmit",
-		"test": "vitest run"
-	},
-	"dependencies": {
-		"@musescore-linter/core": "workspace:*",
-		"fast-xml-parser": "^5.10.1",
-		"fflate": "^0.8.3"
-	}
+  "name": "@musescore-linter/source-musicxml",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@musescore-linter/core": "workspace:*",
+    "fast-xml-parser": "^5.10.1",
+    "fflate": "^0.8.3"
+  }
 }

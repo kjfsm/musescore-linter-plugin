@@ -1,48 +1,48 @@
 {
-	"$schema": "https://unpkg.com/knip@6/schema.json",
-	"workspaces": {
-		".": {
-			"entry": ["src/bundle-entry.ts", "scripts/*.ts"]
-		},
-		"packages/musescore-api": {
-			"project": ["src/**/*.ts"]
-		},
-		"packages/core": {
-			"project": ["src/**/*.ts", "tests/**/*.ts"]
-		},
-		"packages/checkers": {
-			"project": ["src/**/*.ts", "tests/**/*.ts"]
-		},
-		"packages/source-musescore": {
-			"project": ["src/**/*.ts", "tests/**/*.ts"]
-		},
-		"packages/source-musicxml": {
-			"project": ["src/**/*.ts", "tests/**/*.ts"]
-		},
-		"packages/cli": {
-			"project": ["src/**/*.ts", "tests/**/*.ts"]
-		},
-		"apps/web": {
-			"entry": ["tests/**/*.test.ts"],
-			"project": ["src/**/*.{ts,tsx}", "tests/**/*.ts"],
-			// shadcn CLI が生成するコード。使っていない variant や下位コンポーネントを
-			// 含むのが前提なので、未使用判定の対象から外す。
-			"ignore": ["src/components/ui/**"],
-			// いずれも src/index.css の @import から使われている（knip は CSS を辿らない）。
-			// tailwindcss は @tailwindcss/vite と `@import "tailwindcss"` の両方で必要。
-			"ignoreDependencies": [
-				"@fontsource-variable/geist",
-				"shadcn",
-				"tailwindcss",
-				"tw-animate-css"
-			]
-		}
-	},
-	"ignoreExportsUsedInFile": true,
-	"ignore": [
-		// 外部から取り込んだスキル定義。プロジェクトのコードではないので
-		// 未使用ファイル判定の対象外にする（.oxfmtrc.json の ignorePatterns と同じ理由）。
-		".agents/**",
-		".claude/**"
-	]
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["src/bundle-entry.ts", "scripts/*.ts"]
+    },
+    "packages/musescore-api": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/core": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/checkers": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/source-musescore": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/source-musicxml": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/cli": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "apps/web": {
+      "entry": ["tests/**/*.test.ts"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.ts"],
+      // shadcn CLI が生成するコード。使っていない variant や下位コンポーネントを
+      // 含むのが前提なので、未使用判定の対象から外す。
+      "ignore": ["src/components/ui/**"],
+      // いずれも src/index.css の @import から使われている（knip は CSS を辿らない）。
+      // tailwindcss は @tailwindcss/vite と `@import "tailwindcss"` の両方で必要。
+      "ignoreDependencies": [
+        "@fontsource-variable/geist",
+        "shadcn",
+        "tailwindcss",
+        "tw-animate-css"
+      ]
+    }
+  },
+  "ignoreExportsUsedInFile": true,
+  "ignore": [
+    // 外部から取り込んだスキル定義。プロジェクトのコードではないので
+    // 未使用ファイル判定の対象外にする（.oxfmtrc.json の ignorePatterns と同じ理由）。
+    ".agents/**",
+    ".claude/**"
+  ]
 }

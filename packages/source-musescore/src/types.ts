@@ -1,7 +1,4 @@
-import type {
-	BarLineTypeEnum,
-	NoteTypeEnum,
-} from "@kjfsm/musescore-plugin-sdk-types";
+import type { BarLineTypeEnum, NoteTypeEnum } from "@kjfsm/musescore-plugin-sdk-types";
 
 /**
  * QML から `buildSnapshot(curScore, { noteType: NoteType, barLineType: BarLineType }, plugin)` で
@@ -9,6 +6,6 @@ import type {
  * enum を使うことでバージョン差の再採番による誤判定を防ぐ。
  */
 export interface HostEnums {
-	noteType: NoteTypeEnum;
-	barLineType: BarLineTypeEnum;
+  noteType: NoteTypeEnum;
+  barLineType: BarLineTypeEnum;
 }

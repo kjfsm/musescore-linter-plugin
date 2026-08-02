@@ -1,57 +1,57 @@
 {
-	"name": "musescore-linter-plugin",
-	"version": "2.2.1",
-	"private": true,
-	"packageManager": "pnpm@10.33.0",
-	"scripts": {
-		"build": "tsx scripts/build.ts",
-		"build:cli": "tsx scripts/build-cli.ts",
-		"build:web": "pnpm --filter @musescore-linter/web build",
-		"dev:web": "pnpm --filter @musescore-linter/web dev",
-		"preview:web": "pnpm --filter @musescore-linter/web preview",
-		"deploy:web": "pnpm --filter @musescore-linter/web deploy",
-		"lint:score": "tsx packages/cli/src/main.ts",
-		"package": "tsx scripts/package.ts",
-		"pipeline": "turbo run typecheck test build build:cli build:web package",
-		"test": "vitest run",
-		"test:coverage": "vitest run --coverage",
-		"typecheck": "tsc --noEmit && pnpm --filter @musescore-linter/web typecheck",
-		"turbo:typecheck": "turbo run typecheck",
-		"dev": "vitest",
-		"knip": "knip",
-		"lint": "oxlint && oxfmt --check",
-		"lint:fix": "oxlint --fix && oxfmt",
-		"changeset": "changeset",
-		"version": "changeset version",
-		"prepare": "simple-git-hooks"
-	},
-	"simple-git-hooks": {
-		"pre-commit": "pnpm lint"
-	},
-	"devDependencies": {
-		"@changesets/changelog-github": "^0.7.0",
-		"@changesets/cli": "^2.31.0",
-		"@musescore-linter/checkers": "workspace:*",
-		"@musescore-linter/core": "workspace:*",
-		"@musescore-linter/source-musescore": "workspace:*",
-		"@types/node": "^25.8.0",
-		"@vitest/coverage-v8": "^4.1.6",
-		"esbuild": "^0.28.0",
-		"fflate": "^0.8.3",
-		"knip": "^6.14.0",
-		"oxfmt": "0.61.0",
-		"oxlint": "^1.76.0",
-		"simple-git-hooks": "^2.13.1",
-		"tsx": "^4.22.0",
-		"turbo": "^2.9.14",
-		"typescript": "^6.0.3",
-		"vitest": "^4.1.6",
-		"wrangler": "^4.118.0"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"simple-git-hooks"
-		]
-	}
+  "name": "musescore-linter-plugin",
+  "version": "2.2.1",
+  "private": true,
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "build:cli": "tsx scripts/build-cli.ts",
+    "build:web": "pnpm --filter @musescore-linter/web build",
+    "dev:web": "pnpm --filter @musescore-linter/web dev",
+    "preview:web": "pnpm --filter @musescore-linter/web preview",
+    "deploy:web": "pnpm --filter @musescore-linter/web deploy",
+    "lint:score": "tsx packages/cli/src/main.ts",
+    "package": "tsx scripts/package.ts",
+    "pipeline": "turbo run typecheck test build build:cli build:web package",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit && pnpm --filter @musescore-linter/web typecheck",
+    "turbo:typecheck": "turbo run typecheck",
+    "dev": "vitest",
+    "knip": "knip",
+    "lint": "oxlint && oxfmt --check",
+    "lint:fix": "oxlint --fix && oxfmt",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "prepare": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
+    "@musescore-linter/checkers": "workspace:*",
+    "@musescore-linter/core": "workspace:*",
+    "@musescore-linter/source-musescore": "workspace:*",
+    "@types/node": "^25.8.0",
+    "@vitest/coverage-v8": "^4.1.6",
+    "esbuild": "^0.28.0",
+    "fflate": "^0.8.3",
+    "knip": "^6.14.0",
+    "oxfmt": "0.61.0",
+    "oxlint": "^1.76.0",
+    "simple-git-hooks": "^2.13.1",
+    "tsx": "^4.22.0",
+    "turbo": "^2.9.14",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6",
+    "wrangler": "^4.118.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "simple-git-hooks"
+    ]
+  }
 }

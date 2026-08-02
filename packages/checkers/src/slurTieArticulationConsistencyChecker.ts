@@ -3,12 +3,12 @@ import { createIssue } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 import {
-	articulationsOf,
-	chordsIn,
-	normalizeArticulationName,
-	slurCoversTick,
-	staffGroupsSharingRhythm,
-	tieCoversTick,
+  articulationsOf,
+  chordsIn,
+  normalizeArticulationName,
+  slurCoversTick,
+  staffGroupsSharingRhythm,
+  tieCoversTick,
 } from "./base/query.js";
 
 // 主声部のみ比較する（多声部の比較は将来）。
@@ -19,65 +19,59 @@ const VOICE = 0;
  * 同じリズムなら chord の tick が揃うので、プロファイルが一致すれば記号も一致しているとみなせる。
  */
 function profileOf(ir: LintIR, staffIdx: number, measure: number): string {
-	return chordsIn(ir, staffIdx, measure, VOICE)
-		.map((ch) => {
-			const arts = articulationsOf(ir, ch.id)
-				.map(normalizeArticulationName)
-				.sort()
-				.join("+");
-			const slur = slurCoversTick(ir, staffIdx, VOICE, ch.tick) ? "S" : "-";
-			const tie = tieCoversTick(ir, staffIdx, VOICE, ch.tick) ? "T" : "-";
-			return `${ch.tick}:${slur}:${tie}:${arts}`;
-		})
-		.join("|");
+  return chordsIn(ir, staffIdx, measure, VOICE)
+    .map((ch) => {
+      const arts = articulationsOf(ir, ch.id).map(normalizeArticulationName).sort().join("+");
+      const slur = slurCoversTick(ir, staffIdx, VOICE, ch.tick) ? "S" : "-";
+      const tie = tieCoversTick(ir, staffIdx, VOICE, ch.tick) ? "T" : "-";
+      return `${ch.tick}:${slur}:${tie}:${arts}`;
+    })
+    .join("|");
 }
 
 function partName(ir: LintIR, staffIdx: number): string {
-	return (
-		ir.meta?.parts?.find((p) => p.staffIdx === staffIdx)?.partName ??
-		`Staff ${staffIdx + 1}`
-	);
+  return ir.meta?.parts?.find((p) => p.staffIdx === staffIdx)?.partName ?? `Staff ${staffIdx + 1}`;
 }
 
 export const slurTieArticulationConsistencyChecker: Checker = {
-	id: "slur-tie-articulation-consistency",
-	name: "同リズム間のスラー/タイ/アーティキュレーション整合",
-	description:
-		"同じ小節で同じリズムのパート間で、スラー・タイの有無やアーティキュレーションが食い違っていないかを確認（最終判断は編曲方針による）",
-	category: "articulation",
-	severity: "info",
-	defaultEnabled: true,
-	run(ir: LintIR): Issue[] {
-		const issues: Issue[] = [];
-		const canonical = getCanonical(ir);
-		if (!canonical) return issues;
+  id: "slur-tie-articulation-consistency",
+  name: "同リズム間のスラー/タイ/アーティキュレーション整合",
+  description:
+    "同じ小節で同じリズムのパート間で、スラー・タイの有無やアーティキュレーションが食い違っていないかを確認（最終判断は編曲方針による）",
+  category: "articulation",
+  severity: "info",
+  defaultEnabled: true,
+  run(ir: LintIR): Issue[] {
+    const issues: Issue[] = [];
+    const canonical = getCanonical(ir);
+    if (!canonical) return issues;
 
-		const measures = new Set<number>();
-		for (const id of ir.index?.byKind?.[canonical.elementKinds.CHORD] ?? []) {
-			const ev = ir.events[id];
-			if (ev.voice === VOICE) measures.add(ev.measure);
-		}
+    const measures = new Set<number>();
+    for (const id of ir.index?.byKind?.[canonical.elementKinds.CHORD] ?? []) {
+      const ev = ir.events[id];
+      if (ev.voice === VOICE) measures.add(ev.measure);
+    }
 
-		for (const measure of measures) {
-			for (const group of staffGroupsSharingRhythm(ir, measure, VOICE)) {
-				const refStaff = group[0];
-				const refProfile = profileOf(ir, refStaff, measure);
-				for (const staffIdx of group.slice(1)) {
-					if (profileOf(ir, staffIdx, measure) === refProfile) continue;
-					const chords = chordsIn(ir, staffIdx, measure, VOICE);
-					issues.push(
-						createIssue(slurTieArticulationConsistencyChecker, {
-							message: `小節 ${measure}: ${partName(ir, staffIdx)} は ${partName(ir, refStaff)} と同じリズムですが、スラー/タイ/アーティキュレーションが異なります`,
-							partName: partName(ir, staffIdx),
-							staffIdx,
-							measure,
-							tick: chords[0]?.tick ?? 0,
-							detail: { comparedToStaffIdx: refStaff },
-						}),
-					);
-				}
-			}
-		}
-		return issues;
-	},
+    for (const measure of measures) {
+      for (const group of staffGroupsSharingRhythm(ir, measure, VOICE)) {
+        const refStaff = group[0];
+        const refProfile = profileOf(ir, refStaff, measure);
+        for (const staffIdx of group.slice(1)) {
+          if (profileOf(ir, staffIdx, measure) === refProfile) continue;
+          const chords = chordsIn(ir, staffIdx, measure, VOICE);
+          issues.push(
+            createIssue(slurTieArticulationConsistencyChecker, {
+              message: `小節 ${measure}: ${partName(ir, staffIdx)} は ${partName(ir, refStaff)} と同じリズムですが、スラー/タイ/アーティキュレーションが異なります`,
+              partName: partName(ir, staffIdx),
+              staffIdx,
+              measure,
+              tick: chords[0]?.tick ?? 0,
+              detail: { comparedToStaffIdx: refStaff },
+            }),
+          );
+        }
+      }
+    }
+    return issues;
+  },
 };

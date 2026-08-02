@@ -9,7 +9,7 @@ const root = document.getElementById("root");
 if (root === null) throw new Error("#root が見つかりません");
 
 createRoot(root).render(
-	<StrictMode>
-		<App />
-	</StrictMode>,
+  <StrictMode>
+    <App />
+  </StrictMode>,
 );

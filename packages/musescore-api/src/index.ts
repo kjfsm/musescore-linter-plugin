@@ -14,5 +14,5 @@ export interface TextAnnotation extends EngravingItem {}
  * オーバーライドは不要になり、SDK の `Segment.elementAt(): EngravingItem | null` を継承する。
  */
 export interface PluginSegment extends Omit<Segment, "annotations"> {
-	readonly annotations: TextAnnotation[];
+  readonly annotations: TextAnnotation[];
 }

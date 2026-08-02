@@ -10,6 +10,6 @@ export { buildIRFromMusicXML, TICKS_PER_QUARTER };
  * 中身の先頭バイトで判別するので拡張子には依存しない。
  */
 export function buildIRFromBytes(bytes: Uint8Array): LintIR {
-	const xml = isZip(bytes) ? extractMxl(bytes) : decodeXml(bytes);
-	return buildIRFromMusicXML(xml);
+  const xml = isZip(bytes) ? extractMxl(bytes) : decodeXml(bytes);
+  return buildIRFromMusicXML(xml);
 }

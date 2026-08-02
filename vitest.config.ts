@@ -6,44 +6,35 @@ import { defineConfig } from "vitest/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-	test: {
-		globals: true,
-		include: ["packages/*/tests/**/*.test.ts", "apps/*/tests/**/*.test.ts"],
-		coverage: {
-			provider: "v8",
-			reporter: ["text", "lcov"],
-			include: ["packages/*/src/**/*.ts"],
-			// MuseScore ランタイムなしでは実行不可なファイルを除外
-			exclude: ["**/snapshot.ts", "**/enumRegistry.ts"],
-			thresholds: {
-				lines: 85,
-				functions: 85,
-				branches: 60,
-			},
-		},
-	},
-	resolve: {
-		alias: {
-			"@musescore-linter/core": path.join(
-				__dirname,
-				"packages/core/src/index.ts",
-			),
-			"@musescore-linter/checkers": path.join(
-				__dirname,
-				"packages/checkers/src/index.ts",
-			),
-			"@musescore-linter/source-musescore": path.join(
-				__dirname,
-				"packages/source-musescore/src/index.ts",
-			),
-			"@musescore-linter/source-musicxml": path.join(
-				__dirname,
-				"packages/source-musicxml/src/index.ts",
-			),
-			"@musescore-linter/cli": path.join(
-				__dirname,
-				"packages/cli/src/index.ts",
-			),
-		},
-	},
+  test: {
+    globals: true,
+    include: ["packages/*/tests/**/*.test.ts", "apps/*/tests/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      include: ["packages/*/src/**/*.ts"],
+      // MuseScore ランタイムなしでは実行不可なファイルを除外
+      exclude: ["**/snapshot.ts", "**/enumRegistry.ts"],
+      thresholds: {
+        lines: 85,
+        functions: 85,
+        branches: 60,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      "@musescore-linter/core": path.join(__dirname, "packages/core/src/index.ts"),
+      "@musescore-linter/checkers": path.join(__dirname, "packages/checkers/src/index.ts"),
+      "@musescore-linter/source-musescore": path.join(
+        __dirname,
+        "packages/source-musescore/src/index.ts",
+      ),
+      "@musescore-linter/source-musicxml": path.join(
+        __dirname,
+        "packages/source-musicxml/src/index.ts",
+      ),
+      "@musescore-linter/cli": path.join(__dirname, "packages/cli/src/index.ts"),
+    },
+  },
 });

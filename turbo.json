@@ -1,66 +1,63 @@
 {
-	"$schema": "https://turbo.build/schema.json",
-	"globalDependencies": [
-		".oxlintrc.json",
-		".oxfmtrc.json",
-		".editorconfig",
-		"tsconfig.json",
-		"vitest.config.ts",
-		"pnpm-lock.yaml"
-	],
-	"tasks": {
-		"build": {
-			"description": "apps/* のフロントエンドを Vite でビルドする。ルートタスクの //#build（QML バンドル）とは別物。",
-			"dependsOn": ["^typecheck", "^test"],
-			"inputs": ["$TURBO_DEFAULT$", "!dist/**"],
-			"outputs": ["dist/**"]
-		},
-		"typecheck": {
-			"description": "TypeScript の型チェックを実行する。依存パッケージの typecheck が先に完了している必要がある。",
-			"dependsOn": ["^typecheck"]
-		},
-		"test": {
-			"description": "vitest でユニットテストを実行する。typecheck が通過していることが前提。",
-			"dependsOn": ["typecheck"],
-			"outputs": []
-		},
-		"//#build": {
-			"description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
-			"dependsOn": [
-				"@musescore-linter/musescore-api#typecheck",
-				"@musescore-linter/core#test",
-				"@musescore-linter/checkers#test",
-				"@musescore-linter/source-musescore#test"
-			],
-			"inputs": [
-				"src/**",
-				"scripts/build.ts",
-				"packages/core/src/**",
-				"packages/checkers/src/**",
-				"packages/source-musescore/src/**"
-			],
-			"outputs": ["dist/**"]
-		},
-		"//#build:cli": {
-			"description": "esbuild で musescore-lint CLI を dist-cli/ へ単一ファイルにバンドルする。QML 向けの //#build とは独立。",
-			"dependsOn": [
-				"@musescore-linter/cli#test",
-				"@musescore-linter/source-musicxml#test"
-			],
-			"inputs": [
-				"scripts/build-cli.ts",
-				"packages/cli/**",
-				"packages/core/src/**",
-				"packages/checkers/src/**",
-				"packages/source-musicxml/src/**"
-			],
-			"outputs": ["dist-cli/**"]
-		},
-		"//#package": {
-			"description": "dist/ の成果物を配布用 ZIP にパッケージングする。",
-			"dependsOn": ["//#build"],
-			"inputs": ["dist/**", "README.md", "package.json", "scripts/package.ts"],
-			"outputs": ["musescore-linter-plugin-*.zip"]
-		}
-	}
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".oxlintrc.json",
+    ".oxfmtrc.json",
+    ".editorconfig",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "pnpm-lock.yaml"
+  ],
+  "tasks": {
+    "build": {
+      "description": "apps/* のフロントエンドを Vite でビルドする。ルートタスクの //#build（QML バンドル）とは別物。",
+      "dependsOn": ["^typecheck", "^test"],
+      "inputs": ["$TURBO_DEFAULT$", "!dist/**"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "description": "TypeScript の型チェックを実行する。依存パッケージの typecheck が先に完了している必要がある。",
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "description": "vitest でユニットテストを実行する。typecheck が通過していることが前提。",
+      "dependsOn": ["typecheck"],
+      "outputs": []
+    },
+    "//#build": {
+      "description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
+      "dependsOn": [
+        "@musescore-linter/musescore-api#typecheck",
+        "@musescore-linter/core#test",
+        "@musescore-linter/checkers#test",
+        "@musescore-linter/source-musescore#test"
+      ],
+      "inputs": [
+        "src/**",
+        "scripts/build.ts",
+        "packages/core/src/**",
+        "packages/checkers/src/**",
+        "packages/source-musescore/src/**"
+      ],
+      "outputs": ["dist/**"]
+    },
+    "//#build:cli": {
+      "description": "esbuild で musescore-lint CLI を dist-cli/ へ単一ファイルにバンドルする。QML 向けの //#build とは独立。",
+      "dependsOn": ["@musescore-linter/cli#test", "@musescore-linter/source-musicxml#test"],
+      "inputs": [
+        "scripts/build-cli.ts",
+        "packages/cli/**",
+        "packages/core/src/**",
+        "packages/checkers/src/**",
+        "packages/source-musicxml/src/**"
+      ],
+      "outputs": ["dist-cli/**"]
+    },
+    "//#package": {
+      "description": "dist/ の成果物を配布用 ZIP にパッケージングする。",
+      "dependsOn": ["//#build"],
+      "inputs": ["dist/**", "README.md", "package.json", "scripts/package.ts"],
+      "outputs": ["musescore-linter-plugin-*.zip"]
+    }
+  }
 }

@@ -1,15 +1,15 @@
 {
-	"name": "@musescore-linter/musescore-api",
-	"version": "1.0.1",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"scripts": {
-		"typecheck": "tsc --noEmit"
-	},
-	"devDependencies": {
-		"@kjfsm/musescore-plugin-sdk-types": "^2.0.0"
-	}
+  "name": "@musescore-linter/musescore-api",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@kjfsm/musescore-plugin-sdk-types": "^2.0.0"
+  }
 }

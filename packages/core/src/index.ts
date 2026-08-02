@@ -1,13 +1,6 @@
 export { getAll, getById, register, reset } from "./checkerRegistry.js";
 export { CANONICAL } from "./enumRegistry.js";
-export type {
-	EventSpec,
-	HairpinSpec,
-	IRSpec,
-	PartSpec,
-	SlurSpec,
-	TieSpec,
-} from "./irBuilder.js";
+export type { EventSpec, HairpinSpec, IRSpec, PartSpec, SlurSpec, TieSpec } from "./irBuilder.js";
 export { buildIR } from "./irBuilder.js";
 export type { IssueFields } from "./issue.js";
 export { compareIssues, createIssue } from "./issue.js";
@@ -17,18 +10,18 @@ export { make as makeLogger, setLevel } from "./logger.js";
 export { tpcToAlter, tpcToName, tpcToStep } from "./pitchSpelling.js";
 
 export type {
-	CanonicalKinds,
-	Checker,
-	HostVersionInfo,
-	IRDerived,
-	IRIndex,
-	IRMeta,
-	Issue,
-	LintEvent,
-	LintIR,
-	NoteInfo,
-	Severity,
-	TextPairCheckerConfig,
-	TieInfo,
+  CanonicalKinds,
+  Checker,
+  HostVersionInfo,
+  IRDerived,
+  IRIndex,
+  IRMeta,
+  Issue,
+  LintEvent,
+  LintIR,
+  NoteInfo,
+  Severity,
+  TextPairCheckerConfig,
+  TieInfo,
 } from "./types.js";
 export { compareVersions, isNewerVersion } from "./version.js";
