@@ -44,6 +44,22 @@ jobs:
       - name: ビルド
         run: pnpm build
 
+      - name: Web のビルド
+        run: pnpm build:web
+
+      # 「アップロードしたファイルは送信されない」の実質的な検証。
+      # ネットワーク API がバンドルに現れた時点で主張が崩れるので CI で止める。
+      - name: Web が通信コードを含まないことの確認
+        run: |
+          if grep -lE "fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource" apps/web/dist/assets/*.js; then
+            echo "::error::apps/web のバンドルにネットワーク API が含まれています"
+            exit 1
+          fi
+          if grep -qE "<script[^>]*>[^<]" apps/web/dist/index.html; then
+            echo "::error::apps/web/dist/index.html にインライン script があります（CSP script-src 'self' に違反）"
+            exit 1
+          fi
+
       - name: Codecov へのカバレッジ送信
         if: always()
         uses: codecov/codecov-action@v6

@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	test: {
 		globals: true,
-		include: ["packages/*/tests/**/*.test.ts"],
+		include: ["packages/*/tests/**/*.test.ts", "apps/*/tests/**/*.test.ts"],
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "lcov"],

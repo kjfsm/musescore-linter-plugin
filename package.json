@@ -6,12 +6,16 @@
 	"scripts": {
 		"build": "tsx scripts/build.ts",
 		"build:cli": "tsx scripts/build-cli.ts",
+		"build:web": "pnpm --filter @musescore-linter/web build",
+		"dev:web": "pnpm --filter @musescore-linter/web dev",
+		"preview:web": "pnpm --filter @musescore-linter/web preview",
+		"deploy:web": "pnpm --filter @musescore-linter/web deploy",
 		"lint:score": "tsx packages/cli/src/main.ts",
 		"package": "tsx scripts/package.ts",
-		"pipeline": "turbo run typecheck test build build:cli package",
+		"pipeline": "turbo run typecheck test build build:cli build:web package",
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "tsc --noEmit && pnpm --filter @musescore-linter/web typecheck",
 		"turbo:typecheck": "turbo run typecheck",
 		"dev": "vitest",
 		"knip": "knip",
@@ -41,7 +45,8 @@
 		"tsx": "^4.22.0",
 		"turbo": "^2.9.14",
 		"typescript": "^6.0.3",
-		"vitest": "^4.1.6"
+		"vitest": "^4.1.6",
+		"wrangler": "^4.118.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
