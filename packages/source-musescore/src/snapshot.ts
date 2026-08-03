@@ -5,6 +5,7 @@ import {
   getAnnotationText,
   getArticulationNames,
   getHairpinRange,
+  getMeasureTimeSig,
   getNoteSpellings,
   getSpannerRange,
   getTempoBpm,
@@ -31,9 +32,9 @@ import {
   trackToStaffIdx,
   VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { EngravingItem, MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { EngravingItem, Measure, MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
-import type { HostVersionInfo, LintEvent, LintIR } from "@musescore-linter/core";
+import type { HostVersionInfo, LintEvent, LintIR, MeasureInfo } from "@musescore-linter/core";
 import { CANONICAL, createPerf, makeLogger } from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
@@ -117,6 +118,7 @@ function appendEvent(ir: LintIR, payload: Partial<LintEvent> & { kind: string })
   if (payload.barlineType !== undefined) ev.barlineType = payload.barlineType;
   if (payload.barlineKind !== undefined) ev.barlineKind = payload.barlineKind;
   if (payload.duration !== undefined) ev.duration = payload.duration;
+  if (payload.tuplet !== undefined) ev.tuplet = payload.tuplet;
 
   ir.events.push(ev);
 
@@ -222,6 +224,8 @@ function processStaffElements(
               },
             }
           : {}),
+        // 連符ブラケット内か。SDK の DurationElement.tuplet をそのまま反映する。
+        ...(el.tuplet ? { tuplet: true } : {}),
       });
 
       if (ir.meta.firstMusicTickByStaff[staffIdx] === null) {
@@ -282,6 +286,28 @@ function processStaffElements(
   }
 }
 
+/**
+ * 小節の拍子・先頭 tick・長さ。1 つでも取れなければ null を返し、その小節は
+ * `meta.measures` に載せない（拍位置を使う checker はその小節を判定対象から外す）。
+ */
+function readMeasureInfo(measure: Measure, measureNum: number): MeasureInfo | null {
+  const sig = getMeasureTimeSig(measure);
+  const slash = sig.indexOf("/");
+  if (slash <= 0) return null;
+
+  const timeSigN = Number(sig.slice(0, slash));
+  const timeSigD = Number(sig.slice(slash + 1));
+  if (!Number.isInteger(timeSigN) || !Number.isInteger(timeSigD)) return null;
+  if (timeSigN <= 0 || timeSigD <= 0) return null;
+
+  const startTick = measure.tick?.ticks;
+  const ticks = measure.ticks?.ticks;
+  if (typeof startTick !== "number" || typeof ticks !== "number") return null;
+  if (!Number.isFinite(startTick) || !Number.isFinite(ticks)) return null;
+
+  return { measure: measureNum, startTick, ticks, timeSigN, timeSigD };
+}
+
 export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseScore): LintIR {
   const numStaves = score.nstaves;
   const wrappedHostEnums = wrapHostEnums(hostEnums);
@@ -299,6 +325,7 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
       hairpins: [],
       slurs: [],
       ties: [],
+      measures: [],
       hostVersion: buildHostVersionInfo(host),
     },
     registry: { canonical: CANONICAL },
@@ -314,6 +341,10 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
   let segCount = 0;
   for (const m of iterateMeasures(score)) {
     try {
+      // 1 小節につき 1 回だけ。拍位置を使う checker 向けの枠組み情報。
+      const info = readMeasureInfo(m, measureNum);
+      if (info) ir.meta.measures.push(info);
+
       for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
         segCount++;
 

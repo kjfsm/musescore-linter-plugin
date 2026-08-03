@@ -37,6 +37,9 @@ export interface LintEvent {
   barlineType?: unknown;
   barlineKind?: string;
   duration?: { numerator: number; denominator: number };
+  // chord/rest のみ。連符（3連符等）のブラケット内なら true。ブラケット自体が
+  // グルーピングを示すので、拍のグルーピングを見る checker はこれを対象外にする。
+  tuplet?: boolean;
   stemDirection?: number; // chord のみ。DirectionV 生値（0 auto / 1 up / 2 down）
   beamMode?: number; // chord のみ。BeamMode 生値
   articulations?: string[]; // chord のみ。アーティキュレーション名（"Staccato" 等）
@@ -73,6 +76,18 @@ export interface TieInfo {
   endPitch: number | null;
 }
 
+/**
+ * 小節の枠組み（拍子・先頭 tick・長さ）。拍の位置を知る必要がある checker 向け。
+ * 取得できなかった小節はそもそも配列に載らないので、参照側は「無ければ判定しない」でよい。
+ */
+export interface MeasureInfo {
+  measure: number; // 1 始まり。LintEvent.measure と同じ番号体系
+  startTick: number;
+  ticks: number; // 実際の小節長（tick）。アウフタクト・不完全小節の検出に使う
+  timeSigN: number; // 拍子の分子
+  timeSigD: number; // 拍子の分母
+}
+
 export interface IRMeta {
   parts: { staffIdx: number; partName: string }[];
   firstMusicTickByStaff: (number | null)[];
@@ -80,6 +95,8 @@ export interface IRMeta {
   hairpins: HairpinInfo[];
   slurs: SlurInfo[];
   ties: TieInfo[];
+  // 小節番号昇順。拍子が取れないソース・小節では空/欠番になりうる。
+  measures: MeasureInfo[];
   // `buildSnapshot` にホストを渡したときのみ設定される版照合結果（診断用。checker は参照しない）。
   hostVersion?: HostVersionInfo;
 }
