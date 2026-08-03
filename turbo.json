@@ -46,7 +46,13 @@
         "scripts/build.ts",
         "packages/core/src/**",
         "packages/checkers/src/**",
-        "packages/source-musescore/src/**"
+        "packages/source-musescore/src/**",
+        // scripts/build.ts が dist/ へコピー・テンプレート置換する対象。
+        // ここに無いと QML だけ編集したときキャッシュ誤ヒットで dist が古いままになる。
+        "ScoreLinter.qml",
+        "qml/**",
+        // __PLUGIN_VERSION__ の注入元
+        "package.json"
       ],
       "outputs": ["dist/**"]
     },
@@ -66,7 +72,10 @@
       "description": "dist/ の成果物を配布用 ZIP にパッケージングする。",
       "dependsOn": ["//#build"],
       "inputs": ["dist/**", "README.md", "package.json", "scripts/package.ts"],
-      "outputs": ["musescore-linter-plugin-*.zip"]
+      // scripts/package.ts は版付きと版無しの 2 本を書き出す。版無し
+      // （musescore-linter-plugin.zip）は release.yml が参照するので、
+      // ここに無いとキャッシュヒット時に復元されず古いものが残る。
+      "outputs": ["musescore-linter-plugin-*.zip", "musescore-linter-plugin.zip"]
     }
   }
 }
