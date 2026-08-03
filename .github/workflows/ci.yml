@@ -35,6 +35,13 @@ jobs:
       - name: 未使用コード検出
         run: pnpm knip
 
+      # リリース（release.yml）は main への push でしか走らないので、そこで初めて
+      # 壊れていることに気づく経路があった。実際 pnpm-workspace.yaml からルートを
+      # 外したときに changesets がルートパッケージを解決できなくなり、リリースが
+      # 止まった。PR の時点で同じ解決を踏んでおく。
+      - name: changeset の解決確認
+        run: pnpm exec changeset status
+
       # turbo のタスクグラフ自体を検証する。未定義タスク名や依存の破綻は
       # ここで落ちる（個別に pnpm run を叩いていた頃はすり抜けていた）。
       - name: turbo タスクグラフの検証
