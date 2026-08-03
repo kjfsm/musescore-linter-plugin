@@ -23,6 +23,7 @@ describe("parseFile", () => {
     const parsed = parseFile("duet.musicxml", duetXml);
     expect(parsed.error).toBeUndefined();
     expect(parsed.ir?.meta.parts).toHaveLength(2);
+    expect(parsed.xml).toContain("score-partwise");
   });
 
   it("MusicXML でないものは error として返す（例外を投げない）", () => {

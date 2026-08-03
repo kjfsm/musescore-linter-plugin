@@ -6,7 +6,7 @@ import { getCanonical } from "./base/predicates.js";
 export const tempoBarlineChecker: Checker = {
   id: "tempo-barline",
   name: "テンポ変更と複縦線",
-  description: "テンポ変更前の小節に複縦線があるかを確認",
+  description: "テンポ変更前に複縦線が無い箇所を検出",
   category: "tempo",
   severity: "info",
   defaultEnabled: true,

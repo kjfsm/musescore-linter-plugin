@@ -3,8 +3,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const soloTuttiChecker = createTextPairChecker({
   id: "solo-tutti",
   name: "Solo / Tutti",
-  description:
-    "solo/soli と tutti の対応関係を確認し、重複や戻し忘れを検知（solo の二連続は info）",
+  description: "solo/tutti の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

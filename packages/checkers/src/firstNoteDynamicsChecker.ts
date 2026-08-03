@@ -6,7 +6,7 @@ import { getCanonical, isDynamicMark } from "./base/predicates.js";
 export const firstNoteDynamicsChecker: Checker = {
   id: "first-note-dynamics",
   name: "各パート冒頭ダイナミクス",
-  description: "各パートの1音目にダイナミクスが付いているかを確認（未記載は不受理）",
+  description: "各パート1音目のダイナミクス欠落を検出",
   category: "dynamics",
   severity: "error",
   defaultEnabled: true,

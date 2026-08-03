@@ -109,7 +109,7 @@ pnpm monorepo です。ビルド・テスト・リリースは Turborepo + Chang
 
 LintIR を **作る側**（入力ソース）と **使う側**（checker）が分かれているのが構成の要点です。
 `core` は MuseScore に依存せず、MuseScore を触るのは `source-musescore` だけ。同じ LintIR を
-MusicXML からも組み立てられるので、30 個の checker は QML プラグインからも CLI からも
+MusicXML からも組み立てられるので、31 個の checker は QML プラグインからも CLI からも
 Web 版からもそのまま動きます。
 
 `packages/*` はビルド不要の再利用ライブラリで、成果物を作るのはルートの `scripts/*.ts`（esbuild）です。
@@ -198,7 +198,7 @@ apps/
       lib/lint.ts              parseFile（重い）/ lintParsed（軽い）を分離
       lib/rules.ts             checker のカテゴリ分けと localStorage 永続化
       lib/rows.ts              表示用の整形（cli の format.ts を再利用）
-      components/              Dropzone / ResultTable / RulePanel / PrivacyNote
+      components/              Dropzone / ResultTable / RulePanel / ScorePreview / PrivacyNote
       components/ui/           shadcn/ui の生成コード
     public/_headers            CSP などのセキュリティヘッダ
     wrangler.jsonc             main を持たない assets-only Worker
@@ -244,7 +244,9 @@ pnpm lint:score score.musicxml             # ビルドせずに直接実行（ts
 
 ## Web 版（ブラウザ完結）
 
-MusicXML をドラッグ&ドロップすると、その場で同じ checker が走ります。MuseScore も Node も要りません。
+MusicXML をドラッグ&ドロップすると、その場で同じ checker が走り、OSMD (OpenSheetMusicDisplay) による
+楽譜プレビューも見られます（各ファイルの「楽譜プレビュー」を開くと表示、既定では閉じています）。
+MuseScore も Node も要りません。
 
 **読み込んだファイルはサーバーに送信されません。** このサイトは Cloudflare Workers の
 static assets だけで構成されており、`wrangler.jsonc` に `main` を書いていないため
@@ -252,8 +254,13 @@ static assets だけで構成されており、`wrangler.jsonc` に `main` を�
 「送信されない」ことの根拠です。
 
 加えて配信時のセキュリティヘッダで `connect-src 'none'` を指定しているため、ページからの
-fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。バンドルにネットワーク
-API が含まれていないことは CI でも検査しています（`.github/workflows/ci.yml`）。
+fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。自前で書いたコード
+（エントリチャンク）にネットワーク API が含まれていないことは CI でも検査しています
+（`.github/workflows/ci.yml`）。OSMD のような動的 import で分離された vendor チャンクは、
+中身を完全には制御できない第三者コードのためこの検査の対象外にしており、実行時の歯止めは
+上記の `connect-src 'none'` に委ねています（OSMD 自体は URL 文字列を渡したときのみ内部で
+通信ヘルパーを使うコード経路を持ちますが、Web 版では常に読み込み済みの MusicXML 文字列を
+直接渡すため、そのコード経路は実行されません）。
 
 ```bash
 pnpm dev:web        # Vite の開発サーバー（_headers は再現されない）

@@ -3,7 +3,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const sordinoChecker = createTextPairChecker({
   id: "sordino",
   name: "Con sord. / Senza sord.",
-  description: "弱音器の開始(con sord.)→解除(senza sord.)の対応漏れや重複を検知",
+  description: "con sord.→senza sord. の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

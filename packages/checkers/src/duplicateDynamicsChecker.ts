@@ -22,8 +22,7 @@ function sameDynamic(a: LintEvent, b: LintEvent): boolean {
 export const duplicateDynamicsChecker: Checker = {
   id: "duplicate-dynamics",
   name: "重複ダイナミクス",
-  description:
-    "同パートで同じ強弱記号が変化なく連続している箇所を検出（subtype を優先比較、sf/rf の連続は許可）",
+  description: "同じ強弱記号が変化なく連続する箇所を検出",
   category: "dynamics",
   severity: "info",
   defaultEnabled: true,

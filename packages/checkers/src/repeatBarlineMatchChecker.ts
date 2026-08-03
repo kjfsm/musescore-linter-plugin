@@ -9,8 +9,7 @@ import { getCanonical } from "./base/predicates.js";
 export const repeatBarlineMatchChecker: Checker = {
   id: "repeat-barline-match",
   name: "リピート小節線の対応",
-  description:
-    "リピート開始(‖:)に対応する終了(:‖)が無い箇所を検出（終了のみは曲頭からの反復として許容）",
+  description: "リピート開始に対応する終了が無い箇所を検出",
   category: "notation",
   severity: "warning",
   defaultEnabled: true,

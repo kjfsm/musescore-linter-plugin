@@ -3,7 +3,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const sulPontOrdChecker = createTextPairChecker({
   id: "sul-pont-ord",
   name: "Sul pont. / Ord.",
-  description: "駒寄り奏法(sul pont.)→通常奏法(ord.)の対応漏れや重複を検知",
+  description: "sul pont.→ord. の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

@@ -8,8 +8,8 @@ import { findRestOnlyEndpoints } from "./base/spannerOnRest.js";
 export const slurOnRestChecker: Checker = {
   id: "slur-on-rest",
   name: "休符上のスラー端点",
-  description: "スラーの開始/終了端点が休符上にある箇所を検出（同 tick に音符があれば許容）",
-  category: "notation",
+  description: "スラーの端点が休符上にある箇所を検出",
+  category: "slur-tie",
   severity: "warning",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {

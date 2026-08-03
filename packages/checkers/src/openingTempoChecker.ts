@@ -6,7 +6,7 @@ import { getCanonical, isTempoMark } from "./base/predicates.js";
 export const openingTempoChecker: Checker = {
   id: "opening-tempo",
   name: "冒頭テンポ表記",
-  description: "曲頭にテンポ表記があるかを確認（未記載は不受理）",
+  description: "曲頭のテンポ表記の欠落を検出",
   category: "tempo",
   severity: "error",
   defaultEnabled: true,

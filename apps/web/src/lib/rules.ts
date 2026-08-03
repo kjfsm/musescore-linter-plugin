@@ -1,4 +1,4 @@
-import type { Checker, CheckerOptionValue } from "@musescore-linter/core";
+import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
 import { getCheckerList, resolveCheckerOptions } from "@musescore-linter/core";
 
 import { allRuleIds } from "./lint";
@@ -12,14 +12,17 @@ const OPTIONS_STORAGE_KEY = "musescore-linter:rule-options";
 export type RuleOptions = Record<string, Record<string, CheckerOptionValue>>;
 
 /** 設定パネルの表示順。ここに無いカテゴリは後ろに回す。 */
-const CATEGORY_ORDER = ["articulation", "dynamics", "tempo", "notation"];
+const CATEGORY_ORDER = ["articulation", "dynamics", "tempo", "slur-tie", "notation"];
 
 const CATEGORY_LABEL: Record<string, string> = {
   articulation: "奏法・アーティキュレーション",
   dynamics: "強弱",
   tempo: "テンポ",
+  "slur-tie": "スラー・タイ",
   notation: "記譜",
 };
+
+const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
 
 export interface RuleGroup {
   category: string;
@@ -44,7 +47,9 @@ export function ruleGroups(): RuleGroup[] {
     .map(([category, checkers]) => ({
       category,
       label: CATEGORY_LABEL[category] ?? category,
-      checkers,
+      // severity 順（error→warning→info）に並べる。同 severity 内は registerAll() の登録順のまま
+      // （安定ソート）にしておくと、関連しあうペアが隣り合った現状の並びが崩れない。
+      checkers: [...checkers].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]),
     }));
 }
 

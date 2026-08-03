@@ -1,8 +1,7 @@
 import type { FileResult } from "@musescore-linter/cli";
-import type { Severity } from "@musescore-linter/core";
-import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { ChevronRight, CircleCheck } from "lucide-react";
+import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -14,21 +13,8 @@ import {
 import type { ParsedFile } from "@/lib/lint";
 import { toRows } from "@/lib/rows";
 
-const SEVERITY_VARIANT: Record<Severity, "destructive" | "secondary" | "ghost"> = {
-  error: "destructive",
-  warning: "secondary",
-  info: "ghost",
-};
-
-export function SeverityBadge({ severity }: { severity: Severity }) {
-  const Icon = severity === "error" ? CircleAlert : severity === "warning" ? TriangleAlert : Info;
-  return (
-    <Badge variant={SEVERITY_VARIANT[severity]}>
-      <Icon aria-hidden />
-      {severity}
-    </Badge>
-  );
-}
+import { ScorePreview } from "./ScorePreview";
+import { SeverityBadge } from "./SeverityBadge";
 
 /** 読めなかったファイル向けの案内。.mscz だけは原因がはっきりしているので特別扱いする。 */
 function failureHint(name: string, error: string): string {
@@ -36,6 +22,29 @@ function failureHint(name: string, error: string): string {
     return "MuseScore の .mscz は独自形式のため直接は読めません。MuseScore で「エクスポート」→ MusicXML を選んで書き出したファイルを読み込ませてください。";
   }
   return error;
+}
+
+/**
+ * 既定で閉じておき、開いたときだけ ScorePreview（＝OSMD の動的 import と構築）を走らせる。
+ * 未展開のファイルでは OSMD のコストを一切払わない。
+ */
+function ScorePreviewSection({ name, xml }: { name: string; xml: string }) {
+  const [hasOpened, setHasOpened] = useState(false);
+
+  return (
+    <details
+      className="group rounded-lg border"
+      onToggle={(e) => {
+        if (e.currentTarget.open) setHasOpened(true);
+      }}
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+        <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden />
+        楽譜プレビュー
+      </summary>
+      {hasOpened && <ScorePreview name={name} xml={xml} />}
+    </details>
+  );
 }
 
 export interface ResultTableProps {
@@ -66,6 +75,7 @@ export function ResultTable({ parsed, results }: ResultTableProps) {
         return (
           <section key={file.name} className="flex flex-col gap-2">
             <h2 className="font-medium">{file.name}</h2>
+            <ScorePreviewSection name={file.name} xml={file.xml} />
             {rows.length === 0 ? (
               <p className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
                 <CircleCheck className="size-4" aria-hidden />
