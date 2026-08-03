@@ -606,6 +606,26 @@ describe("tempo-without-bpm checker", () => {
     });
     expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
   });
+
+  // 入力ソースが壊れた値を入れてきても検出漏れにしない。null / undefined
+  // だけを弾いていると NaN が「BPM あり」として素通りしていた。
+  it("tempo が NaN でも検出", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: Number.NaN,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+      ],
+    });
+    expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
+  });
 });
 
 // ─── duplicate-dynamics ─────────────────────────────────────────────────────

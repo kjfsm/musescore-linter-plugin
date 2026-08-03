@@ -230,7 +230,14 @@ function processAnnotations(seg: PluginSegment, measureNum: number, ir: LintIR):
     const annStaffIdx = getAnnotationStaffIdx(ann);
     const annKind = resolveAnnotationKind(ann);
     const textNorm = resolveAnnotationTextNorm(ann, textRaw);
-    const tempo = isTempo(ann) ? getTempoBpm(ann) : null;
+    // getTempoBpm は Math.round(el.tempo * 60) を返すだけなので、el.tempo が
+    // 未定義だと NaN、null だと 0 になる。LintEvent.tempo は「正の有限数か
+    // null」でなければならない（tempo-without-bpm は null/undefined しか
+    // 弾かず、NaN や 0 を「BPM あり」と誤判定して素通りさせてしまう）。
+    // MusicXML 経路の soundTempo も同じ条件で見ている。
+    const rawTempo = isTempo(ann) ? getTempoBpm(ann) : null;
+    const tempo =
+      typeof rawTempo === "number" && Number.isFinite(rawTempo) && rawTempo > 0 ? rawTempo : null;
 
     appendEvent(ir, {
       type: "text",
