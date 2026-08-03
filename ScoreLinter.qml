@@ -386,13 +386,16 @@ MuseScore {
         clipboardHelper.deselect();
     }
 
+    // パート絞り込み用のパート一覧。snapshotIR から直接読む。
+    //
+    // 以前は snapshotText（スナップショットタブを開いたときだけ組み立てられる巨大な
+    // JSON 文字列）を JSON.parse し直していた。そのため
+    //   - タブを開くまでは絞り込みが常に空
+    //   - 開いたあとはバインディングが再評価されるたびに数 MB のパースが UI スレッドで走る
+    // という二重の問題があった。snapshotIR は runLinter の時点で手元にあるので、
+    // 文字列化を経由する理由がない。
     function parts() {
-        if (hasRun && snapshotText && snapshotText.length > 0) {
-            try {
-                var snap = JSON.parse(snapshotText);
-                if (snap && snap.meta && snap.meta.parts) return snap.meta.parts;
-            } catch (e) { /* ignore */ }
-        }
+        if (snapshotIR && snapshotIR.meta && snapshotIR.meta.parts) return snapshotIR.meta.parts;
         return [];
     }
 
