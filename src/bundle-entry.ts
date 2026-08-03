@@ -2,12 +2,23 @@ import { registerAll } from "@musescore-linter/checkers";
 import {
   compareVersions,
   getCheckerList,
+  getCheckerPerfReport,
   isNewerVersion,
   runAllCheckers,
+  setPerfEnabled,
 } from "@musescore-linter/core";
-import { buildSnapshot } from "@musescore-linter/source-musescore";
+import { buildSnapshot, getSnapshotPerfReport } from "@musescore-linter/source-musescore";
 
 // バンドルロード時に全チェッカーを登録
 registerAll();
 
-export { buildSnapshot, compareVersions, getCheckerList, isNewerVersion, runAllCheckers };
+export {
+  buildSnapshot,
+  compareVersions,
+  getCheckerList,
+  getCheckerPerfReport,
+  getSnapshotPerfReport,
+  isNewerVersion,
+  runAllCheckers,
+  setPerfEnabled,
+};

@@ -34,12 +34,20 @@ import {
 import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
 import type { HostVersionInfo, LintEvent, LintIR } from "@musescore-linter/core";
-import { CANONICAL, makeLogger } from "@musescore-linter/core";
+import { CANONICAL, createPerf, makeLogger } from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
 import type { HostEnums } from "./types.js";
 
 const log = makeLogger("snapshot");
+
+// 走査の内訳を計測する。既定では無効（setPerfEnabled(true) で有効化）。
+const perf = createPerf("snapshot");
+
+/** 直近の buildSnapshot の計測結果。計測が無効なら空文字列。 */
+export function getSnapshotPerfReport(): string {
+  return perf.report();
+}
 
 // MuseScore 4.4+（Qt6 の V4 エンジン）は ES6 Proxy をサポートする（.claude/skills/musescore-qt-versions
 // の対応表参照）。念のためガードし、非対応環境では生の enum のまま渡す（strictEnum の恩恵は失うが
@@ -283,20 +291,43 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
     derived: null,
   };
 
+  // 計時は segment 単位に留める。staff/voice ごとに Date.now() を呼ぶと計測自体が
+  // 数万回走って対象を歪めるため。
+  perf.clear();
+  const tTotal = perf.now();
+
   let measureNum = 1;
+  let segCount = 0;
   for (const m of iterateMeasures(score)) {
     try {
       for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
+        segCount++;
+
+        const tAnn = perf.now();
         processAnnotations(seg, measureNum, ir);
+        perf.addSince("annotations", tAnn);
+
+        const tStaff = perf.now();
         for (const staffIdx of iterateStaves(score)) {
           processStaffElements(seg, measureNum, staffIdx, ir, wrappedHostEnums);
         }
+        perf.addSince("staffElements", tStaff);
       }
     } catch (e) {
       log.warn(`measure ${measureNum} の解析中にエラー: ${e}`);
     }
     measureNum++;
   }
+
+  perf.addSince("total", tTotal);
+  perf.count("measures", measureNum - 1);
+  perf.count("segments", segCount);
+  perf.count("staves", numStaves);
+  perf.count("events", ir.events.length);
+  // 実測ではなく構造からの概算（ラベルは桁を揃えるため ASCII のみ）。processStaffElements は
+  // 1 segment × 1 staff あたり chord/rest 用と barline 用の 2 ループで elementAt を引く
+  // （barline 側は break で早く抜けることがあるので上限値）。
+  perf.count("elementAt(est)", segCount * numStaves * VOICES_PER_STAFF * 2);
 
   log.info(
     `LintIR を生成: events=${ir.events.length}, parts=${ir.meta.parts.length}, lastTick=${ir.meta.lastTick}`,

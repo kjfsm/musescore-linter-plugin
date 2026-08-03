@@ -1,7 +1,8 @@
 import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
-import { describe, expect, it } from "vitest";
+import { setPerfEnabled } from "@musescore-linter/core";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { buildSnapshot } from "../src/snapshot.js";
+import { buildSnapshot, getSnapshotPerfReport } from "../src/snapshot.js";
 import type { HostEnums } from "../src/types.js";
 
 // 実際の MuseScore v4.7.3 の値と一致しない、独自の割り当てを使う。焼き込んだ値ではなく
@@ -128,5 +129,36 @@ describe("buildSnapshot", () => {
     expect(ir.events.length).toBeGreaterThan(0);
     const barline = ir.events.find((e) => e.type === "barline");
     expect(barline?.barlineKind).toBe("final");
+  });
+});
+
+describe("getSnapshotPerfReport", () => {
+  afterEach(() => {
+    setPerfEnabled(false);
+  });
+
+  it("計測が無効なら何も記録しない", () => {
+    buildSnapshot(mockScoreWithContent(), hostEnums());
+    expect(getSnapshotPerfReport()).toBe("");
+  });
+
+  it("計測が有効なら走査の内訳を記録する", () => {
+    setPerfEnabled(true);
+    buildSnapshot(mockScoreWithContent(), hostEnums());
+    const report = getSnapshotPerfReport();
+    expect(report).toContain("[ScoreLinter:snapshot]");
+    expect(report).toMatch(/total\s+\d+ ms/);
+    expect(report).toMatch(/measures\s+1 回/);
+    expect(report).toMatch(/segments\s+1 回/);
+    expect(report).toMatch(/staves\s+1 回/);
+    // 1 segment × 1 staff × 4 voice × 2 ループ
+    expect(report).toMatch(/elementAt\(est\)\s+8 回/);
+  });
+
+  it("実行のたびに記録を捨てるので前回分が混ざらない", () => {
+    setPerfEnabled(true);
+    buildSnapshot(mockScoreWithContent(), hostEnums());
+    buildSnapshot(mockScoreWithContent(), hostEnums());
+    expect(getSnapshotPerfReport()).toMatch(/segments\s+1 回/);
   });
 });
