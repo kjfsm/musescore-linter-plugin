@@ -1,6 +1,6 @@
 {
   "name": "musescore-linter-plugin",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "private": true,
   "scripts": {
     "build": "tsx scripts/build.ts",

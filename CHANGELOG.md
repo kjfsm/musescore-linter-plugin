@@ -1,5 +1,49 @@
 # musescore-linter-plugin
 
+## 2.3.0
+
+### Minor Changes
+
+- [#97](https://github.com/kjfsm/musescore-linter-plugin/pull/97) [`17ab751`](https://github.com/kjfsm/musescore-linter-plugin/commit/17ab751993403edb04596fcf72eb92a9347ac0de) Thanks [@kjfsm](https://github.com/kjfsm)! - パーサーを差し替え可能にし、MusicXML を解析する `musescore-lint` CLI を追加
+
+  - MuseScore 依存を `source-musescore` パッケージへ分離し、`core` / `checkers` を MuseScore 非依存にした
+  - MusicXML / .mxl から LintIR を組み立てる `source-musicxml` を追加（29 個の checker は無改修で動作）
+  - `musescore-lint` CLI を追加（pretty / json / github 出力、終了コードによる CI 連携）
+  - `.mscz` を MuseScore CLI で MusicXML 化して解析する GitHub Actions ワークフローを追加
+
+  QML プラグインの動作・バンドル出力に変更はない。
+
+- [#104](https://github.com/kjfsm/musescore-linter-plugin/pull/104) [`ba5c2d1`](https://github.com/kjfsm/musescore-linter-plugin/commit/ba5c2d14ff20f582a79e7126544f1b99ae3197c7) Thanks [@kjfsm](https://github.com/kjfsm)! - `slur-tie-articulation-consistency` を高速化した。小節ごとにパートの chord を引くたびに
+  そのパート全体の chord を filter + sort し直しており、チェッカー全体の実行時間の 8 割を
+  1 つのチェッカーが占めていた。`ensureDerived` が `${staffIdx}:${measure}:${voice}` の索引を
+  作るようにして引くだけにした（検出結果は変わらない）。
+
+  また実行のたびに前回の LintIR を明示的に解放するようにした。巨大なオブジェクトグラフが
+  2 つ生きていると QJSEngine の GC が繰り返し走り、2 回目以降の実行が 7 倍遅くなっていた。
+
+  スナップショットの JSON 化を遅延化し、実行時間を大幅に短縮した。従来は実行のたびに
+  `JSON.stringify` していたが、これが MuseScore 上で実測 5.4 秒（全体の 6 割）を占めていた。
+  スナップショットタブを開いたときだけ生成するようにし、生成中は進捗を表示、他のタブに
+  切り替えると中断する。events は 1 行 1 件で出力するようになった（JSON としては同じ内容で、
+  サイズは約 6 割）。
+
+  あわせて実行時間をヘッダに表示するようにした。全体の所要時間は常に ms 単位で出る。
+  設定タブの「実行時間の内訳を記録する」を有効にすると、走査（buildSnapshot）・
+  チェッカー実行の内訳と、走査した小節/セグメント数がスナップショットタブに表示される。
+  内訳の集計は無効時には一切行わないため、通常の実行には影響しない。
+
+- [#103](https://github.com/kjfsm/musescore-linter-plugin/pull/103) [`9cf10c6`](https://github.com/kjfsm/musescore-linter-plugin/commit/9cf10c68886a44f7987323a2992df05a9a3a91fd) Thanks [@kjfsm](https://github.com/kjfsm)! - ブラウザ完結の Web 版（`apps/web`）を追加。MusicXML / .mxl をドラッグ&ドロップすると
+  その場で 29 個の checker が走る。Cloudflare Workers の static assets として配信し、
+  Worker スクリプトを持たないためファイルがサーバーに送られることはない。
+
+### Patch Changes
+
+- [#104](https://github.com/kjfsm/musescore-linter-plugin/pull/104) [`959e6d9`](https://github.com/kjfsm/musescore-linter-plugin/commit/959e6d915d25db35fd02f4100fed0f5e4fa45b32) Thanks [@kjfsm](https://github.com/kjfsm)! - 走査時に `elementAt` を 1 track につき 1 回しか引かないようにした。chord/rest 用と
+  barline 用で voice ループを 2 回回して同じ track を二度引いていた。呼び出し回数が
+  半減する（交響曲 5 番全曲で 30 万回 → 15 万回）。この呼び出しは QML↔C++ の境界を
+  越えるため 1 回あたり約 1.3 µs かかり、走査時間はほぼ回数で決まる。
+  イベントの生成順は変わらない。
+
 ## 2.2.1
 
 ### Patch Changes
