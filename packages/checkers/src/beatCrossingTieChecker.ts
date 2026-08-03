@@ -4,9 +4,13 @@ import { createIssue, TICKS_PER_WHOLE } from "@musescore-linter/core";
 import { getCanonical } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";
 
-// 裏拍から始まった音符が拍境界をまたぐ記譜（イマジナリーバーライン違反）を検出する。
-// 例: 4/4 の「付点8分 + 付点8分 + 8分」の 2 つ目は 2 拍目裏から 2 拍目境界をまたぐので、
-// 「16分 + 8分」のタイに分割したほうが拍の骨格が見える。
+// 拍の骨格を隠す音符（イマジナリーバーライン違反）を検出し、タイでの分割案を出す。
+//
+// 規則は 2 段構え:
+//   - 主要境界（偶数拍子の小節の中央）をまたぐ音符は、小節の頭から始まるものだけが例外。
+//     例: 4/4 の 2 拍目からの付点4分音符は拍頭始まりでも 3 拍目を隠すので「4分 ⌣ 8分」。
+//   - それ以外の拍境界は、拍の途中から始まる音符がまたぐ場合に分割を推奨。
+//     例: 4/4 の「付点8分 + 付点8分 + 8分」の 2 つ目（1 拍目の付点8分後から開始）は「16分 ⌣ 8分」。
 //
 // 判定は音符ごとに独立なので (staff, measure, voice) でグループ化はせず、
 // ir.index.byKind[CHORD] を 1 パスするだけにしてある。走査対象の下限。
@@ -17,29 +21,33 @@ interface Meter {
   ticks: number;
   /** 1 拍の tick 長。単純拍子は分母そのまま、複合拍子は付点音符 1 個分。 */
   beatUnit: number;
-  /** 主要境界（4/4 の 3 拍目頭など）。ここをまたぐ違反は warning に上げる。 */
-  primary: number;
   /**
-   * 拍数が偶数で、primary が本物の「小節の中央」か。真のときだけ
-   * 「拍頭始まりでも中央をまたげば分割必須」の強い規則を適用する。
-   * 奇数拍子（3/4, 9/8）に中央は無く、3/4 の「4分+2分」のような
-   * 標準的な記譜まで違反になってしまうため。
+   * 小節の中央（4/4 の 3 拍目頭、6/8 の 2 拍目頭など）。ここをまたぐ音符は
+   * 拍頭始まりでも分割必須で、severity も warning に上げる。
+   *
+   * 奇数拍子（3/4・9/8）に中央は実在しないので -1（＝決してまたげない）にする。
+   * 中間の拍境界を中央とみなすと、3/4 の「4分+2分」のような標準的な記譜まで
+   * 違反になってしまうため。
    */
-  hasMid: boolean;
+  primary: number;
   /** 複合拍子か。拍位置ラベルで「裏」を使ってよいかの判定に使う。 */
   isCompound: boolean;
   timeSig: string;
 }
 
-/** tick → 音価名。付点音符は 3/7 倍の位置に載る。ここに無い長さは分割案を出さない。 */
+/** tick → 音価名。付点は 3/2 倍、複付点は 7/4 倍の位置に載る。ここに無い長さは分割案を出さない。 */
 const DURATION_NAMES: Record<number, string> = {
   1920: "全音符",
+  1680: "複付点2分音符",
   1440: "付点2分音符",
   960: "2分音符",
+  840: "複付点4分音符",
   720: "付点4分音符",
   480: "4分音符",
+  420: "複付点8分音符",
   360: "付点8分音符",
   240: "8分音符",
+  210: "複付点16分音符",
   180: "付点16分音符",
   120: "16分音符",
   90: "付点32分音符",
@@ -72,15 +80,14 @@ function toMeter(info: MeasureInfo): Meter | null {
   const beatUnit = isCompound ? (3 * TICKS_PER_WHOLE) / d : TICKS_PER_WHOLE / d;
   const numBeats = isCompound ? n / 3 : n;
 
-  // 拍数が偶数なら中央境界、奇数なら拍境界列の中間。1 本の式で両方を満たす。
-  const primary = beatUnit * (Math.floor((numBeats - 1) / 2) + 1);
+  // 中央は拍数が偶数のときだけ実在する。奇数拍子は -1 にして「決してまたげない」を表す。
+  const primary = numBeats % 2 === 0 ? beatUnit * (numBeats / 2) : -1;
 
   return {
     startTick: info.startTick,
     ticks: info.ticks,
     beatUnit,
     primary,
-    hasMid: numBeats % 2 === 0,
     isCompound,
     timeSig: `${n}/${d}`,
   };
@@ -188,10 +195,10 @@ export const beatCrossingTieChecker: Checker = {
       const rem = onset % meter.beatUnit;
       if (rem + durTicks <= meter.beatUnit) continue;
 
+      // 中央をまたぐなら拍頭始まりでも分割が必要。downbeat 始まりは上で除外済みなので
+      // ここに来た時点で例外は無い。奇数拍子は primary = -1 なので常に false になる。
       const crossesPrimary = onset < meter.primary && meter.primary < end;
-      // 主要境界（小節の中央）をまたぐなら、拍頭始まりでも分割が必要。
-      // downbeat 始まりは上で除外済みなので、ここに来た時点で例外は無い。
-      if (!(meter.hasMid && crossesPrimary) && rem === 0) continue;
+      if (!crossesPrimary && rem === 0) continue;
 
       // ここから先は違反確定。確保が発生するのはこの経路だけ。
       const severity: Severity = crossesPrimary ? "warning" : "info";

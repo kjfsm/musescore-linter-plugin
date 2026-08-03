@@ -160,6 +160,75 @@ describe("beat-crossing-tie", () => {
       // 480..1440 は 3/4 の標準的な記譜。偶数拍子の強い規則を適用してはいけない
       expect(run([chord(0, QUARTER), chord(480, HALF)], [measure(3, 4)])).toHaveLength(0);
     });
+
+    it("奇数拍子では中間の拍境界またぎも warning に上げない", () => {
+      // 3/4 の 960（3拍目頭）は中央ではない。裏拍始まりで検出はするが severity は info
+      const issues = run([chord(720, QUARTER)], [measure(3, 4)]);
+      expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("info");
+      expect(issues[0].detail).toMatchObject({ crossesPrimaryBoundary: false });
+    });
+
+    it("9/8 も奇数拍数なので中央の規則を適用しない", () => {
+      // 720..1440 は 2 拍目まるごと。拍頭始まりなので検出しない
+      expect(run([chord(720, DOTTED_QUARTER)], [measure(9, 8)])).toHaveLength(0);
+    });
+
+    it("12/8 の 2 拍目からの付点2分は中央（3拍目頭）をまたぐので warning", () => {
+      // beatUnit = 720、中央 = 1440。720..2160 が中央をまたぐ
+      const issues = run([chord(720, { numerator: 3, denominator: 4 })], [measure(12, 8)]);
+      expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("warning");
+      expect(issues[0].detail).toMatchObject({ position: "2拍目", timeSig: "12/8" });
+    });
+
+    it("2/4 の 2 拍目は中央そのものなので、またぐ音符は warning", () => {
+      const issues = run([chord(240, QUARTER)], [measure(2, 4)]);
+      expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("warning");
+      expect(issues[0].detail).toMatchObject({ timeSig: "2/4" });
+    });
+  });
+
+  it("複付点音符も音価名と分割案を出せる", () => {
+    // 複付点4分（840）を 2 拍目裏から。720..1560 が 960・1440 をまたぐ
+    const issues = run([chord(720, { numerator: 7, denominator: 16 })], [measure(4, 4)]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain("複付点4分音符が");
+    expect(issues[0].message).toContain("8分音符+4分音符+16分音符のタイ");
+  });
+
+  it("meta.measures に載っていない小節の音符は判定しない", () => {
+    const issues = beatCrossingTieChecker.run(
+      buildIR({
+        parts: [{ partName: "Vn1" }],
+        events: [
+          { kind: K.CHORD, staff: 0, voice: 0, measure: 2, tick: 2280, duration: DOTTED_EIGHTH },
+        ],
+        // 1 小節目しか拍子が取れなかったケース
+        measures: [measure(4, 4)],
+      }),
+    );
+    expect(issues).toHaveLength(0);
+  });
+
+  it("複数パートでは staffIdx ごとに正しいパート名を付ける", () => {
+    const issues = beatCrossingTieChecker.run(
+      buildIR({
+        parts: [{ partName: "Vn1" }, { partName: "Vc" }],
+        events: [
+          { kind: K.CHORD, staff: 0, voice: 0, measure: 1, tick: 360, duration: DOTTED_EIGHTH },
+          { kind: K.CHORD, staff: 1, voice: 0, measure: 1, tick: 480, duration: DOTTED_QUARTER },
+        ],
+        measures: [measure(4, 4)],
+      }),
+    );
+    expect(issues.map((i) => [i.staffIdx, i.partName, i.severity])).toEqual([
+      [0, "Vn1", "info"],
+      [1, "Vc", "warning"],
+    ]);
+    expect(issues[0].message.startsWith("Vn1: ")).toBe(true);
+    expect(issues[1].message.startsWith("Vc: ")).toBe(true);
   });
 
   it("拍境界をまたがない裏拍の音符は検出しない", () => {
