@@ -78,28 +78,23 @@ export const xxxChecker = createTextPairChecker({
 ## ステップ 2: `index.ts` への登録
 
 `packages/checkers/src/index.ts` **1 ファイルだけ**を触る（他のファイルを触る必要はない）。
-ただしその中で **3 箇所**追加が必要——1 箇所だけ足して終わりにしない。
+その中で **2 箇所**追加する。
 
 ```ts
 // 1. 冒頭の import 群に追加（アルファベット順）
 import { xxxChecker } from "./xxxChecker.js";
 
-// 2. registerAll() 内の register 呼び出しに追加
-export function registerAll(): void {
-  reset();
-  // ...既存の register(...) 呼び出し...
-  register(xxxChecker);
-}
-
-// 3. 末尾の export {} ブロックに追加（アルファベット順）
-export {
-  // ...既存のエクスポート...
+// 2. ALL_CHECKERS 配列に追加。ここが唯一の登録点で、registerAll() はこの配列を回すだけ。
+//    並び順がそのまま実行順・検出結果の並び順になるので、関連しあうペアの隣に入れる。
+export const ALL_CHECKERS: Checker[] = [
+  // ...既存のエントリ...
   xxxChecker,
-};
+];
 ```
 
-3 番目（末尾の `export {}`）を忘れると、`registerAll()` 経由の実行（プラグイン・CLI・Web 版）は
-動くが、`@musescore-linter/checkers` の公開 API から checker 単体を import できなくなる。
+配列に足し忘れると、ファイルを作っただけで一切実行されない状態になる。`registerAll()` が
+`ALL_CHECKERS` をそのまま登録することは `packages/checkers/tests/checkers.test.ts` の
+「ALL_CHECKERS の中身がそのまま登録される」で固定してある。
 
 **QML（ScoreLinter.qml / qml/）と Settings の永続化キーは一切触らない。** 設定 UI は
 `getCheckerList()`（`packages/core/src/linter.ts`）が返す checker メタデータ一覧から自動生成される。
@@ -157,6 +152,6 @@ checker が複雑でテストが長くなる場合は、`checkers.test.ts` に�
 - [ ] `id` が kebab-case で他と重複していない
 - [ ] `run()` 内で `try/catch` を書いていない（linter が全体で catch する）
 - [ ] `ir.events` の全件ループではなく `ir.index` を使っている
-- [ ] `packages/checkers/src/index.ts` の 3 箇所（import / register 呼び出し / 末尾 export）すべてに登録した
+- [ ] `packages/checkers/src/index.ts` の 2 箇所（import / ALL_CHECKERS 配列）に追加した
 - [ ] 正例・負例の両方のテストを追加した
 - [ ] README の「チェック項目」表を更新した

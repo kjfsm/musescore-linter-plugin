@@ -128,8 +128,8 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
 
 1. `packages/checkers/src/xxxChecker.ts` に `export const xxxChecker: Checker = { ... }` を定義
    （on/off ペア型なら `createTextPairChecker()` を利用）
-2. `packages/checkers/src/index.ts` に 3 箇所追加する（**この 1 ファイルで完結する**）: 冒頭の `import`
-   文、`registerAll()` 内の `register(xxxChecker)` 呼び出し、末尾の `export { ... }` ブロック
-   （3 つ目を忘れるとパッケージの公開 API から漏れる）
+2. `packages/checkers/src/index.ts` に 2 箇所追加する（**この 1 ファイルで完結する**）: 冒頭の `import`
+   文と、`ALL_CHECKERS` 配列へのエントリ。配列の並び順がそのまま実行順・検出結果の並び順に
+   なるので、関連しあうペア（pizz./arco など）の隣に入れること
 3. `packages/checkers/tests/checkers.test.ts` にテストケースを追加（fixture は `tests/helpers/irBuilder.ts` の `buildIR({...})` / `cleanIR()` / `quintetIR()` で構築）
 4. README の「チェック項目」表を更新

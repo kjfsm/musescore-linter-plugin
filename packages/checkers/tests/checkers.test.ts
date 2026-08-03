@@ -12,7 +12,7 @@ import { firstNoteDynamicsChecker } from "../src/firstNoteDynamicsChecker.js";
 import { hairpinOnRestChecker } from "../src/hairpinOnRestChecker.js";
 import { hairpinTargetDynamicChecker } from "../src/hairpinTargetDynamicChecker.js";
 import { harpTableChecker } from "../src/harpTableChecker.js";
-import { registerAll } from "../src/index.js";
+import { ALL_CHECKERS, registerAll } from "../src/index.js";
 import { muteOpenChecker } from "../src/muteOpenChecker.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
 import { pizzArcoChecker } from "../src/pizzArcoChecker.js";
@@ -51,6 +51,14 @@ describe("registerAll", () => {
     const ids = getCheckerList().map((c) => c.id);
     expect(ids.length).toBeGreaterThan(0);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  // ALL_CHECKERS が唯一の登録点であることの確認。配列に足したのに登録されない、
+  // という状態が起きないようにする。
+  it("ALL_CHECKERS の中身がそのまま登録される", () => {
+    reset();
+    registerAll();
+    expect(getCheckerList()).toEqual(ALL_CHECKERS);
   });
 });
 
