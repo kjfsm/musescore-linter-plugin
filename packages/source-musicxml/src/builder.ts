@@ -22,6 +22,7 @@ import {
   toStaffLine,
   toTpc,
 } from "./pitch.js";
+import { looksLikeTempoText } from "./tempoWords.js";
 import {
   attr,
   child,
@@ -586,7 +587,10 @@ class PartWalker {
     const text = words.join(" ").trim() || (metronome ? metronomeText(metronome) : "");
     if (text === "") return;
 
-    if (bpm !== null || metronome !== undefined) {
+    // BPM も <metronome> も無い「Allegro」だけの direction は、MusicXML 上は
+    // ただの <words> と区別が付かない。MuseScore 経路は要素型で TEMPO_TEXT に
+    // できるので、こちらは語彙で判定して揃える（looksLikeTempoText の冒頭コメント参照）。
+    if (bpm !== null || metronome !== undefined || looksLikeTempoText(text)) {
       this.push(localTick, {
         kind: K.TEMPO_TEXT,
         staff: staffIdx,
