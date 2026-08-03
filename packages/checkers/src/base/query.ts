@@ -1,7 +1,5 @@
 import type { LintEvent, LintIR } from "@musescore-linter/core";
 
-import { getCanonical } from "./predicates.js";
-
 /** tick に対応する小節番号。見つからなければ 0。 */
 export function measureAtTick(ir: LintIR, tick: number): number {
   const ids = ir.index.byTick[String(tick)] ?? [];
@@ -21,20 +19,20 @@ export function buildPartNameMap(ir: LintIR): Map<number, string> {
   return map;
 }
 
-/** (staff, measure, voice) の chord イベントを tick 昇順で返す。 */
+/**
+ * (staff, measure, voice) の chord イベントを tick 昇順で返す。返り値は ir.derived が持つ
+ * 配列そのものなので、呼び出し側で書き換えてはいけない。
+ *
+ * ensureDerived が事前に索引を作る。小節ごとに呼ばれると staff 全体の chord を毎回
+ * filter + sort することになり、実測でこの経路だけがチェッカー全体の 8 割を占めていた。
+ */
 export function chordsIn(
   ir: LintIR,
   staffIdx: number,
   measure: number,
   voice: number,
 ): LintEvent[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-  const ids = ir.index?.byStaffAndKind?.[staffIdx]?.[canonical.elementKinds.CHORD] ?? [];
-  return ids
-    .map((id) => ir.events[id])
-    .filter((ev) => ev.measure === measure && ev.voice === voice)
-    .sort((a, b) => a.tick - b.tick);
+  return ir.derived?.chordsByStaffMeasure?.[`${staffIdx}:${measure}:${voice}`] ?? [];
 }
 
 /** (staff, measure, voice) のリズム署名。無ければ undefined。 */

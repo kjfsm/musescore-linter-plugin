@@ -29,6 +29,7 @@ export function ensureDerived(ir: LintIR): void {
     slursByStaff: {},
     tiesByStaff: {},
     rhythmByStaffMeasure: {},
+    chordsByStaffMeasure: {},
   };
 
   const chordKind = canonical.elementKinds.CHORD;
@@ -72,6 +73,13 @@ export function ensureDerived(ir: LintIR): void {
     if (aev.articulations && aev.articulations.length > 0) {
       derived.articulationsByChordId[aev.id] = aev.articulations;
     }
+    if (aev.staffIdx < 0) continue;
+    const chordKey = `${aev.staffIdx}:${aev.measure}:${aev.voice}`;
+    if (!derived.chordsByStaffMeasure[chordKey]) derived.chordsByStaffMeasure[chordKey] = [];
+    derived.chordsByStaffMeasure[chordKey].push(aev);
+  }
+  for (const key of Object.keys(derived.chordsByStaffMeasure)) {
+    derived.chordsByStaffMeasure[key].sort((a, b) => a.tick - b.tick);
   }
 
   for (const slur of ir.meta?.slurs ?? []) {
