@@ -3,6 +3,9 @@ import { createIssue } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 
+// sf・rf はアクセント的に連続して使われることが多いため、重複検出の対象から除外する。
+const CONSECUTIVE_ALLOWED = new Set(["sf", "rf"]);
+
 function sameDynamic(a: LintEvent, b: LintEvent): boolean {
   if (
     a.subtype !== null &&
@@ -19,7 +22,8 @@ function sameDynamic(a: LintEvent, b: LintEvent): boolean {
 export const duplicateDynamicsChecker: Checker = {
   id: "duplicate-dynamics",
   name: "重複ダイナミクス",
-  description: "同パートで同じ強弱記号が変化なく連続している箇所を検出（subtype を優先比較）",
+  description:
+    "同パートで同じ強弱記号が変化なく連続している箇所を検出（subtype を優先比較、sf/rf の連続は許可）",
   category: "dynamics",
   severity: "info",
   defaultEnabled: true,
@@ -38,7 +42,7 @@ export const duplicateDynamicsChecker: Checker = {
 
       let prev: LintEvent | null = null;
       for (const ev of dynEvents) {
-        if (prev !== null && sameDynamic(prev, ev)) {
+        if (prev !== null && sameDynamic(prev, ev) && !CONSECUTIVE_ALLOWED.has(ev.textNorm)) {
           const prevTick = prev.tick;
           const hasHairpinBetween = hairpins.some(
             (h) => h.startTick >= prevTick && h.startTick < ev.tick,

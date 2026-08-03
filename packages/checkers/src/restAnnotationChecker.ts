@@ -37,7 +37,8 @@ const DISALLOWED_TECHNIQUE_PATTERNS = new Set([
 export const restAnnotationChecker: Checker = {
   id: "rest-annotation",
   name: "休符アノテーション",
-  description: "休符位置の注記を確認（強弱記号・演奏技法テキストは不受理、リハーサル記号等は受理）",
+  description:
+    "休符位置の注記を確認（演奏技法テキストは不受理・error、強弱記号は info、リハーサル記号等は受理）",
   category: "notation",
   severity: "error",
   defaultEnabled: true,
@@ -65,8 +66,9 @@ export const restAnnotationChecker: Checker = {
           const ev = ir.events[id];
           if (!restTicks.has(ev.tick)) continue;
 
+          const isDynamic = isDynamicMark(ev, ir);
           const isDisallowed =
-            isDynamicMark(ev, ir) ||
+            isDynamic ||
             ((isKind(ev, canonical.elementKinds.STAFF_TEXT) ||
               isKind(ev, canonical.elementKinds.EXPRESSION)) &&
               DISALLOWED_TECHNIQUE_PATTERNS.has(ev.textNorm));
@@ -80,6 +82,8 @@ export const restAnnotationChecker: Checker = {
               staffIdx: staff.staffIdx,
               measure: ev.measure,
               tick: ev.tick,
+              // 休符へのダイナミクスは音の受け渡し表現として使われることもあるため info に留める。
+              severity: isDynamic ? "info" : undefined,
             }),
           );
         }
