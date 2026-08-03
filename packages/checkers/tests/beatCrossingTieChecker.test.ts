@@ -260,9 +260,33 @@ describe("beat-crossing-tie", () => {
     expect(issues[0].detail).toMatchObject({ timeSig: "3/4" });
   });
 
-  it("連符は判定対象外", () => {
-    // 3連8分（160 tick）を 200 から。240 が境界だが連符ガードで落とす
-    expect(run([chord(200, TRIPLET_EIGHTH)], [measure(4, 4)])).toHaveLength(0);
+  describe("連符は判定対象外", () => {
+    // 分母が 2 の冪でないものが連符。1920 = 2^7×3×5 なので 1920 % q === 0 では弾けない
+    const TRIPLET_QUARTER = { numerator: 1, denominator: 6 }; // 320 tick
+    const QUINTUPLET_16TH = { numerator: 1, denominator: 20 }; // 96 tick
+
+    it("4分3連の 2 音目は拍境界をまたぐが検出しない", () => {
+      // 320..640 は 2 拍目頭（480）をまたぐ。タイ分割の提案が意味をなさない
+      expect(
+        run([chord(0, TRIPLET_QUARTER), chord(320, TRIPLET_QUARTER)], [measure(4, 4)]),
+      ).toHaveLength(0);
+    });
+
+    it("8分3連も検出しない", () => {
+      // 400..560 は 480 をまたぐ
+      expect(run([chord(400, TRIPLET_EIGHTH)], [measure(4, 4)])).toHaveLength(0);
+    });
+
+    it("5連符も検出しない", () => {
+      // 432..528 は 480 をまたぐ
+      expect(run([chord(432, QUINTUPLET_16TH)], [measure(4, 4)])).toHaveLength(0);
+    });
+  });
+
+  it("duration の無い chord は判定対象外", () => {
+    expect(
+      run([{ kind: K.CHORD, staff: 0, voice: 0, measure: 1, tick: 360 }], [measure(4, 4)]),
+    ).toHaveLength(0);
   });
 
   it("加算拍子（5/8）は判定対象外", () => {

@@ -56,11 +56,26 @@ const DURATION_NAMES: Record<number, string> = {
 };
 
 /**
+ * 通常の音価（素・付点・複付点）の分母は必ず 2 の冪になる。連符はここで落ちる
+ * （3連符は 6/12/24、5連符は 10/20/40 …）。
+ *
+ * 1920 = 2^7 × 3 × 5 なので `1920 % q === 0` は連符ガードにならない点に注意
+ * （3連8分 = 1/12 は 1920 % 12 === 0 を通ってしまう）。
+ */
+function isPowerOfTwo(x: number): boolean {
+  return x > 0 && (x & (x - 1)) === 0;
+}
+
+/**
  * 拍子 n/m から拍の枠組みを導く。対象外なら null。
  *
- * - 複合拍子: n % 3 === 0 かつ n > 3（6/8, 9/8, 12/8）。拍単位 = 付点音符 1 個分
- * - 単純拍子: それ以外（2/4, 3/4, 4/4。n = 3 は単純側に入る）
+ * - 複合拍子: n % 3 === 0 かつ n > 3、n ∈ {6, 9, 12}（6/8, 9/8, 12/8, 6/4 …）。
+ *   拍単位 = 付点音符 1 個分
+ * - 単純拍子: それ以外で n ∈ {2, 3, 4}（2/4, 3/4, 4/4, 2/2, 3/8 …。n = 3 は単純側）
  * - 加算拍子（5/8, 7/8 等）と 15/8 以上の複合拍子は対象外
+ *
+ * 分母 d は 1920 を割り切るものすべて（1〜128）を受け入れる。拍の数え方は n だけで
+ * 決まり d は tick 尺度にしか効かないので、拍子の列挙を分子側に限っている。
  */
 function toMeter(info: MeasureInfo): Meter | null {
   const n = info.timeSigN;
@@ -181,8 +196,12 @@ export const beatCrossingTieChecker: Checker = {
       if (!dur) continue;
       const q = dur.denominator;
       const p = dur.numerator;
-      // 連符ガード。素（1）/ 付点（3）/ 複付点（7）以外は分割の議論ができない
+      // 連符ガード。分母が 2 の冪でなければ連符なので、タイ分割の議論ができない。
+      // 1920 % q === 0 は連符を弾けない（1920 に 3 と 5 の因数があるため）ので別途必要。
+      if (!isPowerOfTwo(q)) continue;
+      // 256 分音符以下は tick が非整数になるので落とす
       if (TICKS_PER_WHOLE % q !== 0) continue;
+      // 素（1）/ 付点（3）/ 複付点（7）以外は音価として扱わない
       if (p !== 1 && p !== 3 && p !== 7) continue;
 
       const durTicks = (TICKS_PER_WHOLE * p) / q;
