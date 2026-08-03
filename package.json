@@ -14,7 +14,7 @@
     "pipeline": "turbo run typecheck test build build:cli package",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit && pnpm --filter @musescore-linter/web typecheck",
+    "typecheck": "tsc --noEmit && pnpm --filter './packages/*' --filter './apps/*' typecheck",
     "turbo:typecheck": "turbo run typecheck",
     "dev": "vitest",
     "knip": "knip",
