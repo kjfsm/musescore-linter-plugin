@@ -62,6 +62,11 @@ jobs:
             exit 1
           fi
 
+      # 閾値では落とさない（runner のブレが大きく偽陽性になる）。
+      # job summary に数値を出すだけにして、回帰は PR 前後の比較で判断する。
+      - name: 性能ベースラインの計測
+        run: pnpm bench
+
       - name: Codecov へのカバレッジ送信
         if: always()
         uses: codecov/codecov-action@v6

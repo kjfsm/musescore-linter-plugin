@@ -23,6 +23,9 @@ importers:
       '@musescore-linter/source-musescore':
         specifier: workspace:*
         version: link:packages/source-musescore
+      '@musescore-linter/source-musicxml':
+        specifier: workspace:*
+        version: link:packages/source-musicxml
       '@types/node':
         specifier: ^25.8.0
         version: 25.8.0
