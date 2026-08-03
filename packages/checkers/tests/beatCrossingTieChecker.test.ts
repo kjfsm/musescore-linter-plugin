@@ -51,9 +51,13 @@ describe("beat-crossing-tie", () => {
     expect(issues[0].severity).toBe("info");
     expect(issues[0].ruleId).toBe("beat-crossing-tie");
     expect(issues[0].partName).toBe("Vn1");
-    expect(issues[0].message).toContain("Vn1: ");
-    expect(issues[0].message).toContain("付点8分音符 → 16分音符+8分音符のタイ");
+    expect(issues[0].message).toBe(
+      "Vn1: 1小節目 1拍目+付点8分音符 から始まる付点8分音符が2拍目の頭をまたいでいます。" +
+        "16分音符+8分音符のタイに分割することを推奨します",
+    );
     expect(issues[0].detail).toMatchObject({
+      position: "1拍目+付点8分音符",
+      crossedBeats: "2拍目の頭",
       onsetTicks: 360,
       durationTicks: 360,
       suggestedSplit: [120, 240],
@@ -73,9 +77,50 @@ describe("beat-crossing-tie", () => {
     expect(issues[1].detail).toMatchObject({ crossesPrimaryBoundary: true });
   });
 
+  it("同じ小節に同じ音価の違反が並んでもメッセージで区別できる", () => {
+    // 「付点8分+付点8分+8分」を前半・後半で繰り返す。違反は onset 360 と 1320
+    const issues = run(
+      [
+        chord(0, DOTTED_EIGHTH),
+        chord(360, DOTTED_EIGHTH),
+        chord(720, EIGHTH),
+        chord(960, DOTTED_EIGHTH),
+        chord(1320, DOTTED_EIGHTH),
+        chord(1680, EIGHTH),
+      ],
+      [measure(4, 4)],
+    );
+
+    expect(issues).toHaveLength(2);
+    expect(issues.map((i) => i.detail?.position)).toEqual([
+      "1拍目+付点8分音符",
+      "3拍目+付点8分音符",
+    ]);
+    expect(issues.map((i) => i.detail?.crossedBeats)).toEqual(["2拍目の頭", "4拍目の頭"]);
+    expect(issues[0].message).not.toBe(issues[1].message);
+  });
+
+  it("裏拍ちょうどなら「N拍目裏」と示す", () => {
+    const issues = run([chord(240, QUARTER)], [measure(4, 4)]);
+    expect(issues[0].detail).toMatchObject({ position: "1拍目裏", crossedBeats: "2拍目の頭" });
+  });
+
+  it("複数の拍境界をまたぐ場合はすべて列挙する", () => {
+    // 240..1200 は 480 と 960 をまたぐ
+    expect(
+      run([chord(240, { numerator: 1, denominator: 2 })], [measure(4, 4)])[0].detail,
+    ).toMatchObject({ crossedBeats: "2・3拍目の頭" });
+  });
+
   it("拍頭から始まる音符は何拍またいでも検出しない", () => {
     const issues = run([chord(0, QUARTER), chord(480, QUARTER), chord(960, HALF)], [measure(4, 4)]);
     expect(issues).toHaveLength(0);
+  });
+
+  it("拍頭から始まる付点4分は主要境界をまたいでも検出しない", () => {
+    // 4/4 の 2 拍目から付点4分（480..1200）は中央境界 960 をまたぐが、
+    // 「拍頭から始まる音符は分割不要」という判定ルールにより対象外になる
+    expect(run([chord(480, DOTTED_QUARTER)], [measure(4, 4)])).toHaveLength(0);
   });
 
   it("小節全体を覆う全音符は検出しない", () => {

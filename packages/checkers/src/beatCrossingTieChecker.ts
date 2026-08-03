@@ -19,6 +19,8 @@ interface Meter {
   beatUnit: number;
   /** 主要境界（4/4 の 3 拍目頭など）。ここをまたぐ違反は warning に上げる。 */
   primary: number;
+  /** 複合拍子か。拍位置ラベルで「裏」を使ってよいかの判定に使う。 */
+  isCompound: boolean;
   timeSig: string;
 }
 
@@ -66,7 +68,37 @@ function toMeter(info: MeasureInfo): Meter | null {
   // 拍数が偶数なら中央境界、奇数なら拍境界列の中間。1 本の式で両方を満たす。
   const primary = beatUnit * (Math.floor((numBeats - 1) / 2) + 1);
 
-  return { startTick: info.startTick, ticks: info.ticks, beatUnit, primary, timeSig: `${n}/${d}` };
+  return {
+    startTick: info.startTick,
+    ticks: info.ticks,
+    beatUnit,
+    primary,
+    isCompound,
+    timeSig: `${n}/${d}`,
+  };
+}
+
+/**
+ * 小節内での開始位置。「2拍目裏」「1拍目+付点8分音符」のように、同じ小節に同じ音価の
+ * 違反が複数あってもどの音符かを一意に指せる粒度にする。
+ * 複合拍子の 1 拍は付点音符なので「裏」とは呼ばず、常にオフセットの音価で示す。
+ */
+function beatPositionLabel(onset: number, meter: Meter): string {
+  const beat = Math.floor(onset / meter.beatUnit) + 1;
+  const rem = onset % meter.beatUnit;
+  if (rem === 0) return `${beat}拍目`;
+  if (!meter.isCompound && rem === meter.beatUnit / 2) return `${beat}拍目裏`;
+  const name = DURATION_NAMES[rem];
+  return name ? `${beat}拍目+${name}` : `${beat}拍目+${rem}tick`;
+}
+
+/** またいだ拍境界。「2拍目の頭」「3拍目・4拍目の頭」。 */
+function crossedBeatsLabel(onset: number, end: number, beatUnit: number): string {
+  const beats: number[] = [];
+  for (let b = (Math.floor(onset / beatUnit) + 1) * beatUnit; b < end; b += beatUnit) {
+    beats.push(b / beatUnit + 1);
+  }
+  return `${beats.join("・")}拍目の頭`;
 }
 
 /** onset から音符を拍境界ごとに割ったときの各断片の長さ。 */
@@ -150,22 +182,25 @@ export const beatCrossingTieChecker: Checker = {
       const partName = partsByStaff.get(ev.staffIdx) ?? "";
 
       const segments = splitSegments(onset, end, meter.beatUnit);
-      const before = DURATION_NAMES[end - onset];
+      const position = beatPositionLabel(onset, meter);
+      const crossed = crossedBeatsLabel(onset, end, meter.beatUnit);
+      const noteName = DURATION_NAMES[end - onset] ?? "音符";
       const after = describeSplit(segments);
-      const suggestion =
-        before && after ? `${before} → ${after}のタイに分割することを推奨します` : "";
+      const suggestion = after ? `${after}のタイに分割することを推奨します` : "";
 
       issues.push(
         createIssue(beatCrossingTieChecker, {
           severity,
           message:
-            `${partName}: 拍の途中から始まる音符が拍境界をまたいでいます（${ev.measure}小節目）。` +
+            `${partName}: ${ev.measure}小節目 ${position} から始まる${noteName}が${crossed}をまたいでいます。` +
             suggestion,
           partName,
           staffIdx: ev.staffIdx,
           measure: ev.measure,
           tick: ev.tick,
           detail: {
+            position,
+            crossedBeats: crossed,
             onsetTicks: onset,
             durationTicks: end - onset,
             suggestedSplit: segments,
