@@ -2157,7 +2157,7 @@ describe("spanner-on-rest checker", () => {
     expect(issues[0].severity).toBe("info");
   });
 
-  it("ヘアピンの開始端点が休符上 → warning 1件（開始は info 化しない）", () => {
+  it("ヘアピンの開始端点が休符上 → info 1件", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
       events: [
@@ -2168,10 +2168,10 @@ describe("spanner-on-rest checker", () => {
     });
     const issues = spannerOnRestChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0].severity).toBe("info");
   });
 
-  it("スラーの開始端点が休符上 → warning 1件", () => {
+  it("スラーの開始端点が休符上 → warning 1件（スラーは info 化しない）", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
       events: [
@@ -2182,6 +2182,7 @@ describe("spanner-on-rest checker", () => {
     });
     const issues = spannerOnRestChecker.run(ir);
     expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
   });
 
   it("端点が音符上 → 0件", () => {

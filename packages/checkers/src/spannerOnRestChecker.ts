@@ -16,7 +16,7 @@ export const spannerOnRestChecker: Checker = {
   id: "spanner-on-rest",
   name: "休符上のスパナー端点",
   description:
-    "ヘアピン(cresc./dim.)やスラーの端点が休符上にある箇所を検出（同 tick に音符があれば許容）",
+    "ヘアピン(cresc./dim.)やスラーの端点が休符上にある箇所を検出（同 tick に音符があれば許容、ヘアピンは info）",
   category: "notation",
   severity: "warning",
   defaultEnabled: true,
@@ -71,9 +71,9 @@ export const spannerOnRestChecker: Checker = {
         startTick: hp.startTick,
         endTick: hp.endTick,
       };
+      // ヘアピンの端点が休符上にあるのは、直前/直後の音符へ受け渡す記譜として許容されるケースが多いため info に留める。
       if (onRestOnly(hp.staffIdx, hp.startTick))
-        report("ヘアピン", hp.staffIdx, "開始", hp.startTick, detail);
-      // ヘアピンの終了が休符上にあるのは、直後の音符へ受け渡す記譜として許容されるケースが多いため info に留める。
+        report("ヘアピン", hp.staffIdx, "開始", hp.startTick, detail, "info");
       if (onRestOnly(hp.staffIdx, hp.endTick))
         report("ヘアピン", hp.staffIdx, "終了", hp.endTick, detail, "info");
     }
