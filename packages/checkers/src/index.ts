@@ -1,5 +1,6 @@
 import { register, reset } from "@musescore-linter/core";
 
+import { beatCrossingTieChecker } from "./beatCrossingTieChecker.js";
 import { codaSegnoChecker } from "./codaSegnoChecker.js";
 import { conLegnoArcoChecker } from "./conLegnoArcoChecker.js";
 import { courtesyAccidentalChecker } from "./courtesyAccidentalChecker.js";
@@ -61,9 +62,11 @@ export function registerAll(): void {
   register(spannerOnRestChecker);
   register(slurSingleNoteChecker);
   register(crescTextResolutionChecker);
+  register(beatCrossingTieChecker);
 }
 
 export {
+  beatCrossingTieChecker,
   codaSegnoChecker,
   conLegnoArcoChecker,
   courtesyAccidentalChecker,

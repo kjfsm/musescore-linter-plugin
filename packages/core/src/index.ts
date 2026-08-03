@@ -1,4 +1,5 @@
 export { getAll, getById, register, reset } from "./checkerRegistry.js";
+export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";
 export { CANONICAL } from "./enumRegistry.js";
 export type { EventSpec, HairpinSpec, IRSpec, PartSpec, SlurSpec, TieSpec } from "./irBuilder.js";
 export { buildIR } from "./irBuilder.js";
@@ -21,6 +22,7 @@ export type {
   Issue,
   LintEvent,
   LintIR,
+  MeasureInfo,
   NoteInfo,
   Severity,
   TextPairCheckerConfig,

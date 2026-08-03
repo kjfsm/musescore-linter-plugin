@@ -2,12 +2,13 @@ import type {
   EventSpec,
   HairpinSpec,
   LintIR,
+  MeasureInfo,
   NoteInfo,
   PartSpec,
   SlurSpec,
   TieSpec,
 } from "@musescore-linter/core";
-import { buildIR, CANONICAL } from "@musescore-linter/core";
+import { buildIR, CANONICAL, TICKS_PER_QUARTER } from "@musescore-linter/core";
 
 import { articulationNameOf } from "./articulations.js";
 import { durationFromDivisions, durationFromType, type Fraction } from "./duration.js";
@@ -34,8 +35,9 @@ import {
   type XNode,
 } from "./xml.js";
 
-/** MuseScore 経路と tick の尺度を揃えるため、四分音符 = 480 tick に正規化する。 */
-export const TICKS_PER_QUARTER = 480;
+// MuseScore 経路と tick の尺度を揃えるため、四分音符 = 480 tick に正規化する。
+// 実体は core（両ソースが同じ尺度を共有する必要があるため）。既存の公開 API を保つため再輸出する。
+export { TICKS_PER_QUARTER };
 
 const K = CANONICAL.elementKinds;
 const BK = CANONICAL.barlineKinds;
@@ -66,11 +68,18 @@ interface SpanDraft {
   endPitch: number | null;
 }
 
+interface TimeSig {
+  n: number;
+  d: number;
+}
+
 interface ScoreDraft {
   parts: PartSpec[];
   events: PendingEvent[];
   /** measureIdx → その小節の長さ（tick）。全パートの最大値を採る。 */
   measureLengths: number[];
+  /** measureIdx → その小節の拍子。最初に見つけたパートの値を採る。取れない小節は空き。 */
+  timeSigs: (TimeSig | undefined)[];
   hairpins: SpanDraft[];
   slurs: SpanDraft[];
   ties: SpanDraft[];
@@ -188,8 +197,27 @@ function countStaves(partNode: XNode): number {
   return staves;
 }
 
+/**
+ * `<time>` を n/m として読む。読めない・単純な分数で表せないものは undefined を返し、
+ * その小節は拍子なしとして扱う（拍位置を使う checker は黙ってスキップする）。
+ * 複数の `<beats>` を持つ加算拍子（3+2/8 等）と `<senza-misura>` はここで落ちる。
+ */
+function readTimeSig(time: XNode): TimeSig | undefined {
+  const beats = childrenNamed(time, "beats");
+  const beatTypes = childrenNamed(time, "beat-type");
+  if (beats.length !== 1 || beatTypes.length !== 1) return undefined;
+
+  const n = childNumber(time, "beats");
+  const d = childNumber(time, "beat-type");
+  if (n === undefined || d === undefined) return undefined;
+  if (!Number.isInteger(n) || !Number.isInteger(d) || n <= 0 || d <= 0) return undefined;
+  return { n, d };
+}
+
 class PartWalker {
   private divisions = 1;
+  /** `<time>` は変更時のみ現れるので、次の変更まで持ち回る。 */
+  private timeSig: TimeSig | undefined;
   private cursor = 0;
   private measureIdx = 0;
   private chordAnchorTick = 0;
@@ -249,6 +277,9 @@ class PartWalker {
         this.handleMeasureChild(node);
       }
       this.growMeasure();
+      if (this.timeSig !== undefined && this.draft.timeSigs[i] === undefined) {
+        this.draft.timeSigs[i] = this.timeSig;
+      }
     }
   }
 
@@ -283,6 +314,10 @@ class PartWalker {
   private handleAttributes(node: XNode): void {
     const divisions = childNumber(node, "divisions");
     if (divisions !== undefined && divisions > 0) this.divisions = divisions;
+
+    for (const time of childrenNamed(node, "time")) {
+      this.timeSig = readTimeSig(time);
+    }
 
     for (const clef of childrenNamed(node, "clef")) {
       const staffNumber = Number(attr(clef, "number") ?? "1");
@@ -653,6 +688,7 @@ export function buildIRFromMusicXML(xmlText: string): LintIR {
     parts: [],
     events: [],
     measureLengths: [],
+    timeSigs: [],
     hairpins: [],
     slurs: [],
     ties: [],
@@ -714,5 +750,18 @@ function assemble(draft: ScoreDraft): LintIR {
     endPitch: s.endPitch,
   }));
 
-  return buildIR({ parts: draft.parts, events, hairpins, slurs, ties });
+  const measures: MeasureInfo[] = [];
+  for (let i = 0; i < draft.measureLengths.length; i++) {
+    const sig = draft.timeSigs[i];
+    if (sig === undefined) continue;
+    measures.push({
+      measure: i + 1,
+      startTick: measureStarts[i],
+      ticks: draft.measureLengths[i] ?? 0,
+      timeSigN: sig.n,
+      timeSigD: sig.d,
+    });
+  }
+
+  return buildIR({ parts: draft.parts, events, hairpins, slurs, ties, measures });
 }

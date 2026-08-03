@@ -1,5 +1,5 @@
 import { CANONICAL } from "./enumRegistry.js";
-import type { LintEvent, LintIR, NoteInfo } from "./types.js";
+import type { LintEvent, LintIR, MeasureInfo, NoteInfo } from "./types.js";
 
 /**
  * プレーンな spec から LintIR を組み立てる汎用ビルダ。
@@ -66,6 +66,7 @@ export interface IRSpec {
   hairpins?: HairpinSpec[];
   slurs?: SlurSpec[];
   ties?: TieSpec[];
+  measures?: MeasureInfo[];
 }
 
 function typeFromKind(kind: string): LintEvent["type"] {
@@ -97,6 +98,7 @@ export function buildIR(spec: IRSpec): LintIR {
       hairpins: (spec.hairpins ?? []).map((h) => ({ ...h })),
       slurs: (spec.slurs ?? []).map((s) => ({ ...s })),
       ties: (spec.ties ?? []).map((t) => ({ ...t })),
+      measures: (spec.measures ?? []).map((m) => ({ ...m })),
     },
     registry: { canonical: CANONICAL },
     derived: null,

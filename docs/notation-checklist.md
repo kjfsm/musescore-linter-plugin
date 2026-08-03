@@ -26,7 +26,7 @@
 - **取れる**: chord/rest（tick・measure・staffIdx・voice・duration・stemDirection・beamMode・articulations[]）、
   text 系（tempo_text・dynamic・staff_text・system_text・expression・rehearsal_mark の textNorm/textRaw/tempo/subtype）、
   barline（barlineKind = double/final/repeat/other）、`meta.hairpins[]`、`meta.slurs[]`、`meta.parts[]`（partName のみ）。
-- **取れない**: 音高（pitch/tpc/octave/臨時記号）、拍子、調号、音部記号、楽器メタ情報
+- **取れない**: 調号、音部記号、楽器メタ情報
   （instrumentId・楽器族・移調・MIDI program・有/無音程）、タイ、連符、装飾音、歌詞、グリッサンド/トレモロ、
   リピートの開始/終了の区別（現状 `repeat` に一括）。
 
@@ -96,13 +96,13 @@
 
 ## F. リズム / 連桁の浄書（拍の見せ方）
 
-| #   | 項目                                                  | タグ | severity | 優先 | 備考                                |
-| --- | ----------------------------------------------------- | ---- | -------- | ---- | ----------------------------------- |
-| F1  | 4/4 等で拍頭（特に 3 拍目）が休符のまとめ過ぎで隠れる | SDK  | info     | 高   | 要: 拍子。浄書の最重要ルールの一つ  |
-| F2  | 小節線をまたぐ音価（タイで書くべき長音）              | SDK  | warning  | 中   | 要: 拍子 + タイ                     |
-| F3  | シンコペーションの連桁が拍の見せ方に反する            | SDK  | info     | 中   | 要: 拍子 + beam                     |
-| F4  | 連符の不適切な記法                                    | SDK  | info     | 低   | 要: 連符情報                        |
-| F5  | stem 方向の不統一（同 voice 内、beamMode と矛盾）     | NOW  | info     | 低   | stemDirection/beamMode で部分的に可 |
+| #   | 項目                                                  | タグ | severity     | 優先 | 状態 | 備考                                                                              |
+| --- | ----------------------------------------------------- | ---- | ------------ | ---- | ---- | --------------------------------------------------------------------------------- |
+| F1  | 4/4 等で拍頭（特に 3 拍目）が休符のまとめ過ぎで隠れる | NOW  | info         | 高   |      | 拍子は `meta.measures` で取得済み。休符側への適用が残り                           |
+| F2  | 小節線をまたぐ音価（タイで書くべき長音）              | NOW  | warning      | 中   |      | 拍子・タイとも取得済み                                                            |
+| F3  | 拍境界をまたぐ音符（イマジナリーバーライン）          | SDK  | info/warning | 中   | ✅   | `beat-crossing-tie`。単純拍子・複合拍子のみ。加算拍子と慣習的例外パターンは対象外 |
+| F4  | 連符の不適切な記法                                    | SDK  | info         | 低   |      | 要: 連符情報                                                                      |
+| F5  | stem 方向の不統一（同 voice 内、beamMode と矛盾）     | NOW  | info         | 低   |      | stemDirection/beamMode で部分的に可                                               |
 
 ## G. スラー / フレージング / アーティキュレーション整合
 
@@ -152,7 +152,7 @@
 
 1. **音高（最優先・波及大）**: `Note.pitch`/`Note.tpc` を SDK types で公開 → helpers に `getNotePitches` / `getNoteSpellings` →
    `snapshot.ts` の chord 処理で `ev.notes`（音高/tpc/譜表位置/臨時記号表示）付与。解放: D6, G2, J1–J4, I2。`tpc` 演算は core の `pitchSpelling.ts`。
-2. **拍子**: `TimeSig` を helper で取得 → `meta.timeSigByMeasure`。解放: F1, F2, F3, J1 の小節境界。
+2. **拍子**（配線済み）: helpers の `getMeasureTimeSig` → `meta.measures[]`（拍子・小節先頭 tick・小節長）。解放: F3（実装済み）、F1/F2/J1 の小節境界。
 3. **楽器メタ**: `Part.instrumentId`/移調/MIDI program/有音程フラグを `meta.parts[]` に拡充。解放: H1, H3, H6, D7。
 4. **タイ / グリッサンド**: 既存の `note.spannerForward` 経路で `meta.ties`/`meta.glissandos`。解放: D4, D5, D6, F2, G2, G3。
 5. **連符・装飾・歌詞**: 後追い。解放: F4, I1, I3, H7, H8。

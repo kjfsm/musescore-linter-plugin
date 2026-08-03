@@ -16,6 +16,7 @@ function minimalIR(): LintIR {
       hairpins: [],
       slurs: [],
       ties: [],
+      measures: [],
     },
     registry: { canonical: CANONICAL },
     derived: null,

@@ -310,6 +310,56 @@ describe("buildIRFromMusicXML: 小節線", () => {
   });
 });
 
+describe("buildIRFromMusicXML: 小節の枠組み（meta.measures）", () => {
+  it("<time> から拍子・小節先頭 tick・小節長を拾う", () => {
+    const ir = buildIRFromMusicXML(duet);
+    expect(ir.meta.measures).toEqual([
+      { measure: 1, startTick: 0, ticks: WHOLE, timeSigN: 4, timeSigD: 4 },
+      { measure: 2, startTick: WHOLE, ticks: WHOLE, timeSigN: 4, timeSigD: 4 },
+      { measure: 3, startTick: WHOLE * 2, ticks: WHOLE, timeSigN: 4, timeSigD: 4 },
+    ]);
+  });
+
+  it("<time> は次の変更まで持ち回る", () => {
+    const withTime = (n: number, d: number) =>
+      `<time><beats>${n}</beats><beat-type>${d}</beat-type></time>`;
+    const ir = buildIRFromMusicXML(
+      score(
+        `<measure number="1">
+          <attributes><divisions>1</divisions>${withTime(3, 4)}</attributes>
+          ${quarterNote("C", 4)}${quarterNote("D", 4)}${quarterNote("E", 4)}
+        </measure>
+        <measure number="2">
+          ${quarterNote("C", 4)}${quarterNote("D", 4)}${quarterNote("E", 4)}
+        </measure>`,
+      ),
+    );
+    expect(ir.meta.measures).toEqual([
+      { measure: 1, startTick: 0, ticks: QUARTER * 3, timeSigN: 3, timeSigD: 4 },
+      { measure: 2, startTick: QUARTER * 3, ticks: QUARTER * 3, timeSigN: 3, timeSigD: 4 },
+    ]);
+  });
+
+  it("拍子が無い譜面では meta.measures が空になる", () => {
+    const ir = buildIRFromMusicXML(score(measure(quarterNote("C", 4))));
+    expect(ir.meta.measures).toEqual([]);
+  });
+
+  it("加算拍子（複数の <beats>）は拍子なしとして扱う", () => {
+    const ir = buildIRFromMusicXML(
+      score(
+        `<measure number="1">
+          <attributes><divisions>1</divisions>
+            <time><beats>3</beats><beat-type>8</beat-type><beats>2</beats><beat-type>8</beat-type></time>
+          </attributes>
+          ${quarterNote("C", 4)}
+        </measure>`,
+      ),
+    );
+    expect(ir.meta.measures).toEqual([]);
+  });
+});
+
 describe("buildIRFromMusicXML: エラー", () => {
   it("score-timewise は明示的に非対応と伝える", () => {
     expect(() => buildIRFromMusicXML('<?xml version="1.0"?><score-timewise/>')).toThrow(
