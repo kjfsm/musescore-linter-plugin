@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: ビルド
-        run: pnpm run build
+        run: pnpm run build:plugin
 
       - name: Changeset アクションの実行
         id: changesets
