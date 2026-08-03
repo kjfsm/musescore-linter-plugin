@@ -200,6 +200,41 @@ describe("buildSnapshot", () => {
   });
 });
 
+describe("buildSnapshot: テンポ注記", () => {
+  /** Tempo 注記を 1 つだけ持つスコア。`tempo` は拍/秒。 */
+  function mockScoreWithTempo(tempo: unknown): Score {
+    const seg = {
+      tick: 0,
+      annotations: [{ name: "Tempo", plainText: "Allegro", track: 0, tempo }],
+      nextInMeasure: null,
+      elementAt: () => null,
+    };
+    const measure = { firstSegment: seg, nextMeasure: null, irregular: false };
+    return {
+      nstaves: 1,
+      ntracks: 4,
+      parts: [],
+      firstMeasure: measure,
+      staves: [],
+    } as unknown as Score;
+  }
+
+  it("tempo を BPM に換算する", () => {
+    const ir = buildSnapshot(mockScoreWithTempo(2), hostEnums());
+    expect(ir.events[0].tempo).toBe(120);
+  });
+
+  // getTempoBpm は Math.round(el.tempo * 60) を返すだけなので、tempo が未定義
+  // だと NaN になる。null に落としておかないと tempo-without-bpm が
+  // 「BPM あり」と誤判定して素通りさせてしまう。
+  it("tempo が取れないときは NaN ではなく null にする", () => {
+    for (const broken of [undefined, null, "fast", Number.NaN]) {
+      const ir = buildSnapshot(mockScoreWithTempo(broken), hostEnums());
+      expect(ir.events[0].tempo, String(broken)).toBeNull();
+    }
+  });
+});
+
 describe("buildSnapshot: システムブラケット", () => {
   // 実際の MuseScore と一致しない独自の割り当て。hostEnums 経由で解決されることを証明するため。
   const BracketType = { NORMAL: 300, BRACE: 301, SQUARE: 302, LINE: 303, NO_BRACKET: 304 };

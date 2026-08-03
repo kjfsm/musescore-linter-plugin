@@ -1,7 +1,15 @@
 import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
-import { getCheckerList, resolveCheckerOptions } from "@musescore-linter/core";
+import {
+  getCategories,
+  getCheckerList,
+  isCheckerEnabled,
+  resolveCheckerOptions,
+} from "@musescore-linter/core";
 
 import { allRuleIds } from "./lint";
+
+/** checker が有効かどうか。判定は core に一本化してある。 */
+export const isEnabled = isCheckerEnabled;
 
 const STORAGE_KEY = "musescore-linter:rule-overrides";
 // checker 個別の設定は ON/OFF とは別のキーに置く。同じ袋に混ぜると、真偽値として
@@ -10,17 +18,6 @@ const OPTIONS_STORAGE_KEY = "musescore-linter:rule-options";
 
 /** ruleId → { key: 値 }。「既定から変えたぶん」だけを持つ。 */
 export type RuleOptions = Record<string, Record<string, CheckerOptionValue>>;
-
-/** 設定パネルの表示順。ここに無いカテゴリは後ろに回す。 */
-const CATEGORY_ORDER = ["articulation", "dynamics", "tempo", "slur-tie", "notation"];
-
-const CATEGORY_LABEL: Record<string, string> = {
-  articulation: "奏法・アーティキュレーション",
-  dynamics: "強弱",
-  tempo: "テンポ",
-  "slur-tie": "スラー・タイ",
-  notation: "記譜",
-};
 
 const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
 
@@ -38,28 +35,16 @@ export function ruleGroups(): RuleGroup[] {
     if (bucket) bucket.push(checker);
     else byCategory.set(checker.category, [checker]);
   }
-  const rank = (category: string): number => {
-    const i = CATEGORY_ORDER.indexOf(category);
-    return i === -1 ? CATEGORY_ORDER.length : i;
-  };
-  return [...byCategory.entries()]
-    .sort(([a], [b]) => rank(a) - rank(b))
-    .map(([category, checkers]) => ({
-      category,
-      label: CATEGORY_LABEL[category] ?? category,
-      // severity 順（error→warning→info）に並べる。同 severity 内は registerAll() の登録順のまま
-      // （安定ソート）にしておくと、関連しあうペアが隣り合った現状の並びが崩れない。
-      checkers: [...checkers].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]),
-    }));
-}
-
-/**
- * checker が有効かどうか。core の linter と同じ判定にそろえる
- * （`enabledRules[id]` が未定義なら `checker.defaultEnabled` にフォールバック）。
- */
-export function isEnabled(checker: Checker, enabledRules: Record<string, boolean>): boolean {
-  const explicit = enabledRules[checker.id];
-  return explicit === undefined ? checker.defaultEnabled !== false : explicit;
+  // カテゴリの並び順とラベルは core に一本化してある（QML の設定タブと同じ定義）。
+  return getCategories().map(({ id, label }) => ({
+    category: id,
+    label,
+    // severity 順（error→warning→info）に並べる。同 severity 内は registerAll() の登録順のまま
+    // （安定ソート）にしておくと、関連しあうペアが隣り合った現状の並びが崩れない。
+    checkers: [...(byCategory.get(id) ?? [])].sort(
+      (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity],
+    ),
+  }));
 }
 
 /**
@@ -67,6 +52,10 @@ export function isEnabled(checker: Checker, enabledRules: Record<string, boolean
  * こうしておくと checker が増減しても、触っていないルールは常に既定に従う。
  */
 export function saveEnabledRules(storage: Storage, rules: Record<string, boolean>): void {
+  // getCheckerList() は登録前だと空。登録を保証しないと defaults が空 Map になり、
+  // すべての override が「未知の checker」として捨てられ、保存済みの設定を {} で
+  // 上書きしてしまう（diffFromDefaults の allRuleIds() 呼び出しと同じ理由）。
+  allRuleIds();
   const defaults = new Map(getCheckerList().map((c) => [c.id, c.defaultEnabled !== false]));
   const overrides: Record<string, boolean> = {};
   for (const [id, enabled] of Object.entries(rules)) {

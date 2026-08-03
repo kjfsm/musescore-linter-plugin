@@ -1,4 +1,4 @@
-import { getAll } from "./checkerRegistry.js";
+import { getAll, isCheckerEnabled } from "./checkerRegistry.js";
 import { CANONICAL } from "./enumRegistry.js";
 import { compareIssues } from "./issue.js";
 import { make } from "./logger.js";
@@ -23,8 +23,6 @@ export function ensureDerived(ir: LintIR): void {
   const derived: IRDerived = {
     _eventsCount: ir.events.length,
     firstChordByStaff: {},
-    annotationIdsByTick: {},
-    globalAnnotationIdsByTick: {},
     articulationsByChordId: {},
     slursByStaff: {},
     tiesByStaff: {},
@@ -48,24 +46,6 @@ export function ensureDerived(ir: LintIR): void {
         measure: ev.measure,
       };
     }
-  }
-
-  const dynamicKind = canonical.elementKinds.DYNAMIC;
-  for (const tick of Object.keys(ir.index?.byTick ?? {})) {
-    const ids = ir.index.byTick[tick];
-    const annotationIds = ids.filter((id) => {
-      const e = ir.events[id];
-      return e.type === "text" || e.kind === dynamicKind;
-    });
-    if (annotationIds.length > 0) derived.annotationIdsByTick[tick] = annotationIds;
-  }
-
-  const globalIds = ir.index?.byStaff?.["-1"] ?? [];
-  for (const id of globalIds) {
-    const gev = ir.events[id];
-    const k = String(gev.tick);
-    if (!derived.globalAnnotationIdsByTick[k]) derived.globalAnnotationIdsByTick[k] = [];
-    derived.globalAnnotationIdsByTick[k].push(gev.id);
   }
 
   for (const id of chordIds) {
@@ -144,11 +124,7 @@ export function runAllCheckers(
   const checkers = getAll();
 
   for (const checker of checkers) {
-    const enabled =
-      enabledRules[checker.id] !== undefined
-        ? enabledRules[checker.id] !== false
-        : checker.defaultEnabled !== false;
-    if (!enabled) continue;
+    if (!isCheckerEnabled(checker, enabledRules)) continue;
 
     try {
       const tChecker = perf.now();

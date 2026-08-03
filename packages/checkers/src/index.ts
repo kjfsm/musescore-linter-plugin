@@ -1,3 +1,4 @@
+import type { Checker } from "@musescore-linter/core";
 import { register, reset } from "@musescore-linter/core";
 
 import { beatCrossingTieChecker } from "./beatCrossingTieChecker.js";
@@ -32,71 +33,52 @@ import { tempoWithoutBpmChecker } from "./tempoWithoutBpmChecker.js";
 import { tiePitchMismatchChecker } from "./tiePitchMismatchChecker.js";
 import { unaCordaChecker } from "./unaCordaChecker.js";
 
-export function registerAll(): void {
-  reset();
-  register(pizzArcoChecker);
-  register(sordinoChecker);
-  register(soloTuttiChecker);
-  register(divisiChecker);
-  register(sulTastoOrdChecker);
-  register(sulPontOrdChecker);
-  register(conLegnoArcoChecker);
-  register(muteOpenChecker);
-  register(unaCordaChecker);
-  register(harpTableChecker);
-  register(slurTieArticulationConsistencyChecker);
-  register(restAnnotationChecker);
-  register(tempoBarlineChecker);
-  register(openingTempoChecker);
-  register(firstNoteDynamicsChecker);
-  register(tempoWithoutBpmChecker);
-  register(tempoChangeResolutionChecker);
-  register(duplicateDynamicsChecker);
-  register(simultaneousDynamicsChecker);
-  register(hairpinTargetDynamicChecker);
-  register(finalBarlineChecker);
-  register(codaSegnoChecker);
-  register(rehearsalMarkOrderChecker);
-  register(repeatBarlineMatchChecker);
-  register(tiePitchMismatchChecker);
-  register(courtesyAccidentalChecker);
-  register(hairpinOnRestChecker);
-  register(slurOnRestChecker);
-  register(slurSingleNoteChecker);
-  register(crescTextResolutionChecker);
-  register(beatCrossingTieChecker);
-}
-
-export {
-  beatCrossingTieChecker,
-  codaSegnoChecker,
-  conLegnoArcoChecker,
-  courtesyAccidentalChecker,
-  crescTextResolutionChecker,
-  divisiChecker,
-  duplicateDynamicsChecker,
-  finalBarlineChecker,
-  firstNoteDynamicsChecker,
-  hairpinOnRestChecker,
-  hairpinTargetDynamicChecker,
-  harpTableChecker,
-  muteOpenChecker,
-  openingTempoChecker,
+/**
+ * 登録される checker の一覧。**この配列が唯一の登録点**。
+ *
+ * 並び順はそのまま実行順・検出結果の並び順になる。関連しあうペア（pizz./arco など）を
+ * 隣り合わせてあるので、追加するときは意味のある位置に入れること。
+ *
+ * 以前は import・registerAll 内の register 呼び出し・末尾の re-export ブロックの
+ * 3 箇所を手で揃える必要があり、契約書には「唯一の同期点」と書いてあった。
+ * 個別の re-export には利用者が 1 つも無かった（外から使われるのは registerAll だけで、
+ * テストは ../src/xxxChecker.js を直接読む）ので落とし、import と この配列の 2 箇所にした。
+ */
+export const ALL_CHECKERS: Checker[] = [
   pizzArcoChecker,
+  sordinoChecker,
+  soloTuttiChecker,
+  divisiChecker,
+  sulTastoOrdChecker,
+  sulPontOrdChecker,
+  conLegnoArcoChecker,
+  muteOpenChecker,
+  unaCordaChecker,
+  harpTableChecker,
+  slurTieArticulationConsistencyChecker,
+  restAnnotationChecker,
+  tempoBarlineChecker,
+  openingTempoChecker,
+  firstNoteDynamicsChecker,
+  tempoWithoutBpmChecker,
+  tempoChangeResolutionChecker,
+  duplicateDynamicsChecker,
+  simultaneousDynamicsChecker,
+  hairpinTargetDynamicChecker,
+  finalBarlineChecker,
+  codaSegnoChecker,
   rehearsalMarkOrderChecker,
   repeatBarlineMatchChecker,
-  restAnnotationChecker,
-  simultaneousDynamicsChecker,
+  tiePitchMismatchChecker,
+  courtesyAccidentalChecker,
+  hairpinOnRestChecker,
   slurOnRestChecker,
   slurSingleNoteChecker,
-  slurTieArticulationConsistencyChecker,
-  soloTuttiChecker,
-  sordinoChecker,
-  sulPontOrdChecker,
-  sulTastoOrdChecker,
-  tempoBarlineChecker,
-  tempoChangeResolutionChecker,
-  tempoWithoutBpmChecker,
-  tiePitchMismatchChecker,
-  unaCordaChecker,
-};
+  crescTextResolutionChecker,
+  beatCrossingTieChecker,
+];
+
+export function registerAll(): void {
+  reset();
+  for (const checker of ALL_CHECKERS) register(checker);
+}

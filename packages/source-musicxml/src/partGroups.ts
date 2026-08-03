@@ -1,4 +1,5 @@
 import type { PartGroupInfo, PartGroupSymbol } from "@musescore-linter/core";
+import { normalizePartGroups } from "@musescore-linter/core";
 
 import type { XNode } from "./xml.js";
 import { attr, childText, childrenOf, tagOf } from "./xml.js";
@@ -96,7 +97,6 @@ export function resolvePartGroups(
   rangeByPartId: Map<string, StaffRange>,
 ): PartGroupInfo[] {
   const out: PartGroupInfo[] = [];
-  const seen = new Set<string>();
 
   for (const draft of drafts) {
     // <score-part> はあるが <part> が無い id は捨てる
@@ -114,17 +114,9 @@ export function resolvePartGroups(
     const covered = ranges.reduce((n, r) => n + r.count, 0);
     if (covered !== staffCount) continue;
 
-    // 1 譜表しか覆わない括弧はグループとして意味を持たない。MuseScore 経路
-    // （snapshot.ts の readPartGroups）も同じ条件で落としており、meta.partGroups の
-    // 意味を両ソースで揃えるためここでも落とす。
-    if (staffCount < 2) continue;
-
-    const key = `${draft.symbol}:${startStaffIdx}:${staffCount}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
     out.push({ symbol: draft.symbol, startStaffIdx, staffCount });
   }
 
-  // 外側の括弧が先に来る並び（MuseScore 経路と揃える）
-  return out.sort((a, b) => a.startStaffIdx - b.startStaffIdx || b.staffCount - a.staffCount);
+  // 最小サイズの切り捨て・重複の畳み込み・並び順は core が決める（MuseScore 経路と同じ規則）
+  return normalizePartGroups(out);
 }

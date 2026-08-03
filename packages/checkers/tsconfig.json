@@ -1,9 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "outDir": "out",
-    "rootDir": ".",
+    "noEmit": true,
     "paths": {
       "@musescore-linter/core": ["../core/src/index.ts"]
     }

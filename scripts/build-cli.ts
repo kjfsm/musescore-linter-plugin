@@ -8,10 +8,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "dist-cli", "musescore-lint.mjs");
 
-function alias(name: string, file: string): [string, string] {
-  return [`@musescore-linter/${name}`, path.join(ROOT, file)];
-}
-
 async function main() {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "packages/cli/package.json"), "utf8")) as {
     version: string;
@@ -28,11 +24,6 @@ async function main() {
     minify: false,
     // shebang は packages/cli/src/main.ts の先頭にあり、esbuild がそのまま先頭へ残す
     define: { __CLI_VERSION__: JSON.stringify(pkg.version) },
-    alias: Object.fromEntries([
-      alias("core", "packages/core/src/index.ts"),
-      alias("checkers", "packages/checkers/src/index.ts"),
-      alias("source-musicxml", "packages/source-musicxml/src/index.ts"),
-    ]),
   });
 
   fs.chmodSync(OUT, 0o755);

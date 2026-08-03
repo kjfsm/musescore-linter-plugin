@@ -1,11 +1,4 @@
-import {
-  ensureDerived,
-  reset,
-  runAllCheckers,
-  tpcToAlter,
-  tpcToName,
-  tpcToStep,
-} from "@musescore-linter/core";
+import { ensureDerived, getCheckerList, reset, runAllCheckers } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
@@ -19,7 +12,7 @@ import { firstNoteDynamicsChecker } from "../src/firstNoteDynamicsChecker.js";
 import { hairpinOnRestChecker } from "../src/hairpinOnRestChecker.js";
 import { hairpinTargetDynamicChecker } from "../src/hairpinTargetDynamicChecker.js";
 import { harpTableChecker } from "../src/harpTableChecker.js";
-import { registerAll } from "../src/index.js";
+import { ALL_CHECKERS, registerAll } from "../src/index.js";
 import { muteOpenChecker } from "../src/muteOpenChecker.js";
 import { openingTempoChecker } from "../src/openingTempoChecker.js";
 import { pizzArcoChecker } from "../src/pizzArcoChecker.js";
@@ -46,6 +39,28 @@ function run(ir: ReturnType<typeof buildIR>, enabledRules: Record<string, boolea
   ensureDerived(ir);
   return runAllCheckers(ir, enabledRules);
 }
+
+// ─── レジストリ ─────────────────────────────────────────────────────────────
+
+describe("registerAll", () => {
+  // register は id が重複すると throw するので、実装側に打ち間違いが紛れ込めば
+  // ここで落ちる。checker を増やしたときの取りこぼしを検出する唯一の場所。
+  it("重複 id なしで全 checker を登録できる", () => {
+    reset();
+    expect(() => registerAll()).not.toThrow();
+    const ids = getCheckerList().map((c) => c.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  // ALL_CHECKERS が唯一の登録点であることの確認。配列に足したのに登録されない、
+  // という状態が起きないようにする。
+  it("ALL_CHECKERS の中身がそのまま登録される", () => {
+    reset();
+    registerAll();
+    expect(getCheckerList()).toEqual(ALL_CHECKERS);
+  });
+});
 
 // ─── クリーン fixture ───────────────────────────────────────────────────────
 
@@ -606,6 +621,26 @@ describe("tempo-without-bpm checker", () => {
     });
     expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
   });
+
+  // 入力ソースが壊れた値を入れてきても検出漏れにしない。null / undefined
+  // だけを弾いていると NaN が「BPM あり」として素通りしていた。
+  it("tempo が NaN でも検出", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.TEMPO_TEXT,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          tempo: Number.NaN,
+          textNorm: "allegro",
+          textRaw: "Allegro",
+        },
+      ],
+    });
+    expect(tempoWithoutBpmChecker.run(ir)).toHaveLength(1);
+  });
 });
 
 // ─── duplicate-dynamics ─────────────────────────────────────────────────────
@@ -1074,6 +1109,23 @@ describe("con-legno-arco checker", () => {
 // ─── rest-annotation（追加ケース）──────────────────────────────────────────
 
 describe("rest-annotation checker（追加ケース）", () => {
+  // 以前は SYSTEM_TEXT を見ておらず、MuseScore で SystemText として書いた奏法指示を
+  // 取りこぼしていた（MusicXML 経路では staff_text になるため検出されていた）。
+  it("休符に SYSTEM_TEXT の pizz. → 検出する", () => {
+    const ir = cleanIR([
+      { kind: K.REST, staff: 0, tick: 960, measure: 3 },
+      {
+        kind: K.SYSTEM_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "pizz.",
+        textRaw: "pizz.",
+      },
+    ]);
+    expect(restAnnotationChecker.run(ir)).toHaveLength(1);
+  });
+
   it("休符に pizz. (STAFF_TEXT) → error 1件", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
@@ -1309,6 +1361,23 @@ describe("tempo-barline checker（追加ケース）", () => {
 // ─── coda-segno ──────────────────────────────────────────────────────────────
 
 describe("coda-segno checker", () => {
+  // 以前は EXPRESSION を見ておらず、MuseScore で Expression 要素として書いた
+  // 反復記号を取りこぼしていた（MusicXML 経路では staff_text になるため検出されており、
+  // 同じ楽譜でもソースによって結果が変わっていた）。
+  it("EXPRESSION で書かれた D.S. も検出する", () => {
+    const ir = cleanIR([
+      {
+        kind: K.EXPRESSION,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "d.s.",
+        textRaw: "D.S.",
+      },
+    ]);
+    expect(codaSegnoChecker.run(ir)).toHaveLength(1);
+  });
+
   it("D.S. があるが Segno なし → error 1件", () => {
     const ir = cleanIR([
       {
@@ -2009,31 +2078,6 @@ describe("tie-pitch-mismatch checker", () => {
       ],
     });
     expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
-  });
-});
-
-// ─── tpc spelling helpers ─────────────────────────────────────────────────
-
-describe("tpc spelling helpers", () => {
-  it("tpcToStep returns 0=C..6=B", () => {
-    expect(tpcToStep(14)).toBe(0); // C
-    expect(tpcToStep(13)).toBe(3); // F
-    expect(tpcToStep(20)).toBe(3); // F#（同じステップ F）
-    expect(tpcToStep(19)).toBe(6); // B
-  });
-
-  it("tpcToAlter returns the chromatic alteration", () => {
-    expect(tpcToAlter(14)).toBe(0); // C
-    expect(tpcToAlter(20)).toBe(1); // F#
-    expect(tpcToAlter(21)).toBe(1); // C#
-    expect(tpcToAlter(12)).toBe(-1); // Bb
-  });
-
-  it("tpcToName composes letter + accidental", () => {
-    expect(tpcToName(14)).toBe("C");
-    expect(tpcToName(13)).toBe("F");
-    expect(tpcToName(20)).toBe("F#");
-    expect(tpcToName(12)).toBe("Bb");
   });
 });
 

@@ -1,17 +1,15 @@
 import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
+import { getCanonical, techniqueTextKinds } from "./base/predicates.js";
 
 function collectTextEvents(ir: LintIR): LintEvent[] {
   const canonical = getCanonical(ir);
   if (!canonical) return [];
 
-  const kinds = [
-    canonical.elementKinds.STAFF_TEXT,
-    canonical.elementKinds.SYSTEM_TEXT,
-    canonical.elementKinds.REHEARSAL_MARK,
-  ];
+  // 以前は EXPRESSION を見ておらず、MuseScore で Expression 要素として書いた
+  // 「Coda」「D.C.」を取りこぼしていた。テンポ表記は反復記号を載せないので除く。
+  const kinds = [...techniqueTextKinds(ir), canonical.elementKinds.REHEARSAL_MARK];
 
   const events: LintEvent[] = [];
   for (const kind of kinds) {

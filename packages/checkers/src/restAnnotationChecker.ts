@@ -1,7 +1,7 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
-import { getCanonical, isDynamicMark, isKind } from "./base/predicates.js";
+import { getCanonical, isDynamicMark, techniqueTextKinds } from "./base/predicates.js";
 
 // 休符に付与してはいけない演奏技法テキスト（textNorm の完全一致）
 const DISALLOWED_TECHNIQUE_PATTERNS = new Set([
@@ -47,11 +47,9 @@ export const restAnnotationChecker: Checker = {
     if (!canonical) return issues;
 
     const parts = ir.meta?.parts ?? [];
-    const annotationKinds = [
-      canonical.elementKinds.STAFF_TEXT,
-      canonical.elementKinds.EXPRESSION,
-      canonical.elementKinds.DYNAMIC,
-    ];
+    // 以前は SYSTEM_TEXT を見ておらず、MuseScore で SystemText として書いた
+    // 「pizz.」を取りこぼしていた。テンポ表記は休符に載っていて当然なので除く。
+    const scannedKinds = [...techniqueTextKinds(ir), canonical.elementKinds.DYNAMIC];
 
     for (const staff of parts) {
       const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
@@ -59,7 +57,7 @@ export const restAnnotationChecker: Checker = {
         (byStaff[canonical.elementKinds.REST] ?? []).map((id) => ir.events[id].tick),
       );
 
-      for (const kind of annotationKinds) {
+      for (const kind of scannedKinds) {
         const ids = byStaff[kind] ?? [];
         for (const id of ids) {
           const ev = ir.events[id];
@@ -68,8 +66,7 @@ export const restAnnotationChecker: Checker = {
           const isDynamic = isDynamicMark(ev, ir);
           const isDisallowed =
             isDynamic ||
-            ((isKind(ev, canonical.elementKinds.STAFF_TEXT) ||
-              isKind(ev, canonical.elementKinds.EXPRESSION)) &&
+            (techniqueTextKinds(ir).includes(ev.kind) &&
               DISALLOWED_TECHNIQUE_PATTERNS.has(ev.textNorm));
 
           if (!isDisallowed) continue;

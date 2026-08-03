@@ -1,7 +1,8 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
-import { getCanonical, isDynamicMark } from "./base/predicates.js";
+import { getCanonical } from "./base/predicates.js";
+import { eventIdsForStaff } from "./base/query.js";
 
 export const firstNoteDynamicsChecker: Checker = {
   id: "first-note-dynamics",
@@ -23,31 +24,11 @@ export const firstNoteDynamicsChecker: Checker = {
       const firstChord = firstChordByStaff[staff.staffIdx];
       if (!firstChord) continue;
 
-      let hasDynamics = false;
-
-      // staff-scoped events at firstChord.tick
-      const tickIds = ir.index.byTick[String(firstChord.tick)] ?? [];
-      for (const id of tickIds) {
-        const tev = ir.events[id];
-        if (tev.staffIdx !== staff.staffIdx) continue;
-        if (isDynamicMark(tev, ir)) {
-          hasDynamics = true;
-          break;
-        }
-      }
-
-      // global scope events at firstChord.tick
-      if (!hasDynamics) {
-        const globalIds = ir.index.byStaff["-1"] ?? [];
-        for (const id of globalIds) {
-          const gev = ir.events[id];
-          if (gev.tick !== firstChord.tick) continue;
-          if (isDynamicMark(gev, ir)) {
-            hasDynamics = true;
-            break;
-          }
-        }
-      }
+      // 譜表に載ったダイナミクスと、global scope（全パート共通）のダイナミクスの
+      // 両方を見る。MuseScore 経路は後者に置くが、MusicXML 経路には相当する表現が
+      // 無く譜表に載る。
+      const dynamicIds = eventIdsForStaff(ir, staff.staffIdx, canonical.elementKinds.DYNAMIC);
+      const hasDynamics = dynamicIds.some((id) => ir.events[id].tick === firstChord.tick);
 
       if (!hasDynamics) {
         issues.push(

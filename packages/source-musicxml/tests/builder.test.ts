@@ -339,6 +339,41 @@ describe("buildIRFromMusicXML: テキストと強弱", () => {
     ]);
   });
 
+  // MusicXML の <words> には要素の種類が無いので、MuseScore 経路（isTempo で
+  // 判定できる）と揃えるにはテキストで見るしかない。ここを staff_text に
+  // 落としていると opening-tempo が「冒頭にテンポ表記がありません」と誤報する。
+  it("BPM も metronome も無いテンポ語だけの direction を tempo_text にする", () => {
+    const ir = buildIRFromMusicXML(
+      score(
+        measure(`<direction><direction-type><words>Allegro con brio</words></direction-type></direction>
+        ${quarterNote("C", 4)}`),
+      ),
+    );
+    const tempos = eventsOfKind(ir, K.TEMPO_TEXT);
+    expect(tempos).toHaveLength(1);
+    expect(tempos[0].textRaw).toBe("Allegro con brio");
+    // BPM は書かれていないので null のまま。tempo-without-bpm がこれを拾う。
+    expect(tempos[0].tempo).toBeNull();
+    expect(eventsOfKind(ir, K.STAFF_TEXT)).toHaveLength(0);
+  });
+
+  it("テンポ語でないテキストは staff_text のままにする", () => {
+    const ir = buildIRFromMusicXML(
+      score(
+        measure(`<direction><direction-type><words>dolce</words></direction-type></direction>
+        <direction><direction-type><words>rit.</words></direction-type></direction>
+        <direction><direction-type><words>a tempo</words></direction-type></direction>
+        ${quarterNote("C", 4)}`),
+      ),
+    );
+    expect(eventsOfKind(ir, K.TEMPO_TEXT)).toHaveLength(0);
+    expect(eventsOfKind(ir, K.STAFF_TEXT).map((e) => e.textNorm)).toEqual([
+      "dolce",
+      "rit.",
+      "a tempo",
+    ]);
+  });
+
   it("segno / coda / rehearsal を対応する kind に変換する", () => {
     const ir = buildIRFromMusicXML(
       score(

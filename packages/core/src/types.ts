@@ -120,8 +120,6 @@ export interface IRMeta {
 export interface IRDerived {
   _eventsCount: number;
   firstChordByStaff: Record<number, { tick: number; measure: number }>;
-  annotationIdsByTick: Record<string, number[]>;
-  globalAnnotationIdsByTick: Record<string, number[]>;
   // chord イベント id → アーティキュレーション名
   articulationsByChordId: Record<number, string[]>;
   // staffIdx → スラー（startTick 昇順）
@@ -215,6 +213,13 @@ export interface Checker {
   name: string;
   description: string;
   category: string;
+  /**
+   * この checker が出しうる issue のうち**最も重い** severity。
+   *
+   * `createIssue` の既定値であると同時に、設定 UI のバッジ表示に使われる
+   * （実行前でも出るので、実際の issue から導出することはできない）。
+   * 条件によって軽い severity も出す checker は、重いほうをここに書くこと。
+   */
   severity: Severity;
   defaultEnabled: boolean;
   options?: CheckerOptionSpec[];
@@ -225,18 +230,4 @@ export interface Checker {
    * 引数を取らない既存の checker はそのままこの型を満たす。
    */
   run(ir: LintIR, options?: Record<string, unknown>): Issue[];
-}
-
-export interface TextPairCheckerConfig {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  severity?: Severity;
-  defaultEnabled?: boolean;
-  onPatterns: string[];
-  offPatterns: string[];
-  defaultState: "on" | "off";
-  onLabel: string;
-  offLabel: string;
 }

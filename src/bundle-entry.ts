@@ -1,8 +1,10 @@
 import { registerAll } from "@musescore-linter/checkers";
 import {
   compareVersions,
+  getCategories,
   getCheckerList,
   getCheckerPerfReport,
+  isCheckerEnabled,
   isNewerVersion,
   resolveCheckerOptions,
   runAllCheckers,
@@ -16,9 +18,11 @@ registerAll();
 export {
   buildSnapshot,
   compareVersions,
+  getCategories,
   getCheckerList,
   getCheckerPerfReport,
   getSnapshotPerfReport,
+  isCheckerEnabled,
   isNewerVersion,
   resolveCheckerOptions,
   runAllCheckers,

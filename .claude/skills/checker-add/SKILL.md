@@ -7,114 +7,144 @@ description: 新しい Checker を追加するときに使う。スキャフォ�
 
 新しい Checker を追加するための 4 ステップ手順。
 
+Checker オブジェクトの必須フィールド・`options` の書き方・severity 基準・LintIR の構造・
+`ir.index` を使うパフォーマンス上の注意点など、**契約そのもの**は
+`.claude/rules/checker-contract.md` にまとまっている。ここではスキャフォールド〜登録〜
+テスト〜README 更新までの手順だけを示す。
+
 ## ステップ 1: checker ファイルの作成
 
-`src/checkers/xxxChecker.js` を作成する。on/off ペア型か独立チェック型かで選ぶ。
+`packages/checkers/src/xxxChecker.ts` を作成する。on/off ペア型か独立チェック型かで選ぶ。
 
 ### 独立チェック型のテンプレート
 
-```js
-.pragma library
-.import "../issue.js" as IssueModule
+実例: `packages/checkers/src/finalBarlineChecker.ts`
 
-var checker = {
-  id: "xxx-check",              // kebab-case、Registry キー（他と重複禁止）
+```ts
+import type { Checker, Issue, LintIR } from "@musescore-linter/core";
+import { createIssue } from "@musescore-linter/core";
+
+export const xxxChecker: Checker = {
+  id: "xxx-check", // kebab-case、他と重複禁止
   name: "〇〇チェック",
   description: "〇〇が〇〇になっていることを確認する",
-  category: "notation",         // articulation / dynamics / tempo / notation
-  severity: "warning",          // error / warning / info
+  category: "notation", // articulation / dynamics / tempo / notation / slur-tie
+  severity: "warning", // error / warning / info
   defaultEnabled: true,
-
-  run: function(ir) {
-    var issues = [];
+  run(ir: LintIR): Issue[] {
+    const issues: Issue[] = [];
     // ir.index.byKind / byStaffAndKind / byTick を使う（ir.events の全件ループは避ける）
-    var targets = ir.index.byKind["TARGET_KIND"] || [];
-    for (var i = 0; i < targets.length; i++) {
-      var ev = targets[i];
+    const targetIds = ir.index.byKind["TARGET_KIND"] ?? [];
+    for (const id of targetIds) {
+      const ev = ir.events[id];
       // 違反条件のチェック
-      issues.push(IssueModule.createIssue(checker, {
-        message: "〇〇が不足しています",
-        partName: ev.staffIdx >= 0 ? ir.meta.parts[ev.staffIdx].partName : "",
-        staffIdx: ev.staffIdx,
-        measure: ev.measure,
-        tick: ev.tick,
-        detail: null
-      }));
+      issues.push(
+        createIssue(xxxChecker, {
+          message: "〇〇が不足しています",
+          partName: ev.staffIdx >= 0 ? ir.meta.parts[ev.staffIdx].partName : "",
+          staffIdx: ev.staffIdx,
+          measure: ev.measure,
+          tick: ev.tick,
+        }),
+      );
     }
     return issues;
-  }
+  },
 };
 ```
 
 ### on/off ペア型のテンプレート
 
-```js
-.pragma library
-.import "./base/textPairChecker.js" as TextPair
+実例: `packages/checkers/src/pizzArcoChecker.ts`
 
-var checker = TextPair.createTextPairChecker({
+```ts
+import { createTextPairChecker } from "./base/textPairChecker.js";
+
+export const xxxChecker = createTextPairChecker({
   id: "xxx-on-off",
   name: "〇〇 on/off チェック",
   description: "〇〇の開始と終了が対応していることを確認する",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,
-  onPattern: /^pizz\.$/i,
-  offPattern: /^arco$/i,
-  onLabel: "pizz.",
-  offLabel: "arco"
+  onPatterns: ["xxx"],
+  offPatterns: ["yyy"],
+  defaultState: "off",
+  onLabel: "xxx",
+  offLabel: "yyy",
 });
 ```
 
-## ステップ 2: index.js への登録（唯一の同期点）
+## ステップ 2: `index.ts` への登録
 
-`src/checkers/index.js` に 2 行追加する。
+`packages/checkers/src/index.ts` **1 ファイルだけ**を触る（他のファイルを触る必要はない）。
+その中で **2 箇所**追加する。
 
-```js
-// 既存の import の後に追加
-.import "xxxChecker.js" as XxxChecker
+```ts
+// 1. 冒頭の import 群に追加（アルファベット順）
+import { xxxChecker } from "./xxxChecker.js";
 
-// 既存の Registry.register の後に追加
-Registry.register(XxxChecker.checker);
+// 2. ALL_CHECKERS 配列に追加。ここが唯一の登録点で、registerAll() はこの配列を回すだけ。
+//    並び順がそのまま実行順・検出結果の並び順になるので、関連しあうペアの隣に入れる。
+export const ALL_CHECKERS: Checker[] = [
+  // ...既存のエントリ...
+  xxxChecker,
+];
 ```
 
-**QML（ScoreLinter.qml / qml/）と Settings の永続化キーは一切触らない。** 設定 UI は `Linter.getCheckerList()` から自動生成される。
+配列に足し忘れると、ファイルを作っただけで一切実行されない状態になる。`registerAll()` が
+`ALL_CHECKERS` をそのまま登録することは `packages/checkers/tests/checkers.test.ts` の
+「ALL_CHECKERS の中身がそのまま登録される」で固定してある。
+
+**QML（ScoreLinter.qml / qml/）と Settings の永続化キーは一切触らない。** 設定 UI は
+`getCheckerList()`（`packages/core/src/linter.ts`）が返す checker メタデータ一覧から自動生成される。
 
 ## ステップ 3: テストの追加
 
-`test/runner.js` にテストケースを追加する。
+`packages/checkers/tests/checkers.test.ts` に `describe`/`it` ブロックを追加する
+（fixture は `packages/checkers/tests/helpers/irBuilder.ts` の `cleanIR()` / `quintetIR()` /
+`buildIR()` で組み立てる。詳細は `.claude/rules/testing.md` を参照）。
 
-```js
-// --- xxxChecker ---
-(function() {
-  var XxxChecker = load("src/checkers/xxxChecker.js");
+```ts
+import { xxxChecker } from "../src/xxxChecker.js";
+import { cleanIR, K } from "./helpers/irBuilder.js";
 
-  // 正例: 違反なし
-  var ir1 = irBuilder.buildIR({
-    events: [ /* 正常なケース */ ],
-    parts: [{ staffIdx: 0, partName: "Violin I" }]
+describe("xxx-check checker", () => {
+  it("正常なケース → 違反なし", () => {
+    const ir = cleanIR([
+      // 違反にならないイベント
+    ]);
+    expect(xxxChecker.run(ir)).toHaveLength(0);
   });
-  assert.strictEqual(XxxChecker.checker.run(ir1).length, 0, "違反なし");
 
-  // 負例: 違反あり
-  var ir2 = irBuilder.buildIR({
-    events: [ /* 違反するケース */ ],
-    parts: [{ staffIdx: 0, partName: "Violin I" }]
+  it("違反ケース → 1件検出", () => {
+    const ir = cleanIR([
+      {
+        kind: K.STAFF_TEXT,
+        staff: 0,
+        tick: 480,
+        measure: 2,
+        textNorm: "xxx",
+        textRaw: "xxx",
+      },
+    ]);
+    const issues = xxxChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].ruleId).toBe("xxx-check");
   });
-  var issues = XxxChecker.checker.run(ir2);
-  assert.strictEqual(issues.length, 1, "違反1件");
-  assert.strictEqual(issues[0].ruleId, "xxx-check");
-
-  console.log("✓ xxxChecker");
-})();
+});
 ```
+
+checker が複雑でテストが長くなる場合は、`checkers.test.ts` に足さず
+`packages/checkers/tests/xxxChecker.test.ts` として独立させてもよい
+（`beatCrossingTieChecker.test.ts` / `slurTieArticulationConsistencyChecker.test.ts` が実例）。
 
 ## ステップ 4: README の更新
 
-`README.md` の「チェック項目」表に 1 行追加する。
+`README.md` の「チェック項目」表に 1 行追加する（列は「ルール / severity / 目的」の 3 列）。
 
 ```markdown
-| 〇〇チェック | `xxx-check` | notation | warning | ✅ |
+| 〇〇チェック | warning | 〇〇の開始と終了の対応漏れ・重複を検出 |
 ```
 
 ## チェックリスト
@@ -122,6 +152,6 @@ Registry.register(XxxChecker.checker);
 - [ ] `id` が kebab-case で他と重複していない
 - [ ] `run()` 内で `try/catch` を書いていない（linter が全体で catch する）
 - [ ] `ir.events` の全件ループではなく `ir.index` を使っている
-- [ ] `src/checkers/index.js` に登録した
+- [ ] `packages/checkers/src/index.ts` の 2 箇所（import / ALL_CHECKERS 配列）に追加した
 - [ ] 正例・負例の両方のテストを追加した
 - [ ] README の「チェック項目」表を更新した

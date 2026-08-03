@@ -1,13 +1,8 @@
-/** 音名（0=C ... 6=B）ごとの、C から数えた五度圏上の位置。 */
-const FIFTHS_BY_STEP: Record<string, number> = {
-  C: 0,
-  D: 2,
-  E: 4,
-  F: -1,
-  G: 1,
-  A: 3,
-  B: 5,
-};
+// toTpc（step/alter → TPC）は core の tpcToStep / tpcToAlter の逆関数で、TPC の採番に
+// 依存しない MusicXML 固有のロジックを持たないため core 側（pitchSpelling.ts）に置いている。
+// ラウンドトリップの保証も core 側のテストで行う。builder.ts の呼び出しを壊さないよう
+// ここから re-export する。
+export { toTpc } from "@musescore-linter/core";
 
 /** 音名 → 半音（C からの距離）。 */
 const SEMITONE_BY_STEP: Record<string, number> = {
@@ -37,16 +32,6 @@ export function toMidiPitch(step: string, alter: number, octave: number): number
   if (semitone === undefined) return -1;
   const pitch = (octave + 1) * 12 + semitone + alter;
   return pitch >= 0 && pitch <= 127 ? pitch : -1;
-}
-
-/**
- * MusicXML の step/alter から TPC（tonal pitch class）。core の `tpcToStep` / `tpcToAlter` の
- * 逆関数で、C = 14・五度圏 1 つで +1・変化記号 1 つで ±7 という MuseScore の採番に合わせる。
- */
-export function toTpc(step: string, alter: number): number {
-  const fifths = FIFTHS_BY_STEP[step];
-  if (fifths === undefined) return 14;
-  return 14 + fifths + 7 * Math.round(alter);
 }
 
 export interface ClefState {

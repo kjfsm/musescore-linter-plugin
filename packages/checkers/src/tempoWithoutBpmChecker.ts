@@ -21,7 +21,9 @@ export const tempoWithoutBpmChecker: Checker = {
 
     for (const id of tempoIds) {
       const ev = ir.events[id];
-      if (ev.tempo !== null && ev.tempo !== undefined) continue;
+      // null / undefined だけでなく NaN や 0 以下も「BPM なし」として扱う。
+      // 入力ソースが壊れた値を入れてきても検出漏れにならないようにするため。
+      if (typeof ev.tempo === "number" && Number.isFinite(ev.tempo) && ev.tempo > 0) continue;
 
       const partName = partsByStaff.get(ev.staffIdx) ?? "";
       const label = ev.textRaw || ev.textNorm || "(無題)";

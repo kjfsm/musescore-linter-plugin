@@ -2,7 +2,7 @@ import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
-import { buildPartNameMap, measureAtTick } from "./base/query.js";
+import { buildPartNameMap, eventIdsForStaff, measureAtTick } from "./base/query.js";
 
 // ヘアピン(cresc./dim.)の到達先にダイナミクスが無い箇所を検出する。
 // 浄書では crescendo/diminuendo は原則「どの強さへ向かうか」を終端のダイナミクスで示す。
@@ -12,11 +12,9 @@ function hasDynamicAtTick(
   dynamicKind: string,
   tick: number,
 ): boolean {
-  const onStaff = ir.index.byStaffAndKind[staffIdx]?.[dynamicKind] ?? [];
-  if (onStaff.some((id) => ir.events[id].tick === tick)) return true;
   // global scope（全パート共通）のダイナミクスも到達先として認める
-  const global = ir.index.byStaffAndKind[-1]?.[dynamicKind] ?? [];
-  return global.some((id) => ir.events[id].tick === tick);
+  const ids = eventIdsForStaff(ir, staffIdx, dynamicKind);
+  return ids.some((id) => ir.events[id].tick === tick);
 }
 
 export const hairpinTargetDynamicChecker: Checker = {

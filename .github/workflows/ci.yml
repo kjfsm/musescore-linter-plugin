@@ -35,17 +35,19 @@ jobs:
       - name: 未使用コード検出
         run: pnpm knip
 
-      - name: 型チェック
-        run: pnpm typecheck
+      # turbo のタスクグラフ自体を検証する。未定義タスク名や依存の破綻は
+      # ここで落ちる（個別に pnpm run を叩いていた頃はすり抜けていた）。
+      - name: turbo タスクグラフの検証
+        run: pnpm pipeline --dry=json > /dev/null
 
-      - name: テスト (カバレッジ計測)
+      # 型チェック・テスト・QML/CLI/Web のビルド・ZIP 化までを turbo 経由で通す。
+      - name: パイプライン (typecheck / test / build / package)
+        run: pnpm pipeline
+
+      # codecov へ送る lcov は 1 本にまとめたいので、ルートの vitest で
+      # 全パッケージを一度に計測する（turbo 側の test はパッケージ単位）。
+      - name: カバレッジ計測
         run: pnpm test:coverage
-
-      - name: ビルド
-        run: pnpm build
-
-      - name: Web のビルド
-        run: pnpm build:web
 
       # 「アップロードしたファイルは送信されない」の実質的な検証。
       # 自前で書いたコード（エントリチャンク）にネットワーク API が現れた時点で主張が崩れるので CI で止める。
@@ -62,6 +64,11 @@ jobs:
             echo "::error::apps/web/dist/index.html にインライン script があります（CSP script-src 'self' に違反）"
             exit 1
           fi
+
+      # 閾値では落とさない（runner のブレが大きく偽陽性になる）。
+      # job summary に数値を出すだけにして、回帰は PR 前後の比較で判断する。
+      - name: 性能ベースラインの計測
+        run: pnpm bench
 
       - name: Codecov へのカバレッジ送信
         if: always()

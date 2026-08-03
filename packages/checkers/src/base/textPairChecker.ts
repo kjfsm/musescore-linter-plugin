@@ -1,18 +1,33 @@
-import type {
-  Checker,
-  Issue,
-  LintIR,
-  Severity,
-  TextPairCheckerConfig,
-} from "@musescore-linter/core";
+import type { Checker, Issue, LintIR, Severity } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
 import { buildPartBuckets, matchesAny, type PartBucketEvent } from "./predicates.js";
 
-// onPatterns が「既に on の状態でさらに on」になった場合（例: solo が連続）の severity を
-// checker 全体の severity と別に上書きしたいケース向けの拡張。core の TextPairCheckerConfig は
-// 変更しない（checkers 側からの LintIR/契約型直接変更を避けるため、拡張はこのファイルに閉じる）。
-export interface TextPairCheckerConfigWithOverrides extends TextPairCheckerConfig {
+/**
+ * on/off ペア型 checker（pizz./arco、con sord./senza sord. …）の宣言。
+ *
+ * この型は以前 core の types.ts にあったが、core 内では一度も使われていなかった。
+ * 置き場所が違うせいで onDuplicateSeverity を足すのに
+ * TextPairCheckerConfig という別名で拡張し直す必要があり、
+ * 「core の LintIR/契約型を checker 側から変更しない」という規約を迂回する形に
+ * なっていた。createTextPairChecker の実装都合の型なので checkers 側が持つ。
+ */
+export interface TextPairCheckerConfig {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  severity?: Severity;
+  defaultEnabled?: boolean;
+  onPatterns: string[];
+  offPatterns: string[];
+  defaultState: "on" | "off";
+  onLabel: string;
+  offLabel: string;
+  /**
+   * 「既に on の状態でさらに on」（solo が連続する等）のときの severity。
+   * 省略時は checker 全体の severity を使う。
+   */
   onDuplicateSeverity?: Severity;
 }
 
@@ -38,7 +53,7 @@ function buildDuplicateIssue(
   });
 }
 
-export function createTextPairChecker(config: TextPairCheckerConfigWithOverrides): Checker {
+export function createTextPairChecker(config: TextPairCheckerConfig): Checker {
   const checker: Checker = {
     id: config.id,
     name: config.name,
