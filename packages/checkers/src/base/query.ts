@@ -1,7 +1,34 @@
 import type { LintEvent, LintIR } from "@musescore-linter/core";
 
-/** tick に対応する小節番号。見つからなければ 0。 */
+/**
+ * tick を含む小節の番号。求まらなければ 0。
+ *
+ * `ir.meta.measures` は startTick 昇順なので二分探索する。以前は
+ * `ir.index.byTick[tick]` を引いていたが、その tick にイベントが 1 つも無いと
+ * 0 を返していた（ヘアピンの終端など、音符の無い位置を指すケースがある）。
+ * measure 0 の issue は compareIssues の並びで先頭に来るので、ユーザーには
+ * 「小節 0 の謎の指摘が一番上に出る」と見えていた。
+ */
 export function measureAtTick(ir: LintIR, tick: number): number {
+  const measures = ir.meta?.measures ?? [];
+  if (measures.length > 0) {
+    let lo = 0;
+    let hi = measures.length - 1;
+    let found = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (measures[mid].startTick <= tick) {
+        found = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    if (found >= 0) return measures[found].measure;
+  }
+
+  // measures を持たない IR（テストの最小 fixture や、小節情報を作らない
+  // 入力ソース）向けのフォールバック。
   const ids = ir.index.byTick[String(tick)] ?? [];
   for (const id of ids) {
     const ev = ir.events[id];
