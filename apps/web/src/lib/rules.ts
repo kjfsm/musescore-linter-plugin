@@ -1,5 +1,10 @@
 import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
-import { getCheckerList, isCheckerEnabled, resolveCheckerOptions } from "@musescore-linter/core";
+import {
+  getCategories,
+  getCheckerList,
+  isCheckerEnabled,
+  resolveCheckerOptions,
+} from "@musescore-linter/core";
 
 import { allRuleIds } from "./lint";
 
@@ -13,17 +18,6 @@ const OPTIONS_STORAGE_KEY = "musescore-linter:rule-options";
 
 /** ruleId → { key: 値 }。「既定から変えたぶん」だけを持つ。 */
 export type RuleOptions = Record<string, Record<string, CheckerOptionValue>>;
-
-/** 設定パネルの表示順。ここに無いカテゴリは後ろに回す。 */
-const CATEGORY_ORDER = ["articulation", "dynamics", "tempo", "slur-tie", "notation"];
-
-const CATEGORY_LABEL: Record<string, string> = {
-  articulation: "奏法・アーティキュレーション",
-  dynamics: "強弱",
-  tempo: "テンポ",
-  "slur-tie": "スラー・タイ",
-  notation: "記譜",
-};
 
 const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
 
@@ -41,19 +35,16 @@ export function ruleGroups(): RuleGroup[] {
     if (bucket) bucket.push(checker);
     else byCategory.set(checker.category, [checker]);
   }
-  const rank = (category: string): number => {
-    const i = CATEGORY_ORDER.indexOf(category);
-    return i === -1 ? CATEGORY_ORDER.length : i;
-  };
-  return [...byCategory.entries()]
-    .sort(([a], [b]) => rank(a) - rank(b))
-    .map(([category, checkers]) => ({
-      category,
-      label: CATEGORY_LABEL[category] ?? category,
-      // severity 順（error→warning→info）に並べる。同 severity 内は registerAll() の登録順のまま
-      // （安定ソート）にしておくと、関連しあうペアが隣り合った現状の並びが崩れない。
-      checkers: [...checkers].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]),
-    }));
+  // カテゴリの並び順とラベルは core に一本化してある（QML の設定タブと同じ定義）。
+  return getCategories().map(({ id, label }) => ({
+    category: id,
+    label,
+    // severity 順（error→warning→info）に並べる。同 severity 内は registerAll() の登録順のまま
+    // （安定ソート）にしておくと、関連しあうペアが隣り合った現状の並びが崩れない。
+    checkers: [...(byCategory.get(id) ?? [])].sort(
+      (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity],
+    ),
+  }));
 }
 
 /**

@@ -1,6 +1,7 @@
 import { registerAll } from "@musescore-linter/checkers";
 import {
   compareVersions,
+  getCategories,
   getCheckerList,
   getCheckerPerfReport,
   isCheckerEnabled,
@@ -17,6 +18,7 @@ registerAll();
 export {
   buildSnapshot,
   compareVersions,
+  getCategories,
   getCheckerList,
   getCheckerPerfReport,
   getSnapshotPerfReport,

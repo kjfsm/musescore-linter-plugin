@@ -7,6 +7,8 @@ ScrollView {
     clip: true
 
     property var checkers: []
+    // [{ id, label }]。並び順も core が決める。
+    property var categories: []
     property var enabledRules: ({})
     // ruleId → { key: 値 }。checker の options 宣言に沿って解決済みの値が入る。
     property var ruleOptions: ({})
@@ -53,15 +55,6 @@ ScrollView {
         }
         return 0;
     }
-
-    // カテゴリ表示名マップ
-    readonly property var categoryLabels: {
-        "articulation": "アーティキュレーション",
-        "dynamics":     "ダイナミクス",
-        "tempo":        "テンポ",
-        "notation":     "記譜"
-    }
-    readonly property var categoryOrder: ["tempo", "dynamics", "articulation", "notation"]
 
     function checkersByCategory(cat) {
         var out = [];
@@ -166,7 +159,7 @@ ScrollView {
 
         // ─── カテゴリ別セクション ───
         Repeater {
-            model: root.categoryOrder
+            model: root.categories
 
             ColumnLayout {
                 id: section
@@ -175,8 +168,9 @@ ScrollView {
                 Layout.rightMargin: 8
                 spacing: 0
 
-                property string catId: modelData
-                property var catCheckers: root.checkersByCategory(modelData)
+                property string catId: modelData.id
+                property string catLabel: modelData.label
+                property var catCheckers: root.checkersByCategory(modelData.id)
                 visible: catCheckers.length > 0
 
                 // カテゴリヘッダー（折りたたみ可能）
@@ -199,7 +193,7 @@ ScrollView {
                             font.pixelSize: 11
                         }
                         Label {
-                            text: root.categoryLabels[section.catId] || section.catId
+                            text: section.catLabel
                             font.pixelSize: 12
                             font.bold: true
                             color: "#616161"

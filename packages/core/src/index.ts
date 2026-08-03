@@ -1,3 +1,5 @@
+export type { CategoryInfo } from "./categories.js";
+export { categoryLabel, getCategories } from "./categories.js";
 export { getAll, getById, isCheckerEnabled, register, reset } from "./checkerRegistry.js";
 export type { OptionParseResult } from "./checkerOptions.js";
 export { findOptionSpec, parseCheckerOptionText, resolveCheckerOptions } from "./checkerOptions.js";

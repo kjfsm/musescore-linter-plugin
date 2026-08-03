@@ -32,17 +32,18 @@ describe("ruleGroups", () => {
     const groups = ruleGroups();
     const total = groups.reduce((n, g) => n + g.checkers.length, 0);
     expect(total).toBe(allRuleIds().length);
+    // 並び順は core の getCategories が決める（QML の設定タブと同じ順序）。
     expect(groups.map((g) => g.category)).toEqual([
-      "articulation",
-      "dynamics",
       "tempo",
+      "dynamics",
+      "articulation",
       "slur-tie",
       "notation",
     ]);
   });
 
   it("カテゴリに日本語ラベルを付ける", () => {
-    expect(ruleGroups()[0].label).not.toBe("articulation");
+    expect(ruleGroups()[0].label).not.toBe("tempo");
   });
 
   it("カテゴリ内は severity 順（error→warning→info）に並べる", () => {

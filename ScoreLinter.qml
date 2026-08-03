@@ -28,6 +28,10 @@ MuseScore {
     property var ruleOptions: ({})
     property var issuesList: []
     property var checkerList: []
+    // カテゴリの並び順と表示名は Bundle 側（core）に一本化してある。
+    // ここを QML 内の配列で持っていた頃は、カテゴリを増やしたときに配列へ
+    // 足し忘れると、そのカテゴリの checker が設定タブから丸ごと消えていた。
+    property var checkerCategories: []
     property string snapshotText: ""
     property bool hasRun: false
 
@@ -98,9 +102,11 @@ MuseScore {
     function initialize() {
         try {
             checkerList = Bundle.getCheckerList();
+            checkerCategories = Bundle.getCategories();
         } catch (e) {
             console.error("[ScoreLinter] checker 取得失敗: " + e);
             checkerList = [];
+            checkerCategories = [];
         }
         loadEnabledRules();
         loadRuleOptions();
@@ -694,6 +700,7 @@ MuseScore {
                         anchors.fill: parent
                         anchors.margins: 10
                         checkers: plugin.checkerList
+                        categories: plugin.checkerCategories
                         enabledRules: plugin.enabledRules
                         ruleOptions: plugin.ruleOptions
                         perfEnabled: persistedSettings.perfEnabled
