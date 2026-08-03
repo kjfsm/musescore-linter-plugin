@@ -50,10 +50,13 @@ jobs:
         run: pnpm test:coverage
 
       # 「アップロードしたファイルは送信されない」の実質的な検証。
-      # ネットワーク API がバンドルに現れた時点で主張が崩れるので CI で止める。
+      # 自前で書いたコード（エントリチャンク）にネットワーク API が現れた時点で主張が崩れるので CI で止める。
+      # 動的 import で分離された vendor チャンク（例: opensheetmusicdisplay）は対象外にしている。
+      # 中身を完全には制御できない第三者ライブラリのコードで、実行時の実質的な歯止めは
+      # _headers の `connect-src 'none'`（fetch/XHR/WebSocket 等をブラウザレベルで禁止）に委ねる。
       - name: Web が通信コードを含まないことの確認
         run: |
-          if grep -lE "fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource" apps/web/dist/assets/*.js; then
+          if grep -lE "fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource" apps/web/dist/assets/index-*.js; then
             echo "::error::apps/web のバンドルにネットワーク API が含まれています"
             exit 1
           fi

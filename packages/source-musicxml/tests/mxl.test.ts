@@ -5,7 +5,7 @@ import { CANONICAL } from "@musescore-linter/core";
 import { zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
-import { buildIRFromBytes } from "../src/index.js";
+import { buildIRFromBytes, buildIRFromBytesWithXml } from "../src/index.js";
 import { isZip } from "../src/mxl.js";
 
 const xml = readFileSync(join(__dirname, "fixtures", "duet.musicxml"));
@@ -47,5 +47,23 @@ describe("buildIRFromBytes", () => {
   it("XML を含まない .mxl は理由がわかるエラーになる", () => {
     const mxl = zipSync({ "readme.txt": encoder.encode("hello") });
     expect(() => buildIRFromBytes(mxl)).toThrow(/MusicXML 本体が見つかりません/);
+  });
+});
+
+describe("buildIRFromBytesWithXml", () => {
+  it("非圧縮の MusicXML から IR と元の XML 文字列の両方を返す", () => {
+    const { ir, xml: text } = buildIRFromBytesWithXml(xml);
+    expect(ir.meta.parts).toHaveLength(2);
+    expect(text).toContain("score-partwise");
+  });
+
+  it(".mxl からも IR と展開済みの XML 文字列の両方を返す", () => {
+    const mxl = zipSync({
+      "META-INF/container.xml": encoder.encode(CONTAINER),
+      "score.xml": new Uint8Array(xml),
+    });
+    const { ir, xml: text } = buildIRFromBytesWithXml(mxl);
+    expect(ir.meta.parts).toHaveLength(2);
+    expect(text).toContain("score-partwise");
   });
 });

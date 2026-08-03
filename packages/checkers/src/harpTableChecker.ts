@@ -4,8 +4,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const harpTableChecker = createTextPairChecker({
   id: "harp-table",
   name: "Près de la table / Ord.",
-  description:
-    "ハープの près de la table(響板寄り奏法)→ 通常奏法(ordinario)復帰の対応漏れや重複を検知",
+  description: "près de la table→ordinario 復帰の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

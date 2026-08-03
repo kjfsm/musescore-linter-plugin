@@ -65,8 +65,7 @@ const OPTIONS: CheckerOptionSpec[] = [
 export const slurTieArticulationConsistencyChecker: Checker = {
   id: "slur-tie-articulation-consistency",
   name: "同リズム間のスラー/タイ/アーティキュレーション整合",
-  description:
-    "同じ小節で同じリズムのパート間で、スラー・タイの有無やアーティキュレーションが食い違っていないかを確認（最終判断は編曲方針による）",
+  description: "同リズムのパート間でスラー・タイ・アーティキュレーションの食い違いを検出",
   category: "articulation",
   severity: "info",
   defaultEnabled: true,

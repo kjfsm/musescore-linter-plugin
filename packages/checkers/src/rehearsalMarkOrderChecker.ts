@@ -26,8 +26,7 @@ function rankOf(label: string): number | null {
 export const rehearsalMarkOrderChecker: Checker = {
   id: "rehearsal-mark-order",
   name: "リハーサルマークの順序",
-  description:
-    "リハーサルマークが昇順に並んでいるか、重複していないかを検査（順序逆転・重複を検出）",
+  description: "リハーサルマークの順序の乱れ・重複を検出",
   category: "notation",
   severity: "info",
   defaultEnabled: true,

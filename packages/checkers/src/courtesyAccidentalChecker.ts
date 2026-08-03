@@ -28,8 +28,7 @@ function alterName(alter: number): string {
 export const courtesyAccidentalChecker: Checker = {
   id: "courtesy-accidental",
   name: "親切臨時記号の提案",
-  description:
-    "前の小節で臨時記号が付いた音が次の小節で記号なしで再び現れる箇所に、親切のための臨時記号を提案（音高データが必要）",
+  description: "親切臨時記号を付けた方がよい箇所を提案",
   category: "notation",
   severity: "info",
   defaultEnabled: true,

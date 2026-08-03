@@ -2,12 +2,15 @@ import { registerAll } from "@musescore-linter/checkers";
 import type { FileResult } from "@musescore-linter/cli";
 import type { LintIR } from "@musescore-linter/core";
 import { getCheckerList, reset, runAllCheckers, setLevel } from "@musescore-linter/core";
-import { buildIRFromBytes } from "@musescore-linter/source-musicxml";
+import { buildIRFromBytesWithXml } from "@musescore-linter/source-musicxml";
 
-/** パース済みのファイル 1 件。IR を保持するので再 lint で読み直さなくてよい。 */
+/**
+ * パース済みのファイル 1 件。IR を保持するので再 lint で読み直さなくてよい。
+ * `xml` は楽譜プレビュー（OSMD）向けに、デコード済みの MusicXML 文字列をそのまま保持する。
+ */
 export type ParsedFile =
-  | { name: string; ir: LintIR; error?: undefined }
-  | { name: string; ir?: undefined; error: string };
+  | { name: string; ir: LintIR; xml: string; error?: undefined }
+  | { name: string; ir?: undefined; xml?: undefined; error: string };
 
 let registered = false;
 
@@ -43,7 +46,8 @@ function describeError(error: unknown): string {
 export function parseFile(name: string, bytes: Uint8Array): ParsedFile {
   ensureCheckersRegistered();
   try {
-    return { name, ir: buildIRFromBytes(bytes) };
+    const { ir, xml } = buildIRFromBytesWithXml(bytes);
+    return { name, ir, xml };
   } catch (error) {
     return { name, error: describeError(error) };
   }

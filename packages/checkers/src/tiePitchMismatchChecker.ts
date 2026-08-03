@@ -9,8 +9,8 @@ import { buildPartNameMap, measureAtTick } from "./base/query.js";
 export const tiePitchMismatchChecker: Checker = {
   id: "tie-pitch-mismatch",
   name: "異音程のタイ",
-  description: "異なる音高どうしをタイで結んでいる箇所を検出（スラーの書き間違いの可能性）",
-  category: "notation",
+  description: "異なる音高をタイで結んでいる箇所を検出",
+  category: "slur-tie",
   severity: "warning",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {

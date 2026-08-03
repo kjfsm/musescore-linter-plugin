@@ -8,9 +8,8 @@ import { findRestOnlyEndpoints } from "./base/spannerOnRest.js";
 export const hairpinOnRestChecker: Checker = {
   id: "hairpin-on-rest",
   name: "休符上のヘアピン端点",
-  description:
-    "ヘアピン(cresc./dim.)の開始/終了端点が休符上にある箇所を検出（同 tick に音符があれば許容）",
-  category: "notation",
+  description: "ヘアピンの端点が休符上にある箇所を検出",
+  category: "dynamics",
   severity: "info",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {

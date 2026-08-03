@@ -180,9 +180,8 @@ function describeSplit(segments: number[]): string | null {
 export const beatCrossingTieChecker: Checker = {
   id: "beat-crossing-tie",
   name: "拍をまたぐ音符の分割",
-  description:
-    "拍境界をまたぐ音符を検出（小節の中央をまたぐ場合は小節頭始まりのみ許容）。タイでの分割を推奨",
-  category: "notation",
+  description: "拍をまたぐ音符(分割推奨)を検出",
+  category: "slur-tie",
   severity: "info",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {
