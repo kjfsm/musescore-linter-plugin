@@ -406,7 +406,8 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
   },
   registry: { canonical: { elementKinds, barlineKinds } },
   derived: {                     // 遅延初期化。linter.ts が 1 回だけ構築（_eventsCount で無効化判定）
-    firstChordByStaff, annotationIdsByTick, globalAnnotationIdsByTick
+    firstChordByStaff, articulationsByChordId, slursByStaff, tiesByStaff,
+    rhythmByStaffMeasure, chordsByStaffMeasure
   }
 }
 ```

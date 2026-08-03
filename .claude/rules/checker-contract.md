@@ -104,10 +104,12 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
   },
   registry: { canonical: { elementKinds, barlineKinds } },
   derived: {
-    firstChordByStaff, annotationIdsByTick, globalAnnotationIdsByTick,
+    firstChordByStaff,        // staffIdx → { tick, measure }
     articulationsByChordId,   // chord イベント id → アーティキュレーション名[]
     slursByStaff,             // staffIdx → SlurInfo[]（startTick 昇順）
+    tiesByStaff,              // staffIdx → TieInfo[]（startTick 昇順）
     rhythmByStaffMeasure,     // `${staffIdx}:${measure}:${voice}` → リズム署名
+    chordsByStaffMeasure,     // `${staffIdx}:${measure}:${voice}` → chord[]（tick 昇順）
   }
 }
 ```

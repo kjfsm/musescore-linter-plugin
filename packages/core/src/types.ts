@@ -120,8 +120,6 @@ export interface IRMeta {
 export interface IRDerived {
   _eventsCount: number;
   firstChordByStaff: Record<number, { tick: number; measure: number }>;
-  annotationIdsByTick: Record<string, number[]>;
-  globalAnnotationIdsByTick: Record<string, number[]>;
   // chord イベント id → アーティキュレーション名
   articulationsByChordId: Record<number, string[]>;
   // staffIdx → スラー（startTick 昇順）
