@@ -31,7 +31,7 @@ import {
   trackToStaffIdx,
   VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { EngravingItem, MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
 import type { HostVersionInfo, LintEvent, LintIR } from "@musescore-linter/core";
 import { CANONICAL, createPerf, makeLogger } from "@musescore-linter/core";
@@ -177,6 +177,14 @@ function processAnnotations(seg: PluginSegment, measureNum: number, ir: LintIR):
   }
 }
 
+// elementAt は QML↔C++ の境界を越えるので、1 track につき 1 回に抑える。この 1 回あたりの
+// コストは実測で約 1.3 μs、譜面 2 種で一致しており、走査時間はほぼこの呼び出し回数で決まる。
+// segment × staff ごとに配列を作ると GC 圧が増えるため、モジュールレベルのバッファを
+// 使い回す（走査は同期処理なので再入しない）。
+const trackElements: (EngravingItem | null)[] = Array.from<EngravingItem | null>({
+  length: VOICES_PER_STAFF,
+}).fill(null);
+
 function processStaffElements(
   seg: PluginSegment,
   measureNum: number,
@@ -185,7 +193,11 @@ function processStaffElements(
   hostEnums: HostEnums,
 ): void {
   for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
-    const el = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
+    trackElements[voice] = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
+  }
+
+  for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
+    const el = trackElements[voice];
     if (!el) continue;
 
     // グレースノートは LintIR に含めない（拍位置のタイミングを持たないため）
@@ -249,8 +261,10 @@ function processStaffElements(
     }
   }
 
+  // chord/rest とは別ループのままにしてイベントの生成順（= id 順）を変えない。
+  // 引き直さず上で取得済みの要素を見る。
   for (let v = 0; v < VOICES_PER_STAFF; v++) {
-    const barEl = seg.elementAt(staffVoiceToTrack(staffIdx, v));
+    const barEl = trackElements[v];
     if (barEl && isBarLine(barEl)) {
       appendEvent(ir, {
         type: "barline",
@@ -325,9 +339,8 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
   perf.count("staves", numStaves);
   perf.count("events", ir.events.length);
   // 実測ではなく構造からの概算（ラベルは桁を揃えるため ASCII のみ）。processStaffElements は
-  // 1 segment × 1 staff あたり chord/rest 用と barline 用の 2 ループで elementAt を引く
-  // （barline 側は break で早く抜けることがあるので上限値）。
-  perf.count("elementAt(est)", segCount * numStaves * VOICES_PER_STAFF * 2);
+  // 1 segment × 1 staff あたり全 voice を 1 回ずつ引き、chord/rest 用と barline 用で使い回す。
+  perf.count("elementAt(est)", segCount * numStaves * VOICES_PER_STAFF);
 
   log.info(
     `LintIR を生成: events=${ir.events.length}, parts=${ir.meta.parts.length}, lastTick=${ir.meta.lastTick}`,

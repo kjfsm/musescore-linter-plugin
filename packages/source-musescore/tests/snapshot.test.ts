@@ -82,6 +82,54 @@ function mockScoreWithContent(): Score {
   } as unknown as Score;
 }
 
+/**
+ * 全 4 voice に音符が乗り、末尾の voice に BarLine が来るスコア。elementAt の呼び出し回数を
+ * 数えられるようにしてある。chord/rest と barline で track を引き直していないこと、および
+ * イベントの生成順が voice 昇順 → barline のままであることを検証するために使う。
+ */
+function mockScoreCountingElementAt(): { score: Score; calls: () => number } {
+  let calls = 0;
+  const chordAt = (voice: number) => ({
+    name: "Chord",
+    noteType: NoteType.NORMAL,
+    duration: { numerator: 1, denominator: 4 },
+    notes: [],
+    stemDirection: voice,
+    beamMode: 0,
+    spannerForward: [],
+  });
+  const rest = {
+    name: "Rest",
+    duration: { numerator: 1, denominator: 4 },
+  };
+  const barline = { name: "BarLine", barlineType: BarLineType.END };
+
+  const seg = {
+    tick: 0,
+    annotations: [],
+    nextInMeasure: null,
+    elementAt(track: number) {
+      calls++;
+      if (track === 0) return chordAt(0);
+      if (track === 1) return rest;
+      if (track === 2) return chordAt(2);
+      if (track === 3) return barline;
+      return null;
+    },
+  };
+  const measure = { firstSegment: seg, nextMeasure: null, irregular: false };
+  return {
+    score: {
+      nstaves: 1,
+      ntracks: 4,
+      parts: [],
+      firstMeasure: measure,
+      staves: [],
+    } as unknown as Score,
+    calls: () => calls,
+  };
+}
+
 function emptyScore(): Score {
   return {
     nstaves: 0,
@@ -130,6 +178,26 @@ describe("buildSnapshot", () => {
     const barline = ir.events.find((e) => e.type === "barline");
     expect(barline?.barlineKind).toBe("final");
   });
+
+  it("elementAt は 1 track につき 1 回しか引かない", () => {
+    const { score, calls } = mockScoreCountingElementAt();
+    buildSnapshot(score, hostEnums());
+    // 1 segment × 1 staff × 4 voice。chord/rest 用と barline 用で引き直さない。
+    expect(calls()).toBe(4);
+  });
+
+  it("イベントは voice 昇順のあとに barline の順で生成される", () => {
+    const { score } = mockScoreCountingElementAt();
+    const ir = buildSnapshot(score, hostEnums());
+    expect(ir.events.map((e) => [e.type, e.voice])).toEqual([
+      ["chord", 0],
+      ["rest", 1],
+      ["chord", 2],
+      ["barline", -1],
+    ]);
+    // id は生成順に振られる
+    expect(ir.events.map((e) => e.id)).toEqual([0, 1, 2, 3]);
+  });
 });
 
 describe("getSnapshotPerfReport", () => {
@@ -151,8 +219,8 @@ describe("getSnapshotPerfReport", () => {
     expect(report).toMatch(/measures\s+1 回/);
     expect(report).toMatch(/segments\s+1 回/);
     expect(report).toMatch(/staves\s+1 回/);
-    // 1 segment × 1 staff × 4 voice × 2 ループ
-    expect(report).toMatch(/elementAt\(est\)\s+8 回/);
+    // 1 segment × 1 staff × 4 voice
+    expect(report).toMatch(/elementAt\(est\)\s+4 回/);
   });
 
   it("実行のたびに記録を捨てるので前回分が混ざらない", () => {
