@@ -1,5 +1,6 @@
 import {
   ensureDerived,
+  getCheckerList,
   reset,
   runAllCheckers,
   tpcToAlter,
@@ -46,6 +47,20 @@ function run(ir: ReturnType<typeof buildIR>, enabledRules: Record<string, boolea
   ensureDerived(ir);
   return runAllCheckers(ir, enabledRules);
 }
+
+// ─── レジストリ ─────────────────────────────────────────────────────────────
+
+describe("registerAll", () => {
+  // register は id が重複すると throw するので、実装側に打ち間違いが紛れ込めば
+  // ここで落ちる。checker を増やしたときの取りこぼしを検出する唯一の場所。
+  it("重複 id なしで全 checker を登録できる", () => {
+    reset();
+    expect(() => registerAll()).not.toThrow();
+    const ids = getCheckerList().map((c) => c.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
 
 // ─── クリーン fixture ───────────────────────────────────────────────────────
 
