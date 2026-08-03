@@ -6,7 +6,13 @@ import { ResultTable, SeverityBadge } from "@/components/ResultTable";
 import { RulePanel } from "@/components/RulePanel";
 import { type ParsedFile, lintParsed, parseFile } from "@/lib/lint";
 import { summarize } from "@/lib/rows";
-import { loadEnabledRules, saveEnabledRules } from "@/lib/rules";
+import {
+  loadEnabledRules,
+  loadRuleOptions,
+  type RuleOptions,
+  saveEnabledRules,
+  saveRuleOptions,
+} from "@/lib/rules";
 
 const SEVERITIES = ["error", "warning", "info"] as const;
 
@@ -15,15 +21,23 @@ export function App() {
   const [enabledRules, setEnabledRules] = useState<Record<string, boolean>>(() =>
     loadEnabledRules(localStorage),
   );
+  const [ruleOptions, setRuleOptions] = useState<RuleOptions>(() => loadRuleOptions(localStorage));
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     saveEnabledRules(localStorage, enabledRules);
   }, [enabledRules]);
 
+  useEffect(() => {
+    saveRuleOptions(localStorage, ruleOptions);
+  }, [ruleOptions]);
+
   // パースは重いが lint は軽いので、ルールを切り替えたときは IR を使い回して
   // checker だけ流し直す。
-  const results = useMemo(() => lintParsed(parsed, enabledRules), [parsed, enabledRules]);
+  const results = useMemo(
+    () => lintParsed(parsed, enabledRules, ruleOptions),
+    [parsed, enabledRules, ruleOptions],
+  );
   const counts = useMemo(() => summarize(results), [results]);
 
   const handleFiles = useCallback(async (files: File[]) => {
@@ -60,7 +74,12 @@ export function App() {
 
       <Dropzone onFiles={handleFiles} busy={busy} />
 
-      <RulePanel enabledRules={enabledRules} onChange={setEnabledRules} />
+      <RulePanel
+        enabledRules={enabledRules}
+        onChange={setEnabledRules}
+        ruleOptions={ruleOptions}
+        onOptionsChange={setRuleOptions}
+      />
 
       {busy && <p className="text-sm text-muted-foreground">解析中…</p>}
 

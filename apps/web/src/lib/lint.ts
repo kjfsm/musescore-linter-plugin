@@ -53,9 +53,10 @@ export function parseFile(name: string, bytes: Uint8Array): ParsedFile {
 export function lintParsed(
   parsed: ParsedFile[],
   enabledRules: Record<string, boolean>,
+  ruleOptions: Record<string, Record<string, unknown>> = {},
 ): FileResult[] {
   ensureCheckersRegistered();
   return parsed
     .filter((p): p is ParsedFile & { ir: LintIR } => p.ir !== undefined)
-    .map((p) => ({ file: p.name, issues: runAllCheckers(p.ir, enabledRules) }));
+    .map((p) => ({ file: p.name, issues: runAllCheckers(p.ir, enabledRules, ruleOptions) }));
 }

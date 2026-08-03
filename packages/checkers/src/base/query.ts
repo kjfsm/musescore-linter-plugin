@@ -70,16 +70,43 @@ export function tieCoversTick(ir: LintIR, staffIdx: number, voice: number, tick:
   return ties.some((t) => t.voice === voice && t.startTick <= tick && tick < t.endTick);
 }
 
-/** measure/voice で同じリズム署名を持つ staffIdx のグループ（サイズ >= 2）を返す。 */
-export function staffGroupsSharingRhythm(ir: LintIR, measure: number, voice: number): number[][] {
-  const bySig: Record<string, number[]> = {};
+/**
+ * measure/voice で同じリズム署名を持つ staffIdx のグループ（サイズ >= 2）を返す。
+ *
+ * `groupKeyOf` を渡すと、同じリズムでも別グループの譜表は同じバケツに入らなくなる
+ * （`null` を返した譜表は列挙から外れる）。省略時は全パート横断。
+ *
+ * バケツを `groupKey → sig` の 2 段にしているのは意図的で、`` `${gk}:${sig}` `` の連結キーに
+ * してはいけない。リズム署名は小節内の全音符を連結した文字列（16 分主体の小節では数百文字）で、
+ * 連結すると「パート数 × 小節数」回そのコピーとハッシュが走る。
+ */
+export function staffGroupsSharingRhythm(
+  ir: LintIR,
+  measure: number,
+  voice: number,
+  groupKeyOf?: (staffIdx: number) => string | null,
+): number[][] {
+  const byGroup = new Map<string, Map<string, number[]>>();
   for (const part of ir.meta?.parts ?? []) {
+    const groupKey = groupKeyOf ? groupKeyOf(part.staffIdx) : "";
+    if (groupKey === null) continue;
     const sig = rhythmSignature(ir, part.staffIdx, measure, voice);
     if (!sig) continue;
-    if (!bySig[sig]) bySig[sig] = [];
-    bySig[sig].push(part.staffIdx);
+    let bySig = byGroup.get(groupKey);
+    if (!bySig) {
+      bySig = new Map();
+      byGroup.set(groupKey, bySig);
+    }
+    const bucket = bySig.get(sig);
+    if (bucket) bucket.push(part.staffIdx);
+    else bySig.set(sig, [part.staffIdx]);
   }
-  return Object.values(bySig)
-    .filter((g) => g.length >= 2)
-    .map((g) => g.sort((a, b) => a - b));
+
+  const out: number[][] = [];
+  for (const bySig of byGroup.values()) {
+    for (const group of bySig.values()) {
+      if (group.length >= 2) out.push(group.sort((a, b) => a - b));
+    }
+  }
+  return out;
 }

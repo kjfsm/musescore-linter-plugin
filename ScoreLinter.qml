@@ -24,6 +24,8 @@ MuseScore {
     readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/musescore-linter-plugin.zip"
 
     property var enabledRules: ({})
+    // ruleId → { key: 値 }。checker の options 宣言から解決した値を持つ。
+    property var ruleOptions: ({})
     property var issuesList: []
     property var checkerList: []
     property string snapshotText: ""
@@ -83,6 +85,9 @@ MuseScore {
     QtObject {
         id: persistedSettings
         property string rulesJson: "{}"
+        // checker 個別の設定は rulesJson に混ぜない。loadEnabledRules が全値を !! で
+        // 真偽値に潰すため、同じ袋に入れると配列や文字列の設定が壊れる。
+        property string ruleOptionsJson: "{}"
         property bool perfEnabled: false
     }
 
@@ -98,6 +103,7 @@ MuseScore {
             checkerList = [];
         }
         loadEnabledRules();
+        loadRuleOptions();
     }
 
     function loadEnabledRules() {
@@ -122,6 +128,40 @@ MuseScore {
         rules[ruleId] = checked;
         enabledRules = rules;
         persistedSettings.rulesJson = JSON.stringify(rules);
+    }
+
+    // 保存済みの値を checker の options 宣言に沿って解決する。未知の checker/key や
+    // 不正な値は Bundle 側（resolveCheckerOptions）が既定へ落としてくれる。
+    function loadRuleOptions() {
+        var persisted = {};
+        try {
+            persisted = JSON.parse(persistedSettings.ruleOptionsJson || "{}") || {};
+        } catch (e) {
+            console.warn("[ScoreLinter] ruleOptionsJson パース失敗、初期状態で復元: " + e);
+            persisted = {};
+        }
+        var out = {};
+        for (var i = 0; i < checkerList.length; i++) {
+            var c = checkerList[i];
+            if (!c.options || c.options.length === 0) continue;
+            out[c.id] = Bundle.resolveCheckerOptions(c.options, persisted[c.id]);
+        }
+        ruleOptions = out;
+    }
+
+    function setRuleOption(ruleId, key, value) {
+        var next = {};
+        for (var k in ruleOptions) if (ruleOptions.hasOwnProperty(k)) next[k] = ruleOptions[k];
+        var forRule = {};
+        if (next[ruleId]) {
+            for (var j in next[ruleId]) {
+                if (next[ruleId].hasOwnProperty(j)) forRule[j] = next[ruleId][j];
+            }
+        }
+        forRule[key] = value;
+        next[ruleId] = forRule;
+        ruleOptions = next;
+        persistedSettings.ruleOptionsJson = JSON.stringify(next);
     }
 
     function runLinter() {
@@ -161,7 +201,7 @@ MuseScore {
             // オブジェクト自身）も渡すと、型の生成元 MuseScore バージョンとの照合・実行時 enum の
             // 未知メンバ検出（strictEnum）を Bundle 側（SDK ヘルパ）が行い、結果を
             // snapshot.meta.hostVersion に記録する。
-            var hostEnums = { noteType: NoteType, barLineType: BarLineType };
+            var hostEnums = { noteType: NoteType, barLineType: BarLineType, bracketType: BracketType };
 
             var tSnapshot = Date.now();
             var snapshot = Bundle.buildSnapshot(curScore, hostEnums, plugin);
@@ -177,7 +217,7 @@ MuseScore {
             }
 
             var tCheckers = Date.now();
-            issuesList = issues.concat(Bundle.runAllCheckers(snapshot, enabledRules));
+            issuesList = issues.concat(Bundle.runAllCheckers(snapshot, enabledRules, ruleOptions));
             var msCheckers = Date.now() - tCheckers;
 
             hasRun = true;
@@ -651,8 +691,10 @@ MuseScore {
                         anchors.margins: 10
                         checkers: plugin.checkerList
                         enabledRules: plugin.enabledRules
+                        ruleOptions: plugin.ruleOptions
                         perfEnabled: persistedSettings.perfEnabled
                         onRuleToggled: plugin.setRuleEnabled(ruleId, checked)
+                        onRuleOptionChanged: plugin.setRuleOption(ruleId, key, value)
                         onPerfToggled: plugin.setPerfLogging(checked)
                     }
                 }

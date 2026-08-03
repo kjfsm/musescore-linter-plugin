@@ -1,5 +1,5 @@
 import { CANONICAL } from "./enumRegistry.js";
-import type { LintEvent, LintIR, MeasureInfo, NoteInfo } from "./types.js";
+import type { LintEvent, LintIR, MeasureInfo, NoteInfo, PartGroupInfo } from "./types.js";
 
 /**
  * プレーンな spec から LintIR を組み立てる汎用ビルダ。
@@ -63,6 +63,7 @@ export interface TieSpec {
 
 export interface IRSpec {
   parts?: PartSpec[];
+  partGroups?: PartGroupInfo[];
   events?: EventSpec[];
   hairpins?: HairpinSpec[];
   slurs?: SlurSpec[];
@@ -94,6 +95,7 @@ export function buildIR(spec: IRSpec): LintIR {
     index: { byStaff: {}, byTick: {}, byKind: {}, byStaffAndKind: {} },
     meta: {
       parts,
+      partGroups: (spec.partGroups ?? []).map((g) => ({ ...g })),
       firstMusicTickByStaff: parts.map(() => null),
       lastTick: 0,
       hairpins: (spec.hairpins ?? []).map((h) => ({ ...h })),

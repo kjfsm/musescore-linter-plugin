@@ -1,8 +1,16 @@
 import { getCheckerList } from "@musescore-linter/core";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { allRuleIds } from "../src/lib/lint";
-import { isEnabled, loadEnabledRules, ruleGroups, saveEnabledRules } from "../src/lib/rules";
+import {
+  effectiveOptions,
+  isEnabled,
+  loadEnabledRules,
+  loadRuleOptions,
+  ruleGroups,
+  saveEnabledRules,
+  saveRuleOptions,
+} from "../src/lib/rules";
 
 /** localStorage を持たない Node 環境向けの最小実装。 */
 function fakeStorage(initial: Record<string, string> = {}): Storage {
@@ -94,5 +102,77 @@ describe("loadEnabledRules / saveEnabledRules", () => {
   it("壊れた値は捨てて既定に戻す", () => {
     expect(loadEnabledRules(fakeStorage({ "musescore-linter:rule-overrides": "{" }))).toEqual({});
     expect(loadEnabledRules(fakeStorage({ "musescore-linter:rule-overrides": "[1]" }))).toEqual({});
+  });
+});
+
+describe("loadRuleOptions / saveRuleOptions", () => {
+  const KEY = "musescore-linter:rule-options";
+  const OPTION_RULE = "slur-tie-articulation-consistency";
+  let storage: Storage;
+  beforeEach(() => {
+    storage = fakeStorage();
+  });
+
+  it("保存していなければ空（＝全設定が既定）", () => {
+    expect(loadRuleOptions(storage)).toEqual({});
+  });
+
+  it("checker の登録を待たずに呼ばれても保存済みの設定を落とさない", async () => {
+    // 登録前だと getCheckerList() が空になり、全設定が「未知の checker」として捨てられる。
+    // App の mount 直後に save の effect が走るので、そのまま localStorage を空で
+    // 上書きしてユーザー設定を壊してしまう。
+    // 「まだ一度も登録していない」状態はモジュール内フラグ込みで作る必要があるため、
+    // モジュールごと読み直してから最初の呼び出しが loadRuleOptions になるようにする。
+    vi.resetModules();
+    const fresh = await import("../src/lib/rules");
+    const saved = fakeStorage({ [KEY]: JSON.stringify({ [OPTION_RULE]: { scope: "group" } }) });
+    expect(fresh.loadRuleOptions(saved)).toEqual({ [OPTION_RULE]: { scope: "group" } });
+  });
+
+  it("既定と違う値だけ保存して読み戻せる", () => {
+    saveRuleOptions(storage, { [OPTION_RULE]: { scope: "group" } });
+    expect(loadRuleOptions(storage)).toEqual({ [OPTION_RULE]: { scope: "group" } });
+  });
+
+  it("既定と同じ値は保存しない", () => {
+    saveRuleOptions(storage, { [OPTION_RULE]: { scope: "all" } });
+    expect(JSON.parse(storage.getItem(KEY) ?? "{}")).toEqual({});
+  });
+
+  it("multiselect は順序が違っても既定と同じなら保存しない", () => {
+    saveRuleOptions(storage, { [OPTION_RULE]: { groupSymbols: ["square", "bracket"] } });
+    expect(JSON.parse(storage.getItem(KEY) ?? "{}")).toEqual({});
+  });
+
+  it("ON/OFF とは別のキーに保存する（真偽値扱いで配列を壊さないため）", () => {
+    saveRuleOptions(storage, { [OPTION_RULE]: { scope: "group" } });
+    expect(storage.getItem("musescore-linter:rule-overrides")).toBeNull();
+  });
+
+  it("未知の checker / key / 不正値は捨てる", () => {
+    const dirty = fakeStorage({
+      [KEY]: JSON.stringify({
+        "no-such-rule": { scope: "group" },
+        [OPTION_RULE]: { scope: "nonsense", nope: 1, groupSymbols: ["bracket"] },
+      }),
+    });
+    expect(loadRuleOptions(dirty)).toEqual({ [OPTION_RULE]: { groupSymbols: ["bracket"] } });
+  });
+
+  it("壊れた値は捨てて既定に戻す", () => {
+    expect(loadRuleOptions(fakeStorage({ [KEY]: "{" }))).toEqual({});
+    expect(loadRuleOptions(fakeStorage({ [KEY]: "[1]" }))).toEqual({});
+  });
+});
+
+describe("effectiveOptions", () => {
+  it("保存済みの差分を既定の上に重ねる", () => {
+    allRuleIds();
+    const checker = getCheckerList().find((c) => c.options)!;
+    expect(effectiveOptions(checker, {})).toEqual({
+      scope: "all",
+      groupSymbols: ["bracket", "square"],
+    });
+    expect(effectiveOptions(checker, { [checker.id]: { scope: "group" } }).scope).toBe("group");
   });
 });

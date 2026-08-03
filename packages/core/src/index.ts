@@ -1,4 +1,6 @@
 export { getAll, getById, register, reset } from "./checkerRegistry.js";
+export type { OptionParseResult } from "./checkerOptions.js";
+export { findOptionSpec, parseCheckerOptionText, resolveCheckerOptions } from "./checkerOptions.js";
 export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";
 export { CANONICAL } from "./enumRegistry.js";
 export type { EventSpec, HairpinSpec, IRSpec, PartSpec, SlurSpec, TieSpec } from "./irBuilder.js";
@@ -15,6 +17,9 @@ export { tpcToAlter, tpcToName, tpcToStep } from "./pitchSpelling.js";
 export type {
   CanonicalKinds,
   Checker,
+  CheckerOptionChoice,
+  CheckerOptionSpec,
+  CheckerOptionValue,
   HostVersionInfo,
   IRDerived,
   IRIndex,
@@ -24,6 +29,8 @@ export type {
   LintIR,
   MeasureInfo,
   NoteInfo,
+  PartGroupInfo,
+  PartGroupSymbol,
   Severity,
   TextPairCheckerConfig,
   TieInfo,

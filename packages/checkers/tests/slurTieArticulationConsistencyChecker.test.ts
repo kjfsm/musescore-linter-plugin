@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 import { slurTieArticulationConsistencyChecker } from "../src/slurTieArticulationConsistencyChecker.js";
 import { buildIR, K } from "./helpers/irBuilder.js";
 
-const run = (ir: LintIR) => {
+const run = (ir: LintIR, options?: Record<string, unknown>) => {
   ensureDerived(ir);
-  return slurTieArticulationConsistencyChecker.run(ir);
+  return slurTieArticulationConsistencyChecker.run(ir, options);
 };
 
 const q = { numerator: 1, denominator: 4 };
@@ -244,5 +244,68 @@ describe("slur-tie-articulation-consistency", () => {
       ],
     });
     expect(run(ir)).toHaveLength(0);
+  });
+});
+
+describe("slur-tie-articulation-consistency の比較範囲オプション", () => {
+  /**
+   * 4 譜表すべてが同じリズムで、staff 0 だけスタッカートが付いている。
+   * 全体比較なら staff 1/2/3 の 3 件、括弧で 2 本ずつに割ると staff 1 の 1 件だけになる。
+   */
+  const fourStaves = (partGroups: Parameters<typeof buildIR>[0]["partGroups"]) =>
+    buildIR({
+      parts: [{ partName: "Fl1" }, { partName: "Fl2" }, { partName: "Vn1" }, { partName: "Vn2" }],
+      partGroups,
+      events: [0, 1, 2, 3].map((staff) => ({
+        kind: K.CHORD,
+        staff,
+        voice: 0,
+        tick: 0,
+        measure: 1,
+        duration: q,
+        ...(staff === 0 ? { articulations: ["Staccato"] } : {}),
+      })),
+    });
+
+  const pairs = [
+    { symbol: "square" as const, startStaffIdx: 0, staffCount: 2 },
+    { symbol: "square" as const, startStaffIdx: 2, staffCount: 2 },
+  ];
+
+  it("既定（scope=all）では括弧があっても全パートを比較する", () => {
+    expect(run(fourStaves(pairs))).toHaveLength(3);
+  });
+
+  it("scope=group では別の括弧に属するパートを比較しない", () => {
+    const issues = run(fourStaves(pairs), { scope: "group" });
+    expect(issues).toHaveLength(1);
+    expect(issues[0].staffIdx).toBe(1);
+    expect(issues[0].detail).toMatchObject({ scope: "group", comparedToStaffIdx: 0 });
+  });
+
+  it("入れ子では内側の括弧が優先される", () => {
+    const nested = [{ symbol: "bracket" as const, startStaffIdx: 0, staffCount: 4 }, ...pairs];
+    expect(run(fourStaves(nested), { scope: "group" })).toHaveLength(1);
+  });
+
+  it("groupSymbols で内側の種類を外すと、外側の括弧の粒度になる", () => {
+    const nested = [{ symbol: "bracket" as const, startStaffIdx: 0, staffCount: 4 }, ...pairs];
+    expect(run(fourStaves(nested), { scope: "group", groupSymbols: ["bracket"] })).toHaveLength(3);
+  });
+
+  it("括弧に属さないパートは比較対象から外れる", () => {
+    const partial = [{ symbol: "square" as const, startStaffIdx: 0, staffCount: 2 }];
+    // staff 2/3 はどの括弧にも属さないので、検出は staff 1 の 1 件だけ
+    expect(run(fourStaves(partial), { scope: "group" })).toHaveLength(1);
+  });
+
+  it("該当する種類の括弧が無ければ全パート比較にフォールバックする", () => {
+    expect(run(fourStaves([]), { scope: "group" })).toHaveLength(3);
+    expect(run(fourStaves(pairs), { scope: "group", groupSymbols: ["brace"] })).toHaveLength(3);
+  });
+
+  it("不正なオプション値は既定に落とす", () => {
+    expect(run(fourStaves(pairs), { scope: "nonsense" })).toHaveLength(3);
+    expect(run(fourStaves(pairs), { scope: "group", groupSymbols: "square" })).toHaveLength(1);
   });
 });

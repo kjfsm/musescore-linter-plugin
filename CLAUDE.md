@@ -58,4 +58,3 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 - `core` / `checkers` に MuseScore SDK への依存を持ち込む（入力ソース側の責務）
 - `apps/web` に Worker スクリプト（`wrangler.jsonc` の `main`）やサーバー通信を足す
 - `apps/web` で `style` 属性・インライン `<script>` を書く（CSP で落ちる。README「Web 版」節）
-- `.claude/` の直接編集（`.claude-next/` 経由で変更後にコピー）

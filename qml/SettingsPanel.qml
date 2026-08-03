@@ -8,10 +8,51 @@ ScrollView {
 
     property var checkers: []
     property var enabledRules: ({})
+    // ruleId → { key: 値 }。checker の options 宣言に沿って解決済みの値が入る。
+    property var ruleOptions: ({})
     property bool perfEnabled: false
 
     signal ruleToggled(string ruleId, bool checked)
+    signal ruleOptionChanged(string ruleId, string key, var value)
     signal perfToggled(bool checked)
+
+    /** ruleId/key の現在値。未設定なら spec の既定値。 */
+    function optionValue(ruleId, spec) {
+        var forRule = ruleOptions[ruleId];
+        if (forRule && forRule[spec.key] !== undefined) return forRule[spec.key];
+        return spec["default"];
+    }
+
+    function isSelected(ruleId, spec, value) {
+        var current = optionValue(ruleId, spec) || [];
+        return current.indexOf(value) !== -1;
+    }
+
+    /** multiselect のトグル。spec.choices の順を保った新しい配列を返す。 */
+    function toggledSelection(ruleId, spec, value, checked) {
+        var current = optionValue(ruleId, spec) || [];
+        var out = [];
+        for (var i = 0; i < spec.choices.length; i++) {
+            var v = spec.choices[i].value;
+            var on = v === value ? checked : current.indexOf(v) !== -1;
+            if (on) out.push(v);
+        }
+        return out;
+    }
+
+    function choiceLabels(spec) {
+        var out = [];
+        for (var i = 0; i < spec.choices.length; i++) out.push(spec.choices[i].label);
+        return out;
+    }
+
+    function choiceIndex(ruleId, spec) {
+        var current = optionValue(ruleId, spec);
+        for (var i = 0; i < spec.choices.length; i++) {
+            if (spec.choices[i].value === current) return i;
+        }
+        return 0;
+    }
 
     // カテゴリ表示名マップ
     readonly property var categoryLabels: {
@@ -238,6 +279,85 @@ ScrollView {
                                     wrapMode: Text.WordWrap
                                     color: "#757575"
                                     font.pixelSize: 11
+                                }
+
+                                // ─── checker 個別の設定（options 宣言から自動生成）───
+                                Repeater {
+                                    id: optionRepeater
+                                    property string ruleId: modelData.id
+                                    // ルールを無効にしても隠さない。消えると設定が失われたように見える。
+                                    property bool ruleEnabled: root.enabledRules[modelData.id] !== false
+                                    model: modelData.options || []
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Layout.topMargin: 4
+                                        spacing: 2
+
+                                        property var spec: modelData
+
+                                        Label {
+                                            // boolean は CheckBox 自身がラベルを持つので二重に出さない
+                                            visible: spec.type !== "boolean"
+                                            text: spec.label
+                                            color: "#9E9E9E"
+                                            font.pixelSize: 10
+                                        }
+
+                                        // select
+                                        ComboBox {
+                                            visible: spec.type === "select"
+                                            enabled: optionRepeater.ruleEnabled
+                                            font.pixelSize: 11
+                                            implicitHeight: 26
+                                            Layout.preferredWidth: 200
+                                            model: root.choiceLabels(spec)
+                                            currentIndex: root.choiceIndex(optionRepeater.ruleId, spec)
+                                            // 引数を明示的に受ける。signal parameter injection に
+                                            // 頼ると、Repeater が注入する context property の `index`
+                                            // （options 配列内の位置）と衝突し、injection が無効化
+                                            // されたときにエラーなく別の選択肢が保存されてしまう。
+                                            onActivated: function (activatedIndex) {
+                                                root.ruleOptionChanged(
+                                                    optionRepeater.ruleId, spec.key,
+                                                    spec.choices[activatedIndex].value);
+                                            }
+                                        }
+
+                                        // boolean
+                                        CheckBox {
+                                            visible: spec.type === "boolean"
+                                            enabled: optionRepeater.ruleEnabled
+                                            text: spec.label
+                                            font.pixelSize: 11
+                                            checked: root.optionValue(optionRepeater.ruleId, spec) === true
+                                            onToggled: root.ruleOptionChanged(
+                                                optionRepeater.ruleId, spec.key, checked)
+                                        }
+
+                                        // multiselect
+                                        Flow {
+                                            visible: spec.type === "multiselect"
+                                            Layout.fillWidth: true
+                                            spacing: 8
+
+                                            Repeater {
+                                                model: spec.type === "multiselect" ? spec.choices : []
+
+                                                CheckBox {
+                                                    enabled: optionRepeater.ruleEnabled
+                                                    text: modelData.label
+                                                    font.pixelSize: 11
+                                                    checked: root.isSelected(
+                                                        optionRepeater.ruleId, spec, modelData.value)
+                                                    onToggled: root.ruleOptionChanged(
+                                                        optionRepeater.ruleId, spec.key,
+                                                        root.toggledSelection(
+                                                            optionRepeater.ruleId, spec, modelData.value, checked))
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

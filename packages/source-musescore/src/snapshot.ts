@@ -32,9 +32,22 @@ import {
   trackToStaffIdx,
   VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { EngravingItem, Measure, MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type {
+  BracketTypeEnum,
+  EngravingItem,
+  Measure,
+  MuseScore,
+  Score,
+} from "@kjfsm/musescore-plugin-sdk-types";
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
-import type { HostVersionInfo, LintEvent, LintIR, MeasureInfo } from "@musescore-linter/core";
+import type {
+  HostVersionInfo,
+  LintEvent,
+  LintIR,
+  MeasureInfo,
+  PartGroupInfo,
+  PartGroupSymbol,
+} from "@musescore-linter/core";
 import { CANONICAL, createPerf, makeLogger } from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
@@ -58,6 +71,11 @@ function wrapHostEnums(hostEnums: HostEnums): HostEnums {
   return {
     noteType: strictEnum("NoteType", hostEnums.noteType),
     barLineType: strictEnum("BarLineType", hostEnums.barLineType),
+    // bracketType は strictEnum で包まない。包むと未知メンバの参照で throw し、
+    // 小節ループの外で走る readPartGroups が落ちてスナップショット全体を巻き込む。
+    // 代償として、上流で enum が再採番されても検知できず黙って別の記号にマップされる。
+    // 括弧は比較範囲の絞り込みにしか使わない補助情報なので、全体を落とすより許容する。
+    bracketType: hostEnums.bracketType,
   };
 }
 
@@ -90,6 +108,58 @@ function getPartName(score: Score, staffIdx: number): string {
     trackOffset += staveCount;
   }
   return `Staff ${staffIdx + 1}`;
+}
+
+const BRACKET_SYMBOL_BY_MEMBER: Record<string, PartGroupSymbol> = {
+  NORMAL: "bracket",
+  BRACE: "brace",
+  SQUARE: "square",
+  LINE: "line",
+  // NO_BRACKET は「括弧なし」なので採らない
+};
+
+/**
+ * 譜表に付いたシステムブラケットを読む。MuseScore は括弧を「開始譜表」に持たせるので、
+ * 全譜表を 1 周すれば各括弧がちょうど 1 回ずつ拾える。
+ *
+ * `bracketType`（実行時 enum）が無い＝古い QML から呼ばれた場合は空配列を返す。
+ * checker 側はこれを見て全パート比較へフォールバックする。
+ */
+function readPartGroups(score: Score, bracketType: BracketTypeEnum | undefined): PartGroupInfo[] {
+  const out: PartGroupInfo[] = [];
+  const staves = score.staves;
+  if (!bracketType || !staves) return out;
+
+  // 実行中の版に無いメンバは undefined になる。その値には決してマッチしないよう、
+  // undefined のエントリは対応表から落としておく。
+  const symbolByValue = new Map<unknown, PartGroupSymbol>();
+  for (const [member, symbol] of Object.entries(BRACKET_SYMBOL_BY_MEMBER)) {
+    const value = (bracketType as unknown as Record<string, unknown>)[member];
+    if (value !== undefined) symbolByValue.set(value, symbol);
+  }
+
+  // 同じ範囲・同じ種類の括弧が別カラムに重複していても 1 本として扱う
+  // （MusicXML 経路の resolvePartGroups と揃える）。
+  const seen = new Set<string>();
+
+  for (let i = 0; i < staves.length; i++) {
+    const staff = staves[i];
+    if (!staff) continue;
+    const startStaffIdx = typeof staff.idx === "number" ? staff.idx : i;
+    for (const bracket of staff.brackets ?? []) {
+      const symbol = symbolByValue.get(bracket.systemBracket);
+      if (!symbol) continue;
+      const staffCount = bracket.bracketSpan;
+      if (typeof staffCount !== "number" || staffCount < 2) continue;
+      const key = `${symbol}:${startStaffIdx}:${staffCount}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ symbol, startStaffIdx, staffCount });
+    }
+  }
+
+  // 外側の括弧が先に来る並び（MusicXML 経路と揃える）
+  return out.sort((a, b) => a.startStaffIdx - b.startStaffIdx || b.staffCount - a.staffCount);
 }
 
 function pushIndexedId(map: Record<string, number[]>, key: string | number, eventId: number): void {
@@ -320,6 +390,7 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
         staffIdx: i,
         partName: getPartName(score, i),
       })),
+      partGroups: readPartGroups(score, wrappedHostEnums.bracketType),
       firstMusicTickByStaff: Array(numStaves).fill(null) as (number | null)[],
       lastTick: 0,
       hairpins: [],

@@ -30,6 +30,31 @@ function score(partBody: string, partName = "Vn1"): string {
 </score-partwise>`;
 }
 
+/**
+ * `<part-list>` を丸ごと差し替えられる版。`part-group` の入れ子を組むのに使う。
+ * `partIds` の順が `<part>` の出現順（＝ staffIdx の採番順）になる。
+ */
+function scoreWithPartList(partListInner: string, partIds: string[], staves = 1): string {
+  const attrs = `<attributes><divisions>1</divisions>${staves > 1 ? `<staves>${staves}</staves>` : ""}</attributes>`;
+  const parts = partIds
+    .map(
+      (id) =>
+        `<part id="${id}"><measure number="1">${attrs}<note><rest/><duration>1</duration><voice>1</voice></note></measure></part>`,
+    )
+    .join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>${partListInner}</part-list>
+  ${parts}
+</score-partwise>`;
+}
+
+const scorePart = (id: string): string =>
+  `<score-part id="${id}"><part-name>${id}</part-name></score-part>`;
+const groupStart = (n: number, symbol?: string): string =>
+  `<part-group type="start" number="${n}">${symbol ? `<group-symbol>${symbol}</group-symbol>` : ""}</part-group>`;
+const groupStop = (n: number): string => `<part-group type="stop" number="${n}"/>`;
+
 function measure(inner: string, number = 1): string {
   return `<measure number="${number}">
     <attributes><divisions>1</divisions><clef><sign>G</sign><line>2</line></clef></attributes>
@@ -41,6 +66,141 @@ function quarterNote(step: string, octave: number, extra = ""): string {
   return `<note><pitch><step>${step}</step><octave>${octave}</octave></pitch>
     <duration>1</duration><voice>1</voice><type>quarter</type>${extra}</note>`;
 }
+
+describe("buildIRFromMusicXML: part-group（システムブラケット）", () => {
+  it("括弧が無ければ空配列", () => {
+    expect(buildIRFromMusicXML(duet).meta.partGroups).toEqual([]);
+  });
+
+  it("入れ子の bracket + square を外側が先の順で読む", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList(
+        [
+          groupStart(1, "bracket"),
+          groupStart(2, "square"),
+          scorePart("P1"),
+          scorePart("P2"),
+          groupStop(2),
+          groupStart(2, "square"),
+          scorePart("P3"),
+          scorePart("P4"),
+          groupStop(2),
+          groupStop(1),
+        ].join(""),
+        ["P1", "P2", "P3", "P4"],
+      ),
+    );
+    expect(ir.meta.partGroups).toEqual([
+      { symbol: "bracket", startStaffIdx: 0, staffCount: 4 },
+      { symbol: "square", startStaffIdx: 0, staffCount: 2 },
+      { symbol: "square", startStaffIdx: 2, staffCount: 2 },
+    ]);
+  });
+
+  it("group-symbol 省略（既定 none）は括弧として採らないが、入れ子の対応は崩さない", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList(
+        [
+          groupStart(1), // group-symbol なし
+          scorePart("P1"),
+          groupStart(2, "square"),
+          scorePart("P2"),
+          scorePart("P3"),
+          groupStop(2),
+          groupStop(1),
+        ].join(""),
+        ["P1", "P2", "P3"],
+      ),
+    );
+    expect(ir.meta.partGroups).toEqual([{ symbol: "square", startStaffIdx: 1, staffCount: 2 }]);
+  });
+
+  it("対応する start が無い stop は無視する", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList([groupStop(3), scorePart("P1"), scorePart("P2")].join(""), ["P1", "P2"]),
+    );
+    expect(ir.meta.partGroups).toEqual([]);
+  });
+
+  it("閉じ忘れたグループも拾う", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList([groupStart(1, "bracket"), scorePart("P1"), scorePart("P2")].join(""), [
+        "P1",
+        "P2",
+      ]),
+    );
+    expect(ir.meta.partGroups).toEqual([{ symbol: "bracket", startStaffIdx: 0, staffCount: 2 }]);
+  });
+
+  it("複数譜表のパートは譜表数ぶん span を広げる", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList(
+        [groupStart(1, "brace"), scorePart("P1"), groupStop(1)].join(""),
+        ["P1"],
+        2,
+      ),
+    );
+    expect(ir.meta.partGroups).toEqual([{ symbol: "brace", startStaffIdx: 0, staffCount: 2 }]);
+  });
+
+  it("<part> が無い score-part は範囲計算から外す", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList(
+        [
+          groupStart(1, "bracket"),
+          scorePart("P1"),
+          scorePart("GHOST"),
+          scorePart("P2"),
+          groupStop(1),
+        ].join(""),
+        ["P1", "P2"],
+      ),
+    );
+    expect(ir.meta.partGroups).toEqual([{ symbol: "bracket", startStaffIdx: 0, staffCount: 2 }]);
+  });
+
+  it("Object.prototype のメンバ名を group-symbol に書かれても採らない", () => {
+    // 素のオブジェクトで引くと constructor / toString が prototype 経由で truthy になり、
+    // symbol に関数が入って JSON.stringify で消える（LintIR が純データでなくなる）。
+    for (const evil of ["constructor", "toString", "hasOwnProperty", "__proto__"]) {
+      const ir = buildIRFromMusicXML(
+        scoreWithPartList(
+          [groupStart(1, evil), scorePart("P1"), scorePart("P2"), groupStop(1)].join(""),
+          ["P1", "P2"],
+        ),
+      );
+      expect(ir.meta.partGroups).toEqual([]);
+    }
+  });
+
+  it("1 譜表しか覆わない括弧は落とす（MuseScore 経路と揃える）", () => {
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList(
+        [groupStart(1, "bracket"), scorePart("P1"), groupStop(1), scorePart("P2")].join(""),
+        ["P1", "P2"],
+      ),
+    );
+    expect(ir.meta.partGroups).toEqual([]);
+  });
+
+  it("<part> の順とズレて飛び地になる括弧は捨てる", () => {
+    // part-list は P1,P2,P3 の順だが <part> は P1,P3,P2 の順。
+    // 括弧は P1 と P2（=staff 0 と 2）を囲むので staff 1 を跨いだ飛び地になる。
+    const ir = buildIRFromMusicXML(
+      scoreWithPartList(
+        [
+          groupStart(1, "bracket"),
+          scorePart("P1"),
+          scorePart("P2"),
+          groupStop(1),
+          scorePart("P3"),
+        ].join(""),
+        ["P1", "P3", "P2"],
+      ),
+    );
+    expect(ir.meta.partGroups).toEqual([]);
+  });
+});
 
 describe("buildIRFromMusicXML: パートと譜表", () => {
   it("part-list の順に staffIdx を採番し partName を引き継ぐ", () => {

@@ -200,6 +200,103 @@ describe("buildSnapshot", () => {
   });
 });
 
+describe("buildSnapshot: システムブラケット", () => {
+  // 実際の MuseScore と一致しない独自の割り当て。hostEnums 経由で解決されることを証明するため。
+  const BracketType = { NORMAL: 300, BRACE: 301, SQUARE: 302, LINE: 303, NO_BRACKET: 304 };
+
+  function scoreWithBrackets(
+    staves: { brackets: { systemBracket: number; bracketSpan: number }[] }[],
+  ): Score {
+    return {
+      nstaves: staves.length,
+      ntracks: staves.length * 4,
+      parts: [],
+      firstMeasure: null,
+      staves: staves.map((s, idx) => ({ idx, ...s })),
+    } as unknown as Score;
+  }
+
+  const withBracketType = (): HostEnums => ({
+    ...hostEnums(),
+    bracketType: BracketType as unknown as NonNullable<HostEnums["bracketType"]>,
+  });
+
+  it("bracketType を渡さない古い QML では空になる（全パート比較へフォールバックする）", () => {
+    const score = scoreWithBrackets([
+      { brackets: [{ systemBracket: BracketType.NORMAL, bracketSpan: 2 }] },
+      { brackets: [] },
+    ]);
+    expect(buildSnapshot(score, hostEnums()).meta.partGroups).toEqual([]);
+  });
+
+  it("開始譜表に付いた括弧を種類と span ごと読む", () => {
+    const score = scoreWithBrackets([
+      {
+        brackets: [
+          { systemBracket: BracketType.NORMAL, bracketSpan: 4 },
+          { systemBracket: BracketType.SQUARE, bracketSpan: 2 },
+        ],
+      },
+      { brackets: [] },
+      { brackets: [{ systemBracket: BracketType.SQUARE, bracketSpan: 2 }] },
+      { brackets: [] },
+    ]);
+    expect(buildSnapshot(score, withBracketType()).meta.partGroups).toEqual([
+      { symbol: "bracket", startStaffIdx: 0, staffCount: 4 },
+      { symbol: "square", startStaffIdx: 0, staffCount: 2 },
+      { symbol: "square", startStaffIdx: 2, staffCount: 2 },
+    ]);
+  });
+
+  it("NO_BRACKET と span 1 以下は採らない", () => {
+    const score = scoreWithBrackets([
+      {
+        brackets: [
+          { systemBracket: BracketType.NO_BRACKET, bracketSpan: 4 },
+          { systemBracket: BracketType.NORMAL, bracketSpan: 1 },
+        ],
+      },
+      { brackets: [] },
+    ]);
+    expect(buildSnapshot(score, withBracketType()).meta.partGroups).toEqual([]);
+  });
+
+  it("同じ範囲・種類の括弧が重複していても 1 本にまとめる（MusicXML 経路と揃える）", () => {
+    const score = scoreWithBrackets([
+      {
+        brackets: [
+          { systemBracket: BracketType.NORMAL, bracketSpan: 2 },
+          { systemBracket: BracketType.NORMAL, bracketSpan: 2 },
+        ],
+      },
+      { brackets: [] },
+    ]);
+    expect(buildSnapshot(score, withBracketType()).meta.partGroups).toEqual([
+      { symbol: "bracket", startStaffIdx: 0, staffCount: 2 },
+    ]);
+  });
+
+  it("実行中の版に無い enum メンバがあっても落ちない", () => {
+    const partialEnum = { NORMAL: 300 } as unknown as NonNullable<HostEnums["bracketType"]>;
+    const score = scoreWithBrackets([
+      {
+        brackets: [
+          { systemBracket: 300, bracketSpan: 2 },
+          // SQUARE が未定義の版。undefined と一致してしまわないこと。
+          { systemBracket: undefined as unknown as number, bracketSpan: 2 },
+        ],
+      },
+      { brackets: [] },
+    ]);
+    const ir = buildSnapshot(score, { ...hostEnums(), bracketType: partialEnum });
+    expect(ir.meta.partGroups).toEqual([{ symbol: "bracket", startStaffIdx: 0, staffCount: 2 }]);
+  });
+
+  it("staves が無いスコアでも空を返す", () => {
+    expect(buildSnapshot(emptyScore(), withBracketType()).meta.partGroups).toEqual([]);
+  });
+});
+
 describe("getSnapshotPerfReport", () => {
   afterEach(() => {
     setPerfEnabled(false);

@@ -19,9 +19,34 @@ paths:
   category: "articulation" | "dynamics" | "tempo" | "notation" | string,
   severity: "error" | "warning" | "info",  // 検出 issue のデフォルト severity
   defaultEnabled: boolean,
-  run: function(ir) -> Issue[]             // LintIR を受け取り Issue 配列を返す
+  options?: CheckerOptionSpec[],           // 任意。ユーザー設定の宣言（後述）
+  run: function(ir, options?) -> Issue[]   // LintIR を受け取り Issue 配列を返す
 }
 ```
+
+## ユーザー設定（`options`）
+
+ON/OFF 以外の設定を持たせたい checker は `options` を宣言する。UI（Web / QML）と CLI は
+この宣言だけを見て入力欄・バリデーション・`--rule-option` の受理を組み立てるので、
+UI 側に個別対応を書く必要はない。
+
+```js
+options: [
+  { key: "scope", label: "比較範囲", type: "select",
+    choices: [{ value: "all", label: "全パート" }, { value: "group", label: "括弧内のみ" }],
+    default: "all" },
+  { key: "groupSymbols", label: "対象の括弧", type: "multiselect",
+    choices: [...], default: ["bracket", "square"] },
+  { key: "strict", label: "厳格", type: "boolean", default: false },
+]
+```
+
+- **`run` の第 2 引数は未検証の生値**。値の出所は localStorage / QML の JSON / CLI 文字列で
+  どれも信用できないので、冒頭で `resolveCheckerOptions(OPTIONS, rawOptions)` を通してから使う。
+  `runAllCheckers` 側では正規化しない（テストが `checker.run(ir)` を直接呼ぶ経路と揃えるため）。
+- **`options` は純データに保つ**。QML の `Repeater` model や `JSON.stringify` を通るので、
+  関数や getter を入れてはいけない。
+- 引数を取らない既存の checker はそのままでよい（第 2 引数は optional）。
 
 ## Issue の生成
 
@@ -45,11 +70,11 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
 
 ## severity 基準
 
-| レベル | 用途 |
-|---|---|
-| `error` | 再生・出版に支障が出るレベルの漏れ（冒頭テンポなし、冒頭ダイナミクスなし等） |
-| `warning` | on/off の対応漏れ（pizz. のまま終わる、senza sord. 忘れ等） |
-| `info` | あると望ましい記載の漏れ（複縦線等） |
+| レベル    | 用途                                                                         |
+| --------- | ---------------------------------------------------------------------------- |
+| `error`   | 再生・出版に支障が出るレベルの漏れ（冒頭テンポなし、冒頭ダイナミクスなし等） |
+| `warning` | on/off の対応漏れ（pizz. のまま終わる、senza sord. 忘れ等）                  |
+| `info`    | あると望ましい記載の漏れ（複縦線等）                                         |
 
 ## LintIR の構造
 
@@ -67,6 +92,9 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
   },
   meta: {
     parts: [{staffIdx, partName}], firstMusicTickByStaff, lastTick,
+    // システムブラケット。取れないソースでは []。入れ子は「同じ譜表を覆う括弧が
+    // 複数ある」状態で表し、内側かどうかは staffCount の小ささで決まる。
+    partGroups: [{symbol: "bracket"|"square"|"brace"|"line", startStaffIdx, staffCount}],
     hairpins: [{staffIdx, startTick, endTick}],
     slurs:    [{staffIdx, voice, startTick, endTick}],
     ties:     [{staffIdx, voice, startTick, endTick, startPitch, endPitch}],
@@ -95,6 +123,7 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
 ## Checker 追加の標準手順
 
 詳細は `/checker-add` skill を参照。
+
 1. `src/checkers/xxxChecker.js` に `var checker = { ... }` を定義
 2. `src/checkers/index.js` に `import` と `Registry.register(X.checker)` を 1 行ずつ追加（**唯一の同期点**）
 3. `test/runner.js` にテストケースを追加（fixture は `irBuilder.buildIR({...})` で構築）

@@ -1,6 +1,14 @@
-import type { Severity } from "@musescore-linter/core";
+import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
+import { findOptionSpec, parseCheckerOptionText } from "@musescore-linter/core";
 
 export type OutputFormat = "pretty" | "json" | "github";
+
+/** `--rule-option=<ruleId>.<key>=<value>` を割っただけの生の指定。値の妥当性は未検証。 */
+export interface RawRuleOption {
+  ruleId: string;
+  key: string;
+  value: string;
+}
 
 /** 非ゼロ終了の閾値。"none" はどんな issue でも 0 を返す。 */
 export type FailOn = Severity | "none";
@@ -13,6 +21,8 @@ export interface CliOptions {
   disabledRules: string[];
   /** 指定があればこの checker だけを有効にする */
   onlyRules: string[];
+  /** checker 個別のオプション指定（出現順。同じキーは後勝ち） */
+  ruleOptions: RawRuleOption[];
   failOn: FailOn;
   color: boolean;
   help: boolean;
@@ -31,6 +41,7 @@ const DEFAULTS: CliOptions = {
   dumpIR: false,
   disabledRules: [],
   onlyRules: [],
+  ruleOptions: [],
   failOn: "error",
   color: true,
   help: false,
@@ -55,6 +66,26 @@ function oneOf<T extends string>(flag: string, value: string, allowed: T[]): T {
 }
 
 /**
+ * `--rule-option=<ruleId>.<key>=<value>` の payload 部分を割る。
+ *
+ * 外側のパーサが**最初の `=`** で切るので、ここに来る文字列は `<ruleId>.<key>=<value>`。
+ * ruleId は kebab-case、key は lowerCamel でどちらも `.` を含まないため、
+ * 最初の `.` を境目にして曖昧さなく割れる。
+ */
+function parseRuleOptionArg(flag: string, payload: string): RawRuleOption {
+  const eq = payload.indexOf("=");
+  if (eq === -1) {
+    throw new UsageError(`${flag} は <ruleId>.<key>=<value> の形式で指定してください`);
+  }
+  const lhs = payload.slice(0, eq);
+  const dot = lhs.indexOf(".");
+  if (dot <= 0 || dot === lhs.length - 1) {
+    throw new UsageError(`${flag} は <ruleId>.<key>=<value> の形式で指定してください`);
+  }
+  return { ruleId: lhs.slice(0, dot), key: lhs.slice(dot + 1), value: payload.slice(eq + 1) };
+}
+
+/**
  * 引数を解析する。`--flag=value` 形式のみ受け付け、`--flag value` は受け付けない
  * （ファイル名との区別が曖昧になるため）。
  */
@@ -64,6 +95,7 @@ export function parseArgs(argv: string[]): CliOptions {
     files: [],
     disabledRules: [],
     onlyRules: [],
+    ruleOptions: [],
   };
   let noMoreFlags = false;
 
@@ -111,6 +143,9 @@ export function parseArgs(argv: string[]): CliOptions {
       case "--rule":
         options.onlyRules.push(requireValue(flag, value));
         break;
+      case "--rule-option":
+        options.ruleOptions.push(parseRuleOptionArg(flag, requireValue(flag, value)));
+        break;
       case "--no-color":
         options.color = false;
         break;
@@ -134,6 +169,45 @@ export function resolveEnabledRules(
   }
   for (const id of options.disabledRules) enabled[id] = false;
   return enabled;
+}
+
+/**
+ * `runAllCheckers` に渡す ruleOptions を組み立てる。
+ *
+ * 人間が打った指定を受ける境界なので、`resolveCheckerOptions` のように黙って既定へ
+ * 落とさず、未知の checker / key / 値はここでエラーにする。同じキーの重複指定は後勝ち。
+ */
+export function resolveRuleOptions(
+  options: Pick<CliOptions, "ruleOptions">,
+  checkers: Checker[],
+): Record<string, Record<string, CheckerOptionValue>> {
+  const byId = new Map(checkers.map((c) => [c.id, c]));
+  const out: Record<string, Record<string, CheckerOptionValue>> = {};
+
+  for (const { ruleId, key, value } of options.ruleOptions) {
+    const checker = byId.get(ruleId);
+    if (!checker) {
+      throw new UsageError(
+        `チェッカー '${ruleId}' は存在しません（--list-rules で一覧を確認できます）`,
+      );
+    }
+    const spec = findOptionSpec(checker, key);
+    if (!spec) {
+      const keys = (checker.options ?? []).map((s) => s.key);
+      throw new UsageError(
+        keys.length > 0
+          ? `チェッカー '${ruleId}' に設定 '${key}' はありません（指定できるのは ${keys.join(" / ")}）`
+          : `チェッカー '${ruleId}' に設定できる項目はありません`,
+      );
+    }
+    const parsed = parseCheckerOptionText(spec, value);
+    if (!parsed.ok) throw new UsageError(`--rule-option=${ruleId}.${key}: ${parsed.error}`);
+
+    if (!out[ruleId]) out[ruleId] = {};
+    out[ruleId][key] = parsed.value;
+  }
+
+  return out;
 }
 
 /** 指定された id が実在する checker かを検証する。 */
@@ -167,6 +241,9 @@ export const HELP_TEXT = `musescore-lint — MusicXML の楽譜を静的解析�
                                    [{ file, ir }, ...] の配列になる）
   --rule=<id>                    指定した checker だけを有効にする（複数指定可）
   --no-rule=<id>                 指定した checker を無効にする（複数指定可）
+  --rule-option=<id>.<key>=<値>  checker 個別の設定（複数指定可、同じキーは後勝ち）
+                                 複数選択の値はカンマ区切り
+                                 指定できる key は --list-rules で確認できる
   --fail-on=<error|warning|info|none>
                                  この severity 以上の issue があれば終了コード 1
                                  （既定: error。none はつねに 0）

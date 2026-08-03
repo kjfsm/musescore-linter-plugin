@@ -3,7 +3,14 @@ import type { LintIR } from "@musescore-linter/core";
 import { getCheckerList, reset, runAllCheckers, setLevel } from "@musescore-linter/core";
 import { buildIRFromBytes } from "@musescore-linter/source-musicxml";
 
-import { assertKnownRules, HELP_TEXT, parseArgs, resolveEnabledRules, UsageError } from "./args.js";
+import {
+  assertKnownRules,
+  HELP_TEXT,
+  parseArgs,
+  resolveEnabledRules,
+  resolveRuleOptions,
+  UsageError,
+} from "./args.js";
 import {
   type FileResult,
   formatGithub,
@@ -33,20 +40,26 @@ function registerCheckers(): void {
 
 function listRules(io: RunIO): number {
   registerCheckers();
-  const rows = getCheckerList().map((c) => ({
-    id: c.id,
-    severity: c.severity,
-    category: c.category,
-    name: c.name,
-    defaultEnabled: c.defaultEnabled,
-  }));
-  const idWidth = Math.max(...rows.map((r) => r.id.length));
+  const checkers = getCheckerList();
+  const idWidth = Math.max(...checkers.map((c) => c.id.length));
   io.stdout(
-    rows
-      .map(
-        (r) =>
-          `${r.id.padEnd(idWidth)}  ${r.severity.padEnd(7)}  ${r.category.padEnd(12)}  ${r.name}${r.defaultEnabled ? "" : "（既定で無効）"}`,
-      )
+    checkers
+      .map((c) => {
+        const head = `${c.id.padEnd(idWidth)}  ${c.severity.padEnd(7)}  ${c.category.padEnd(12)}  ${c.name}${c.defaultEnabled ? "" : "（既定で無効）"}`;
+        // オプション行は id 幅の計算に混ぜず、ぶら下げて出す
+        const opts = (c.options ?? []).map((o) => {
+          // multiselect はカンマ区切りで複数指定できることが書式から分かるようにする
+          const values =
+            o.type === "boolean"
+              ? "true|false"
+              : o.type === "select"
+                ? o.choices.map((ch) => ch.value).join("|")
+                : `${o.choices.map((ch) => ch.value).join("|")}（カンマ区切りで複数可）`;
+          const def = Array.isArray(o.default) ? o.default.join(",") : String(o.default);
+          return `    --rule-option=${c.id}.${o.key}=<${values}>  ${o.label}（既定: ${def || "なし"}）`;
+        });
+        return [head, ...opts].join("\n");
+      })
       .join("\n"),
   );
   return EXIT_OK;
@@ -88,9 +101,12 @@ export function run(argv: string[], io: RunIO): number {
   setLevel("warn");
   registerCheckers();
 
-  const allRuleIds = getCheckerList().map((c) => c.id);
+  const checkers = getCheckerList();
+  const allRuleIds = checkers.map((c) => c.id);
+  let ruleOptions: Record<string, Record<string, unknown>>;
   try {
     assertKnownRules(options, allRuleIds);
+    ruleOptions = resolveRuleOptions(options, checkers);
   } catch (error) {
     if (error instanceof UsageError) {
       io.stderr(describeError(error));
@@ -111,7 +127,7 @@ export function run(argv: string[], io: RunIO): number {
         irs.push({ file, ir });
         continue;
       }
-      results.push({ file, issues: runAllCheckers(ir, enabledRules) });
+      results.push({ file, issues: runAllCheckers(ir, enabledRules, ruleOptions) });
     } catch (error) {
       failed = true;
       io.stderr(`${file}: ${describeError(error)}`);

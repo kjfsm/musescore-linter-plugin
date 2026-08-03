@@ -31,41 +31,63 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 
 ## チェック項目
 
-| ルール                                         | severity     | 目的                                                                                 |
-| ---------------------------------------------- | ------------ | ------------------------------------------------------------------------------------ |
-| Pizz / Arco                                    | warning      | `pizz.` 開始 → `arco` 解除の対応漏れ・重複                                           |
-| Con sord. / Senza sord.                        | warning      | 弱音器の対応漏れ・重複                                                               |
-| Solo / Tutti                                   | warning      | `solo`/`soli` → `tutti` の対応漏れ・重複（`tutti` を挟まない二連ソロは info）        |
-| Div. / Unis.                                   | warning      | `div.` → `unis.` の対応漏れ・重複                                                    |
-| Sul tasto / Ord.                               | warning      | `sul tasto`（駒から離れた奏法）→ `ord.` 復帰の対応漏れ・重複                         |
-| Sul pont. / Ord.                               | warning      | `sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複                               |
-| Con legno / Arco                               | warning      | `con legno`（弓の木部奏法）→ `arco` 復帰の対応漏れ・重複                             |
-| Mute / Open                                    | warning      | 金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複                       |
-| Una corda / Tre corde                          | warning      | ピアノ左ペダル `una corda` → `tre corde` の対応漏れ・重複                            |
-| Près de la table / Ord.                        | warning      | ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複          |
-| 同リズム間のスラー/タイ/アーティキュレーション | info         | 同じ小節で同じリズムのパート間でスラー・タイの有無やアーティキュレーションが食い違う |
-| 休符アノテーション                             | error        | 休符の位置に演奏技法テキストが付与されていないか（ダイナミクスは info）              |
-| テンポ変更と複縦線                             | info         | テンポ変更前の小節に複縦線があるか                                                   |
-| 冒頭テンポ表記                                 | error        | 曲頭にテンポ表記があるか                                                             |
-| 各パート冒頭ダイナミクス                       | error        | 各パートの 1 音目にダイナミクスがあるか                                              |
-| BPM 値なしテンポ                               | warning      | テンポ表記に BPM 値が未設定（再生テンポに反映されない）                              |
-| テンポ変化の解除漏れ                           | warning      | `rit.`/`accel.` 等が `a tempo`/新テンポで解除されないまま終わる                      |
-| 重複ダイナミクス                               | info         | 同パートで同じ強弱記号が変化なく連続している箇所（`sf`/`rf` の連続は許可）           |
-| 同時ダイナミクスの衝突                         | warning      | 同じ位置に異なる強弱記号が同時に付いている                                           |
-| ヘアピンの到達先ダイナミクス                   | info         | crescendo/diminuendo の終端に到達先のダイナミクスが無い（曲尾のヘアピンは除外）      |
-| 終止線の確認                                   | info         | 曲末の最終 barline が終止線になっているか                                            |
-| コーダ/セーニョ整合性                          | error        | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落）                  |
-| リハーサルマークの順序                         | info         | リハーサルマークの順序逆転・重複                                                     |
-| リピート小節線の対応                           | warning      | リピート開始(‖:)に対応する終了(:‖)が無い（終了のみは曲頭反復として許容）             |
-| 異音程のタイ                                   | warning      | 異なる音高をタイで結んでいる（スラーの書き間違いの可能性）                           |
-| 親切臨時記号の提案                             | info         | 前小節で臨時記号が付いた音が次小節で記号なしで再び現れる箇所に親切記号を提案         |
-| 休符上のヘアピン端点                           | info         | ヘアピン(cresc./dim.)の端点が休符上にある（同 tick に音符があれば許容）              |
-| 休符上のスラー端点                             | warning      | スラーの端点が休符上にある（同 tick に音符があれば許容）                             |
-| 単一音スラー                                   | info         | スラーが単一音（開始 tick == 終了 tick）に掛かっている                               |
-| cresc./dim. の到達先                           | info         | テキスト式 cresc./dim. の後に到達先の強弱記号が現れない                              |
-| 拍をまたぐ音符の分割                           | info/warning | 拍境界をまたぐ音符（小節の中央またぎは小節頭始まりのみ許容し warning）。分割案を提示 |
+| ルール                                         | severity     | 目的                                                                                                           |
+| ---------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| Pizz / Arco                                    | warning      | `pizz.` 開始 → `arco` 解除の対応漏れ・重複                                                                     |
+| Con sord. / Senza sord.                        | warning      | 弱音器の対応漏れ・重複                                                                                         |
+| Solo / Tutti                                   | warning      | `solo`/`soli` → `tutti` の対応漏れ・重複（`tutti` を挟まない二連ソロは info）                                  |
+| Div. / Unis.                                   | warning      | `div.` → `unis.` の対応漏れ・重複                                                                              |
+| Sul tasto / Ord.                               | warning      | `sul tasto`（駒から離れた奏法）→ `ord.` 復帰の対応漏れ・重複                                                   |
+| Sul pont. / Ord.                               | warning      | `sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複                                                         |
+| Con legno / Arco                               | warning      | `con legno`（弓の木部奏法）→ `arco` 復帰の対応漏れ・重複                                                       |
+| Mute / Open                                    | warning      | 金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複                                                 |
+| Una corda / Tre corde                          | warning      | ピアノ左ペダル `una corda` → `tre corde` の対応漏れ・重複                                                      |
+| Près de la table / Ord.                        | warning      | ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複                                    |
+| 同リズム間のスラー/タイ/アーティキュレーション | info         | 同じ小節で同じリズムのパート間でスラー・タイの有無やアーティキュレーションが食い違う（比較範囲を設定可、後述） |
+| 休符アノテーション                             | error        | 休符の位置に演奏技法テキストが付与されていないか（ダイナミクスは info）                                        |
+| テンポ変更と複縦線                             | info         | テンポ変更前の小節に複縦線があるか                                                                             |
+| 冒頭テンポ表記                                 | error        | 曲頭にテンポ表記があるか                                                                                       |
+| 各パート冒頭ダイナミクス                       | error        | 各パートの 1 音目にダイナミクスがあるか                                                                        |
+| BPM 値なしテンポ                               | warning      | テンポ表記に BPM 値が未設定（再生テンポに反映されない）                                                        |
+| テンポ変化の解除漏れ                           | warning      | `rit.`/`accel.` 等が `a tempo`/新テンポで解除されないまま終わる                                                |
+| 重複ダイナミクス                               | info         | 同パートで同じ強弱記号が変化なく連続している箇所（`sf`/`rf` の連続は許可）                                     |
+| 同時ダイナミクスの衝突                         | warning      | 同じ位置に異なる強弱記号が同時に付いている                                                                     |
+| ヘアピンの到達先ダイナミクス                   | info         | crescendo/diminuendo の終端に到達先のダイナミクスが無い（曲尾のヘアピンは除外）                                |
+| 終止線の確認                                   | info         | 曲末の最終 barline が終止線になっているか                                                                      |
+| コーダ/セーニョ整合性                          | error        | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落）                                            |
+| リハーサルマークの順序                         | info         | リハーサルマークの順序逆転・重複                                                                               |
+| リピート小節線の対応                           | warning      | リピート開始(‖:)に対応する終了(:‖)が無い（終了のみは曲頭反復として許容）                                       |
+| 異音程のタイ                                   | warning      | 異なる音高をタイで結んでいる（スラーの書き間違いの可能性）                                                     |
+| 親切臨時記号の提案                             | info         | 前小節で臨時記号が付いた音が次小節で記号なしで再び現れる箇所に親切記号を提案                                   |
+| 休符上のヘアピン端点                           | info         | ヘアピン(cresc./dim.)の端点が休符上にある（同 tick に音符があれば許容）                                        |
+| 休符上のスラー端点                             | warning      | スラーの端点が休符上にある（同 tick に音符があれば許容）                                                       |
+| 単一音スラー                                   | info         | スラーが単一音（開始 tick == 終了 tick）に掛かっている                                                         |
+| cresc./dim. の到達先                           | info         | テキスト式 cresc./dim. の後に到達先の強弱記号が現れない                                                        |
+| 拍をまたぐ音符の分割                           | info/warning | 拍境界をまたぐ音符（小節の中央またぎは小節頭始まりのみ許容し warning）。分割案を提示                           |
 
 検出結果は「問題」タブにリスト表示され、クリックで該当小節・拍へジャンプします。
+
+### チェック項目ごとの設定
+
+一部の checker は ON/OFF に加えて設定値を持ちます。設定タブ（プラグイン / Web 版）に
+自動で入力欄が出るほか、CLI では `--rule-option=<id>.<key>=<値>` で指定できます
+（指定できる key は `--list-rules` で確認できます）。
+
+**同リズム間のスラー/タイ/アーティキュレーション整合**の比較範囲:
+
+| key            | 値                                                 | 既定             | 意味                                                               |
+| -------------- | -------------------------------------------------- | ---------------- | ------------------------------------------------------------------ |
+| `scope`        | `all` / `group`                                    | `all`            | `group` にするとスコアの括弧（システムブラケット）内だけを比較する |
+| `groupSymbols` | `bracket` / `square` / `brace` / `line` の複数選択 | `bracket,square` | 区切りに使う括弧の種類。譜表を覆う**最小の**括弧が採用される       |
+
+オーケストラスコアなら、`bracket` だけを選べば「木管全体」「金管全体」「弦全体」の単位、
+`bracket,square` なら「Fl 1st/2nd のペア」単位で比較されます。どの括弧にも属さないパート
+（例: Timpani）は比較対象から外れます。**選んだ種類の括弧がスコアに 1 つも無ければ、
+従来どおり全パート横断で比較します**（括弧を持たない楽譜で無検出にならないようにするため）。
+
+> `brace`（ピアノ・ハープの大譜表）は **MuseScore プラグイン経路でのみ**効きます。MusicXML では
+> 大譜表が `<part-group>` ではなく `<staves>` で暗黙表現されるため、Web 版と CLI では `brace` を
+> 選んでも括弧として認識されません（結果として全パート横断へフォールバックします）。
 
 > 今後追加しうるチェック項目の網羅カタログ（実装可否・優先度・必要な SDK 拡張つき）は
 > [`docs/notation-checklist.md`](./docs/notation-checklist.md)、
@@ -208,9 +230,11 @@ pnpm lint:score score.musicxml             # ビルドせずに直接実行（ts
 --dump-ir                      issue ではなく LintIR を JSON 出力
                                （1 ファイルなら LintIR そのもの、複数なら [{ file, ir }] の配列）
 --rule=<id> / --no-rule=<id>   checker の絞り込み（複数指定可）
+--rule-option=<id>.<key>=<値>  checker 個別の設定（複数指定可、同じキーは後勝ち）
+                               複数選択の値はカンマ区切り。指定できる key は --list-rules で確認
 --fail-on=<error|warning|info|none>
                                この severity 以上で終了コード 1（既定: error）
---list-rules                   checker の一覧
+--list-rules                   checker の一覧（設定できる項目もあわせて表示）
 ```
 
 終了コードは 0（閾値以上の issue なし）/ 1（あり）/ 2（実行エラー）です。
@@ -260,11 +284,24 @@ CSP の `style-src 'self'`（`'unsafe-inline'` なし）を維持するため、
   一致判定しかしないため判定は変わりません。
 - MuseScore で書き出した MusicXML は、MuseScore 自身が記譜を正規化したあとの姿です
   （例: 異音程のタイは取り込み時に `let-ring` へ変換され、`tie-pitch-mismatch` は出なくなる）。
+- パート括弧（`<part-group>`）はスコアによっては書き出されません。その場合
+  `meta.partGroups` は空になり、比較範囲を「括弧内のみ」にしても全パート横断で判定されます。
 
 ## 設定の永続化
 
-設定は QML `Settings` の単一プロパティ `rulesJson`（JSON 文字列）に保存されます。
+設定は QML の 2 つのプロパティに JSON 文字列で保存されます。
 これにより新しい checker を追加しても QML を触る必要はありません（後述の追加手順参照）。
+
+- `rulesJson` — checker の ON/OFF
+- `ruleOptionsJson` — checker 個別の設定（`options` 宣言を持つ checker のみ）
+
+ON/OFF 側は値を真偽値として読み書きするので、両者は必ず別プロパティに分けます。
+
+> プラグイン側の保持先は `QtObject` なので、**設定はプラグインを閉じると消えます**（セッション内のみ）。
+> セッションをまたいで残したい場合は `Qt.labs.settings` の `Settings` に置き換える必要があります。
+
+Web 版は `musescore-linter:rule-overrides` と `musescore-linter:rule-options` の 2 キーに分けて
+localStorage に保存し、どちらも「既定から変えたぶんだけ」を残すのでブラウザを閉じても残ります。
 
 ## 新しい checker の追加手順
 
