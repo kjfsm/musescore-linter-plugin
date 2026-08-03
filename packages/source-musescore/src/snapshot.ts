@@ -31,15 +31,23 @@ import {
   trackToStaffIdx,
   VOICES_PER_STAFF,
 } from "@kjfsm/musescore-plugin-sdk-helpers";
-import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { EngravingItem, MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
 import type { HostVersionInfo, LintEvent, LintIR } from "@musescore-linter/core";
-import { CANONICAL, makeLogger } from "@musescore-linter/core";
+import { CANONICAL, createPerf, makeLogger } from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
 import type { HostEnums } from "./types.js";
 
 const log = makeLogger("snapshot");
+
+// 走査の内訳を計測する。既定では無効（setPerfEnabled(true) で有効化）。
+const perf = createPerf("snapshot");
+
+/** 直近の buildSnapshot の計測結果。計測が無効なら空文字列。 */
+export function getSnapshotPerfReport(): string {
+  return perf.report();
+}
 
 // MuseScore 4.4+（Qt6 の V4 エンジン）は ES6 Proxy をサポートする（.claude/skills/musescore-qt-versions
 // の対応表参照）。念のためガードし、非対応環境では生の enum のまま渡す（strictEnum の恩恵は失うが
@@ -169,6 +177,14 @@ function processAnnotations(seg: PluginSegment, measureNum: number, ir: LintIR):
   }
 }
 
+// elementAt は QML↔C++ の境界を越えるので、1 track につき 1 回に抑える。この 1 回あたりの
+// コストは実測で約 1.3 μs、譜面 2 種で一致しており、走査時間はほぼこの呼び出し回数で決まる。
+// segment × staff ごとに配列を作ると GC 圧が増えるため、モジュールレベルのバッファを
+// 使い回す（走査は同期処理なので再入しない）。
+const trackElements: (EngravingItem | null)[] = Array.from<EngravingItem | null>({
+  length: VOICES_PER_STAFF,
+}).fill(null);
+
 function processStaffElements(
   seg: PluginSegment,
   measureNum: number,
@@ -177,7 +193,11 @@ function processStaffElements(
   hostEnums: HostEnums,
 ): void {
   for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
-    const el = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
+    trackElements[voice] = seg.elementAt(staffVoiceToTrack(staffIdx, voice));
+  }
+
+  for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
+    const el = trackElements[voice];
     if (!el) continue;
 
     // グレースノートは LintIR に含めない（拍位置のタイミングを持たないため）
@@ -241,8 +261,10 @@ function processStaffElements(
     }
   }
 
+  // chord/rest とは別ループのままにしてイベントの生成順（= id 順）を変えない。
+  // 引き直さず上で取得済みの要素を見る。
   for (let v = 0; v < VOICES_PER_STAFF; v++) {
-    const barEl = seg.elementAt(staffVoiceToTrack(staffIdx, v));
+    const barEl = trackElements[v];
     if (barEl && isBarLine(barEl)) {
       appendEvent(ir, {
         type: "barline",
@@ -283,20 +305,42 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
     derived: null,
   };
 
+  // 計時は segment 単位に留める。staff/voice ごとに Date.now() を呼ぶと計測自体が
+  // 数万回走って対象を歪めるため。
+  perf.clear();
+  const tTotal = perf.now();
+
   let measureNum = 1;
+  let segCount = 0;
   for (const m of iterateMeasures(score)) {
     try {
       for (const seg of iterateMeasureSegments(m) as Iterable<PluginSegment>) {
+        segCount++;
+
+        const tAnn = perf.now();
         processAnnotations(seg, measureNum, ir);
+        perf.addSince("annotations", tAnn);
+
+        const tStaff = perf.now();
         for (const staffIdx of iterateStaves(score)) {
           processStaffElements(seg, measureNum, staffIdx, ir, wrappedHostEnums);
         }
+        perf.addSince("staffElements", tStaff);
       }
     } catch (e) {
       log.warn(`measure ${measureNum} の解析中にエラー: ${e}`);
     }
     measureNum++;
   }
+
+  perf.addSince("total", tTotal);
+  perf.count("measures", measureNum - 1);
+  perf.count("segments", segCount);
+  perf.count("staves", numStaves);
+  perf.count("events", ir.events.length);
+  // 実測ではなく構造からの概算（ラベルは桁を揃えるため ASCII のみ）。processStaffElements は
+  // 1 segment × 1 staff あたり全 voice を 1 回ずつ引き、chord/rest 用と barline 用で使い回す。
+  perf.count("elementAt(est)", segCount * numStaves * VOICES_PER_STAFF);
 
   log.info(
     `LintIR を生成: events=${ir.events.length}, parts=${ir.meta.parts.length}, lastTick=${ir.meta.lastTick}`,

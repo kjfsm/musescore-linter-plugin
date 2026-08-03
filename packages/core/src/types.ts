@@ -97,6 +97,9 @@ export interface IRDerived {
   tiesByStaff: Record<number, TieInfo[]>;
   // `${staffIdx}:${measure}:${voice}` → リズム署名（声部横断の同リズム判定キー）
   rhythmByStaffMeasure: Record<string, string>;
+  // `${staffIdx}:${measure}:${voice}` → chord（tick 昇順）。読み取り専用として扱うこと。
+  // 小節×パート単位で chord を引く checker が staff 全体を毎回 filter + sort しないための索引。
+  chordsByStaffMeasure: Record<string, LintEvent[]>;
 }
 
 export interface CanonicalKinds {

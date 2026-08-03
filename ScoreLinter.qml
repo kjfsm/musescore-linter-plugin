@@ -29,6 +29,34 @@ MuseScore {
     property string snapshotText: ""
     property bool hasRun: false
 
+    // ─── 実行時間の計測 ───
+    // 全体の所要時間は常に記録してヘッダに表示する（Date.now() 2 回分でコストは無視できる）。
+    // 内訳は perfEnabled が true のときだけ集計し、スナップショットタブに出す。
+    property int elapsedMs: 0
+    property string perfText: ""
+
+    // ─── スナップショット JSON の遅延生成 ───
+    // JSON.stringify は QJSEngine だと実測で 5 秒超かかる（V8 の約 100 倍）。実行のたびに
+    // 走らせると全体の 6 割を占めるので、スナップショットタブを開いたときだけ生成する。
+    // events が出力の 6 割弱を占めるため、そこだけ分割して Timer で回し、タブを離れたら
+    // 途中で中断できるようにしている。残りの index/meta/registry/derived は合わせても
+    // 小さいので最後に一括で作る。
+    readonly property int snapshotChunkSize: 1000
+    property var snapshotIR: null
+    property bool snapshotBuilding: false
+    property int snapshotDone: 0
+    property int snapshotTotal: 0
+    property int snapshotBuildMs: 0
+    property var snapshotChunks: []
+    property double snapshotStartedAt: 0
+
+    // タブの出入りで生成の開始・中断を切り替える（2 = スナップショットタブ）
+    property int currentTab: tabBar.currentIndex
+    onCurrentTabChanged: {
+        if (currentTab === 2) startSnapshotBuild();
+        else cancelSnapshotBuild();
+    }
+
     // ─── アップデート確認の状態 ───
     // idle / checking / upToDate / available / error
     property string updateState: "idle"
@@ -55,6 +83,7 @@ MuseScore {
     QtObject {
         id: persistedSettings
         property string rulesJson: "{}"
+        property bool perfEnabled: false
     }
 
     onRun: {
@@ -96,37 +125,183 @@ MuseScore {
     }
 
     function runLinter() {
+        var tStart = Date.now();
+
+        // 前回の LintIR と JSON を先に手放してから走査する。QJSEngine は巨大なオブジェクト
+        // グラフが 2 つ生きているとチェッカー実行中に GC が繰り返し走り、実測で 2 回目以降が
+        // 7 倍遅くなった（701 ms → 5143 ms）。参照を切るだけでは回収の時機を選べないので、
+        // 使えるなら明示的に走らせる。
+        cancelSnapshotBuild();
         snapshotText = "";
+        snapshotIR = null;
+        snapshotBuildMs = 0;
+        perfText = "";
+
+        var msGc = 0;
+        if (typeof gc === "function") {
+            var tGc = Date.now();
+            gc();
+            msGc = Date.now() - tGc;
+        }
+
         if (!curScore) {
             issuesList = [internalIssue("スコアが開かれていません")];
             hasRun = true;
+            elapsedMs = Date.now() - tStart;
             tabBar.currentIndex = 0;
             return;
         }
 
         try {
+            // 内訳の集計は bundle 側（core/perf.ts）で行う。false のときは計時も記録もしない。
+            Bundle.setPerfEnabled(persistedSettings.perfEnabled);
+
             // `NoteType` / `BarLineType` は MuseScore オブジェクトのプロパティ（実行時に値を解決する
             // enum）。値を焼き込まず、実行時の enum を hostEnums として渡す。`plugin`（このルート
             // オブジェクト自身）も渡すと、型の生成元 MuseScore バージョンとの照合・実行時 enum の
             // 未知メンバ検出（strictEnum）を Bundle 側（SDK ヘルパ）が行い、結果を
             // snapshot.meta.hostVersion に記録する。
             var hostEnums = { noteType: NoteType, barLineType: BarLineType };
+
+            var tSnapshot = Date.now();
             var snapshot = Bundle.buildSnapshot(curScore, hostEnums, plugin);
-            snapshotText = JSON.stringify(snapshot, null, 2);
+            var msSnapshot = Date.now() - tSnapshot;
+
+            // JSON 化はここでは行わない。スナップショットタブを開いたときに初めて作る。
+            snapshotIR = snapshot;
 
             var issues = [];
             var hv = snapshot.meta && snapshot.meta.hostVersion;
             if (hv && !hv.ok) {
                 issues.push(internalWarning(hv.message));
             }
+
+            var tCheckers = Date.now();
             issuesList = issues.concat(Bundle.runAllCheckers(snapshot, enabledRules));
+            var msCheckers = Date.now() - tCheckers;
+
             hasRun = true;
+            elapsedMs = Date.now() - tStart;
+
+            if (persistedSettings.perfEnabled) {
+                perfText = buildPerfText(msGc, msSnapshot, msCheckers);
+                console.log(perfText);
+            }
             tabBar.currentIndex = 0;
         } catch (e) {
             console.error("[ScoreLinter] runLinter 失敗: " + e);
             issuesList = [internalIssue("実行中にエラーが発生しました: " + e)];
             hasRun = true;
+            elapsedMs = Date.now() - tStart;
         }
+    }
+
+    function buildPerfText(msGc, msSnapshot, msCheckers) {
+        // ラベルは桁を揃えるため ASCII のみ（monospace 表示なので全角が混ざるとずれる）
+        var lines = [
+            "[ScoreLinter:runLinter]",
+            "  total           " + elapsedMs  + " ms",
+            "  gc              " + msGc       + " ms",
+            "  buildSnapshot   " + msSnapshot + " ms",
+            "  runAllCheckers  " + msCheckers + " ms"
+        ];
+        var reports = ["getSnapshotPerfReport", "getCheckerPerfReport"];
+        for (var i = 0; i < reports.length; i++) {
+            var detail = "";
+            try {
+                detail = Bundle[reports[i]]();
+            } catch (e) {
+                console.warn("[ScoreLinter] " + reports[i] + " の取得に失敗: " + e);
+            }
+            if (detail && detail.length > 0) {
+                lines.push("");
+                lines.push(detail);
+            }
+        }
+        return lines.join("\n");
+    }
+
+    // ─── スナップショット JSON の分割生成 ───
+
+    Timer {
+        id: snapshotTimer
+        interval: 1
+        repeat: true
+        onTriggered: buildSnapshotChunk()
+    }
+
+    function startSnapshotBuild() {
+        // 生成済み・生成中・未実行のいずれでもないときだけ着手する
+        if (snapshotBuilding || snapshotText.length > 0 || !snapshotIR) return;
+
+        snapshotChunks = [];
+        snapshotDone = 0;
+        snapshotTotal = snapshotIR.events ? snapshotIR.events.length : 0;
+        snapshotStartedAt = Date.now();
+        snapshotBuilding = true;
+        snapshotTimer.start();
+    }
+
+    function cancelSnapshotBuild() {
+        if (!snapshotBuilding) return;
+        snapshotTimer.stop();
+        snapshotBuilding = false;
+        snapshotChunks = [];
+        snapshotDone = 0;
+        snapshotTotal = 0;
+    }
+
+    function buildSnapshotChunk() {
+        if (!snapshotIR || !snapshotIR.events) {
+            cancelSnapshotBuild();
+            return;
+        }
+        try {
+            var events = snapshotIR.events;
+            var end = Math.min(snapshotDone + snapshotChunkSize, snapshotTotal);
+            var buf = [];
+            // 1 イベント 1 行。インデント付きで丸ごと stringify するより速く、行単位で
+            // 追いやすい。JSON としては同じ。
+            for (var i = snapshotDone; i < end; i++) {
+                buf.push("    " + JSON.stringify(events[i]));
+            }
+            snapshotChunks.push(buf.join(",\n"));
+            snapshotDone = end;
+
+            if (snapshotDone >= snapshotTotal) finishSnapshotBuild();
+        } catch (e) {
+            console.error("[ScoreLinter] スナップショット生成に失敗: " + e);
+            cancelSnapshotBuild();
+            snapshotText = "スナップショットの生成に失敗しました: " + e;
+        }
+    }
+
+    function finishSnapshotBuild() {
+        snapshotTimer.stop();
+
+        var out = ['{\n  "events": [\n', snapshotChunks.join(",\n"), "\n  ]"];
+        var keys = ["index", "meta", "registry", "derived"];
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            if (snapshotIR[k] === undefined) continue;
+            // events より 1 段浅い位置に出るのでインデントを足して揃える。文字列値の中の
+            // 改行は stringify が \\n へエスケープするので、生の \n は構造由来だけ。
+            var body = JSON.stringify(snapshotIR[k], null, 2).split("\n").join("\n  ");
+            out.push(',\n  "' + k + '": ' + body);
+        }
+        out.push("\n}");
+
+        snapshotText = out.join("");
+        snapshotChunks = [];
+        snapshotBuilding = false;
+        snapshotBuildMs = Date.now() - snapshotStartedAt;
+        console.log("[ScoreLinter] スナップショット生成: " + snapshotBuildMs + " ms");
+    }
+
+    // Bundle.setPerfEnabled（bundle 側の計測フラグ）と紛らわしくないよう名前を分けている。
+    function setPerfLogging(checked) {
+        persistedSettings.perfEnabled = checked;
+        if (!checked) perfText = "";
     }
 
     function internalIssue(msg) {
@@ -321,6 +496,15 @@ MuseScore {
                         font.pixelSize: 12
                     }
 
+                    // 実行時間（最適化の前後比較に使うので秒に丸めず ms のまま出す）
+                    Label {
+                        visible: hasRun
+                        text: plugin.elapsedMs + " ms"
+                        font.pixelSize: 10
+                        color: "#9E9E9E"
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
                     Item { Layout.fillWidth: true }
 
                     // アップデート確認ボタン
@@ -467,7 +651,9 @@ MuseScore {
                         anchors.margins: 10
                         checkers: plugin.checkerList
                         enabledRules: plugin.enabledRules
+                        perfEnabled: persistedSettings.perfEnabled
                         onRuleToggled: plugin.setRuleEnabled(ruleId, checked)
+                        onPerfToggled: plugin.setPerfLogging(checked)
                     }
                 }
 
@@ -477,6 +663,12 @@ MuseScore {
                         anchors.fill: parent
                         anchors.margins: 10
                         snapshotText: plugin.snapshotText
+                        perfText: plugin.perfText
+                        building: plugin.snapshotBuilding
+                        buildDone: plugin.snapshotDone
+                        buildTotal: plugin.snapshotTotal
+                        buildMs: plugin.snapshotBuildMs
+                        hasSnapshot: plugin.snapshotIR !== null
                         onCopyRequested: plugin.copyToClipboard(text)
                     }
                 }

@@ -14,6 +14,9 @@ const EXPORTS = [
   "getCheckerList",
   "compareVersions",
   "isNewerVersion",
+  "setPerfEnabled",
+  "getSnapshotPerfReport",
+  "getCheckerPerfReport",
 ];
 
 async function main() {

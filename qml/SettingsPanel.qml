@@ -8,8 +8,10 @@ ScrollView {
 
     property var checkers: []
     property var enabledRules: ({})
+    property bool perfEnabled: false
 
     signal ruleToggled(string ruleId, bool checked)
+    signal perfToggled(bool checked)
 
     // カテゴリ表示名マップ
     readonly property var categoryLabels: {
@@ -247,6 +249,60 @@ ScrollView {
                     Layout.fillWidth: true
                     height: 1
                     color: "#F5F5F5"
+                }
+            }
+        }
+
+        // ─── 診断 ───
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: 12
+            height: 1
+            color: "#EEEEEE"
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            Layout.topMargin: 10
+            spacing: 2
+
+            Label {
+                text: "診断"
+                font.pixelSize: 12
+                font.bold: true
+                color: "#616161"
+                font.letterSpacing: 0.5
+            }
+
+            RowLayout {
+                spacing: 8
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+
+                CheckBox {
+                    checked: root.perfEnabled
+                    onToggled: root.perfToggled(checked)
+                }
+
+                ColumnLayout {
+                    spacing: 1
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "実行時間の内訳を記録する"
+                        font.pixelSize: 12
+                        font.bold: true
+                        color: "#212121"
+                    }
+                    Label {
+                        text: "スナップショットタブに走査・チェックの内訳を表示します。通常は不要です。"
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: "#757575"
+                        font.pixelSize: 11
+                    }
                 }
             }
         }

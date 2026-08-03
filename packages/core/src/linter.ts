@@ -2,9 +2,18 @@ import { getAll } from "./checkerRegistry.js";
 import { CANONICAL } from "./enumRegistry.js";
 import { compareIssues } from "./issue.js";
 import { make } from "./logger.js";
+import { createPerf } from "./perf.js";
 import type { Checker, IRDerived, Issue, LintEvent, LintIR } from "./types.js";
 
 const log = make("linter");
+
+// checker ごとの内訳を計測する。既定では無効（setPerfEnabled(true) で有効化）。
+const perf = createPerf("checkers");
+
+/** 直近の runAllCheckers の計測結果。計測が無効なら空文字列。 */
+export function getCheckerPerfReport(): string {
+  return perf.report();
+}
 
 export function ensureDerived(ir: LintIR): void {
   if (!ir?.events) return;
@@ -20,6 +29,7 @@ export function ensureDerived(ir: LintIR): void {
     slursByStaff: {},
     tiesByStaff: {},
     rhythmByStaffMeasure: {},
+    chordsByStaffMeasure: {},
   };
 
   const chordKind = canonical.elementKinds.CHORD;
@@ -63,6 +73,13 @@ export function ensureDerived(ir: LintIR): void {
     if (aev.articulations && aev.articulations.length > 0) {
       derived.articulationsByChordId[aev.id] = aev.articulations;
     }
+    if (aev.staffIdx < 0) continue;
+    const chordKey = `${aev.staffIdx}:${aev.measure}:${aev.voice}`;
+    if (!derived.chordsByStaffMeasure[chordKey]) derived.chordsByStaffMeasure[chordKey] = [];
+    derived.chordsByStaffMeasure[chordKey].push(aev);
+  }
+  for (const key of Object.keys(derived.chordsByStaffMeasure)) {
+    derived.chordsByStaffMeasure[key].sort((a, b) => a.tick - b.tick);
   }
 
   for (const slur of ir.meta?.slurs ?? []) {
@@ -107,7 +124,13 @@ export function getCheckerList(): Checker[] {
 }
 
 export function runAllCheckers(ir: LintIR, enabledRules: Record<string, boolean> = {}): Issue[] {
+  perf.clear();
+  const tTotal = perf.now();
+
+  const tDerived = perf.now();
   ensureDerived(ir);
+  perf.addSince("ensureDerived", tDerived);
+
   const allIssues: Issue[] = [];
   const checkers = getAll();
 
@@ -119,7 +142,9 @@ export function runAllCheckers(ir: LintIR, enabledRules: Record<string, boolean>
     if (!enabled) continue;
 
     try {
+      const tChecker = perf.now();
       const issues = checker.run(ir) ?? [];
+      perf.addSince(checker.id, tChecker);
       log.info(`'${checker.id}': ${issues.length} 件検出`);
       allIssues.push(...issues);
     } catch (e) {
@@ -138,6 +163,11 @@ export function runAllCheckers(ir: LintIR, enabledRules: Record<string, boolean>
     }
   }
 
+  const tSort = perf.now();
   allIssues.sort(compareIssues);
+  perf.addSince("sort", tSort);
+
+  perf.addSince("total", tTotal);
+  perf.count("issues", allIssues.length);
   return allIssues;
 }
