@@ -11,7 +11,7 @@
     "deploy:web": "pnpm --filter @musescore-linter/web deploy",
     "lint:score": "tsx packages/cli/src/main.ts",
     "package": "tsx scripts/package.ts",
-    "pipeline": "turbo run typecheck test build build:cli build:web package",
+    "pipeline": "turbo run typecheck test build build:cli package",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit && pnpm --filter @musescore-linter/web typecheck",
