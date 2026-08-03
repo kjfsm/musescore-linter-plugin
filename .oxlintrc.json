@@ -23,5 +23,27 @@
     // Hooks のルール違反を確実に検出できるよう明示的に有効化する。
     "react/rules-of-hooks": "error"
   },
-  "ignorePatterns": ["dist/**", "dist-cli/**", "coverage/**", "out/**"]
+  "ignorePatterns": ["dist/**", "dist-cli/**", "coverage/**", "out/**"],
+  "overrides": [
+    {
+      // core と checkers は MuseScore に依存しない、が CLAUDE.md の最重要制約。
+      // これまで package.json の記述と人の注意力だけで守られていたので、
+      // import を機械的に塞いでおく。MuseScore を触ってよいのは
+      // source-musescore と musescore-api だけ。
+      "files": ["packages/core/**", "packages/checkers/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@kjfsm/musescore-plugin-sdk-*", "@musescore-linter/musescore-api"],
+                "message": "core / checkers は MuseScore に依存しない。入力ソース側（source-musescore）の責務。"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
