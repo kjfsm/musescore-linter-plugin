@@ -51,8 +51,8 @@ export function App() {
           を分析して、アーティキュレーションや強弱記号のミスなどをチェックすることができます。
         </p>
         <p className="text-muted-foreground">
-          MusicXML
-          での保存については、各ソフトのヘルプを参照してください。（MuseScoreの場合は「エクスポート」→「フォーマット:MusicXML」です）
+          MusicXML での保存については、各ソフトのヘルプを参照してください。 <br />
+          （MuseScoreでは「エクスポート」→「フォーマット:MusicXML」）
         </p>
       </header>
 
