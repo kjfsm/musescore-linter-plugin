@@ -1,5 +1,49 @@
 # musescore-linter-plugin
 
+## 2.4.0
+
+### Minor Changes
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`d1962ce`](https://github.com/kjfsm/musescore-linter-plugin/commit/d1962cebe76e52903239565d0093dfa3b08440ca) Thanks [@kjfsm](https://github.com/kjfsm)! - MusicXML 経路で、BPM も `<metronome>` も持たないテンポ語（「Allegro con brio」だけの `<direction>`）をテンポ表記として認識するようになりました。
+
+  これまでは通常のテキストとして扱われていたため、Sibelius / Finale などが書き出した MusicXML に対して「冒頭にテンポ表記がありません」(`opening-tempo`) が誤って報告されていました。CLI と Web 版が影響を受けます。
+
+  代わりに、BPM が書かれていないテンポ表記には `tempo-without-bpm` が反応するようになります（こちらは warning）。
+
+### Patch Changes
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`1eee0e1`](https://github.com/kjfsm/musescore-linter-plugin/commit/1eee0e1269e6520590231d940aa608e56da85c94) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore プラグインで、チェック項目の個別設定（「同リズム間の整合チェック」の比較範囲など）が保存されない・読み込めない問題を修正しました。
+
+  プラグイン内部で設定の解決に使う関数がバンドルから公開されておらず、設定の読み込み処理が毎回失敗していました。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`d748801`](https://github.com/kjfsm/musescore-linter-plugin/commit/d7488018c60ad944abc54dd32419f749436b4751) Thanks [@kjfsm](https://github.com/kjfsm)! - Web 版で、別のフォルダにある同名のファイルを同時に読み込むと結果が取り違えられることがある問題を修正しました。
+
+  あわせて、checker の一覧が読み込まれる前に設定を保存した場合に、保存済みの ON/OFF がすべて既定に戻ってしまう可能性のあった箇所を直しました。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`15f5581`](https://github.com/kjfsm/musescore-linter-plugin/commit/15f55812c3932bb0be46c436f7ddb488f59bd0e7) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore プラグインで、パート絞り込みのドロップダウンが「スナップショット」タブを開くまで空になっていた問題を修正しました。あわせて、大きな楽譜でタブを切り替えたときに UI が引っかかる原因も解消しています。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`967e6b6`](https://github.com/kjfsm/musescore-linter-plugin/commit/967e6b6954dd651e65b8468bea1eedec5858434c) Thanks [@kjfsm](https://github.com/kjfsm)! - 指摘の小節番号が 0 になることがある問題を修正しました。
+
+  ヘアピンの終端など、音符が 1 つも置かれていない位置を指す指摘で小節番号が求まらず 0 になり、一覧の先頭に並んでしまっていました。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`c35b83a`](https://github.com/kjfsm/musescore-linter-plugin/commit/c35b83a5be32956a479d4daf887362a4a1e5c3f8) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore で「Expression」として書いた反復記号（D.S. / Coda など）を「反復記号の対応」チェックが検出するようになりました。同じく「System Text」として書いた奏法指示（pizz. など）を「休符への注記」チェックが検出するようになります。
+
+  いずれも従来は、同じ文言でも要素の種類によって見逃されることがありました。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`e259f52`](https://github.com/kjfsm/musescore-linter-plugin/commit/e259f52952ad07217ec762d21f55696c2a15d9d9) Thanks [@kjfsm](https://github.com/kjfsm)! - 「拍をまたぐタイ」チェックの重要度表示を warning に直しました。小節線や主要拍をまたぐケースでは実際に warning を出していたのに、設定画面のバッジは info と表示されていました。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`68ace02`](https://github.com/kjfsm/musescore-linter-plugin/commit/68ace026bf25936b290a492a50ea5722965ef207) Thanks [@kjfsm](https://github.com/kjfsm)! - Web 版で、ルールの ON/OFF を切り替えたときの反応が改善しました。チェックボックスが即座に反応し、結果の再計算は裏で進みます（進行中は「再計算中…」と表示されます）。
+
+  複数ファイルを一度に読み込んだときも、ファイルごとに画面が更新されるようになりました。解析中に追加でドロップしても処理が二重に走りません。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`1b1a65e`](https://github.com/kjfsm/musescore-linter-plugin/commit/1b1a65e2248596cb2b6eaf4ea3dcd95a4576363d) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore 経路で、BPM 値が取れないテンポ表記を `tempo-without-bpm` が検出するようになりました。
+
+  これまで内部で `NaN` や `0` が「BPM あり」と判定されてしまい、このチェックは MuseScore 上では事実上発火しませんでした。
+
+- [#113](https://github.com/kjfsm/musescore-linter-plugin/pull/113) [`d2fd6f6`](https://github.com/kjfsm/musescore-linter-plugin/commit/d2fd6f6bcf44267f92c1a5089b74628da0e7a889) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore プラグインの設定タブに「スラー・タイ」カテゴリの 4 つのチェック（スラーが休符で始まる/終わる、単一音符のスラー、タイの音高不一致、拍をまたぐタイ）が表示されるようになりました。これまで設定タブから ON/OFF できない状態でした。
+
+  あわせて、カテゴリの表示名と並び順を Web 版と MuseScore プラグインで統一しました。
+
 ## 2.3.1
 
 ### Patch Changes
