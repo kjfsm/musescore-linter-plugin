@@ -315,8 +315,21 @@ CSP の `style-src 'self'`（`'unsafe-inline'` なし）を維持するため、
 
 ### MusicXML 経路の既知の差分
 
-- `tempo-without-bpm` はほぼ発火しません。MuseScore は MusicXML 書き出し時にテンポ表記へ
-  `<sound tempo>` を必ず付けるため、BPM 未設定という状態が MusicXML に残らないためです。
+両経路が同じ LintIR を作れているかは、`profileIR`（`packages/core/src/irProfile.ts`）で
+取った契約プロファイルを両ソースのテストで突き合わせて追跡しています
+（`packages/source-*/tests/conformance.test.ts`）。下記のうち **★** を付けたものが
+そのプロファイルに現れる差分で、埋まるたびにテストの期待値を書き換えていきます。
+
+- ★ `scope: "global"`（全パート共通の注記）を作りません。`opening-tempo` /
+  `first-note-dynamics` / `cresc-text-resolution` / `hairpin-target-dynamic` が持つ
+  global スコープへのフォールバックは、MusicXML 経路では通りません。
+- ★ テキスト系イベントの `subtype` を埋めません（MusicXML に相当する情報がないため）。
+  `duplicate-dynamics` / `simultaneous-dynamics` は `textNorm` の比較に劣化します。
+- ★ `expression` / `system_text` の kind を作らず、すべて `staff_text` に落ちます。
+  `rest-annotation` / `tempo-change-resolution` / `coda-segno` の一部の判定が空振りします。
+- `tempo-without-bpm` は、MuseScore が書き出した MusicXML ではほぼ発火しません。書き出し時に
+  テンポ表記へ `<sound tempo>` を必ず付けるためです。逆に Sibelius / Finale などが書き出した
+  「テンポ語だけで BPM を持たない」MusicXML では発火します。
 - アーティキュレーション名は英語の MuseScore 名（`Staccato` 等）になります。日本語 UI の
   MuseScore が返す名前とは文字列が異なりますが、これを使う
   `slur-tie-articulation-consistency` は同一 IR 内のパート間比較しかしないため判定は変わりません。

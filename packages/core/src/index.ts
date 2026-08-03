@@ -5,6 +5,8 @@ export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";
 export { CANONICAL } from "./enumRegistry.js";
 export type { EventSpec, HairpinSpec, IRSpec, PartSpec, SlurSpec, TieSpec } from "./irBuilder.js";
 export { buildIR } from "./irBuilder.js";
+export type { IRProfile } from "./irProfile.js";
+export { profileIR } from "./irProfile.js";
 export type { IssueFields } from "./issue.js";
 export { compareIssues, createIssue } from "./issue.js";
 export { ensureDerived, getCheckerList, getCheckerPerfReport, runAllCheckers } from "./linter.js";
