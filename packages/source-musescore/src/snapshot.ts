@@ -48,7 +48,13 @@ import type {
   PartGroupInfo,
   PartGroupSymbol,
 } from "@musescore-linter/core";
-import { CANONICAL, createIRBuilder, createPerf, makeLogger } from "@musescore-linter/core";
+import {
+  CANONICAL,
+  createIRBuilder,
+  createPerf,
+  makeLogger,
+  normalizePartGroups,
+} from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
 import type { HostEnums } from "./types.js";
@@ -138,10 +144,6 @@ function readPartGroups(score: Score, bracketType: BracketTypeEnum | undefined):
     if (value !== undefined) symbolByValue.set(value, symbol);
   }
 
-  // 同じ範囲・同じ種類の括弧が別カラムに重複していても 1 本として扱う
-  // （MusicXML 経路の resolvePartGroups と揃える）。
-  const seen = new Set<string>();
-
   for (let i = 0; i < staves.length; i++) {
     const staff = staves[i];
     if (!staff) continue;
@@ -150,16 +152,13 @@ function readPartGroups(score: Score, bracketType: BracketTypeEnum | undefined):
       const symbol = symbolByValue.get(bracket.systemBracket);
       if (!symbol) continue;
       const staffCount = bracket.bracketSpan;
-      if (typeof staffCount !== "number" || staffCount < 2) continue;
-      const key = `${symbol}:${startStaffIdx}:${staffCount}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (typeof staffCount !== "number") continue;
       out.push({ symbol, startStaffIdx, staffCount });
     }
   }
 
-  // 外側の括弧が先に来る並び（MusicXML 経路と揃える）
-  return out.sort((a, b) => a.startStaffIdx - b.startStaffIdx || b.staffCount - a.staffCount);
+  // 最小サイズの切り捨て・重複の畳み込み・並び順は core が決める（MusicXML 経路と同じ規則）
+  return normalizePartGroups(out);
 }
 
 function resolveAnnotationKind(ann: TextAnnotation): string {

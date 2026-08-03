@@ -17,6 +17,7 @@ export { buildIR, createIRBuilder } from "./irBuilder.js";
 export type { IRProfile } from "./irProfile.js";
 export { profileIR } from "./irProfile.js";
 export type { IssueFields } from "./issue.js";
+export { normalizePartGroups } from "./partGroups.js";
 export { compareIssues, createIssue } from "./issue.js";
 export { ensureDerived, getCheckerList, getCheckerPerfReport, runAllCheckers } from "./linter.js";
 export type { Logger } from "./logger.js";
