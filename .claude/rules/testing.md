@@ -57,5 +57,7 @@ pnpm dev                # vitest（watch モード）
 pnpm pipeline           # turbo run typecheck typecheck:root test build build:cli package
 ```
 
-`pnpm pipeline` はパッケージ単位で turbo 経由の `test` タスクを実行する（`typecheck` 完了が前提）。
+`pnpm pipeline` の `test` はルートタスク（`//#test`）で、全パッケージのテストを 1 回で走らせる
+（各パッケージの `typecheck` 完了が前提）。パッケージ単位に分けていた頃は alias だけが違う
+`vitest.config.ts` が 5 本並んでいたが、全体で 1 秒未満なので分割する利点がない。
 通常の開発では `pnpm test` で十分。

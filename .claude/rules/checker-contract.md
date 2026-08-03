@@ -17,7 +17,10 @@ interface Checker {
   name: string; // UI 表示名
   description: string; // 設定タブの説明
   category: string; // 現状の値: articulation / dynamics / tempo / notation / slur-tie
-  severity: "error" | "warning" | "info"; // 検出 issue のデフォルト severity
+  // この checker が出しうる issue のうち**最も重い** severity。createIssue の既定値で
+  // あると同時に、設定 UI のバッジになる（実行前に出るので実際の issue からは導出できない）。
+  // 条件によって軽い severity も出す checker は、重いほうをここに書く。
+  severity: "error" | "warning" | "info";
   defaultEnabled: boolean;
   options?: CheckerOptionSpec[]; // 任意。ユーザー設定の宣言（後述）
   run(ir: LintIR, options?: Record<string, unknown>): Issue[];
@@ -84,10 +87,11 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
               // chord のみ: stemDirection?, beamMode?, articulations?: string[]
               ... } ],
   index: {
-    byTick,         // tick → Event[]
-    byKind,         // kind → Event[]
-    byStaff,        // staffIdx → Event[]
-    byStaffAndKind  // staffIdx → kind → Event[]
+    // いずれも値は **イベント id（ir.events の添字）の配列**。Event 本体ではない。
+    byTick,         // tick → number[]
+    byKind,         // kind → number[]
+    byStaff,        // staffIdx → number[]
+    byStaffAndKind  // staffIdx → kind → number[]
     // staffIdx === -1 は global scope（全パート共通の注記）
   },
   meta: {

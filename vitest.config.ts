@@ -8,9 +8,8 @@ export default defineConfig({
     // package.json が "main": "src/index.ts" を指しているので不要（外して
     // 全テストが通ること・バンドルが byte 単位で同一になることを確認済み）。
     //
-    // ルートを pnpm workspace のメンバーから外してあるので（S2）、turbo run test は
-    // 各パッケージの test を 1 回ずつ走らせる。ここのルート設定はカバレッジを
-    // 1 本の lcov にまとめるためのもので、CI では両方を使い分けている。
+    // turbo 側も //#test（ルートタスク 1 本）でこの設定を使う。パッケージ単位の
+    // test タスクは持たない。
     projects: [
       {
         test: {
@@ -27,7 +26,6 @@ export default defineConfig({
         },
       },
     ],
-    include: ["packages/*/tests/**/*.test.ts", "apps/*/tests/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
