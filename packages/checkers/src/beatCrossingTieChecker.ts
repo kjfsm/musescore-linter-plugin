@@ -182,7 +182,9 @@ export const beatCrossingTieChecker: Checker = {
   name: "拍をまたぐ音符の分割",
   description: "拍をまたぐ音符(分割推奨)を検出",
   category: "slur-tie",
-  severity: "info",
+  // 小節線や主要拍をまたぐケースでは warning を出す（下の severity 判定を参照）。
+  // Checker.severity は「出しうるうち最も重いもの」なので warning を宣言する。
+  severity: "warning",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {
     const measures = ir.meta?.measures ?? [];

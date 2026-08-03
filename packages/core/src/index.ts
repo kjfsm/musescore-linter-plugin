@@ -46,7 +46,6 @@ export type {
   PartGroupInfo,
   PartGroupSymbol,
   Severity,
-  TextPairCheckerConfig,
   TieInfo,
 } from "./types.js";
 export { compareVersions, isNewerVersion } from "./version.js";
