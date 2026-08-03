@@ -1,5 +1,33 @@
 # @musescore-linter/checkers
 
+## 2.4.0
+
+### Minor Changes
+
+- [#105](https://github.com/kjfsm/musescore-linter-plugin/pull/105) [`eb72e66`](https://github.com/kjfsm/musescore-linter-plugin/commit/eb72e666a6311a73b59c5db02697be1ce75e559b) Thanks [@kjfsm](https://github.com/kjfsm)! - 拍境界をまたぐ音符を検出する Checker を追加:
+
+  - **beat-crossing-tie**（info / 主要境界またぎは warning）: 拍の骨格を隠す音符（イマジナリーバーライン違反）を検出し、タイでの分割案をメッセージに載せる。
+
+  判定は境界の強さの順に 3 段構え:
+
+  - **小節線**をまたぐ音符は例外なく分割必須（warning）。ただし MuseScore / MusicXML では 1 つの音符が小節線を越えられない（タイ 2 音で表現される）ので、実際に発火するのは破損小節など異常データのときだけ。
+
+  - **主要境界（偶数拍子の小節中央）をまたぐ音符**は、小節の頭から始まっているものだけを例外とし、それ以外は拍頭始まりでも分割必須（warning）。例: 4/4 の 2 拍目からの付点 4 分音符 → 「4 分音符+8 分音符のタイ」。小節頭からの 2 分音符・付点 2 分音符・全音符は許容する。奇数拍子（3/4・9/8）には中央が無いのでこの規則を適用しない（3/4 の「4 分+2 分」は標準的な記譜のため）。
+  - **通常の拍境界**は、拍の途中から始まる音符がまたぐ場合に分割推奨（info）。例: 4/4 の「付点 8 分+付点 8 分+8 分」の 2 つ目 → 「16 分音符+8 分音符のタイ」。
+
+  対象は単純拍子（分子 2・3・4）と複合拍子（分子 6・9・12）のみ。加算拍子・アウフタクト・連符は判定対象外として黙ってスキップする。診断メッセージには開始位置（「2 拍目裏」「1 拍目+付点 8 分音符」）とまたいだ拍境界を入れ、同じ小節に同じ音価の違反が並んでも区別できるようにしてある。
+
+  前提として LintIR に小節の枠組みを追加:
+
+  - `meta.measures[]`（`MeasureInfo` = 小節番号 / 先頭 tick / 小節長 / 拍子 n・m）を新設。MuseScore 経路は helpers の `getMeasureTimeSig`、MusicXML 経路は `<attributes><time>` から配線した（`<time>` は次の変更まで持ち回る）。拍子が取れない小節は配列に載らないので、参照側は「無ければ判定しない」で済む。
+  - `LintEvent.tuplet`（chord/rest が連符ブラケット内か）を追加。MuseScore 経路は SDK の `DurationElement.tuplet`、MusicXML 経路は `<time-modification>` の有無から配線した。音価の分母だけでは 4:3 のように分母が 2 の冪になる連符を見分けられないため、フラグが要る。
+  - tick 分解能定数 `TICKS_PER_QUARTER` / `TICKS_PER_WHOLE` を core へ移設。`@musescore-linter/source-musicxml` の `TICKS_PER_QUARTER` は core からの再輸出になり、値・公開 API とも変更なし。
+
+### Patch Changes
+
+- Updated dependencies [[`eb72e66`](https://github.com/kjfsm/musescore-linter-plugin/commit/eb72e666a6311a73b59c5db02697be1ce75e559b)]:
+  - @musescore-linter/core@2.4.0
+
 ## 2.3.0
 
 ### Minor Changes
