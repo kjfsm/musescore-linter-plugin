@@ -37,6 +37,9 @@ export interface LintEvent {
   barlineType?: unknown;
   barlineKind?: string;
   duration?: { numerator: number; denominator: number };
+  // chord/rest のみ。連符（3連符等）のブラケット内なら true。ブラケット自体が
+  // グルーピングを示すので、拍のグルーピングを見る checker はこれを対象外にする。
+  tuplet?: boolean;
   stemDirection?: number; // chord のみ。DirectionV 生値（0 auto / 1 up / 2 down）
   beamMode?: number; // chord のみ。BeamMode 生値
   articulations?: string[]; // chord のみ。アーティキュレーション名（"Staccato" 等）

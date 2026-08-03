@@ -27,7 +27,7 @@
   text 系（tempo_text・dynamic・staff_text・system_text・expression・rehearsal_mark の textNorm/textRaw/tempo/subtype）、
   barline（barlineKind = double/final/repeat/other）、`meta.hairpins[]`、`meta.slurs[]`、`meta.parts[]`（partName のみ）。
 - **取れない**: 調号、音部記号、楽器メタ情報
-  （instrumentId・楽器族・移調・MIDI program・有/無音程）、タイ、連符、装飾音、歌詞、グリッサンド/トレモロ、
+  （instrumentId・楽器族・移調・MIDI program・有/無音程）、連符の比率、装飾音、歌詞、グリッサンド/トレモロ、
   リピートの開始/終了の区別（現状 `repeat` に一括）。
 
 ---

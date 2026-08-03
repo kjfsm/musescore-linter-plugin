@@ -350,6 +350,9 @@ class PartWalker {
     }
 
     const duration = this.resolveDuration(node, durationUnits);
+    // <time-modification> があれば連符ブラケット内。3連符等はこれで一意に判別できる
+    // （音価の分母だけでは 4:3 のような 2 の冪になる連符を見分けられない）。
+    const tuplet = hasChild(node, "time-modification");
 
     if (hasChild(node, "rest")) {
       this.currentChord = null;
@@ -358,11 +361,20 @@ class PartWalker {
         staff: staffIdx,
         voice,
         ...(duration ? { duration } : {}),
+        ...(tuplet ? { tuplet: true } : {}),
       });
       return;
     }
 
-    const chord = this.resolveChordEvent(isChordNote, startTick, staffIdx, voice, duration, node);
+    const chord = this.resolveChordEvent(
+      isChordNote,
+      startTick,
+      staffIdx,
+      voice,
+      duration,
+      tuplet,
+      node,
+    );
     const info = this.readNoteInfo(node, staffNumber);
     if (info) chord.value.notes = [...(chord.value.notes ?? []), info];
 
@@ -385,6 +397,7 @@ class PartWalker {
     staffIdx: number,
     voice: number,
     duration: Fraction | undefined,
+    tuplet: boolean,
     node: XNode,
   ): PendingEvent {
     if (isChordNote && this.currentChord) return this.currentChord;
@@ -395,6 +408,7 @@ class PartWalker {
       staff: staffIdx,
       voice,
       ...(duration ? { duration } : {}),
+      ...(tuplet ? { tuplet: true } : {}),
       ...(stem === "up" ? { stemDirection: 1 } : {}),
       ...(stem === "down" ? { stemDirection: 2 } : {}),
     });

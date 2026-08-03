@@ -6,7 +6,10 @@ import { buildPartNameMap } from "./base/query.js";
 
 // 拍の骨格を隠す音符（イマジナリーバーライン違反）を検出し、タイでの分割案を出す。
 //
-// 規則は 2 段構え:
+// 規則は境界の強さの順に 3 段構え:
+//   - 小節線をまたぐ音符は例外なく分割必須（最強の境界）。ただし MuseScore / MusicXML の
+//     データモデルでは 1 つの音符が小節線を越えられない（越える場合はタイ 2 音で表現される）ので、
+//     実際に発火するのは破損小節など異常データのときだけ。規則の完全性のために残してある。
 //   - 主要境界（偶数拍子の小節の中央）をまたぐ音符は、小節の頭から始まるものだけが例外。
 //     例: 4/4 の 2 拍目からの付点4分音符は拍頭始まりでも 3 拍目を隠すので「4分 ⌣ 8分」。
 //   - それ以外の拍境界は、拍の途中から始まる音符がまたぐ場合に分割を推奨。
@@ -67,6 +70,17 @@ function isPowerOfTwo(x: number): boolean {
 }
 
 /**
+ * 分子が「素（1）/ 付点（3）/ 複付点（7）の 2 の冪倍」か。
+ * breve = 2/1、longa = 4/1 のように全音符より長い音価は既約分数で分子が 2 の冪倍になるので、
+ * 1/3/7 の固定比較では落ちてしまう。
+ */
+function isNoteValueNumerator(p: number): boolean {
+  let x = p;
+  while (x > 0 && x % 2 === 0) x /= 2;
+  return x === 1 || x === 3 || x === 7;
+}
+
+/**
  * 拍子 n/m から拍の枠組みを導く。対象外なら null。
  *
  * - 複合拍子: n % 3 === 0 かつ n > 3、n ∈ {6, 9, 12}（6/8, 9/8, 12/8, 6/4 …）。
@@ -122,13 +136,20 @@ function beatPositionLabel(onset: number, meter: Meter): string {
   return name ? `${beat}拍目+${name}` : `${beat}拍目+${rem}tick`;
 }
 
-/** またいだ拍境界。「2拍目の頭」「3拍目・4拍目の頭」。 */
-function crossedBeatsLabel(onset: number, end: number, beatUnit: number): string {
+/** またいだ境界。「2拍目の頭」「3・4拍目の頭」「小節線」。 */
+function crossedBoundariesLabel(
+  onset: number,
+  end: number,
+  beatUnit: number,
+  crossesBarline: boolean,
+): string {
   const beats: number[] = [];
   for (let b = (Math.floor(onset / beatUnit) + 1) * beatUnit; b < end; b += beatUnit) {
     beats.push(b / beatUnit + 1);
   }
-  return `${beats.join("・")}拍目の頭`;
+  const beatLabel = beats.length > 0 ? `${beats.join("・")}拍目の頭` : "";
+  if (!crossesBarline) return beatLabel;
+  return beatLabel ? `${beatLabel}と小節線` : "小節線";
 }
 
 /** onset から音符を拍境界ごとに割ったときの各断片の長さ。 */
@@ -187,48 +208,58 @@ export const beatCrossingTieChecker: Checker = {
       const meter = meters[ev.measure];
       if (!meter) continue;
 
+      // 連符はブラケット自体がグルーピングを示すので、境界判定より前に対象外にする。
+      if (ev.tuplet) continue;
+
       const onset = ev.tick - meter.startTick;
-      // 小節の頭（downbeat）から始まる音符は、中央をまたごうと内部構造を隠さない。
-      // 主要境界の規則に対する唯一の例外なので、他のどの判定より先に落とす。
-      if (onset === 0) continue;
+      if (onset < 0) continue;
 
       const dur = ev.duration;
       if (!dur) continue;
       const q = dur.denominator;
       const p = dur.numerator;
-      // 連符ガード。分母が 2 の冪でなければ連符なので、タイ分割の議論ができない。
+      // 連符フラグを持たないソース向けの保険。分母が 2 の冪でなければ連符。
       // 1920 % q === 0 は連符を弾けない（1920 に 3 と 5 の因数があるため）ので別途必要。
       if (!isPowerOfTwo(q)) continue;
       // 256 分音符以下は tick が非整数になるので落とす
       if (TICKS_PER_WHOLE % q !== 0) continue;
-      // 素（1）/ 付点（3）/ 複付点（7）以外は音価として扱わない
-      if (p !== 1 && p !== 3 && p !== 7) continue;
+      // 素 / 付点 / 複付点 以外の比率は音価として扱わない
+      if (!isNoteValueNumerator(p)) continue;
 
       const durTicks = (TICKS_PER_WHOLE * p) / q;
       const end = onset + durTicks;
-      if (onset < 0 || end > meter.ticks) continue;
-
-      // 拍内オフセット。次の境界まで beatUnit - rem なので、またぐ条件は rem + durTicks > beatUnit。
-      // 除算 1 回でまたぎ判定と拍頭判定の両方に使う。小節末の境界は end <= ticks の保証で
-      // 決してまたげないため、境界の配列は要らない。
       const rem = onset % meter.beatUnit;
-      if (rem + durTicks <= meter.beatUnit) continue;
-
-      // 中央をまたぐなら拍頭始まりでも分割が必要。downbeat 始まりは上で除外済みなので
-      // ここに来た時点で例外は無い。奇数拍子は primary = -1 なので常に false になる。
+      // 奇数拍子は primary = -1 なので常に false。
       const crossesPrimary = onset < meter.primary && meter.primary < end;
-      if (!crossesPrimary && rem === 0) continue;
+
+      // 小節線は最強の境界。またぐ音符は例外なく分割が必要なので、拍の判定より先に決める。
+      const crossesBarline = end > meter.ticks;
+      if (!crossesBarline) {
+        // 小節の頭（downbeat）から始まる音符は、中央をまたごうと内部構造を隠さない。
+        // 拍の規則に対する唯一の例外。
+        if (onset === 0) continue;
+        // 拍内オフセット rem に対し、次の境界までは beatUnit - rem。
+        // またぐ条件は rem + durTicks > beatUnit。除算 1 回でまたぎ判定と拍頭判定を兼ねる。
+        if (rem + durTicks <= meter.beatUnit) continue;
+        // 中央をまたぐなら拍頭始まりでも分割が必要。
+        if (!crossesPrimary && rem === 0) continue;
+      }
 
       // ここから先は違反確定。確保が発生するのはこの経路だけ。
-      const severity: Severity = crossesPrimary ? "warning" : "info";
+      const severity: Severity = crossesBarline || crossesPrimary ? "warning" : "info";
 
       if (!partsByStaff) partsByStaff = buildPartNameMap(ir);
       const partName = partsByStaff.get(ev.staffIdx) ?? "";
 
-      const segments = splitSegments(onset, end, meter.beatUnit);
+      // 小節線をまたぐ場合は、まず小節線で切り、残りを次の小節の音符として扱う。
+      // 次の小節の拍子は別なので、ここでは残りを 1 断片として出すに留める。
+      const inMeasureEnd = crossesBarline ? meter.ticks : end;
+      const segments = splitSegments(onset, inMeasureEnd, meter.beatUnit);
+      if (crossesBarline) segments.push(end - meter.ticks);
+
       const position = beatPositionLabel(onset, meter);
-      const crossed = crossedBeatsLabel(onset, end, meter.beatUnit);
-      const noteName = DURATION_NAMES[end - onset] ?? "音符";
+      const crossed = crossedBoundariesLabel(onset, inMeasureEnd, meter.beatUnit, crossesBarline);
+      const noteName = DURATION_NAMES[durTicks] ?? "音符";
       const after = describeSplit(segments);
       const suggestion = after ? `${after}のタイに分割することを推奨します` : "";
 
@@ -246,9 +277,10 @@ export const beatCrossingTieChecker: Checker = {
             position,
             crossedBeats: crossed,
             onsetTicks: onset,
-            durationTicks: end - onset,
+            durationTicks: durTicks,
             suggestedSplit: segments,
             crossesPrimaryBoundary: crossesPrimary,
+            crossesBarline,
             timeSig: meter.timeSig,
           },
         }),

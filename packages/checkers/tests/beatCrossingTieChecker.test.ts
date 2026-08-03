@@ -283,6 +283,38 @@ describe("beat-crossing-tie", () => {
     });
   });
 
+  it("連符フラグが立っていれば音価に関わらず判定対象外", () => {
+    // 4:3 連符のように分母が 2 の冪になる連符は音価だけでは見分けられない
+    expect(
+      run([{ ...chord(360, { numerator: 3, denominator: 16 }), tuplet: true }], [measure(4, 4)]),
+    ).toHaveLength(0);
+  });
+
+  it("小節線をまたぐ音符は最強の境界として warning で検出する", () => {
+    // 1440..2160 は小節線(1920)を越える。データモデル上は起きないが規則としては網羅する
+    const issues = run([chord(1440, DOTTED_QUARTER)], [measure(4, 4)]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+    expect(issues[0].message).toContain("小節線をまたいでいます");
+    expect(issues[0].detail).toMatchObject({
+      crossesBarline: true,
+      durationTicks: 720,
+      suggestedSplit: [480, 240],
+    });
+  });
+
+  it("小節頭から始まっても小節線をまたげば検出する", () => {
+    // breve（2/1 = 3840 tick）は 4/4 の小節に収まらない
+    const issues = run([chord(0, { numerator: 2, denominator: 1 })], [measure(4, 4)]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].detail).toMatchObject({ crossesBarline: true, durationTicks: 3840 });
+  });
+
+  it("素/付点/複付点でない比率は音価として扱わない", () => {
+    // 5/4 は 2 の冪倍の 1/3/7 にならない
+    expect(run([chord(360, { numerator: 5, denominator: 4 })], [measure(4, 4)])).toHaveLength(0);
+  });
+
   it("duration の無い chord は判定対象外", () => {
     expect(
       run([{ kind: K.CHORD, staff: 0, voice: 0, measure: 1, tick: 360 }], [measure(4, 4)]),

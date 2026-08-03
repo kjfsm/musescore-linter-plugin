@@ -24,6 +24,7 @@ export interface EventSpec {
   tempo?: number;
   barlineKind?: string;
   duration?: { numerator: number; denominator: number };
+  tuplet?: boolean;
   scope?: "staff" | "global";
   subtype?: unknown;
   subStyle?: unknown;
@@ -127,6 +128,7 @@ export function buildIR(spec: IRSpec): LintIR {
 
     if (e.barlineKind !== undefined) ev.barlineKind = e.barlineKind;
     if (e.duration !== undefined) ev.duration = e.duration;
+    if (e.tuplet !== undefined) ev.tuplet = e.tuplet;
     if (e.stemDirection !== undefined) ev.stemDirection = e.stemDirection;
     if (e.beamMode !== undefined) ev.beamMode = e.beamMode;
     if (e.articulations !== undefined) ev.articulations = e.articulations;

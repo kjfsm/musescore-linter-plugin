@@ -118,6 +118,7 @@ function appendEvent(ir: LintIR, payload: Partial<LintEvent> & { kind: string })
   if (payload.barlineType !== undefined) ev.barlineType = payload.barlineType;
   if (payload.barlineKind !== undefined) ev.barlineKind = payload.barlineKind;
   if (payload.duration !== undefined) ev.duration = payload.duration;
+  if (payload.tuplet !== undefined) ev.tuplet = payload.tuplet;
 
   ir.events.push(ev);
 
@@ -223,6 +224,8 @@ function processStaffElements(
               },
             }
           : {}),
+        // 連符ブラケット内か。SDK の DurationElement.tuplet をそのまま反映する。
+        ...(el.tuplet ? { tuplet: true } : {}),
       });
 
       if (ir.meta.firstMusicTickByStaff[staffIdx] === null) {
