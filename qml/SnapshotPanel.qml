@@ -54,29 +54,36 @@ ColumnLayout {
     }
 
     // 実行時間の内訳（設定タブで計測を有効にしたときのみ）。
-    // 数字を拾えるよう TextArea にして選択可能にしている。
+    // 数字を拾えるよう TextArea にして選択可能にしている。checker ごとの行が増えると
+    // 縦に伸びて JSON 欄を潰すので、高さを頭打ちにして中をスクロールさせる。
     Rectangle {
+        readonly property int maxHeight: 200
+
         visible: root.perfText.length > 0
         Layout.fillWidth: true
         Layout.topMargin: 4
-        implicitHeight: perfArea.implicitHeight + 8
+        Layout.preferredHeight: Math.min(perfArea.implicitHeight + 8, maxHeight)
         color: "#FAFAFA"
         border.color: "#E0E0E0"
         border.width: 1
         radius: 4
 
-        TextArea {
-            id: perfArea
+        ScrollView {
             anchors.fill: parent
             anchors.margins: 4
-            text: root.perfText
-            readOnly: true
-            selectByMouse: true
-            wrapMode: TextArea.NoWrap
-            color: "#424242"
-            font.family: "monospace"
-            font.pixelSize: 11
-            background: null
+            clip: true
+
+            TextArea {
+                id: perfArea
+                text: root.perfText
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextArea.NoWrap
+                color: "#424242"
+                font.family: "monospace"
+                font.pixelSize: 11
+                background: null
+            }
         }
     }
 
