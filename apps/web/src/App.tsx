@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Dropzone } from "@/components/Dropzone";
 import { PrivacyNote } from "@/components/PrivacyNote";
-import { ResultTable, SeverityBadge } from "@/components/ResultTable";
+import { ResultTable } from "@/components/ResultTable";
 import { RulePanel } from "@/components/RulePanel";
+import { SeverityBadge } from "@/components/SeverityBadge";
 import { type ParsedFile, lintParsed, parseFile } from "@/lib/lint";
 import { summarize } from "@/lib/rows";
 import {

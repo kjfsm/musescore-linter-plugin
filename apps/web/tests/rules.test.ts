@@ -36,12 +36,25 @@ describe("ruleGroups", () => {
       "articulation",
       "dynamics",
       "tempo",
+      "slur-tie",
       "notation",
     ]);
   });
 
   it("カテゴリに日本語ラベルを付ける", () => {
     expect(ruleGroups()[0].label).not.toBe("articulation");
+  });
+
+  it("カテゴリ内は severity 順（error→warning→info）に並べる", () => {
+    const dynamics = ruleGroups().find((g) => g.category === "dynamics");
+    expect(dynamics?.checkers.map((c) => c.severity)).toEqual([
+      "error",
+      "warning",
+      "info",
+      "info",
+      "info",
+      "info",
+    ]);
   });
 });
 

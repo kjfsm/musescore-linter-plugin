@@ -1,6 +1,7 @@
 import type { Checker, CheckerOptionSpec, CheckerOptionValue } from "@musescore-linter/core";
 import { ChevronRight } from "lucide-react";
 
+import { SeverityBadge } from "@/components/SeverityBadge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -166,55 +167,65 @@ export function RulePanel({
 
       <Separator />
 
-      <div className="flex flex-col gap-6 px-4 py-4">
-        {groups.map((group) => (
-          <section key={group.category} className="flex flex-col gap-2">
-            <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
-            <ul className="flex flex-col gap-2">
-              {group.checkers.map((checker) => (
-                <li key={checker.id} className="flex items-start gap-3">
-                  <Checkbox
-                    id={`rule-${checker.id}`}
-                    className="mt-1"
-                    checked={isEnabled(checker, enabledRules)}
-                    onCheckedChange={(checked) =>
-                      onChange({
-                        ...enabledRules,
-                        [checker.id]: checked === true,
-                      })
-                    }
-                  />
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor={`rule-${checker.id}`} className="cursor-pointer text-sm">
-                      <span className="font-medium">{checker.name}</span>
-                      <span className="ml-2 font-mono text-xs text-muted-foreground">
-                        {checker.id}
-                      </span>
-                      <span className="block text-muted-foreground">{checker.description}</span>
-                    </label>
+      <div className="flex flex-col gap-3 px-4 py-4">
+        {groups.map((group) => {
+          const activeInGroup = group.checkers.filter((c) => isEnabled(c, enabledRules)).length;
+          return (
+            <details key={group.category} className="group/cat rounded-lg border" open>
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                <ChevronRight
+                  className="size-3.5 transition-transform group-open/cat:rotate-90"
+                  aria-hidden
+                />
+                {group.label}
+                <span className="text-xs font-normal text-muted-foreground">
+                  {activeInGroup} / {group.checkers.length} 有効
+                </span>
+              </summary>
+              <ul className="flex flex-col gap-2 px-3 pb-3 pt-1">
+                {group.checkers.map((checker) => (
+                  <li key={checker.id} className="flex items-start gap-3">
+                    <Checkbox
+                      id={`rule-${checker.id}`}
+                      className="mt-1"
+                      checked={isEnabled(checker, enabledRules)}
+                      onCheckedChange={(checked) =>
+                        onChange({
+                          ...enabledRules,
+                          [checker.id]: checked === true,
+                        })
+                      }
+                    />
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor={`rule-${checker.id}`} className="cursor-pointer text-sm">
+                        <span className="font-medium">{checker.name}</span>
+                        <SeverityBadge severity={checker.severity} className="ml-2" />
+                        <span className="block text-muted-foreground">{checker.description}</span>
+                      </label>
 
-                    {checker.options &&
-                      checker.options.length > 0 && (
-                        // 無効なルールでも非表示にはしない。消えると設定が失われたように見える。
-                        <div className="flex flex-col gap-2 border-l-2 py-1 pl-3">
-                          {checker.options.map((spec) => (
-                            <OptionField
-                              key={spec.key}
-                              checker={checker}
-                              spec={spec}
-                              value={effectiveOptions(checker, ruleOptions)[spec.key]}
-                              disabled={!isEnabled(checker, enabledRules)}
-                              onChange={(value) => setOption(checker, spec.key, value)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+                      {checker.options &&
+                        checker.options.length > 0 && (
+                          // 無効なルールでも非表示にはしない。消えると設定が失われたように見える。
+                          <div className="flex flex-col gap-2 border-l-2 py-1 pl-3">
+                            {checker.options.map((spec) => (
+                              <OptionField
+                                key={spec.key}
+                                checker={checker}
+                                spec={spec}
+                                value={effectiveOptions(checker, ruleOptions)[spec.key]}
+                                disabled={!isEnabled(checker, enabledRules)}
+                                onChange={(value) => setOption(checker, spec.key, value)}
+                              />
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          );
+        })}
       </div>
     </details>
   );

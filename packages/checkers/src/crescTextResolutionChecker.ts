@@ -26,8 +26,7 @@ function isCrescText(ev: LintEvent): boolean {
 export const crescTextResolutionChecker: Checker = {
   id: "cresc-text-resolution",
   name: "cresc./dim. の到達先",
-  description:
-    "テキスト式 cresc./dim. の後に到達先の強弱記号が現れない箇所を検出（曲尾まで強弱記号が無いケース）",
+  description: "テキスト式cresc./dim.の到達先ダイナミクス欠落を検出",
   category: "dynamics",
   severity: "info",
   defaultEnabled: true,

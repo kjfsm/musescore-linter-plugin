@@ -6,8 +6,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const muteOpenChecker = createTextPairChecker({
   id: "mute-open",
   name: "Mute / Open",
-  description:
-    "金管のミュート指定(mute / straight mute / cup mute / harmon / stopped 等)→ open 復帰の対応漏れや重複を検知",
+  description: "ミュート指定→open 復帰の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

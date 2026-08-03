@@ -7,7 +7,7 @@ import { buildPartNameMap } from "./base/query.js";
 export const tempoWithoutBpmChecker: Checker = {
   id: "tempo-without-bpm",
   name: "BPM 値なしテンポ",
-  description: "テンポ表記に BPM 値が設定されていないものを検出（再生テンポに反映されない）",
+  description: "BPM値のないテンポ表記を検出",
   category: "tempo",
   severity: "warning",
   defaultEnabled: true,

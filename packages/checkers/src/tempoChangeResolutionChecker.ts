@@ -14,8 +14,7 @@ const OFF_RE =
 export const tempoChangeResolutionChecker: Checker = {
   id: "tempo-change-resolution",
   name: "テンポ変化の解除漏れ",
-  description:
-    "rit./accel. 等の漸次的テンポ変化が a tempo や新しいテンポ表記で解除されないまま終わっていないかを検査",
+  description: "rit./accel.等が解除されないまま終わる箇所を検出",
   category: "tempo",
   severity: "warning",
   defaultEnabled: true,

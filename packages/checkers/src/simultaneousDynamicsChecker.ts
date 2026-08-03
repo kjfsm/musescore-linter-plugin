@@ -15,7 +15,7 @@ function dynamicIdentity(ev: LintEvent): string {
 export const simultaneousDynamicsChecker: Checker = {
   id: "simultaneous-dynamics",
   name: "同時ダイナミクスの衝突",
-  description: "同じパートの同じ位置(tick)に異なるダイナミクスが同時に付与されている矛盾を検出",
+  description: "同じ位置で強弱記号が矛盾する箇所を検出",
   category: "dynamics",
   severity: "warning",
   defaultEnabled: true,

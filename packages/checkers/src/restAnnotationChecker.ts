@@ -37,8 +37,7 @@ const DISALLOWED_TECHNIQUE_PATTERNS = new Set([
 export const restAnnotationChecker: Checker = {
   id: "rest-annotation",
   name: "休符アノテーション",
-  description:
-    "休符位置の注記を確認（演奏技法テキストは不受理・error、強弱記号は info、リハーサル記号等は受理）",
+  description: "休符位置の不適切な注記を検出",
   category: "notation",
   severity: "error",
   defaultEnabled: true,

@@ -4,8 +4,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const unaCordaChecker = createTextPairChecker({
   id: "una-corda",
   name: "Una corda / Tre corde",
-  description:
-    "ピアノの左ペダル指定(una corda)→ 解除(tre corde / tutte le corde)の対応漏れや重複を検知",
+  description: "una corda→tre corde 復帰の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

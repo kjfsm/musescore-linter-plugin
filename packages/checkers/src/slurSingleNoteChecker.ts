@@ -8,8 +8,8 @@ import { buildPartNameMap, measureAtTick } from "./base/query.js";
 export const slurSingleNoteChecker: Checker = {
   id: "slur-single-note",
   name: "単一音スラー",
-  description: "スラーが単一音（開始 tick == 終了 tick）に掛かっている箇所を検出",
-  category: "notation",
+  description: "単一音に掛かるスラーを検出",
+  category: "slur-tie",
   severity: "info",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {

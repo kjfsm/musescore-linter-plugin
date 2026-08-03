@@ -3,7 +3,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const pizzArcoChecker = createTextPairChecker({
   id: "pizz-arco",
   name: "Pizz / Arco",
-  description: "ピチカート開始(pizz.)→解除(arco)の順序を確認。連続指示や、pizz.なしのarcoを検知",
+  description: "pizz.→arco の順序の乱れ・対応漏れを検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,

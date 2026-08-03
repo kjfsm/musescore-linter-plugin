@@ -28,7 +28,7 @@ const DS_RE = /\bd\.?\s*s\.?/;
 export const codaSegnoChecker: Checker = {
   id: "coda-segno",
   name: "コーダ/セーニョ整合性",
-  description: "D.S.・D.C. と Segno・Coda・Fine の対応関係を確認。参照先マークの欠落を検知",
+  description: "D.S./D.C.とSegno/Coda/Fineの対応漏れを検出",
   category: "notation",
   severity: "error",
   defaultEnabled: true,

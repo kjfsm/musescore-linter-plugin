@@ -22,8 +22,7 @@ function hasDynamicAtTick(
 export const hairpinTargetDynamicChecker: Checker = {
   id: "hairpin-target-dynamic",
   name: "ヘアピンの到達先ダイナミクス",
-  description:
-    "crescendo/diminuendo(ヘアピン)の終端に到達先のダイナミクスが無い箇所を検出（曲尾のヘアピンは除外）",
+  description: "ヘアピンの到達先にダイナミクスが無い箇所を検出",
   category: "dynamics",
   severity: "info",
   defaultEnabled: true,

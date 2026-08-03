@@ -3,7 +3,7 @@ import { createTextPairChecker } from "./base/textPairChecker.js";
 export const divisiChecker = createTextPairChecker({
   id: "div-unis",
   name: "Div. / Unis.",
-  description: "div. と unis. の対応関係を確認し、重複や戻し忘れを検知",
+  description: "div.→unis. の対応漏れ・重複を検出",
   category: "articulation",
   severity: "warning",
   defaultEnabled: true,
