@@ -9,6 +9,7 @@ import { divisiChecker } from "./divisiChecker.js";
 import { duplicateDynamicsChecker } from "./duplicateDynamicsChecker.js";
 import { finalBarlineChecker } from "./finalBarlineChecker.js";
 import { firstNoteDynamicsChecker } from "./firstNoteDynamicsChecker.js";
+import { hairpinOnRestChecker } from "./hairpinOnRestChecker.js";
 import { hairpinTargetDynamicChecker } from "./hairpinTargetDynamicChecker.js";
 import { harpTableChecker } from "./harpTableChecker.js";
 import { muteOpenChecker } from "./muteOpenChecker.js";
@@ -18,11 +19,11 @@ import { rehearsalMarkOrderChecker } from "./rehearsalMarkOrderChecker.js";
 import { repeatBarlineMatchChecker } from "./repeatBarlineMatchChecker.js";
 import { restAnnotationChecker } from "./restAnnotationChecker.js";
 import { simultaneousDynamicsChecker } from "./simultaneousDynamicsChecker.js";
+import { slurOnRestChecker } from "./slurOnRestChecker.js";
 import { slurSingleNoteChecker } from "./slurSingleNoteChecker.js";
 import { slurTieArticulationConsistencyChecker } from "./slurTieArticulationConsistencyChecker.js";
 import { soloTuttiChecker } from "./soloTuttiChecker.js";
 import { sordinoChecker } from "./sordinoChecker.js";
-import { spannerOnRestChecker } from "./spannerOnRestChecker.js";
 import { sulPontOrdChecker } from "./sulPontOrdChecker.js";
 import { sulTastoOrdChecker } from "./sulTastoOrdChecker.js";
 import { tempoBarlineChecker } from "./tempoBarlineChecker.js";
@@ -59,7 +60,8 @@ export function registerAll(): void {
   register(repeatBarlineMatchChecker);
   register(tiePitchMismatchChecker);
   register(courtesyAccidentalChecker);
-  register(spannerOnRestChecker);
+  register(hairpinOnRestChecker);
+  register(slurOnRestChecker);
   register(slurSingleNoteChecker);
   register(crescTextResolutionChecker);
   register(beatCrossingTieChecker);
@@ -75,6 +77,7 @@ export {
   duplicateDynamicsChecker,
   finalBarlineChecker,
   firstNoteDynamicsChecker,
+  hairpinOnRestChecker,
   hairpinTargetDynamicChecker,
   harpTableChecker,
   muteOpenChecker,
@@ -84,11 +87,11 @@ export {
   repeatBarlineMatchChecker,
   restAnnotationChecker,
   simultaneousDynamicsChecker,
+  slurOnRestChecker,
   slurSingleNoteChecker,
   slurTieArticulationConsistencyChecker,
   soloTuttiChecker,
   sordinoChecker,
-  spannerOnRestChecker,
   sulPontOrdChecker,
   sulTastoOrdChecker,
   tempoBarlineChecker,

@@ -1,7 +1,20 @@
-import type { Checker, Issue, LintIR, TextPairCheckerConfig } from "@musescore-linter/core";
+import type {
+  Checker,
+  Issue,
+  LintIR,
+  Severity,
+  TextPairCheckerConfig,
+} from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
 import { buildPartBuckets, matchesAny, type PartBucketEvent } from "./predicates.js";
+
+// onPatterns が「既に on の状態でさらに on」になった場合（例: solo が連続）の severity を
+// checker 全体の severity と別に上書きしたいケース向けの拡張。core の TextPairCheckerConfig は
+// 変更しない（checkers 側からの LintIR/契約型直接変更を避けるため、拡張はこのファイルに閉じる）。
+export interface TextPairCheckerConfigWithOverrides extends TextPairCheckerConfig {
+  onDuplicateSeverity?: Severity;
+}
 
 function buildDuplicateIssue(
   checker: Checker,
@@ -10,6 +23,7 @@ function buildDuplicateIssue(
   ev: PartBucketEvent,
   label: string,
   lastSwitchEvent: PartBucketEvent | null,
+  severity?: Severity,
 ): Issue {
   const previousMeasure = lastSwitchEvent?.measure ?? null;
   const suffix = previousMeasure !== null ? `（前回: ${previousMeasure}小節目）` : "";
@@ -20,10 +34,11 @@ function buildDuplicateIssue(
     measure: ev.measure,
     tick: ev.tick,
     detail: { previousMeasure },
+    severity,
   });
 }
 
-export function createTextPairChecker(config: TextPairCheckerConfig): Checker {
+export function createTextPairChecker(config: TextPairCheckerConfigWithOverrides): Checker {
   const checker: Checker = {
     id: config.id,
     name: config.name,
@@ -51,6 +66,7 @@ export function createTextPairChecker(config: TextPairCheckerConfig): Checker {
                   ev,
                   config.onLabel,
                   lastSwitchEvent,
+                  config.onDuplicateSeverity,
                 ),
               );
             }
