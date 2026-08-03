@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { Dropzone } from "@/components/Dropzone";
 import { PrivacyNote } from "@/components/PrivacyNote";
@@ -35,22 +35,42 @@ export function App() {
 
   // パースは重いが lint は軽いので、ルールを切り替えたときは IR を使い回して
   // checker だけ流し直す。
+  //
+  // ただし lint は同期処理（大きな楽譜で 30ms 前後）で、レンダー中に走ると
+  // チェックボックスの反応そのものが待たされる。ルール設定を遅延値にして、
+  // 「操作の反映」と「結果の再計算」を別のレンダーに分ける。前者は即座に、
+  // 後者は中断可能な優先度で走る。
+  const deferredRules = useDeferredValue(enabledRules);
+  const deferredOptions = useDeferredValue(ruleOptions);
+  const recomputing = deferredRules !== enabledRules || deferredOptions !== ruleOptions;
+
   const results = useMemo(
-    () => lintParsed(parsed, enabledRules, ruleOptions),
-    [parsed, enabledRules, ruleOptions],
+    () => lintParsed(parsed, deferredRules, deferredOptions),
+    [parsed, deferredRules, deferredOptions],
   );
   const counts = useMemo(() => summarize(results), [results]);
 
+  // 解析中の多重投入を防ぐ。busy はボタンしか無効化しておらず、ドロップ自体は
+  // 生きているので、先に終わった側の finally が busy を false に戻してしまう。
+  const parsingRef = useRef(false);
+
   const handleFiles = useCallback(async (files: File[]) => {
+    if (parsingRef.current) return;
+    parsingRef.current = true;
     setBusy(true);
-    // state 更新を描画させてから重い処理に入る（メインスレッドで解析するため）
-    await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      const next = await Promise.all(
-        files.map(async (file) => parseFile(file.name, new Uint8Array(await file.arrayBuffer()))),
-      );
+      const next: ParsedFile[] = [];
+      for (const file of files) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        // ファイルごとに 1 フレーム譲る。parseFile は同期 CPU 処理（大きな楽譜で
+        // 280ms 前後）なので、Promise.all にしても間で描画されず、複数ファイルが
+        // 1 つの長いブロックになる。
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        next.push(parseFile(file.name, bytes));
+      }
       setParsed(next);
     } finally {
+      parsingRef.current = false;
       setBusy(false);
     }
   }, []);
@@ -88,6 +108,7 @@ export function App() {
         <>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">{parsed.length} ファイル</span>
+            {recomputing && <span className="text-sm text-muted-foreground">再計算中…</span>}
             {SEVERITIES.map((severity) => (
               <span key={severity} className="flex items-center gap-1 text-sm">
                 <SeverityBadge severity={severity} />
