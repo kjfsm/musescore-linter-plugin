@@ -45,9 +45,14 @@ export function App() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">MuseScore Linter</h1>
+        <h1 className="text-2xl font-semibold">楽譜のちょっとしたミスをチェックするやつ</h1>
         <p className="text-muted-foreground">
-          MusicXML を読み込むと、記譜の抜けや対応漏れをブラウザ内でチェックします。
+          MusicXML
+          を分析して、アーティキュレーションや強弱記号のミスなどをチェックすることができます。
+        </p>
+        <p className="text-muted-foreground">
+          MusicXML
+          での保存については、各ソフトのヘルプを参照してください。（MuseScoreの場合は「エクスポート」→「フォーマット:MusicXML」です）
         </p>
       </header>
 
@@ -75,7 +80,6 @@ export function App() {
       )}
 
       <footer className="border-t pt-4 text-sm text-muted-foreground">
-        <p>判定は記譜ルールの補助です。最終判断は編曲・出版方針に合わせて行ってください。</p>
         <p>
           <a
             className="underline underline-offset-4"
