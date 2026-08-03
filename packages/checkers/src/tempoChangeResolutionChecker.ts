@@ -1,7 +1,7 @@
 import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
+import { getCanonical, proseTextKinds } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";
 
 // 漸次的テンポ変化(rit. / rall. / accel. / allarg. 等)が解除されないまま放置されていないかを検査する。
@@ -23,12 +23,7 @@ export const tempoChangeResolutionChecker: Checker = {
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
 
-    const kinds = [
-      canonical.elementKinds.TEMPO_TEXT,
-      canonical.elementKinds.STAFF_TEXT,
-      canonical.elementKinds.SYSTEM_TEXT,
-      canonical.elementKinds.EXPRESSION,
-    ];
+    const kinds = proseTextKinds(ir);
 
     // 全テキスト系イベントを tick 昇順で集約（テンポ変化はシステム全体に効くため横断的に見る）
     const seen = new Set<number>();

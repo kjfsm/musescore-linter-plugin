@@ -36,26 +36,27 @@ describe("MusicXML 経路の LintIR 契約プロファイル", () => {
     expect(profile.eventsWithoutMeasure).toBe(0);
   });
 
-  // ─── ここから下は MuseScore 経路との既知の差分（M2 で埋める） ───
+  // ─── ここから下は MuseScore 経路との表現の違い ───
+  //
+  // いずれも MusicXML 側に相当する表現が無いことによるもので、埋めようとすると
+  // テキストからの推測になる（＝誤検出の温床）。代わりに checker 側を
+  // 「どちらの表現でも同じ結果になる」形にしてある:
+  //   - kind の違い → base/predicates.ts の kind 集合（STAFF_TEXT を必ず含む）
+  //   - scope の違い → base/query.ts の eventIdsForStaff（譜表 + global を常に併合）
+  //   - subtype の欠落 → checker は subtype が無ければ textNorm にフォールバックする
+  // ここが false / 0 のままでも checker の挙動は MuseScore 経路と揃う。
 
-  // builder.ts の staffIdx 解決が必ず staffOffset 以上を返すため、
-  // scope: "global" のイベントを 1 つも作らない。opening-tempo /
-  // first-note-dynamics / cresc-text-resolution / hairpin-target-dynamic の
-  // global フォールバック分岐が MusicXML 経路では死んでいる。
-  it("【既知の差分】global scope のイベントを作らない", () => {
+  it("global scope のイベントを作らない（譜表に載せる）", () => {
     expect(profile.hasGlobalScope).toBe(false);
   });
 
-  // MusicXML には MuseScore の subtype に相当する情報が無いため埋めていない。
-  // duplicate-dynamics / simultaneous-dynamics が textNorm 比較に劣化する。
-  it("【既知の差分】テキスト系イベントの subtype が埋まっていない", () => {
+  it("テキスト系イベントの subtype を埋めない", () => {
     expect(profile.subtypeFilledRatio).toBe(0);
   });
 
-  // EXPRESSION と SYSTEM_TEXT を生成しない（すべて STAFF_TEXT に落ちる）。
-  // rest-annotation / tempo-change-resolution / coda-segno が空振りする。
-  it("【既知の差分】EXPRESSION / SYSTEM_TEXT を生成しない", () => {
+  it("EXPRESSION / SYSTEM_TEXT を作らず staff_text に落とす", () => {
     expect(profile.kinds).not.toContain("expression");
     expect(profile.kinds).not.toContain("system_text");
+    expect(profile.kinds).toContain("staff_text");
   });
 });

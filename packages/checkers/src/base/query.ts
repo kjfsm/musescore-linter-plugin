@@ -37,6 +37,23 @@ export function measureAtTick(ir: LintIR, tick: number): number {
   return 0;
 }
 
+/**
+ * その譜表に効く kind のイベント id。global scope（`staffIdx === -1`、全パート共通の注記）も含める。
+ *
+ * MuseScore 経路は全体に効く注記を `staffIdx: -1` に置くが、MusicXML 経路には
+ * それに相当する表現が無く、同じ注記が譜表に載る。checker はどちらのソースから来た IR かを
+ * 知らないので、両方から集めないとソースによって検出したりしなかったりする。
+ *
+ * 索引のキーは文字列なので `byStaffAndKind[-1]`（数値キー）と `byStaff["-1"]`（文字列キー）が
+ * 混在していた。ここに集約して書き方も 1 つにする。
+ */
+export function eventIdsForStaff(ir: LintIR, staffIdx: number, kind: string): number[] {
+  const onStaff = ir.index?.byStaffAndKind?.[staffIdx]?.[kind] ?? [];
+  const global = staffIdx === -1 ? [] : (ir.index?.byStaffAndKind?.[-1]?.[kind] ?? []);
+  if (global.length === 0) return onStaff;
+  return [...onStaff, ...global];
+}
+
 /** staffIdx → partName のマップ。ir.meta.parts から構築する。 */
 export function buildPartNameMap(ir: LintIR): Map<number, string> {
   const map = new Map<number, string>();

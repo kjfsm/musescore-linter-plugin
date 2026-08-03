@@ -1109,6 +1109,23 @@ describe("con-legno-arco checker", () => {
 // ─── rest-annotation（追加ケース）──────────────────────────────────────────
 
 describe("rest-annotation checker（追加ケース）", () => {
+  // 以前は SYSTEM_TEXT を見ておらず、MuseScore で SystemText として書いた奏法指示を
+  // 取りこぼしていた（MusicXML 経路では staff_text になるため検出されていた）。
+  it("休符に SYSTEM_TEXT の pizz. → 検出する", () => {
+    const ir = cleanIR([
+      { kind: K.REST, staff: 0, tick: 960, measure: 3 },
+      {
+        kind: K.SYSTEM_TEXT,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "pizz.",
+        textRaw: "pizz.",
+      },
+    ]);
+    expect(restAnnotationChecker.run(ir)).toHaveLength(1);
+  });
+
   it("休符に pizz. (STAFF_TEXT) → error 1件", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
@@ -1344,6 +1361,23 @@ describe("tempo-barline checker（追加ケース）", () => {
 // ─── coda-segno ──────────────────────────────────────────────────────────────
 
 describe("coda-segno checker", () => {
+  // 以前は EXPRESSION を見ておらず、MuseScore で Expression 要素として書いた
+  // 反復記号を取りこぼしていた（MusicXML 経路では staff_text になるため検出されており、
+  // 同じ楽譜でもソースによって結果が変わっていた）。
+  it("EXPRESSION で書かれた D.S. も検出する", () => {
+    const ir = cleanIR([
+      {
+        kind: K.EXPRESSION,
+        staff: 0,
+        tick: 960,
+        measure: 3,
+        textNorm: "d.s.",
+        textRaw: "D.S.",
+      },
+    ]);
+    expect(codaSegnoChecker.run(ir)).toHaveLength(1);
+  });
+
   it("D.S. があるが Segno なし → error 1件", () => {
     const ir = cleanIR([
       {

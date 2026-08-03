@@ -2,6 +2,7 @@ import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
+import { eventIdsForStaff } from "./base/query.js";
 
 // テキスト式の cresc./dim. の後に到達先の強弱記号が現れない箇所を検出する。
 // DYNAMIC kind には強弱記号(f/p/mf 等)とテキスト式の cresc./dim. の両方が含まれるため、
@@ -40,10 +41,7 @@ export const crescTextResolutionChecker: Checker = {
     // 後続の到達先候補（cresc 系でない実強弱記号）を tick 付きで集める。
     // 同 staff のものに加え、global scope(-1) の強弱記号も到達先として認める。
     const targetTicks = (staffIdx: number): number[] => {
-      const ids = [
-        ...(ir.index.byStaffAndKind[staffIdx]?.[dynamicKind] ?? []),
-        ...(ir.index.byStaffAndKind[-1]?.[dynamicKind] ?? []),
-      ];
+      const ids = eventIdsForStaff(ir, staffIdx, dynamicKind);
       const ticks: number[] = [];
       for (const id of ids) {
         const ev = ir.events[id];

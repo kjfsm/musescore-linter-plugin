@@ -1,7 +1,8 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
-import { getCanonical, isTempoMark } from "./base/predicates.js";
+import { getCanonical } from "./base/predicates.js";
+import { eventIdsForStaff } from "./base/query.js";
 
 export const openingTempoChecker: Checker = {
   id: "opening-tempo",
@@ -21,19 +22,11 @@ export const openingTempoChecker: Checker = {
     const firstMusicTick = ir.meta.firstMusicTickByStaff[staff.staffIdx] ?? null;
     if (firstMusicTick === null) return issues;
 
-    // staff-scoped tempo
-    const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
-    const tempoIds = byStaff[canonical.elementKinds.TEMPO_TEXT] ?? [];
+    // 譜表に載ったテンポ表記と、global scope（全パート共通）のテンポ表記の両方を見る。
+    // MuseScore 経路は後者に置き、MusicXML 経路は前者に置く。
+    const tempoIds = eventIdsForStaff(ir, staff.staffIdx, canonical.elementKinds.TEMPO_TEXT);
     for (const id of tempoIds) {
       if (ir.events[id].tick <= firstMusicTick) return issues;
-    }
-
-    // global scope tempo
-    const globalIds = ir.index.byStaff["-1"] ?? [];
-    for (const id of globalIds) {
-      const gev = ir.events[id];
-      if (!isTempoMark(gev, ir)) continue;
-      if (gev.tick <= firstMusicTick) return issues;
     }
 
     issues.push(
