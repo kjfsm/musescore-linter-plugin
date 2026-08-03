@@ -42,13 +42,13 @@ import type {
 import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
 import type {
   HostVersionInfo,
-  LintEvent,
+  IRBuilder,
   LintIR,
   MeasureInfo,
   PartGroupInfo,
   PartGroupSymbol,
 } from "@musescore-linter/core";
-import { CANONICAL, createPerf, makeLogger } from "@musescore-linter/core";
+import { CANONICAL, createIRBuilder, createPerf, makeLogger } from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
 import type { HostEnums } from "./types.js";
@@ -162,49 +162,6 @@ function readPartGroups(score: Score, bracketType: BracketTypeEnum | undefined):
   return out.sort((a, b) => a.startStaffIdx - b.startStaffIdx || b.staffCount - a.staffCount);
 }
 
-function pushIndexedId(map: Record<string, number[]>, key: string | number, eventId: number): void {
-  const k = String(key);
-  if (!map[k]) map[k] = [];
-  map[k].push(eventId);
-}
-
-function appendEvent(ir: LintIR, payload: Partial<LintEvent> & { kind: string }): LintEvent {
-  const ev: LintEvent = {
-    id: ir.events.length,
-    tick: payload.tick ?? 0,
-    measure: payload.measure ?? 0,
-    staffIdx: payload.staffIdx ?? -1,
-    voice: payload.voice ?? -1,
-    kind: payload.kind,
-    type: payload.type ?? "other",
-    subtype: payload.subtype ?? null,
-    subStyle: payload.subStyle ?? null,
-    tempo: payload.tempo ?? null,
-    textNorm: payload.textNorm ?? "",
-    textRaw: payload.textRaw ?? "",
-    scope: payload.scope ?? "staff",
-  };
-
-  if (payload.barlineType !== undefined) ev.barlineType = payload.barlineType;
-  if (payload.barlineKind !== undefined) ev.barlineKind = payload.barlineKind;
-  if (payload.duration !== undefined) ev.duration = payload.duration;
-  if (payload.tuplet !== undefined) ev.tuplet = payload.tuplet;
-
-  ir.events.push(ev);
-
-  pushIndexedId(ir.index.byTick, ev.tick, ev.id);
-  pushIndexedId(ir.index.byKind, ev.kind, ev.id);
-  pushIndexedId(ir.index.byStaff, ev.staffIdx, ev.id);
-
-  if (!ir.index.byStaffAndKind[ev.staffIdx]) {
-    ir.index.byStaffAndKind[ev.staffIdx] = {};
-  }
-  pushIndexedId(ir.index.byStaffAndKind[ev.staffIdx], ev.kind, ev.id);
-
-  if (ev.tick > ir.meta.lastTick) ir.meta.lastTick = ev.tick;
-  return ev;
-}
-
 function resolveAnnotationKind(ann: TextAnnotation): string {
   if (isTempo(ann)) return CANONICAL.elementKinds.TEMPO_TEXT;
   if (isDynamic(ann)) return CANONICAL.elementKinds.DYNAMIC;
@@ -220,7 +177,7 @@ function resolveAnnotationTextNorm(ann: TextAnnotation, textRaw: string): string
   return textRaw.toLowerCase();
 }
 
-function processAnnotations(seg: PluginSegment, measureNum: number, ir: LintIR): void {
+function processAnnotations(seg: PluginSegment, measureNum: number, builder: IRBuilder): void {
   if (!seg.annotations) return;
 
   for (const ann of seg.annotations) {
@@ -239,7 +196,7 @@ function processAnnotations(seg: PluginSegment, measureNum: number, ir: LintIR):
     const tempo =
       typeof rawTempo === "number" && Number.isFinite(rawTempo) && rawTempo > 0 ? rawTempo : null;
 
-    appendEvent(ir, {
+    builder.append({
       type: "text",
       kind: annKind,
       tick: seg.tick,
@@ -268,7 +225,7 @@ function processStaffElements(
   seg: PluginSegment,
   measureNum: number,
   staffIdx: number,
-  ir: LintIR,
+  builder: IRBuilder,
   hostEnums: HostEnums,
 ): void {
   for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
@@ -285,7 +242,7 @@ function processStaffElements(
     if (isChord(el) || isRest(el)) {
       const evType = isChord(el) ? "chord" : "rest";
       const kind = isChord(el) ? CANONICAL.elementKinds.CHORD : CANONICAL.elementKinds.REST;
-      const ev = appendEvent(ir, {
+      const ev = builder.append({
         type: evType as "chord" | "rest",
         kind,
         tick: seg.tick,
@@ -305,10 +262,6 @@ function processStaffElements(
         ...(el.tuplet ? { tuplet: true } : {}),
       });
 
-      if (ir.meta.firstMusicTickByStaff[staffIdx] === null) {
-        ir.meta.firstMusicTickByStaff[staffIdx] = seg.tick;
-      }
-
       if (isChord(el)) {
         ev.stemDirection = el.stemDirection;
         ev.beamMode = el.beamMode;
@@ -318,7 +271,7 @@ function processStaffElements(
           const tie = note.tieForward;
           if (tie) {
             const tiePitches = getTiePitches(tie);
-            ir.meta.ties.push({
+            builder.ir.meta.ties.push({
               staffIdx,
               voice,
               ...getSpannerRange(tie),
@@ -328,9 +281,9 @@ function processStaffElements(
           }
           for (const spanner of note.spannerForward ?? []) {
             if (isHairpin(spanner)) {
-              ir.meta.hairpins.push({ staffIdx, ...getHairpinRange(spanner) });
+              builder.ir.meta.hairpins.push({ staffIdx, ...getHairpinRange(spanner) });
             } else if (isSlur(spanner)) {
-              ir.meta.slurs.push({
+              builder.ir.meta.slurs.push({
                 staffIdx,
                 voice,
                 ...getSpannerRange(spanner),
@@ -347,7 +300,7 @@ function processStaffElements(
   for (let v = 0; v < VOICES_PER_STAFF; v++) {
     const barEl = trackElements[v];
     if (barEl && isBarLine(barEl)) {
-      appendEvent(ir, {
+      builder.append({
         type: "barline",
         kind: CANONICAL.elementKinds.BAR_LINE,
         barlineType: barEl.barlineType,
@@ -389,26 +342,17 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
   const numStaves = score.nstaves;
   const wrappedHostEnums = wrapHostEnums(hostEnums);
 
-  const ir: LintIR = {
-    events: [],
-    index: { byStaff: {}, byTick: {}, byKind: {}, byStaffAndKind: {} },
-    meta: {
-      parts: Array.from({ length: numStaves }, (_, i) => ({
-        staffIdx: i,
-        partName: getPartName(score, i),
-      })),
-      partGroups: readPartGroups(score, wrappedHostEnums.bracketType),
-      firstMusicTickByStaff: Array(numStaves).fill(null) as (number | null)[],
-      lastTick: 0,
-      hairpins: [],
-      slurs: [],
-      ties: [],
-      measures: [],
-      hostVersion: buildHostVersionInfo(host),
-    },
-    registry: { canonical: CANONICAL },
-    derived: null,
-  };
+  // 索引の張り方と既定値の解決は core のビルダに任せる。以前はここに同じものを
+  // 自前で持っており、既定の measure や scope/type の導出がドリフトしていた。
+  const builder = createIRBuilder({
+    parts: Array.from({ length: numStaves }, (_, i) => ({
+      staffIdx: i,
+      partName: getPartName(score, i),
+    })),
+    partGroups: readPartGroups(score, wrappedHostEnums.bracketType),
+    hostVersion: buildHostVersionInfo(host),
+  });
+  const { ir } = builder;
 
   // 計時は segment 単位に留める。staff/voice ごとに Date.now() を呼ぶと計測自体が
   // 数万回走って対象を歪めるため。
@@ -427,12 +371,12 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
         segCount++;
 
         const tAnn = perf.now();
-        processAnnotations(seg, measureNum, ir);
+        processAnnotations(seg, measureNum, builder);
         perf.addSince("annotations", tAnn);
 
         const tStaff = perf.now();
         for (const staffIdx of iterateStaves(score)) {
-          processStaffElements(seg, measureNum, staffIdx, ir, wrappedHostEnums);
+          processStaffElements(seg, measureNum, staffIdx, builder, wrappedHostEnums);
         }
         perf.addSince("staffElements", tStaff);
       }

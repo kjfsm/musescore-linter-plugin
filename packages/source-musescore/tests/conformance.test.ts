@@ -100,6 +100,13 @@ describe("MuseScore 経路の LintIR 契約プロファイル", () => {
     expect(profile.eventsWithoutMeasure).toBe(0);
   });
 
+  // core のビルダが chord/rest の最初の tick から導出する。以前は snapshot.ts が
+  // 自前で代入しており、ビルダに載せ替えたときに落ちやすい箇所。
+  it("firstMusicTickByStaff が最初の音符/休符の tick になる", () => {
+    const ir = buildSnapshot(mockScore(), hostEnums(), undefined as unknown as MuseScore);
+    expect(ir.meta.firstMusicTickByStaff).toEqual([0]);
+  });
+
   // ─── ここから下が MusicXML 経路との差分（MusicXML 側は満たしていない） ───
 
   it("global scope の注記を作る", () => {
