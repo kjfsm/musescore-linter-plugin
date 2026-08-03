@@ -24,6 +24,15 @@
       "dependsOn": ["typecheck"],
       "outputs": []
     },
+    "//#typecheck:root": {
+      "description": "ルート直下の src/（QML 向けバンドル入口）と scripts/ を型チェックする。パッケージ側の typecheck とは対象が重ならない。",
+      "dependsOn": [
+        "@musescore-linter/core#typecheck",
+        "@musescore-linter/checkers#typecheck",
+        "@musescore-linter/source-musescore#typecheck"
+      ],
+      "inputs": ["src/**", "scripts/**", "tsconfig.json"]
+    },
     "//#build": {
       "description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
       "dependsOn": [
