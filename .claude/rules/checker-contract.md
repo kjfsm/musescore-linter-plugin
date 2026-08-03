@@ -3,24 +3,24 @@ description: Checker の id/run 契約・LintIR 使い方・severity 基準・ir
 paths:
   - "packages/checkers/src/**"
   - "packages/core/src/**"
-  - "src/checkers/**"
-  - "src/**/*.js"
 ---
 
 # Checker 契約
 
 ## Checker オブジェクトの必須フィールド
 
-```js
-{
-  id: string,                              // kebab-case、Registry キー
-  name: string,                            // UI 表示名
-  description: string,                     // 設定タブの説明
-  category: "articulation" | "dynamics" | "tempo" | "notation" | string,
-  severity: "error" | "warning" | "info",  // 検出 issue のデフォルト severity
-  defaultEnabled: boolean,
-  options?: CheckerOptionSpec[],           // 任意。ユーザー設定の宣言（後述）
-  run: function(ir, options?) -> Issue[]   // LintIR を受け取り Issue 配列を返す
+`packages/core/src/types.ts` の `Checker` インターフェース。
+
+```ts
+interface Checker {
+  id: string; // kebab-case、Registry キー
+  name: string; // UI 表示名
+  description: string; // 設定タブの説明
+  category: string; // 現状の値: articulation / dynamics / tempo / notation / slur-tie
+  severity: "error" | "warning" | "info"; // 検出 issue のデフォルト severity
+  defaultEnabled: boolean;
+  options?: CheckerOptionSpec[]; // 任意。ユーザー設定の宣言（後述）
+  run(ir: LintIR, options?: Record<string, unknown>): Issue[];
 }
 ```
 
@@ -50,7 +50,7 @@ options: [
 
 ## Issue の生成
 
-Issue は必ず `src/issue.js` の `createIssue(checker, fields)` 経由で生成する。
+Issue は必ず `packages/core/src/issue.ts` の `createIssue(checker, fields)` 経由で生成する。
 
 ```js
 {
@@ -66,7 +66,7 @@ Issue は必ず `src/issue.js` の `createIssue(checker, fields)` 経由で生�
 }
 ```
 
-on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `createTextPairChecker()` を利用する。
+on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` の `createTextPairChecker()` を利用する。
 
 ## severity 基準
 
@@ -119,14 +119,17 @@ on/off ペア型の checker は `src/checkers/base/textPairChecker.js` の `crea
 ## パフォーマンスガイドライン
 
 1. **`ir.index` を使う** — `ir.index.byKind[K]` / `byStaffAndKind[s][K]` / `byTick[t]` から必要なイベントだけ取り出す。`ir.events` の全件ループは避ける。
-2. **`ir.derived` に共有前処理を乗せる** — 複数 checker が共有する前処理（例: `firstChordByStaff`）は `linter.js` の `ensureDerived` に追加し、`ir.derived.xxx` から参照する。
+2. **`ir.derived` に共有前処理を乗せる** — 複数 checker が共有する前処理（例: `firstChordByStaff`）は `packages/core/src/linter.ts` の `ensureDerived` に追加し、`ir.derived.xxx` から参照する。
 3. **例外は catch しない** — checker 内で `try/catch` を書く必要はない。`linter.runAllCheckers` が全体で catch し、失敗しても他の checker は走る。
 
 ## Checker 追加の標準手順
 
 詳細は `/checker-add` skill を参照。
 
-1. `src/checkers/xxxChecker.js` に `var checker = { ... }` を定義
-2. `src/checkers/index.js` に `import` と `Registry.register(X.checker)` を 1 行ずつ追加（**唯一の同期点**）
-3. `test/runner.js` にテストケースを追加（fixture は `irBuilder.buildIR({...})` で構築）
+1. `packages/checkers/src/xxxChecker.ts` に `export const xxxChecker: Checker = { ... }` を定義
+   （on/off ペア型なら `createTextPairChecker()` を利用）
+2. `packages/checkers/src/index.ts` に 3 箇所追加する（**この 1 ファイルで完結する**）: 冒頭の `import`
+   文、`registerAll()` 内の `register(xxxChecker)` 呼び出し、末尾の `export { ... }` ブロック
+   （3 つ目を忘れるとパッケージの公開 API から漏れる）
+3. `packages/checkers/tests/checkers.test.ts` にテストケースを追加（fixture は `tests/helpers/irBuilder.ts` の `buildIR({...})` / `cleanIR()` / `quintetIR()` で構築）
 4. README の「チェック項目」表を更新

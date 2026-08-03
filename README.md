@@ -141,35 +141,65 @@ packages/
     src/
       types.ts                 LintIR / LintEvent / Issue の型定義
       irBuilder.ts             spec から LintIR を組み立てる汎用ビルダ（buildIR）
-      linter.ts                全 checker を登録順に実行・ソート（runAllCheckers）
+      linter.ts                全 checker を登録順に実行・ソート（runAllCheckers、ensureDerived）
       checkerRegistry.ts       checker の登録・取得
+      checkerOptions.ts        options 値の検証・正規化（resolveCheckerOptions 等）
       enumRegistry.ts          MuseScore enum を canonical 文字列へ正規化する層
       issue.ts                 Issue 生成（createIssue）とソート（compareIssues）
+      constants.ts             tick の分解能の定数（TICKS_PER_QUARTER 等）
+      pitchSpelling.ts         TPC（五度圏に基づく音高綴り）⇄ 音名の変換
+      perf.ts                  実行時間の計測ユーティリティ（既定オフ）
+      version.ts               セマンティックバージョン比較（アップデート確認用）
       logger.ts                タグ付きロガー
+      index.ts                 パッケージの公開 API
   checkers/                    @musescore-linter/checkers — 全 checker
     src/
-      index.ts                 全 checker を registry に登録（registerAll：唯一の同期点）
+      index.ts                 全 checker を registry に登録（registerAll。checker 追加時に触る唯一のファイル）
       base/
         predicates.ts          共通述語（isDynamicMark 等）と buildPartBuckets
         textPairChecker.ts     on/off ペア型 checker のファクトリ
+        partGroups.ts          パート括弧（システムブラケット）でスコープを絞るクロージャ
+        query.ts               tick → 小節番号など checker 間で共有するクエリ
+        spannerOnRest.ts       ヘアピン/スラーの端点が休符上にあるかの共通判定
       pizzArcoChecker.ts       ┐
       sordinoChecker.ts        │
-      soloTuttiChecker.ts      │ on/off ペア型（articulation・計 7 種）
-      divisiChecker.ts         │
+      soloTuttiChecker.ts      │
+      divisiChecker.ts         │ on/off ペア型（articulation・計 10 種、createTextPairChecker 使用）
       sulTastoOrdChecker.ts    │
       sulPontOrdChecker.ts     │
-      conLegnoArcoChecker.ts   ┘
-      restAnnotationChecker.ts     休符アノテーション（独立）
-      tempoBarlineChecker.ts       テンポ変更と複縦線（独立）
-      openingTempoChecker.ts       冒頭テンポ表記（独立）
-      firstNoteDynamicsChecker.ts  各パート冒頭ダイナミクス（独立）
-      tempoWithoutBpmChecker.ts    BPM 値なしテンポ（独立）
-      duplicateDynamicsChecker.ts  重複ダイナミクス（独立）
-      finalBarlineChecker.ts       終止線の確認（独立）
-      codaSegnoChecker.ts          コーダ/セーニョ整合性（独立）
+      conLegnoArcoChecker.ts   │
+      muteOpenChecker.ts       │
+      unaCordaChecker.ts       │
+      harpTableChecker.ts      ┘
+      // 以下、独立型（計 21 種。個別の id / severity / 目的は上記「チェック項目」表を参照）
+      slurTieArticulationConsistencyChecker.ts
+      restAnnotationChecker.ts
+      tempoBarlineChecker.ts
+      openingTempoChecker.ts
+      firstNoteDynamicsChecker.ts
+      tempoWithoutBpmChecker.ts
+      tempoChangeResolutionChecker.ts
+      duplicateDynamicsChecker.ts
+      simultaneousDynamicsChecker.ts
+      hairpinTargetDynamicChecker.ts
+      finalBarlineChecker.ts
+      codaSegnoChecker.ts
+      rehearsalMarkOrderChecker.ts
+      repeatBarlineMatchChecker.ts
+      tiePitchMismatchChecker.ts
+      courtesyAccidentalChecker.ts
+      hairpinOnRestChecker.ts
+      slurOnRestChecker.ts
+      slurSingleNoteChecker.ts
+      crescTextResolutionChecker.ts
+      beatCrossingTieChecker.ts
     tests/
       checkers.test.ts         全 checker の単体テスト（vitest）
-      helpers/irBuilder.ts     テスト用の簡易 LintIR ビルダ
+      derived.test.ts          ensureDerived（ir.derived）の単体テスト
+      beatCrossingTieChecker.test.ts / slurTieArticulationConsistencyChecker.test.ts
+                                個別ファイルに切り出した checker のテスト
+      base/                    base/ ヘルパー（partGroups.ts・query.ts）の単体テスト
+      helpers/irBuilder.ts     テスト用の fixture ヘルパー（buildIR は core の再エクスポート、cleanIR/quintetIR を追加）
   musescore-api/               @musescore-linter/musescore-api — SDK 型の薄い拡張層
     src/
       index.ts                 SDK 型に不足するプロパティ（duration / annotations 等）を補うブリッジ
@@ -179,15 +209,19 @@ packages/
       types.ts                 HostEnums（実行中の MuseScore の enum を受け取る）
   source-musicxml/             @musescore-linter/source-musicxml — MusicXML → LintIR
     src/
+      index.ts                 buildIRFromBytes/buildIRFromBytesWithXml（非圧縮/圧縮 .mxl の入口統一）
       builder.ts               score-partwise を走査して LintIR を生成
       xml.ts                   出現順を保持する XML パース（fast-xml-parser）
       pitch.ts                 step/alter/octave → MIDI 音高・tpc・譜表位置
       duration.ts              <type> と付点 → 全音符 1 の既約分数
       articulations.ts         MusicXML の記号名 → MuseScore の名前
+      tempoWords.ts            <words> がテンポ表記かどうかを判定する語彙表（MusicXML 経路固有）
+      partGroups.ts            <part-group> → PartGroupInfo（システムブラケット）への変換
       mxl.ts                   圧縮 MusicXML（.mxl）の展開
   cli/                         @musescore-linter/cli — musescore-lint コマンド
     src/
       main.ts                  エントリ（shebang 付き）
+      index.ts                 パッケージの公開 API（run/parseArgs/format 系の再エクスポート）
       run.ts                   解析の実行と終了コードの決定
       args.ts                  引数解析
       format.ts                pretty / json / github の出力整形
@@ -198,7 +232,7 @@ apps/
       lib/lint.ts              parseFile（重い）/ lintParsed（軽い）を分離
       lib/rules.ts             checker のカテゴリ分けと localStorage 永続化
       lib/rows.ts              表示用の整形（cli の format.ts を再利用）
-      components/              Dropzone / ResultTable / RulePanel / ScorePreview / PrivacyNote
+      components/              Dropzone / ResultTable / RulePanel / ScorePreview / SeverityBadge / PrivacyNote
       components/ui/           shadcn/ui の生成コード
     public/_headers            CSP などのセキュリティヘッダ
     wrangler.jsonc             main を持たない assets-only Worker
@@ -318,7 +352,9 @@ localStorage に保存し、どちらも「既定から変えたぶんだけ」�
    - 必須プロパティ: `id, name, description, category, severity, defaultEnabled, run(ir)`
    - Issue は `@musescore-linter/core` の `createIssue(checker, fields)` 経由で生成
    - on/off ペア型なら `packages/checkers/src/base/textPairChecker.ts` の `createTextPairChecker()` を利用
-2. `packages/checkers/src/index.ts` の `registerAll()` に `import` と `register(xxxChecker)` を 1 行ずつ追加（**唯一の同期点**）
+2. `packages/checkers/src/index.ts` に 3 箇所追加する（**この 1 ファイルで完結する**）: 冒頭の `import`
+   文、`registerAll()` 内の `register(xxxChecker)` 呼び出し、末尾の `export { ... }` ブロック
+   （3 つ目を忘れるとパッケージの公開 API から漏れる）
 3. `packages/checkers/tests/checkers.test.ts` にテストを追加（fixture は `tests/helpers/irBuilder.ts` の `buildIR({...})` で構築）
 4. README の「チェック項目」表を更新
 
