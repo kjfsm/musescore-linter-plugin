@@ -1,8 +1,50 @@
+import type { Checker } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
-import { assertKnownRules, parseArgs, resolveEnabledRules, UsageError } from "../src/args.js";
+import {
+  assertKnownRules,
+  parseArgs,
+  resolveEnabledRules,
+  resolveRuleOptions,
+  UsageError,
+} from "../src/args.js";
 
 const RULES = ["opening-tempo", "pizz-arco", "final-barline"];
+
+const optionChecker: Checker = {
+  id: "scoped",
+  name: "scoped",
+  description: "",
+  category: "test",
+  severity: "info",
+  defaultEnabled: true,
+  options: [
+    {
+      key: "scope",
+      label: "範囲",
+      type: "select",
+      choices: [
+        { value: "all", label: "全部" },
+        { value: "group", label: "グループ" },
+      ],
+      default: "all",
+    },
+    {
+      key: "symbols",
+      label: "記号",
+      type: "multiselect",
+      choices: [
+        { value: "bracket", label: "角括弧" },
+        { value: "square", label: "括弧" },
+      ],
+      default: ["bracket"],
+    },
+  ],
+  run: () => [],
+};
+
+const plainChecker: Checker = { ...optionChecker, id: "plain", options: undefined };
+const CHECKERS = [optionChecker, plainChecker];
 
 describe("parseArgs", () => {
   it("フラグでない引数はすべてファイルとして扱う", () => {
@@ -78,5 +120,79 @@ describe("assertKnownRules", () => {
     expect(() =>
       assertKnownRules({ onlyRules: ["pizz-arco"], disabledRules: ["final-barline"] }, RULES),
     ).not.toThrow();
+  });
+});
+
+describe("--rule-option の解析", () => {
+  it("<ruleId>.<key>=<value> に割る", () => {
+    expect(parseArgs(["--rule-option=scoped.scope=group"]).ruleOptions).toEqual([
+      { ruleId: "scoped", key: "scope", value: "group" },
+    ]);
+  });
+
+  it("値に = が含まれていても最初の = で割る", () => {
+    expect(parseArgs(["--rule-option=scoped.scope=a=b"]).ruleOptions[0].value).toBe("a=b");
+  });
+
+  it("値がなければエラー", () => {
+    expect(() => parseArgs(["--rule-option"])).toThrow(UsageError);
+    expect(() => parseArgs(["--rule-option=scoped.scope"])).toThrow(/<ruleId>\.<key>=<value>/);
+  });
+
+  it("ruleId と key を区切る . が無ければエラー", () => {
+    expect(() => parseArgs(["--rule-option=scope=group"])).toThrow(/<ruleId>\.<key>=<value>/);
+  });
+});
+
+describe("resolveRuleOptions", () => {
+  const opts = (...argv: string[]) => parseArgs(argv);
+
+  it("指定が無ければ空", () => {
+    expect(resolveRuleOptions(opts(), CHECKERS)).toEqual({});
+  });
+
+  it("select と multiselect を値に変換する", () => {
+    expect(
+      resolveRuleOptions(
+        opts("--rule-option=scoped.scope=group", "--rule-option=scoped.symbols=square,bracket"),
+        CHECKERS,
+      ),
+    ).toEqual({ scoped: { scope: "group", symbols: ["bracket", "square"] } });
+  });
+
+  it("同じキーの重複指定は後勝ち", () => {
+    expect(
+      resolveRuleOptions(
+        opts("--rule-option=scoped.scope=group", "--rule-option=scoped.scope=all"),
+        CHECKERS,
+      ),
+    ).toEqual({ scoped: { scope: "all" } });
+  });
+
+  it("存在しない checker はエラー", () => {
+    expect(() => resolveRuleOptions(opts("--rule-option=nope.scope=all"), CHECKERS)).toThrow(
+      /'nope' は存在しません/,
+    );
+  });
+
+  it("存在しない key はエラーで、指定できる key を示す", () => {
+    expect(() => resolveRuleOptions(opts("--rule-option=scoped.nope=1"), CHECKERS)).toThrow(
+      /scope \/ symbols/,
+    );
+  });
+
+  it("options を持たない checker にはその旨を返す", () => {
+    expect(() => resolveRuleOptions(opts("--rule-option=plain.scope=all"), CHECKERS)).toThrow(
+      /設定できる項目はありません/,
+    );
+  });
+
+  it("choices 外の値はエラー", () => {
+    expect(() => resolveRuleOptions(opts("--rule-option=scoped.scope=nope"), CHECKERS)).toThrow(
+      /all \/ group/,
+    );
+    expect(() => resolveRuleOptions(opts("--rule-option=scoped.symbols=nope"), CHECKERS)).toThrow(
+      /nope/,
+    );
   });
 });

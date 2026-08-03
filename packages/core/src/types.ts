@@ -88,8 +88,24 @@ export interface MeasureInfo {
   timeSigD: number; // 拍子の分母
 }
 
+/** システムブラケット（パート括弧）の種類。MusicXML の `group-symbol` と同じ語彙。 */
+export type PartGroupSymbol = "bracket" | "square" | "brace" | "line";
+
+/**
+ * システムブラケット 1 本。`startStaffIdx` から `staffCount` 本の連続する譜表を覆う。
+ * 入れ子は「同じ譜表を覆う括弧が複数ある」状態として表現され、深さは持たない
+ * （どちらが内側かは `staffCount` の小ささで決まる）。
+ */
+export interface PartGroupInfo {
+  symbol: PartGroupSymbol;
+  startStaffIdx: number;
+  staffCount: number;
+}
+
 export interface IRMeta {
   parts: { staffIdx: number; partName: string }[];
+  // 括弧を持たない・読み取れないソースでは空配列。
+  partGroups: PartGroupInfo[];
   firstMusicTickByStaff: (number | null)[];
   lastTick: number;
   hairpins: HairpinInfo[];
@@ -163,6 +179,37 @@ export interface Issue {
   detail: Record<string, unknown> | null;
 }
 
+export type CheckerOptionValue = boolean | string | string[];
+
+export interface CheckerOptionChoice {
+  value: string;
+  label: string;
+}
+
+interface CheckerOptionSpecBase {
+  key: string;
+  label: string; // UI 表示名
+  description?: string;
+}
+
+/**
+ * checker が受け付ける設定項目の宣言。UI（Web / QML）と CLI はこの宣言だけを見て
+ * 入力欄とバリデーションを組み立てる。QML の Repeater model や JSON.stringify を通るので
+ * **純データに保つこと**（関数・getter を入れてはいけない）。
+ */
+export type CheckerOptionSpec =
+  | (CheckerOptionSpecBase & { type: "boolean"; default: boolean })
+  | (CheckerOptionSpecBase & {
+      type: "select";
+      choices: CheckerOptionChoice[];
+      default: string;
+    })
+  | (CheckerOptionSpecBase & {
+      type: "multiselect";
+      choices: CheckerOptionChoice[];
+      default: string[];
+    });
+
 export interface Checker {
   id: string;
   name: string;
@@ -170,7 +217,14 @@ export interface Checker {
   category: string;
   severity: Severity;
   defaultEnabled: boolean;
-  run(ir: LintIR): Issue[];
+  options?: CheckerOptionSpec[];
+  /**
+   * 第 2 引数は **未検証の生値**。値の出所は localStorage / QML の JSON / CLI 文字列で
+   * どれも信用できないため、`options` を宣言した checker は冒頭で
+   * `resolveCheckerOptions(this.options, options)` を通してから使うこと。
+   * 引数を取らない既存の checker はそのままこの型を満たす。
+   */
+  run(ir: LintIR, options?: Record<string, unknown>): Issue[];
 }
 
 export interface TextPairCheckerConfig {

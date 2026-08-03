@@ -11,6 +11,7 @@ function minimalIR(): LintIR {
     index: { byStaff: {}, byTick: {}, byKind: {}, byStaffAndKind: {} },
     meta: {
       parts: [],
+      partGroups: [],
       firstMusicTickByStaff: [],
       lastTick: 0,
       hairpins: [],
@@ -73,6 +74,23 @@ describe("runAllCheckers", () => {
     const issues = runAllCheckers(minimalIR());
     expect(issues.some((i) => i.ruleId === "internal")).toBe(true);
     expect(issues.some((i) => i.ruleId === "good")).toBe(true);
+  });
+
+  it("ruleOptions を対応する checker にだけ生値のまま渡す", () => {
+    const seen: Record<string, unknown> = {};
+    register({ ...mockChecker("a"), run: (_ir, o) => ((seen.a = o), []) });
+    register({ ...mockChecker("b"), run: (_ir, o) => ((seen.b = o), []) });
+
+    runAllCheckers(minimalIR(), {}, { a: { scope: "group", unknown: 1 } });
+
+    // 正規化は checker 側の責務なので、ここでは素通しされる
+    expect(seen.a).toEqual({ scope: "group", unknown: 1 });
+    expect(seen.b).toBeUndefined();
+  });
+
+  it("ruleOptions を省略しても引数を取らない既存 checker は動く", () => {
+    register(mockChecker("a", 1));
+    expect(runAllCheckers(minimalIR())).toHaveLength(1);
   });
 });
 

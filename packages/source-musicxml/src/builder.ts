@@ -4,6 +4,7 @@ import type {
   LintIR,
   MeasureInfo,
   NoteInfo,
+  PartGroupInfo,
   PartSpec,
   SlurSpec,
   TieSpec,
@@ -12,6 +13,7 @@ import { buildIR, CANONICAL, TICKS_PER_QUARTER } from "@musescore-linter/core";
 
 import { articulationNameOf } from "./articulations.js";
 import { durationFromDivisions, durationFromType, type Fraction } from "./duration.js";
+import { readPartGroupDrafts, resolvePartGroups, type StaffRange } from "./partGroups.js";
 import {
   type ClefState,
   clefFrom,
@@ -75,6 +77,7 @@ interface TimeSig {
 
 interface ScoreDraft {
   parts: PartSpec[];
+  partGroups: PartGroupInfo[];
   events: PendingEvent[];
   /** measureIdx → その小節の長さ（tick）。全パートの最大値を採る。 */
   measureLengths: number[];
@@ -696,10 +699,13 @@ function resolveRoot(doc: XNode[]): XNode {
 /** MusicXML（score-partwise）のテキストから LintIR を組み立てる。 */
 export function buildIRFromMusicXML(xmlText: string): LintIR {
   const root = resolveRoot(parseXml(xmlText));
-  const partNames = readPartNames(child(root, "part-list"));
+  const partList = child(root, "part-list");
+  const partNames = readPartNames(partList);
+  const groupDrafts = readPartGroupDrafts(partList);
 
   const draft: ScoreDraft = {
     parts: [],
+    partGroups: [],
     events: [],
     measureLengths: [],
     timeSigs: [],
@@ -708,10 +714,16 @@ export function buildIRFromMusicXML(xmlText: string): LintIR {
     ties: [],
   };
 
+  // staffIdx は <part-list> の順ではなく <part> の出現順で決まるので、括弧の範囲は
+  // ここで集めた対応表を使ってループ後に解決する。
+  const rangeByPartId = new Map<string, StaffRange>();
+
   let staffOffset = 0;
   for (const partNode of childrenNamed(root, "part")) {
     const staffCount = countStaves(partNode);
-    const rawName = partNames.get(attr(partNode, "id") ?? "") ?? "";
+    const partId = attr(partNode, "id") ?? "";
+    const rawName = partNames.get(partId) ?? "";
+    if (partId) rangeByPartId.set(partId, { start: staffOffset, count: staffCount });
     // MuseScore の getPartName と同じく、名前が空なら "Staff N" にフォールバックする
     for (let s = 0; s < staffCount; s++) {
       const staffIdx = staffOffset + s;
@@ -723,6 +735,8 @@ export function buildIRFromMusicXML(xmlText: string): LintIR {
     new PartWalker({ staffOffset, staffCount }, draft).walk(partNode);
     staffOffset += staffCount;
   }
+
+  draft.partGroups = resolvePartGroups(groupDrafts, rangeByPartId);
 
   return assemble(draft);
 }
@@ -777,5 +791,13 @@ function assemble(draft: ScoreDraft): LintIR {
     });
   }
 
-  return buildIR({ parts: draft.parts, events, hairpins, slurs, ties, measures });
+  return buildIR({
+    parts: draft.parts,
+    partGroups: draft.partGroups,
+    events,
+    hairpins,
+    slurs,
+    ties,
+    measures,
+  });
 }

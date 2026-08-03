@@ -123,7 +123,16 @@ export function getCheckerList(): Checker[] {
   return getAll();
 }
 
-export function runAllCheckers(ir: LintIR, enabledRules: Record<string, boolean> = {}): Issue[] {
+/**
+ * `ruleOptions` は checker id → 未検証の生値。ここでは正規化せずそのまま渡す。
+ * 正規化を checker 側（`resolveCheckerOptions`）に寄せておくと、テストが `checker.run(ir)` を
+ * 直接呼ぶ経路と本番経路で挙動が一致する。
+ */
+export function runAllCheckers(
+  ir: LintIR,
+  enabledRules: Record<string, boolean> = {},
+  ruleOptions: Record<string, Record<string, unknown>> = {},
+): Issue[] {
   perf.clear();
   const tTotal = perf.now();
 
@@ -143,7 +152,7 @@ export function runAllCheckers(ir: LintIR, enabledRules: Record<string, boolean>
 
     try {
       const tChecker = perf.now();
-      const issues = checker.run(ir) ?? [];
+      const issues = checker.run(ir, ruleOptions[checker.id]) ?? [];
       perf.addSince(checker.id, tChecker);
       log.info(`'${checker.id}': ${issues.length} 件検出`);
       allIssues.push(...issues);

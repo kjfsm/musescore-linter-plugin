@@ -1,9 +1,15 @@
-import type { Checker } from "@musescore-linter/core";
-import { getCheckerList } from "@musescore-linter/core";
+import type { Checker, CheckerOptionValue } from "@musescore-linter/core";
+import { getCheckerList, resolveCheckerOptions } from "@musescore-linter/core";
 
 import { allRuleIds } from "./lint";
 
 const STORAGE_KEY = "musescore-linter:rule-overrides";
+// checker 個別の設定は ON/OFF とは別のキーに置く。同じ袋に混ぜると、真偽値として
+// 読み書きしている既存の経路が配列値を壊してしまう。
+const OPTIONS_STORAGE_KEY = "musescore-linter:rule-options";
+
+/** ruleId → { key: 値 }。「既定から変えたぶん」だけを持つ。 */
+export type RuleOptions = Record<string, Record<string, CheckerOptionValue>>;
 
 /** 設定パネルの表示順。ここに無いカテゴリは後ろに回す。 */
 const CATEGORY_ORDER = ["articulation", "dynamics", "tempo", "notation"];
@@ -88,4 +94,58 @@ export function loadEnabledRules(storage: Storage): Record<string, boolean> {
     if (typeof enabled === "boolean" && known.has(id)) rules[id] = enabled;
   }
   return rules;
+}
+
+const sameValue = (a: CheckerOptionValue, b: CheckerOptionValue): boolean =>
+  // resolveCheckerOptions が multiselect を choices 順に正規化するので、
+  // 配列でも JSON 文字列の一致で比べられる
+  Array.isArray(a) || Array.isArray(b) ? JSON.stringify(a) === JSON.stringify(b) : a === b;
+
+/**
+ * checker 個別の設定を「既定と違うキーだけ」に絞る。保存にも読み込み後の正規化にも使う。
+ * 未知の checker / key / 不正な値は `resolveCheckerOptions` の側で落ちる。
+ */
+function diffFromDefaults(values: unknown): RuleOptions {
+  if (typeof values !== "object" || values === null || Array.isArray(values)) return {};
+  // getCheckerList() は登録前だと空。登録を保証しないと「未知の checker」として
+  // 保存済みの設定を丸ごと落とし、その値で localStorage を上書きしてしまう。
+  allRuleIds();
+  const byId = new Map(getCheckerList().map((c) => [c.id, c]));
+  const out: RuleOptions = {};
+
+  for (const [id, raw] of Object.entries(values as Record<string, unknown>)) {
+    const checker = byId.get(id);
+    if (!checker?.options) continue;
+    const resolved = resolveCheckerOptions(checker.options, raw);
+    const defaults = resolveCheckerOptions(checker.options, undefined);
+    const changed: Record<string, CheckerOptionValue> = {};
+    for (const [key, value] of Object.entries(resolved)) {
+      if (!sameValue(value, defaults[key])) changed[key] = value;
+    }
+    if (Object.keys(changed).length > 0) out[id] = changed;
+  }
+  return out;
+}
+
+export function saveRuleOptions(storage: Storage, values: RuleOptions): void {
+  storage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify(diffFromDefaults(values)));
+}
+
+export function loadRuleOptions(storage: Storage): RuleOptions {
+  const raw = storage.getItem(OPTIONS_STORAGE_KEY);
+  if (raw === null) return {};
+  try {
+    return diffFromDefaults(JSON.parse(raw));
+  } catch {
+    // 壊れた値は捨てて既定に戻す（UI の永続化境界なので握ってよい）
+    return {};
+  }
+}
+
+/** 設定パネルに出す表示用の値。既定値で埋めたうえで保存済みの差分を反映する。 */
+export function effectiveOptions(
+  checker: Checker,
+  values: RuleOptions,
+): Record<string, CheckerOptionValue> {
+  return resolveCheckerOptions(checker.options, values[checker.id]);
 }

@@ -4,6 +4,7 @@ import {
   getCheckerList,
   getCheckerPerfReport,
   isNewerVersion,
+  resolveCheckerOptions,
   runAllCheckers,
   setPerfEnabled,
 } from "@musescore-linter/core";
@@ -19,6 +20,7 @@ export {
   getCheckerPerfReport,
   getSnapshotPerfReport,
   isNewerVersion,
+  resolveCheckerOptions,
   runAllCheckers,
   setPerfEnabled,
 };
