@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getAll, getById, register, reset } from "../src/checkerRegistry.js";
+import { getAll, getById, isCheckerEnabled, register, reset } from "../src/checkerRegistry.js";
 import type { Checker } from "../src/types.js";
 
 function mockChecker(id: string): Checker {
@@ -51,5 +51,25 @@ describe("checkerRegistry", () => {
     reset();
     expect(getAll()).toHaveLength(0);
     expect(getById("a")).toBeNull();
+  });
+});
+
+describe("isCheckerEnabled", () => {
+  const on = mockChecker("on");
+  const off = { ...mockChecker("off"), defaultEnabled: false };
+
+  it("未指定なら defaultEnabled に従う", () => {
+    expect(isCheckerEnabled(on)).toBe(true);
+    expect(isCheckerEnabled(off)).toBe(false);
+    expect(isCheckerEnabled(on, {})).toBe(true);
+  });
+
+  it("明示指定は defaultEnabled より優先される", () => {
+    expect(isCheckerEnabled(on, { on: false })).toBe(false);
+    expect(isCheckerEnabled(off, { off: true })).toBe(true);
+  });
+
+  it("他の checker の指定には影響されない", () => {
+    expect(isCheckerEnabled(on, { other: false })).toBe(true);
   });
 });

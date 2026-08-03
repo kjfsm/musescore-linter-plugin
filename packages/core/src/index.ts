@@ -1,4 +1,4 @@
-export { getAll, getById, register, reset } from "./checkerRegistry.js";
+export { getAll, getById, isCheckerEnabled, register, reset } from "./checkerRegistry.js";
 export type { OptionParseResult } from "./checkerOptions.js";
 export { findOptionSpec, parseCheckerOptionText, resolveCheckerOptions } from "./checkerOptions.js";
 export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";

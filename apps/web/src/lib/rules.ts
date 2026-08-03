@@ -1,7 +1,10 @@
 import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
-import { getCheckerList, resolveCheckerOptions } from "@musescore-linter/core";
+import { getCheckerList, isCheckerEnabled, resolveCheckerOptions } from "@musescore-linter/core";
 
 import { allRuleIds } from "./lint";
+
+/** checker が有効かどうか。判定は core に一本化してある。 */
+export const isEnabled = isCheckerEnabled;
 
 const STORAGE_KEY = "musescore-linter:rule-overrides";
 // checker 個別の設定は ON/OFF とは別のキーに置く。同じ袋に混ぜると、真偽値として
@@ -51,15 +54,6 @@ export function ruleGroups(): RuleGroup[] {
       // （安定ソート）にしておくと、関連しあうペアが隣り合った現状の並びが崩れない。
       checkers: [...checkers].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]),
     }));
-}
-
-/**
- * checker が有効かどうか。core の linter と同じ判定にそろえる
- * （`enabledRules[id]` が未定義なら `checker.defaultEnabled` にフォールバック）。
- */
-export function isEnabled(checker: Checker, enabledRules: Record<string, boolean>): boolean {
-  const explicit = enabledRules[checker.id];
-  return explicit === undefined ? checker.defaultEnabled !== false : explicit;
 }
 
 /**

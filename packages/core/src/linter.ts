@@ -1,4 +1,4 @@
-import { getAll } from "./checkerRegistry.js";
+import { getAll, isCheckerEnabled } from "./checkerRegistry.js";
 import { CANONICAL } from "./enumRegistry.js";
 import { compareIssues } from "./issue.js";
 import { make } from "./logger.js";
@@ -124,11 +124,7 @@ export function runAllCheckers(
   const checkers = getAll();
 
   for (const checker of checkers) {
-    const enabled =
-      enabledRules[checker.id] !== undefined
-        ? enabledRules[checker.id] !== false
-        : checker.defaultEnabled !== false;
-    if (!enabled) continue;
+    if (!isCheckerEnabled(checker, enabledRules)) continue;
 
     try {
       const tChecker = perf.now();

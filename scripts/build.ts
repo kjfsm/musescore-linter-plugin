@@ -7,17 +7,24 @@ import * as esbuild from "esbuild";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 
-// QML から呼ばれる公開 API
-const EXPORTS = [
-  "buildSnapshot",
-  "runAllCheckers",
-  "getCheckerList",
-  "compareVersions",
-  "isNewerVersion",
-  "setPerfEnabled",
-  "getSnapshotPerfReport",
-  "getCheckerPerfReport",
-];
+/**
+ * QML へ露出する名前を src/bundle-entry.ts の export ブロックから読む。
+ *
+ * 以前はここに同じ一覧をベタ書きしており、bundle-entry.ts と手で揃える必要があった。
+ * 片方に足し忘れると QML 側で undefined になるだけで型エラーにもならず、実際
+ * resolveCheckerOptions が露出しないまま QML から呼ばれていた。
+ */
+function readBundleExports(): string[] {
+  const src = fs.readFileSync(path.join(ROOT, "src/bundle-entry.ts"), "utf8");
+  const block = src.match(/export \{([^}]*)\};/);
+  if (!block) throw new Error("src/bundle-entry.ts の export ブロックを見つけられませんでした");
+  const names = block[1]
+    .split(",")
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0);
+  if (names.length === 0) throw new Error("src/bundle-entry.ts の export が空です");
+  return names;
+}
 
 async function main() {
   const result = await esbuild.build({
@@ -44,7 +51,9 @@ async function main() {
 
   // QML の .import "file.js" as X で X.xxx にアクセスできるよう
   // トップレベル var として露出する
-  const topLevel = EXPORTS.map((n) => `var ${n} = __bundle__.${n};`).join("\n");
+  const topLevel = readBundleExports()
+    .map((n) => `var ${n} = __bundle__.${n};`)
+    .join("\n");
   const output = [".pragma library", "", raw, "", topLevel, ""].join("\n");
 
   const distDir = path.join(ROOT, "dist");

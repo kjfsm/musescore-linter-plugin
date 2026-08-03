@@ -27,6 +27,22 @@ export function getById(id: string): Checker | null {
   return byId[id] ?? null;
 }
 
+/**
+ * ユーザー設定を踏まえて checker が有効かどうか。
+ *
+ * `enabledRules` は「既定から変えたぶん」だけを持つ（UI も CLI もそう組み立てる）ので、
+ * 未指定なら `defaultEnabled` にフォールバックする。この判定が linter / Web / QML の
+ * 3 箇所に写経されており、Web 側にはコメントで「core と同じ判定にそろえる」と
+ * 書いてあった。仕様の写経は必ずズレるのでここに集約する。
+ */
+export function isCheckerEnabled(
+  checker: Checker,
+  enabledRules: Record<string, boolean> = {},
+): boolean {
+  const explicit = enabledRules[checker.id];
+  return explicit === undefined ? checker.defaultEnabled !== false : explicit !== false;
+}
+
 export function reset(): void {
   registered.length = 0;
   for (const key of Object.keys(byId)) delete byId[key];

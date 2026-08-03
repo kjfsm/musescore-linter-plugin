@@ -117,7 +117,8 @@ MuseScore {
         var rules = {};
         for (var i = 0; i < checkerList.length; i++) {
             var c = checkerList[i];
-            rules[c.id] = (persisted[c.id] !== undefined) ? !!persisted[c.id] : (c.defaultEnabled !== false);
+            // 有効判定は Bundle 側（core）に一本化してある
+            rules[c.id] = Bundle.isCheckerEnabled(c, persisted);
         }
         enabledRules = rules;
     }
