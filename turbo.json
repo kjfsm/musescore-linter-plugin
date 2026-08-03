@@ -11,7 +11,7 @@
   "tasks": {
     "build": {
       "description": "apps/* のフロントエンドを Vite でビルドする。ルートタスクの //#build（QML バンドル）とは別物。",
-      "dependsOn": ["^typecheck", "^test"],
+      "dependsOn": ["^typecheck", "//#test"],
       "inputs": ["$TURBO_DEFAULT$", "!dist/**"],
       "outputs": ["dist/**"]
     },
@@ -19,9 +19,17 @@
       "description": "TypeScript の型チェックを実行する。依存パッケージの typecheck が先に完了している必要がある。",
       "dependsOn": ["^typecheck"]
     },
-    "test": {
-      "description": "vitest でユニットテストを実行する。typecheck が通過していることが前提。",
-      "dependsOn": ["typecheck"],
+    "//#test": {
+      "description": "vitest で全パッケージのユニットテストを 1 回で実行する。パッケージ単位に分けていた頃は、alias だけが違う vitest.config.ts が 5 本並んでいた。全体で 1 秒未満なので分割する利点がない。",
+      "dependsOn": [
+        "@musescore-linter/core#typecheck",
+        "@musescore-linter/checkers#typecheck",
+        "@musescore-linter/cli#typecheck",
+        "@musescore-linter/source-musescore#typecheck",
+        "@musescore-linter/source-musicxml#typecheck",
+        "@musescore-linter/web#typecheck"
+      ],
+      "inputs": ["packages/*/src/**", "packages/*/tests/**", "apps/*/src/**", "apps/*/tests/**"],
       "outputs": []
     },
     "//#typecheck:root": {
@@ -35,12 +43,7 @@
     },
     "//#build": {
       "description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
-      "dependsOn": [
-        "@musescore-linter/musescore-api#typecheck",
-        "@musescore-linter/core#test",
-        "@musescore-linter/checkers#test",
-        "@musescore-linter/source-musescore#test"
-      ],
+      "dependsOn": ["@musescore-linter/musescore-api#typecheck", "//#test"],
       "inputs": [
         "src/**",
         "scripts/build.ts",
@@ -58,7 +61,7 @@
     },
     "//#build:cli": {
       "description": "esbuild で musescore-lint CLI を dist-cli/ へ単一ファイルにバンドルする。QML 向けの //#build とは独立。",
-      "dependsOn": ["@musescore-linter/cli#test", "@musescore-linter/source-musicxml#test"],
+      "dependsOn": ["//#test"],
       "inputs": [
         "scripts/build-cli.ts",
         "packages/cli/**",

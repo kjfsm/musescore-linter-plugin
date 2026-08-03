@@ -36,15 +36,6 @@ async function main() {
     globalName: "__bundle__",
     target: "es2017", // QML の V4 エンジンは ES2017 相当をサポート
     write: false,
-    // packages エイリアスを解決
-    alias: {
-      "@musescore-linter/core": path.join(ROOT, "packages/core/src/index.ts"),
-      "@musescore-linter/checkers": path.join(ROOT, "packages/checkers/src/index.ts"),
-      "@musescore-linter/source-musescore": path.join(
-        ROOT,
-        "packages/source-musescore/src/index.ts",
-      ),
-    },
   });
 
   const raw = result.outputFiles[0].text;
