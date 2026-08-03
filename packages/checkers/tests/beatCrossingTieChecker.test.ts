@@ -112,19 +112,54 @@ describe("beat-crossing-tie", () => {
     ).toMatchObject({ crossedBeats: "2・3拍目の頭" });
   });
 
-  it("拍頭から始まる音符は何拍またいでも検出しない", () => {
+  it("拍頭から始まり中央境界をまたがない音符は検出しない", () => {
+    // 3拍目からの2分音符（960..1920）は 1440 をまたぐが中央境界 960 はまたがない
     const issues = run([chord(0, QUARTER), chord(480, QUARTER), chord(960, HALF)], [measure(4, 4)]);
     expect(issues).toHaveLength(0);
   });
 
-  it("拍頭から始まる付点4分は主要境界をまたいでも検出しない", () => {
-    // 4/4 の 2 拍目から付点4分（480..1200）は中央境界 960 をまたぐが、
-    // 「拍頭から始まる音符は分割不要」という判定ルールにより対象外になる
-    expect(run([chord(480, DOTTED_QUARTER)], [measure(4, 4)])).toHaveLength(0);
-  });
+  describe("主要境界（小節の中央）は小節頭始まりだけが例外", () => {
+    it("2拍目からの付点4分は拍頭始まりでも warning で検出する", () => {
+      // 480..1200 は中央境界 960 をまたぐ。4分音符 ⌣ 8分音符 に分割すべきケース
+      const issues = run([chord(480, DOTTED_QUARTER)], [measure(4, 4)]);
+      expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("warning");
+      expect(issues[0].message).toBe(
+        "Vn1: 1小節目 2拍目 から始まる付点4分音符が3拍目の頭をまたいでいます。" +
+          "4分音符+8分音符のタイに分割することを推奨します",
+      );
+    });
 
-  it("小節全体を覆う全音符は検出しない", () => {
-    expect(run([chord(0, WHOLE)], [measure(4, 4)])).toHaveLength(0);
+    it("2拍目からの2分音符も検出する", () => {
+      // 480..1440。中央境界 960 を隠すので 4分音符 ⌣ 4分音符
+      const issues = run([chord(480, HALF)], [measure(4, 4)]);
+      expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("warning");
+      expect(issues[0].detail).toMatchObject({ position: "2拍目", suggestedSplit: [480, 480] });
+    });
+
+    it("小節頭からの2分音符・付点2分音符・全音符は検出しない", () => {
+      const dottedHalf = { numerator: 3, denominator: 4 };
+      expect(run([chord(0, HALF)], [measure(4, 4)])).toHaveLength(0);
+      expect(run([chord(0, dottedHalf)], [measure(4, 4)])).toHaveLength(0);
+      expect(run([chord(0, WHOLE)], [measure(4, 4)])).toHaveLength(0);
+    });
+
+    it("4/4 の「4分+付点4分+付点4分」は 2・3 音目を検出する", () => {
+      const issues = run(
+        [chord(0, QUARTER), chord(480, DOTTED_QUARTER), chord(1200, DOTTED_QUARTER)],
+        [measure(4, 4)],
+      );
+      expect(issues.map((i) => [i.detail?.position, i.severity])).toEqual([
+        ["2拍目", "warning"], // 中央境界をまたぐ
+        ["3拍目裏", "info"], // 4拍目の頭のみをまたぐ
+      ]);
+    });
+
+    it("奇数拍子には中央が無いので 3/4 の「4分+2分」は検出しない", () => {
+      // 480..1440 は 3/4 の標準的な記譜。偶数拍子の強い規則を適用してはいけない
+      expect(run([chord(0, QUARTER), chord(480, HALF)], [measure(3, 4)])).toHaveLength(0);
+    });
   });
 
   it("拍境界をまたがない裏拍の音符は検出しない", () => {

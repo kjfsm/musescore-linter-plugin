@@ -19,6 +19,13 @@ interface Meter {
   beatUnit: number;
   /** 主要境界（4/4 の 3 拍目頭など）。ここをまたぐ違反は warning に上げる。 */
   primary: number;
+  /**
+   * 拍数が偶数で、primary が本物の「小節の中央」か。真のときだけ
+   * 「拍頭始まりでも中央をまたげば分割必須」の強い規則を適用する。
+   * 奇数拍子（3/4, 9/8）に中央は無く、3/4 の「4分+2分」のような
+   * 標準的な記譜まで違反になってしまうため。
+   */
+  hasMid: boolean;
   /** 複合拍子か。拍位置ラベルで「裏」を使ってよいかの判定に使う。 */
   isCompound: boolean;
   timeSig: string;
@@ -73,6 +80,7 @@ function toMeter(info: MeasureInfo): Meter | null {
     ticks: info.ticks,
     beatUnit,
     primary,
+    hasMid: numBeats % 2 === 0,
     isCompound,
     timeSig: `${n}/${d}`,
   };
@@ -129,7 +137,8 @@ function describeSplit(segments: number[]): string | null {
 export const beatCrossingTieChecker: Checker = {
   id: "beat-crossing-tie",
   name: "拍をまたぐ音符の分割",
-  description: "裏拍から始まり拍境界をまたぐ音符を検出（タイでの分割を推奨）",
+  description:
+    "拍境界をまたぐ音符を検出（小節の中央をまたぐ場合は小節頭始まりのみ許容）。タイでの分割を推奨",
   category: "notation",
   severity: "info",
   defaultEnabled: true,
@@ -150,15 +159,16 @@ export const beatCrossingTieChecker: Checker = {
     // 違反ゼロの譜面では Map を作らずに済ませる
     let partsByStaff: Map<number, string> | null = null;
 
-    // フェーズ 2: chord を 1 パス。大半の音符は拍頭判定で即脱出する。
+    // フェーズ 2: chord を 1 パス。大半の音符は「境界をまたがない」判定で脱出する。
     for (const id of chordIds) {
       const ev = ir.events[id];
       const meter = meters[ev.measure];
       if (!meter) continue;
 
       const onset = ev.tick - meter.startTick;
-      // 拍頭から始まる音符は何拍またごうと分割不要。最も安く最もよく効く早期脱出。
-      if (onset % meter.beatUnit === 0) continue;
+      // 小節の頭（downbeat）から始まる音符は、中央をまたごうと内部構造を隠さない。
+      // 主要境界の規則に対する唯一の例外なので、他のどの判定より先に落とす。
+      if (onset === 0) continue;
 
       const dur = ev.duration;
       if (!dur) continue;
@@ -168,14 +178,22 @@ export const beatCrossingTieChecker: Checker = {
       if (TICKS_PER_WHOLE % q !== 0) continue;
       if (p !== 1 && p !== 3 && p !== 7) continue;
 
-      const end = onset + (TICKS_PER_WHOLE * p) / q;
+      const durTicks = (TICKS_PER_WHOLE * p) / q;
+      const end = onset + durTicks;
       if (onset < 0 || end > meter.ticks) continue;
 
-      // 次の拍境界が音符の途中に来るか。小節末の境界は end <= ticks の保証で決してまたげない
-      if ((Math.floor(onset / meter.beatUnit) + 1) * meter.beatUnit >= end) continue;
+      // 拍内オフセット。次の境界まで beatUnit - rem なので、またぐ条件は rem + durTicks > beatUnit。
+      // 除算 1 回でまたぎ判定と拍頭判定の両方に使う。小節末の境界は end <= ticks の保証で
+      // 決してまたげないため、境界の配列は要らない。
+      const rem = onset % meter.beatUnit;
+      if (rem + durTicks <= meter.beatUnit) continue;
+
+      const crossesPrimary = onset < meter.primary && meter.primary < end;
+      // 主要境界（小節の中央）をまたぐなら、拍頭始まりでも分割が必要。
+      // downbeat 始まりは上で除外済みなので、ここに来た時点で例外は無い。
+      if (!(meter.hasMid && crossesPrimary) && rem === 0) continue;
 
       // ここから先は違反確定。確保が発生するのはこの経路だけ。
-      const crossesPrimary = onset < meter.primary && meter.primary < end;
       const severity: Severity = crossesPrimary ? "warning" : "info";
 
       if (!partsByStaff) partsByStaff = buildPartNameMap(ir);
