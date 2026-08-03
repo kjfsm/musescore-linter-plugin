@@ -102,16 +102,52 @@ export function normalizeArticulationName(name: string): string {
   return name.replace(/^[上下]/, "");
 }
 
+/** startTick 昇順のスパナ列。derived が startTick でソートして持っている。 */
+interface Span {
+  voice: number;
+  startTick: number;
+  endTick: number;
+}
+
+/**
+ * tick を覆うスパナがあるか。
+ *
+ * `slursByStaff` / `tiesByStaff` は ensureDerived が startTick 昇順にソートして
+ * 持っているので、二分探索で「startTick <= tick」の最後の位置まで飛べる。そこから
+ * 手前へ戻りながら endTick を見る。全件 some していた頃は、最も重い checker
+ * （slur-tie-articulation-consistency）の内側から chord ごとに 2 回呼ばれていた。
+ *
+ * 手前へ戻る幅は「まだ閉じていないスパナの数」で、実際の楽譜では同時に開いている
+ * スラー/タイはごく少数なので、実質は定数回で止まる。
+ */
+function spanCoversTick(spans: Span[], voice: number, tick: number): boolean {
+  let lo = 0;
+  let hi = spans.length - 1;
+  let last = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (spans[mid].startTick <= tick) {
+      last = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  for (let i = last; i >= 0; i--) {
+    const s = spans[i];
+    if (s.voice === voice && tick < s.endTick) return true;
+  }
+  return false;
+}
+
 /** tick が staff/voice のスラーに含まれるか。 */
 export function slurCoversTick(ir: LintIR, staffIdx: number, voice: number, tick: number): boolean {
-  const slurs = ir.derived?.slursByStaff?.[staffIdx] ?? [];
-  return slurs.some((s) => s.voice === voice && s.startTick <= tick && tick < s.endTick);
+  return spanCoversTick(ir.derived?.slursByStaff?.[staffIdx] ?? [], voice, tick);
 }
 
 /** tick が staff/voice のタイに含まれるか。 */
 export function tieCoversTick(ir: LintIR, staffIdx: number, voice: number, tick: number): boolean {
-  const ties = ir.derived?.tiesByStaff?.[staffIdx] ?? [];
-  return ties.some((t) => t.voice === voice && t.startTick <= tick && tick < t.endTick);
+  return spanCoversTick(ir.derived?.tiesByStaff?.[staffIdx] ?? [], voice, tick);
 }
 
 /**
