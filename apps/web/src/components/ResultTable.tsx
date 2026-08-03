@@ -1,4 +1,3 @@
-import type { FileResult } from "@musescore-linter/cli";
 import { ChevronRight, CircleCheck } from "lucide-react";
 import { useState } from "react";
 
@@ -10,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ParsedFile } from "@/lib/lint";
+import type { LintedFile, ParsedFile } from "@/lib/lint";
 import { toRows } from "@/lib/rows";
 
 import { ScorePreview } from "./ScorePreview";
@@ -49,18 +48,21 @@ function ScorePreviewSection({ name, xml }: { name: string; xml: string }) {
 
 export interface ResultTableProps {
   parsed: ParsedFile[];
-  results: FileResult[];
+  results: LintedFile[];
 }
 
 export function ResultTable({ parsed, results }: ResultTableProps) {
-  const byFile = new Map(results.map((r) => [r.file, r]));
+  // file 名だけをキーにすると、別フォルダにある同名ファイルを 2 つ D&D したときに
+  // Map のキーも React の key も衝突し、結果が取り違えられる。parsed 配列内の位置
+  // （index）は一意なのでそちらをキーにする。
+  const byIndex = new Map(results.map((r) => [r.index, r]));
 
   return (
     <div className="flex flex-col gap-6">
-      {parsed.map((file) => {
+      {parsed.map((file, i) => {
         if (file.error !== undefined) {
           return (
-            <section key={file.name} className="flex flex-col gap-2">
+            <section key={`${i}:${file.name}`} className="flex flex-col gap-2">
               <h2 className="font-medium">{file.name}</h2>
               <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                 {failureHint(file.name, file.error)}
@@ -69,11 +71,11 @@ export function ResultTable({ parsed, results }: ResultTableProps) {
           );
         }
 
-        const issues = byFile.get(file.name)?.issues ?? [];
+        const issues = byIndex.get(i)?.issues ?? [];
         const rows = toRows(issues);
 
         return (
-          <section key={file.name} className="flex flex-col gap-2">
+          <section key={`${i}:${file.name}`} className="flex flex-col gap-2">
             <h2 className="font-medium">{file.name}</h2>
             <ScorePreviewSection name={file.name} xml={file.xml} />
             {rows.length === 0 ? (

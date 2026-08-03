@@ -53,14 +53,30 @@ export function parseFile(name: string, bytes: Uint8Array): ParsedFile {
   }
 }
 
+/**
+ * lint 結果 1 件。`index` は parsed 配列内での位置で、同名ファイルを
+ * 取り違えないための一意キー。file だけでは別フォルダの同名ファイルを
+ * 区別できない。
+ */
+export interface LintedFile extends FileResult {
+  index: number;
+}
+
 /** パース済みの IR に checker を掛ける。パースに失敗したファイルは飛ばす。 */
 export function lintParsed(
   parsed: ParsedFile[],
   enabledRules: Record<string, boolean>,
   ruleOptions: Record<string, Record<string, unknown>> = {},
-): FileResult[] {
+): LintedFile[] {
   ensureCheckersRegistered();
+  // parsed.filter(...) で先にパース失敗を落とすと、結果配列が parsed と長さ・index
+  // ともにずれてしまい、呼び出し側で「元の何番目のファイルか」を復元できなくなる。
+  // map してから filter する形にして、パース失敗の穴を残したまま元の index を保つ。
   return parsed
-    .filter((p): p is ParsedFile & { ir: LintIR } => p.ir !== undefined)
-    .map((p) => ({ file: p.name, issues: runAllCheckers(p.ir, enabledRules, ruleOptions) }));
+    .map((p, index) =>
+      p.ir === undefined
+        ? undefined
+        : { index, file: p.name, issues: runAllCheckers(p.ir, enabledRules, ruleOptions) },
+    )
+    .filter((r): r is LintedFile => r !== undefined);
 }

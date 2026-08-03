@@ -67,6 +67,10 @@ export function isEnabled(checker: Checker, enabledRules: Record<string, boolean
  * こうしておくと checker が増減しても、触っていないルールは常に既定に従う。
  */
 export function saveEnabledRules(storage: Storage, rules: Record<string, boolean>): void {
+  // getCheckerList() は登録前だと空。登録を保証しないと defaults が空 Map になり、
+  // すべての override が「未知の checker」として捨てられ、保存済みの設定を {} で
+  // 上書きしてしまう（diffFromDefaults の allRuleIds() 呼び出しと同じ理由）。
+  allRuleIds();
   const defaults = new Map(getCheckerList().map((c) => [c.id, c.defaultEnabled !== false]));
   const overrides: Record<string, boolean> = {};
   for (const [id, enabled] of Object.entries(rules)) {

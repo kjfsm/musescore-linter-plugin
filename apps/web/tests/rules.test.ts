@@ -116,6 +116,22 @@ describe("loadEnabledRules / saveEnabledRules", () => {
     expect(loadEnabledRules(fakeStorage({ "musescore-linter:rule-overrides": "{" }))).toEqual({});
     expect(loadEnabledRules(fakeStorage({ "musescore-linter:rule-overrides": "[1]" }))).toEqual({});
   });
+
+  it("checker の登録を待たずに呼ばれても保存済みの設定を消さない", async () => {
+    // 登録前だと getCheckerList() が空になり、defaults が空 Map になって
+    // すべての override が「既定と同じ」判定で {} に上書きされてしまう。
+    // diffFromDefaults 向けの同種のテストと同じく、「まだ一度も登録していない」
+    // 状態はモジュール内フラグ込みで作る必要があるため、モジュールごと読み直して
+    // 最初の呼び出しが saveEnabledRules になるようにする。
+    const id = allRuleIds()[0]; // 読み直す前の（登録済みの）モジュールから id を借りる
+    vi.resetModules();
+    const fresh = await import("../src/lib/rules");
+    const freshStorage = fakeStorage();
+    fresh.saveEnabledRules(freshStorage, { [id]: false });
+    expect(JSON.parse(freshStorage.getItem("musescore-linter:rule-overrides") ?? "{}")).toEqual({
+      [id]: false,
+    });
+  });
 });
 
 describe("loadRuleOptions / saveRuleOptions", () => {

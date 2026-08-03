@@ -41,7 +41,10 @@ function registerCheckers(): void {
 function listRules(io: RunIO): number {
   registerCheckers();
   const checkers = getCheckerList();
-  const idWidth = Math.max(...checkers.map((c) => c.id.length));
+  // checker が 0 件だと Math.max() は -Infinity になる。padEnd は ToLength で
+  // クランプするので実害は出ないが、幅が 0 であることを型でなく式で示しておく
+  // （format.ts の partWidth と同じ形）。
+  const idWidth = Math.max(...checkers.map((c) => c.id.length), 0);
   io.stdout(
     checkers
       .map((c) => {
