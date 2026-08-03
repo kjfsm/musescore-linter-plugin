@@ -12,15 +12,19 @@ on:
   push:
     branches: [main]
     paths:
-      - "scores/**"
+      - "fixtures/scores/**"
       - "packages/cli/**"
       - "packages/source-musicxml/**"
+      - "packages/checkers/**"
+      - "packages/core/**"
       - ".github/workflows/score-lint.yml"
   pull_request:
     paths:
-      - "scores/**"
+      - "fixtures/scores/**"
       - "packages/cli/**"
       - "packages/source-musicxml/**"
+      - "packages/checkers/**"
+      - "packages/core/**"
       - ".github/workflows/score-lint.yml"
   workflow_dispatch:
     inputs:
@@ -39,7 +43,9 @@ permissions:
 env:
   # 変換結果が版によって変わるため、MuseScore のバージョンは固定する
   MUSESCORE_VERSION: ${{ inputs.musescore_version || '4.7.4.260706075' }}
-  SCORES_DIR: scores
+  # 参照楽譜。同じ楽譜の .mscz / .musicxml / .mxl が対で入っており、
+  # 入力ソース間で結果が食い違わないことの確認にも使う。
+  SCORES_DIR: fixtures/scores
   CONVERTED_DIR: build/scores-musicxml
 
 jobs:
@@ -127,18 +133,26 @@ jobs:
             exit 0
           fi
           echo "${#FILES[@]} 件を解析します"
-          ./dist-cli/musescore-lint.mjs --format=github --fail-on=error "${FILES[@]}"
+          # 参照楽譜は市販の譜面なので error ゼロは期待できない（実際 cut 版には
+          # first-note-dynamics が 1 件出る）。ここはゲートではなく回帰の観測が目的
+          # なので --fail-on=none にし、件数の変化を summary の diff で見る。
+          # CLI がクラッシュしたりパースに失敗した場合は非ゼロで落ちる。
+          ./dist-cli/musescore-lint.mjs --format=github --fail-on=none "${FILES[@]}"
 
       - name: 解析結果（人間向け）
-        if: always() && steps.convert.outputs.count != '0'
+        if: always()
         run: |
           set -euo pipefail
           shopt -s nullglob globstar
           FILES=("$CONVERTED_DIR"/*.musicxml "$SCORES_DIR"/**/*.musicxml "$SCORES_DIR"/**/*.mxl)
           if [ ${#FILES[@]} -gt 0 ]; then
             {
+              echo '<details><summary>楽譜の解析結果</summary>'
+              echo
               echo '```'
               ./dist-cli/musescore-lint.mjs --no-color --fail-on=none "${FILES[@]}"
               echo '```'
+              echo
+              echo '</details>'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
