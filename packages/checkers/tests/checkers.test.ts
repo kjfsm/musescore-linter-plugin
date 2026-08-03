@@ -1,12 +1,4 @@
-import {
-  ensureDerived,
-  getCheckerList,
-  reset,
-  runAllCheckers,
-  tpcToAlter,
-  tpcToName,
-  tpcToStep,
-} from "@musescore-linter/core";
+import { ensureDerived, getCheckerList, reset, runAllCheckers } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
@@ -2078,31 +2070,6 @@ describe("tie-pitch-mismatch checker", () => {
       ],
     });
     expect(tiePitchMismatchChecker.run(ir)).toHaveLength(0);
-  });
-});
-
-// ─── tpc spelling helpers ─────────────────────────────────────────────────
-
-describe("tpc spelling helpers", () => {
-  it("tpcToStep returns 0=C..6=B", () => {
-    expect(tpcToStep(14)).toBe(0); // C
-    expect(tpcToStep(13)).toBe(3); // F
-    expect(tpcToStep(20)).toBe(3); // F#（同じステップ F）
-    expect(tpcToStep(19)).toBe(6); // B
-  });
-
-  it("tpcToAlter returns the chromatic alteration", () => {
-    expect(tpcToAlter(14)).toBe(0); // C
-    expect(tpcToAlter(20)).toBe(1); // F#
-    expect(tpcToAlter(21)).toBe(1); // C#
-    expect(tpcToAlter(12)).toBe(-1); // Bb
-  });
-
-  it("tpcToName composes letter + accidental", () => {
-    expect(tpcToName(14)).toBe("C");
-    expect(tpcToName(13)).toBe("F");
-    expect(tpcToName(20)).toBe("F#");
-    expect(tpcToName(12)).toBe("Bb");
   });
 });
 

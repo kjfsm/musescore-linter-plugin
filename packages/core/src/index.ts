@@ -26,7 +26,7 @@ export type { Logger } from "./logger.js";
 export { make as makeLogger, setLevel } from "./logger.js";
 export type { Perf } from "./perf.js";
 export { createPerf, isPerfEnabled, setPerfEnabled } from "./perf.js";
-export { tpcToAlter, tpcToName, tpcToStep } from "./pitchSpelling.js";
+export { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "./pitchSpelling.js";
 
 export type {
   CanonicalKinds,
