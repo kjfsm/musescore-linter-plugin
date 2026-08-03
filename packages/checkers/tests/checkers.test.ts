@@ -274,7 +274,7 @@ describe("sordino checker", () => {
 // ─── rest-annotation ────────────────────────────────────────────────────────
 
 describe("rest-annotation checker", () => {
-  it("休符の位置に強弱記号 → error 1件", () => {
+  it("休符の位置に強弱記号 → info 1件", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
       events: [
@@ -307,7 +307,9 @@ describe("rest-annotation checker", () => {
         },
       ],
     });
-    expect(restAnnotationChecker.run(ir)).toHaveLength(1);
+    const issues = restAnnotationChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
   });
 });
 
@@ -417,7 +419,7 @@ describe("solo-tutti checker", () => {
     expect(soloTuttiChecker.run(ir)).toHaveLength(1);
   });
 
-  it("solo 連続指示 → warning 1件（前回小節が記録される）", () => {
+  it("solo 連続指示（二連ソロ） → info 1件（前回小節が記録される）", () => {
     const ir = cleanIR([
       {
         kind: K.STAFF_TEXT,
@@ -446,6 +448,7 @@ describe("solo-tutti checker", () => {
     ]);
     const issues = soloTuttiChecker.run(ir);
     expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
     expect(issues[0].detail?.previousMeasure).toBe(2);
   });
 
@@ -749,6 +752,56 @@ describe("duplicate-dynamics checker", () => {
     });
     const issues = duplicateDynamicsChecker.run(ir);
     expect(issues).toHaveLength(1);
+  });
+
+  it("sf → sf が連続 → 0件（連続を許可）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "sf",
+          textRaw: "sf",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "sf",
+          textRaw: "sf",
+        },
+      ],
+    });
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+  });
+
+  it("rf → rf が連続 → 0件（連続を許可）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 0,
+          measure: 1,
+          textNorm: "rf",
+          textRaw: "rf",
+        },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          textNorm: "rf",
+          textRaw: "rf",
+        },
+      ],
+    });
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
   });
 });
 
@@ -2090,12 +2143,26 @@ describe("courtesy-accidental checker", () => {
 // ─── spanner-on-rest ─────────────────────────────────────────────────────────
 
 describe("spanner-on-rest checker", () => {
-  it("ヘアピンの終了端点が休符上 → warning 1件", () => {
+  it("ヘアピンの終了端点が休符上 → info 1件", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
       events: [
         { kind: K.CHORD, staff: 0, tick: 0, measure: 1 },
         { kind: K.REST, staff: 0, tick: 480, measure: 1 },
+      ],
+      hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
+    });
+    const issues = spannerOnRestChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("info");
+  });
+
+  it("ヘアピンの開始端点が休符上 → warning 1件（開始は info 化しない）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.REST, staff: 0, tick: 0, measure: 1 },
+        { kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
       ],
       hairpins: [{ staffIdx: 0, startTick: 0, endTick: 480 }],
     });

@@ -48,6 +48,7 @@ export const spannerOnRestChecker: Checker = {
       endpoint: "開始" | "終了",
       tick: number,
       detail: Record<string, unknown>,
+      severity?: Issue["severity"],
     ): void => {
       const partName = partsByStaff.get(staffIdx) ?? "";
       const measure = measureAtTick(ir, tick);
@@ -59,6 +60,7 @@ export const spannerOnRestChecker: Checker = {
           measure,
           tick,
           detail,
+          severity,
         }),
       );
     };
@@ -71,8 +73,9 @@ export const spannerOnRestChecker: Checker = {
       };
       if (onRestOnly(hp.staffIdx, hp.startTick))
         report("ヘアピン", hp.staffIdx, "開始", hp.startTick, detail);
+      // ヘアピンの終了が休符上にあるのは、直後の音符へ受け渡す記譜として許容されるケースが多いため info に留める。
       if (onRestOnly(hp.staffIdx, hp.endTick))
-        report("ヘアピン", hp.staffIdx, "終了", hp.endTick, detail);
+        report("ヘアピン", hp.staffIdx, "終了", hp.endTick, detail, "info");
     }
 
     for (const sl of ir.meta?.slurs ?? []) {
