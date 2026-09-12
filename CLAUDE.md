@@ -30,6 +30,7 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 - **checker-contract** — Checker id/run 契約・LintIR 使い方・severity 基準・ir.index 優先
 - **testing** — vitest 単体テスト責務・irBuilder 使い方
 - **error-handling** — throw / never-catch 規約
+- **musescore-plugin-api** — MuseScore 4.6 プラグイン API の罠(選択・`cmd()`・QML の GC)
 
 ## スキル（`.claude/skills/`）
 
