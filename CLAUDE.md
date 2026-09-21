@@ -48,8 +48,9 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 - `--no-verify` / `--no-gpg-sign` は `~/.claude/hooks/block-no-verify.sh` が全プロジェクト共通で弾く
   （このリポジトリは simple-git-hooks の pre-commit で `pnpm lint` を回しているので対象になる）
 
-**`Bash` 経由でコマンドが内部から書くファイルは塞げない。** 塞げるのは `Read` / `Edit` /
-`Write` のツール呼び出しと、シェルの出力リダイレクトまでである。
+規則は `Read` と `Edit` にしか書けない（`Write(...)` にパスを書いても参照されない）。
+deny は Bash の `cat` / `head` / `tail` / `sed` / `tee` の引数とリダイレクト先にも掛かる。
+**すり抜けるのはパスを名指ししない読み書きだけ**（`grep -r pattern .` など）。
 
 ## ライブラリ側の機能が不足している場合
 
