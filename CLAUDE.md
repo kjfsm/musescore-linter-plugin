@@ -42,10 +42,14 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 
 - **`checker-reviewer`** — 契約準拠・LintIR 使い方・テストカバレッジを独立査読
 
-## 自動 block（`.claude/hooks/`）
+## 自動 block（`.claude/settings.json` の `permissions.deny`）
 
-- `--no-verify` / `--no-gpg-sign` 付き git commit
-- `dist/` / `node_modules/` / `pnpm-lock.yaml` への書き込み
+- `.env*` / `dist/` / `dist-cli/` / `.turbo/` / `coverage/` / `node_modules/` / lockfile への読み書き
+- `--no-verify` / `--no-gpg-sign` は `~/.claude/hooks/block-no-verify.sh` が全プロジェクト共通で弾く
+  （このリポジトリは simple-git-hooks の pre-commit で `pnpm lint` を回しているので対象になる）
+
+**`Bash` 経由でコマンドが内部から書くファイルは塞げない。** 塞げるのは `Read` / `Edit` /
+`Write` のツール呼び出しと、シェルの出力リダイレクトまでである。
 
 ## ライブラリ側の機能が不足している場合
 
@@ -53,7 +57,7 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 
 ## やってはいけないこと
 
-- `main` への直 push（必ずブランチ + PR）
+- `main` への直 push（原則。急ぎで直接入れることはあってよいが、既定の経路にはしない）
 - Checker 内で例外を catch（linter が全体でハンドリングする）
 - `packages/core/src/types.ts`（LintIR の型定義）を checker 側から直接変更
 - `core` / `checkers` に MuseScore SDK への依存を持ち込む（入力ソース側の責務）
