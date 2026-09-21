@@ -4,35 +4,24 @@
 		"deny": [
 			"Read(./.env)",
 			"Edit(./.env)",
-			"Write(./.env)",
 			"Read(./.env.local)",
 			"Edit(./.env.local)",
-			"Write(./.env.local)",
 			"Read(./.env.production)",
 			"Edit(./.env.production)",
-			"Write(./.env.production)",
 
 			"Read(./**/dist/**)",
 			"Edit(./**/dist/**)",
-			"Write(./**/dist/**)",
 			"Read(./dist-cli/**)",
 			"Edit(./dist-cli/**)",
-			"Write(./dist-cli/**)",
 			"Read(./.turbo/**)",
 			"Edit(./.turbo/**)",
-			"Write(./.turbo/**)",
 			"Read(./coverage/**)",
 			"Edit(./coverage/**)",
-			"Write(./coverage/**)",
 
 			"Edit(./pnpm-lock.yaml)",
-			"Write(./pnpm-lock.yaml)",
 			"Edit(./package-lock.json)",
-			"Write(./package-lock.json)",
 			"Edit(./yarn.lock)",
-			"Write(./yarn.lock)",
-			"Edit(./**/node_modules/**)",
-			"Write(./**/node_modules/**)"
+			"Edit(./**/node_modules/**)"
 		]
 	}
 }
