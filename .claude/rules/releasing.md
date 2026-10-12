@@ -1,3 +1,12 @@
+---
+description: 公開パッケージの採番・changeset の bump 種別・旧系列の back-port
+paths:
+  - ".changeset/**"
+  - "packages/*/package.json"
+  - "packages/*/CHANGELOG.md"
+  - ".github/workflows/release*.yml"
+---
+
 # リリース・採番方針
 
 公開パッケージ `@kjfsm/musescore-plugin-sdk-types` / `-helpers` のバージョニングとリリース運用。
@@ -50,4 +59,3 @@
 
 - 公開済みバージョンの上書き（必ず新しい patch/minor/major を出す）。
 - 旧系列の公開で `latest` を巻き戻す（dist-tag を使う）。
-- `main` への直 push（feature ブランチ + PR を経由する）。
