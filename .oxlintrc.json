@@ -26,7 +26,7 @@
   "ignorePatterns": ["dist/**", "dist-cli/**", "coverage/**", "out/**"],
   "overrides": [
     {
-      // core と checkers は MuseScore に依存しない、が CLAUDE.md の最重要制約。
+      // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
       // これまで package.json の記述と人の注意力だけで守られていたので、
       // import を機械的に塞いでおく。MuseScore を触ってよいのは
       // source-musescore と musescore-api だけ。

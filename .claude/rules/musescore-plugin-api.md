@@ -44,5 +44,5 @@ curScore.endCmd();
 
 ## プラグイン側で回避できないとき
 
-回避策が SDK(`@kjfsm/musescore-plugin-sdk-helpers`)に置くべき形なら、CLAUDE.md の
+回避策が SDK(`@kjfsm/musescore-plugin-sdk-helpers`)に置くべき形なら、AGENTS.md の
 「ライブラリ側の機能が不足している場合」に従い、ここで回避実装を足さずに報告する。

@@ -134,7 +134,7 @@ rules-of-hooks / exhaustive-deps / jsx-key が無検査。S16 で hooks を触�
 `react-in-jsx-scope` が automatic runtime で大量に鳴るので `settings.react.runtime` の設定か
 当該ルール off を添えること。指摘が多ければ `rules-of-hooks` を error、`exhaustive-deps` を warn から段階有効化。
 
-**S7 の理由** — CLAUDE.md の最重要制約が人力チェックのみ。中期で両ソースを共通基盤に寄せるとき
+**S7 の理由** — AGENTS.md の最重要制約が人力チェックのみ。中期で両ソースを共通基盤に寄せるとき
 SDK 型が core に漏れる事故が起きやすい。**turbo boundaries ではなく oxlint で行う**
 （CI の実行経路に既に乗っておりコストがゼロ）。
 **検証**: `packages/core/src/types.ts` に SDK 型の import を一時的に足して `pnpm lint` が落ちること。
@@ -202,7 +202,7 @@ LintIR 図**なので、コードと規約を同時に直す必要がある（�
 **S15** — 現状 `snapshotIR.meta.parts` を直接読めばよいのに、スナップショットタブを開いたときだけ
 生成される巨大 JSON 文字列を `JSON.parse` し直している。結果、タブを開くまでパート絞り込みが空、
 開いた後はバインディング再評価のたびに数 MB のパースが UI スレッドで走る。`catch(e){}` の握り潰しも
-CLAUDE.md の never-catch 規約違反なので、`snapshotIR` 未生成の分岐として書き直す。
+`.claude/rules/error-handling.md` の never-catch 規約違反なので、`snapshotIR` 未生成の分岐として書き直す。
 **検証**: MuseScore 4 実機で、スナップショットタブを開かずにパート絞り込みが機能すること。
 
 **S16** — `lintParsed` が `useMemo` 内＝**レンダー中に同期実行**。チェックボックス 1 個で全ファイル再 lint し、
@@ -321,7 +321,7 @@ import は残し `const ALL_CHECKERS = [...]` の配列 1 本から `registerAll
 
 **M10** — `TextPairCheckerConfig` は core 内で未使用なのに core にあり、実装側が
 「core/types.ts を直接変更できない」ため `TextPairCheckerConfigWithOverrides` として拡張し直している。
-**型の所在が誤っているせいで CLAUDE.md の制約が迂回されている**、規約とコードの不整合。
+**型の所在が誤っているせいで AGENTS.md の制約が迂回されている**、規約とコードの不整合。
 同時に severity の不整合を整理: `slurOnRest`(warning) vs `hairpinOnRest`(info) が同じヘルパを使う対称 checker、
 `restAnnotation`/`beatCrossingTie` は checker.severity と発行 issue の severity が異なり UI 表示がズレる。
 **判断が必要**: コミット履歴（`fb1bf91` "ヘアピンの開始端点が休符上にあるケースも info に緩和"）を見ると

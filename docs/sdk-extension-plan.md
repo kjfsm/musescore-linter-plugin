@@ -13,7 +13,7 @@ musescore-plugin-sdk (types/helpers)  →  musescore-api ブリッジ  →  core
 **重要な制約**: 2 つは別リポジトリ。プラグインは npm 公開された
 `@kjfsm/musescore-plugin-sdk-helpers` / `-types` に依存する。よって SDK 側の新 helper は
 **公開（リリース）されて初めてプラグインの `snapshot.ts` から使える**。
-CLAUDE.md の「不足機能をプラグイン側で回避実装しない」に従い、SDK helper を先に出し、
+AGENTS.md の「不足機能をプラグイン側で回避実装しない」に従い、SDK helper を先に出し、
 プラグインはそれを消費する順序で進める。
 
 ## 段階プラン
