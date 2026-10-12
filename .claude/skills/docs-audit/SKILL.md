@@ -1,6 +1,6 @@
 ---
 name: docs-audit
-description: CLAUDE.md / README.md / docs/ 配下のドキュメント全体を横断スキャンし、重複・矛盾・古い記述・リンク切れを検出する。サブエージェントでファイルを全文読みし、整理レポートと推奨アクションを返す。「ドキュメントの重複」「整理してほしい」「矛盾チェック」などのフレーズで起動。
+description: AGENTS.md / README.md / docs/ 配下のドキュメント全体を横断スキャンし、重複・矛盾・古い記述・リンク切れを検出する。サブエージェントでファイルを全文読みし、整理レポートと推奨アクションを返す。「ドキュメントの重複」「整理してほしい」「矛盾チェック」などのフレーズで起動。
 ---
 
 # docs-audit
@@ -15,14 +15,14 @@ description: CLAUDE.md / README.md / docs/ 配下のドキュメント全体を�
 
 - 引数なし: 全ドキュメントを横断
 - `--focus=<file>`: 指定ファイルを軸に、他と何が重複しているかを集中検出
-  - 例: `--focus=CLAUDE.md` → CLAUDE.md が README.md と何を重複しているか
+  - 例: `--focus=AGENTS.md` → AGENTS.md が README.md と何を重複しているか
 - `--links`: リンク切れ（存在しないファイル / セクションアンカー）を集中検出
 
 ### 2. 対象ファイルの収集
 
 ```
 README.md
-CLAUDE.md
+AGENTS.md
 .claude/rules/*.md
 .claude/skills/*/SKILL.md
 packages/*/README.md
@@ -36,9 +36,9 @@ packages/*/README.md
 
 検出観点:
 1. **重複**: 同じ内容（コマンド集 / パイプライン説明 / コーディング規約 / ビルド手順）が複数ファイルに書かれている箇所
-2. **矛盾**: CLAUDE.md の型ジェネレータ説明が rules/types-generator.md と食い違っていないか
+2. **矛盾**: AGENTS.md の型ジェネレータ説明が rules/types-generator.md と食い違っていないか
 3. **古い参照**: 削除されたファイルや変更されたセクション名へのリンク
-4. **CLAUDE.md の肥大**: README.md や rules/ と被っていて参照に置き換えられる箇所
+4. **AGENTS.md の肥大**: README.md や rules/ と被っていて参照に置き換えられる箇所
 
 レポート形式:
 - 矛盾は最優先表示
@@ -52,7 +52,7 @@ packages/*/README.md
 ## 🔴 矛盾（最優先）
 1. `ファイル:行` に古い記述が残存 → 対応
 
-## 🟡 CLAUDE.md 削減候補
+## 🟡 AGENTS.md 削減候補
 1. 〇〇セクション（L○-○）→ rules/types-generator.md と重複
 
 ## 🟠 その他重複・古さ
@@ -68,5 +68,5 @@ packages/*/README.md
 ## 重要な原則
 
 - **削除する前に必ず移動先で内容を保全する**
-- **CLAUDE.md は最小化が至上命題** — 詳細はすべて参照リンクで委ねる
-- **rules/ が詳細の正典** — CLAUDE.md に手順の詳細を書かない
+- **AGENTS.md は最小化が至上命題** — 詳細はすべて参照リンクで委ねる
+- **rules/ が詳細の正典** — AGENTS.md に手順の詳細を書かない
