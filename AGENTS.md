@@ -6,7 +6,7 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 ## 構成の要点
 
 **LintIR を作る側と使う側が分離している。** `core`（LintIR・linter・checker registry）と
-`checkers` は MuseScore に依存しない。MuseScore を触るのは `source-musescore` だけで、
+`checkers` は MuseScore に依存しない。MuseScore を触るのは `source-musescore` と `musescore-api` だけで、
 `source-musicxml` は MusicXML から同じ LintIR を作る。`cli` は `musescore-lint` コマンド。
 
 - LintIR の型定義（`packages/core/src/types.ts`）は、checker の都合で変えない。
