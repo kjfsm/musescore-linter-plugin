@@ -1,4 +1,5 @@
 import type { LintIR } from "@musescore-linter/core";
+import { eventsOnStaff } from "@musescore-linter/core";
 
 export interface RestSpan {
   staffIdx: number;
@@ -14,8 +15,7 @@ export interface RestEndpointHit {
 }
 
 function tickSet(ir: LintIR, staffIdx: number, kind: string): Set<number> {
-  const ids = ir.index.byStaffAndKind[staffIdx]?.[kind] ?? [];
-  return new Set(ids.map((id) => ir.events[id].tick));
+  return new Set(eventsOnStaff(ir, staffIdx, kind).map((ev) => ev.tick));
 }
 
 // スパナー(ヘアピン/スラー)の開始/終了 tick が、その staff で

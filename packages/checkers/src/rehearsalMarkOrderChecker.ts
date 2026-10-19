@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { createIssue, eventsOfKind } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 
@@ -30,18 +30,17 @@ export const rehearsalMarkOrderChecker: Checker = {
   category: "notation",
   severity: "info",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
 
-    const ids = ir.index.byKind[canonical.elementKinds.REHEARSAL_MARK] ?? [];
-    if (ids.length === 0) return issues;
+    const rehearsalMarks = eventsOfKind(ir, canonical.elementKinds.REHEARSAL_MARK);
+    if (rehearsalMarks.length === 0) return issues;
 
     // 複数スタッフに同じマークが同 tick で現れる場合があるので (tick|label) で重複排除
     const seenKey = new Set<string>();
-    const marks = ids
-      .map((id) => ir.events[id])
+    const marks = rehearsalMarks
       .sort((a, b) => a.tick - b.tick)
       .map((ev) => ({ label: (ev.textRaw || ev.textNorm).trim(), ev }))
       .filter((m) => {

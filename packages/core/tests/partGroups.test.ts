@@ -38,7 +38,7 @@ describe("normalizePartGroups", () => {
   it("入力を書き換えない", () => {
     const input = [g("bracket", 0, 4)];
     const out = normalizePartGroups(input);
-    out[0].staffCount = 99;
-    expect(input[0].staffCount).toBe(4);
+    out[0]!.staffCount = 99;
+    expect(input[0]?.staffCount).toBe(4);
   });
 });

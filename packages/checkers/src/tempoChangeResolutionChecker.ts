@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
+import { createIssue, eventsOfKind } from "@musescore-linter/core";
 
 import { getCanonical, proseTextKinds } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";
@@ -18,7 +18,7 @@ export const tempoChangeResolutionChecker: Checker = {
   category: "tempo",
   severity: "warning",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
@@ -29,10 +29,10 @@ export const tempoChangeResolutionChecker: Checker = {
     const seen = new Set<number>();
     const events: LintEvent[] = [];
     for (const kind of kinds) {
-      for (const id of ir.index.byKind[kind] ?? []) {
-        if (seen.has(id)) continue;
-        seen.add(id);
-        events.push(ir.events[id]);
+      for (const ev of eventsOfKind(ir, kind)) {
+        if (seen.has(ev.id)) continue;
+        seen.add(ev.id);
+        events.push(ev);
       }
     }
     events.sort((a, b) => a.tick - b.tick);
@@ -42,9 +42,8 @@ export const tempoChangeResolutionChecker: Checker = {
     // 曲尾のリタルダンド等は a tempo 不要なので、最後の音楽小節は判定対象外にする
     let lastMusicMeasure = 0;
     for (const kind of [canonical.elementKinds.CHORD, canonical.elementKinds.REST]) {
-      for (const id of ir.index.byKind[kind] ?? []) {
-        const m = ir.events[id].measure;
-        if (m > lastMusicMeasure) lastMusicMeasure = m;
+      for (const { measure } of eventsOfKind(ir, kind)) {
+        if (measure > lastMusicMeasure) lastMusicMeasure = measure;
       }
     }
 
@@ -52,12 +51,12 @@ export const tempoChangeResolutionChecker: Checker = {
       ev.kind === canonical.elementKinds.TEMPO_TEXT && ev.tempo !== null && ev.tempo !== undefined;
 
     for (let i = 0; i < events.length; i++) {
-      const ev = events[i];
+      const ev = events[i]!;
       if (!ON_RE.test(ev.textNorm)) continue;
 
       let resolved = false;
       for (let j = i + 1; j < events.length; j++) {
-        const next = events[j];
+        const next = events[j]!;
         if (next.tick <= ev.tick) continue;
         if (OFF_RE.test(next.textNorm) || isNewTempoMark(next)) {
           resolved = true;

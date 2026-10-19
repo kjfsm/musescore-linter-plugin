@@ -1,4 +1,5 @@
 import type { CanonicalKinds, LintEvent, LintIR } from "@musescore-linter/core";
+import { eventsOnStaff } from "@musescore-linter/core";
 
 export function getCanonical(ir: LintIR): CanonicalKinds | null {
   return ir?.registry?.canonical ?? null;
@@ -82,19 +83,17 @@ export function buildPartBuckets(ir: LintIR): PartBucket[] {
   for (const part of metaParts) {
     const { staffIdx } = part;
     const key = part.partName || `Staff ${staffIdx + 1}`;
-    const byStaff = ir.index?.byStaffAndKind?.[staffIdx] ?? {};
-
-    if (!buckets[key]) {
-      buckets[key] = { partName: key, staffIdx, events: [] };
-    } else if (staffIdx < buckets[key].staffIdx) {
-      buckets[key].staffIdx = staffIdx;
+    let bucket = buckets[key];
+    if (!bucket) {
+      bucket = { partName: key, staffIdx, events: [] };
+      buckets[key] = bucket;
+    } else if (staffIdx < bucket.staffIdx) {
+      bucket.staffIdx = staffIdx;
     }
 
     for (const kind of textualKinds) {
-      const ids = byStaff[kind] ?? [];
-      for (const id of ids) {
-        const ev = ir.events[id];
-        buckets[key].events.push({
+      for (const ev of eventsOnStaff(ir, staffIdx, kind)) {
+        bucket.events.push({
           text: ev.textNorm,
           rawText: ev.textRaw,
           tick: ev.tick,

@@ -1,5 +1,5 @@
-import type { Checker, CheckerOptionSpec, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue, resolveCheckerOptions } from "@musescore-linter/core";
+import type { Checker, CheckerOptionSpec, IndexedIR, Issue } from "@musescore-linter/core";
+import { createIssue, eventsOfKind, resolveCheckerOptions } from "@musescore-linter/core";
 
 import { bracketGroupKeyOf } from "./base/partGroups.js";
 import { getCanonical } from "./base/predicates.js";
@@ -20,7 +20,7 @@ const VOICE = 0;
  * 小節×声部の chord 位置ごとに「スラー被覆 + タイ被覆 + アーティキュレーション集合」を直列化したプロファイル。
  * 同じリズムなら chord の tick が揃うので、プロファイルが一致すれば記号も一致しているとみなせる。
  */
-function profileOf(ir: LintIR, staffIdx: number, measure: number): string {
+function profileOf(ir: IndexedIR, staffIdx: number, measure: number): string {
   return chordsIn(ir, staffIdx, measure, VOICE)
     .map((ch) => {
       const arts = articulationsOf(ir, ch.id).map(normalizeArticulationName).sort().join("+");
@@ -70,7 +70,7 @@ export const slurTieArticulationConsistencyChecker: Checker = {
   severity: "info",
   defaultEnabled: true,
   options: OPTIONS,
-  run(ir: LintIR, rawOptions?: Record<string, unknown>): Issue[] {
+  run(ir: IndexedIR, rawOptions?: Record<string, unknown>): Issue[] {
     const issues: Issue[] = [];
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
@@ -84,14 +84,14 @@ export const slurTieArticulationConsistencyChecker: Checker = {
       partNames.get(staffIdx) ?? `Staff ${staffIdx + 1}`;
 
     const measures = new Set<number>();
-    for (const id of ir.index?.byKind?.[canonical.elementKinds.CHORD] ?? []) {
-      const ev = ir.events[id];
+    for (const ev of eventsOfKind(ir, canonical.elementKinds.CHORD)) {
       if (ev.voice === VOICE) measures.add(ev.measure);
     }
 
     for (const measure of measures) {
       for (const group of staffGroupsSharingRhythm(ir, measure, VOICE, groupKeyOf ?? undefined)) {
-        const refStaff = group[0];
+        const [refStaff] = group;
+        if (refStaff === undefined) continue;
         const refProfile = profileOf(ir, refStaff, measure);
         for (const staffIdx of group.slice(1)) {
           if (profileOf(ir, staffIdx, measure) === refProfile) continue;

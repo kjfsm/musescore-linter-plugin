@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
+import { createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 
@@ -19,31 +19,26 @@ export const simultaneousDynamicsChecker: Checker = {
   category: "dynamics",
   severity: "warning",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
 
     const parts = ir.meta?.parts ?? [];
     for (const part of parts) {
-      const byStaff = ir.index.byStaffAndKind[part.staffIdx] ?? {};
-      const dynIds = byStaff[canonical.elementKinds.DYNAMIC] ?? [];
-
       const byTick: Record<number, LintEvent[]> = {};
-      for (const id of dynIds) {
-        const ev = ir.events[id];
+      for (const ev of eventsOnStaff(ir, part.staffIdx, canonical.elementKinds.DYNAMIC)) {
         const group = byTick[ev.tick] ?? [];
         group.push(ev);
         byTick[ev.tick] = group;
       }
 
-      for (const tickStr of Object.keys(byTick)) {
-        const group = byTick[Number(tickStr)];
-        if (group.length < 2) continue;
+      for (const group of Object.values(byTick)) {
+        const [first] = group;
+        if (!first || group.length < 2) continue;
         const identities = new Set(group.map(dynamicIdentity));
         if (identities.size < 2) continue;
 
-        const first = group[0];
         const labels = group.map((e) => e.textRaw || e.textNorm || "(?)").join(" / ");
         issues.push(
           createIssue(simultaneousDynamicsChecker, {

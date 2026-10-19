@@ -221,7 +221,7 @@ describe("buildSnapshot: テンポ注記", () => {
 
   it("tempo を BPM に換算する", () => {
     const ir = buildSnapshot(mockScoreWithTempo(2), hostEnums());
-    expect(ir.events[0].tempo).toBe(120);
+    expect(ir.events[0]?.tempo).toBe(120);
   });
 
   // getTempoBpm は Math.round(el.tempo * 60) を返すだけなので、tempo が未定義
@@ -230,7 +230,7 @@ describe("buildSnapshot: テンポ注記", () => {
   it("tempo が取れないときは NaN ではなく null にする", () => {
     for (const broken of [undefined, null, "fast", Number.NaN]) {
       const ir = buildSnapshot(mockScoreWithTempo(broken), hostEnums());
-      expect(ir.events[0].tempo, String(broken)).toBeNull();
+      expect(ir.events[0]?.tempo, String(broken)).toBeNull();
     }
   });
 });

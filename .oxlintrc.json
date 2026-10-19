@@ -10,8 +10,7 @@
     // QML 向けバンドル（scripts/build.ts）は target es2017。--fix が走ると
     // MuseScore 上で動かないコードになるため無効化する。
     "unicorn/no-array-sort": "off",
-    // `__dirname`（Node 組み込み）・`__CLI_VERSION__`（esbuild define）・
-    // `_eventsCount`（LintIR の内部キャッシュ判定）はいずれも意図的な命名。
+    // `__dirname`（Node 組み込み）・`__CLI_VERSION__`（esbuild define）は意図的な命名。
     "eslint/no-underscore-dangle": "off",
     // テストヘルパを describe 内に置くのは意図的なスコープ分け。
     "unicorn/consistent-function-scoping": "off",

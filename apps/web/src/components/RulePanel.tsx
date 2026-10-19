@@ -212,7 +212,9 @@ export function RulePanel({
                                 key={spec.key}
                                 checker={checker}
                                 spec={spec}
-                                value={effectiveOptions(checker, ruleOptions)[spec.key]}
+                                value={
+                                  effectiveOptions(checker, ruleOptions)[spec.key] ?? spec.default
+                                }
                                 disabled={!isEnabled(checker, enabledRules)}
                                 onChange={(value) => setOption(checker, spec.key, value)}
                               />

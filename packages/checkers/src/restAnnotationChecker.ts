@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 import { getCanonical, isDynamicMark, techniqueTextKinds } from "./base/predicates.js";
 
@@ -41,7 +41,7 @@ export const restAnnotationChecker: Checker = {
   category: "notation",
   severity: "error",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
@@ -52,15 +52,12 @@ export const restAnnotationChecker: Checker = {
     const scannedKinds = [...techniqueTextKinds(ir), canonical.elementKinds.DYNAMIC];
 
     for (const staff of parts) {
-      const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
       const restTicks = new Set<number>(
-        (byStaff[canonical.elementKinds.REST] ?? []).map((id) => ir.events[id].tick),
+        eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.REST).map((ev) => ev.tick),
       );
 
       for (const kind of scannedKinds) {
-        const ids = byStaff[kind] ?? [];
-        for (const id of ids) {
-          const ev = ir.events[id];
+        for (const ev of eventsOnStaff(ir, staff.staffIdx, kind)) {
           if (!restTicks.has(ev.tick)) continue;
 
           const isDynamic = isDynamicMark(ev, ir);

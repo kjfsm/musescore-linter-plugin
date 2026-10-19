@@ -15,7 +15,7 @@ paths:
 テストランナーは vitest（設定は `vitest.config.ts`、`include` にこの 2 パターンを指定）。
 
 checker のテストは `packages/checkers/tests/checkers.test.ts` に集約されている。冒頭の `run()`
-ヘルパーが `reset()` → `registerAll()` → `ensureDerived(ir)` → `runAllCheckers(ir, enabledRules)`
+ヘルパーが `reset()` → `registerAll()` → `runAllCheckers(ir, enabledRules)`
 をまとめて行う。個別 checker の `run(ir)` を直に呼ぶテストと、`run()` ヘルパー経由で registry 全体を
 通すテストの両方が存在する。
 
@@ -36,9 +36,9 @@ expect(issues).toHaveLength(1);
 expect(issues[0].severity).toBe("warning");
 ```
 
-**`packages/checkers/tests/helpers/irBuilder.ts`**: テスト用の fixture ヘルパー。`buildIR` /
-`CANONICAL`（`K` = `elementKinds`、`BK` = `barlineKinds` としてエクスポート）は
-`@musescore-linter/core` の再エクスポートで、実体はそちら（`packages/core/src/irBuilder.ts`）にある。
+**`packages/checkers/tests/helpers/irBuilder.ts`**: テスト用の fixture ヘルパー。`buildIR` は
+core の `buildIR` に `withDerived` を掛けて `IndexedIR` を返すので、`checker.run` に直接渡せる。
+`CANONICAL`（`K` = `elementKinds`、`BK` = `barlineKinds` としてエクスポート）は core の再エクスポート。
 このファイル自身が持つのは `cleanIR(extra)`（全 checker をパスする最小 IR に追加イベントを足す）と
 `quintetIR(extra)`（弦楽五重奏 5 staff 版）の 2 つの fixture ビルダだけ。
 

@@ -21,7 +21,8 @@ export { profileIR } from "./irProfile.js";
 export type { IssueFields } from "./issue.js";
 export { normalizePartGroups } from "./partGroups.js";
 export { compareIssues, createIssue } from "./issue.js";
-export { ensureDerived, getCheckerList, getCheckerPerfReport, runAllCheckers } from "./linter.js";
+export { eventsAtTick, eventsOfKind, eventsOnStaff } from "./irQuery.js";
+export { getCheckerList, getCheckerPerfReport, runAllCheckers, withDerived } from "./linter.js";
 export type { Logger } from "./logger.js";
 export { make as makeLogger, setLevel } from "./logger.js";
 export type { Perf } from "./perf.js";
@@ -35,6 +36,7 @@ export type {
   CheckerOptionSpec,
   CheckerOptionValue,
   HostVersionInfo,
+  IndexedIR,
   IRDerived,
   IRIndex,
   IRMeta,

@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 
@@ -10,28 +10,24 @@ export const tempoBarlineChecker: Checker = {
   category: "tempo",
   severity: "info",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     if (!ir.meta?.parts?.length) return issues;
 
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
 
-    const staff = ir.meta.parts[0];
-    const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
+    const [staff] = ir.meta.parts;
+    if (!staff) return issues;
 
-    const tempoIds = byStaff[canonical.elementKinds.TEMPO_TEXT] ?? [];
-    const barlineIds = byStaff[canonical.elementKinds.BAR_LINE] ?? [];
+    const barlineEvents = eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.BAR_LINE);
+    let tempoEvents = eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.TEMPO_TEXT);
 
     const barlines: Record<number, string> = {};
-    const barlineEvents: LintEvent[] = [];
-    for (const id of barlineIds) {
-      const ev = ir.events[id];
+    for (const ev of barlineEvents) {
       barlines[ev.measure] = ev.barlineKind ?? "";
-      barlineEvents.push(ev);
     }
 
-    let tempoEvents = tempoIds.map((id) => ir.events[id]);
     tempoEvents.sort((a, b) => (a.tick !== b.tick ? a.tick - b.tick : a.measure - b.measure));
     barlineEvents.sort((a, b) => (a.tick !== b.tick ? a.tick - b.tick : a.measure - b.measure));
 
@@ -57,11 +53,11 @@ export const tempoBarlineChecker: Checker = {
 
       while (
         barlineCursor + 1 < barlineEvents.length &&
-        barlineEvents[barlineCursor + 1].tick < tm.tick
+        barlineEvents[barlineCursor + 1]!.tick < tm.tick
       ) {
         barlineCursor++;
       }
-      const prevBarlineByTick = barlineCursor >= 0 ? barlineEvents[barlineCursor] : null;
+      const prevBarlineByTick = barlineCursor >= 0 ? barlineEvents[barlineCursor]! : null;
 
       const prevMeasure = tm.measure - 1;
       const hasDoubleByMeasure = barlines[prevMeasure] === canonical.barlineKinds.DOUBLE;

@@ -132,7 +132,7 @@ describe("--rule-option の解析", () => {
   });
 
   it("値に = が含まれていても最初の = で割る", () => {
-    expect(parseArgs(["--rule-option=scoped.scope=a=b"]).ruleOptions[0].value).toBe("a=b");
+    expect(parseArgs(["--rule-option=scoped.scope=a=b"]).ruleOptions[0]?.value).toBe("a=b");
   });
 
   it("値がなければエラー", () => {

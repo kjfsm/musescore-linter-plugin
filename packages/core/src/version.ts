@@ -11,7 +11,7 @@ function parseVersion(v: string): number[] {
   const cleaned = v.trim().replace(/^v/i, "");
   if (cleaned.length === 0) return [];
   // "2.1.6-beta.1" のようなプレリリース表記は "-" / "+" 以降を無視する
-  const core = cleaned.split(/[-+]/)[0];
+  const core = cleaned.split(/[-+]/)[0] ?? "";
   return core.split(".").map((part) => {
     const n = Number.parseInt(part, 10);
     return Number.isNaN(n) ? 0 : n;

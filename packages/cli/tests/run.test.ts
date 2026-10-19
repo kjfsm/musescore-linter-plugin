@@ -90,8 +90,8 @@ describe("run: 解析結果", () => {
       results: { file: string; issues: Issue[] }[];
     };
     expect(parsed.summary.files).toBe(1);
-    expect(parsed.results[0].file).toBe("duet.musicxml");
-    expect(parsed.summary.issues).toBe(parsed.results[0].issues.length);
+    expect(parsed.results[0]?.file).toBe("duet.musicxml");
+    expect(parsed.summary.issues).toBe(parsed.results[0]?.issues.length);
   });
 
   it("--dump-ir は LintIR をそのまま JSON で返す", () => {
@@ -108,7 +108,7 @@ describe("run: 解析結果", () => {
     const parsed = JSON.parse(r.out) as {
       results: { issues: Issue[] }[];
     };
-    const ids = new Set(parsed.results[0].issues.map((i) => i.ruleId));
+    const ids = new Set(parsed.results[0]?.issues.map((i) => i.ruleId));
     expect([...ids]).toEqual(["tie-pitch-mismatch"]);
   });
 
@@ -119,8 +119,8 @@ describe("run: 解析結果", () => {
     const without = JSON.parse(
       invoke(["--json", "--no-rule=tie-pitch-mismatch", "duet.musicxml"]).out,
     ) as { results: { issues: Issue[] }[] };
-    expect(all.results[0].issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(true);
-    expect(without.results[0].issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(false);
+    expect(all.results[0]?.issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(true);
+    expect(without.results[0]?.issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(false);
   });
 
   it("存在しない checker id は終了コード 2", () => {
@@ -214,7 +214,7 @@ describe("format", () => {
           file: "a.musicxml",
           issues: [
             {
-              ...issues[0],
+              ...issues[0]!,
               message: "Violin I: 1音目にダイナミクスがありません",
             },
           ],
@@ -238,7 +238,7 @@ describe("format", () => {
     const text = formatGithub([
       {
         file: "dir/a,b:c.musicxml",
-        issues: [{ ...issues[0], message: "改行\nを含む" }],
+        issues: [{ ...issues[0]!, message: "改行\nを含む" }],
       },
     ]);
     expect(text).toContain("file=dir/a%2Cb%3Ac.musicxml");

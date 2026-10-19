@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { register, reset } from "../src/checkerRegistry.js";
 import { CANONICAL } from "../src/enumRegistry.js";
-import { ensureDerived, runAllCheckers } from "../src/linter.js";
+import { runAllCheckers, withDerived } from "../src/linter.js";
 import type { Checker, LintIR } from "../src/types.js";
 
 function minimalIR(): LintIR {
@@ -20,7 +20,6 @@ function minimalIR(): LintIR {
       measures: [],
     },
     registry: { canonical: CANONICAL },
-    derived: null,
   };
 }
 
@@ -94,7 +93,7 @@ describe("runAllCheckers", () => {
   });
 });
 
-describe("ensureDerived", () => {
+describe("withDerived", () => {
   it("firstChordByStaff を計算する", () => {
     const ir = minimalIR();
     ir.events.push({
@@ -113,16 +112,13 @@ describe("ensureDerived", () => {
       tempo: null,
     });
     ir.index.byKind[CANONICAL.elementKinds.CHORD] = [0];
-    ensureDerived(ir);
-    expect(ir.derived?.firstChordByStaff[0]).toEqual({ tick: 480, measure: 2 });
+    expect(withDerived(ir).derived.firstChordByStaff[0]).toEqual({ tick: 480, measure: 2 });
   });
 
-  it("キャッシュが有効なら再計算しない", () => {
+  it("渡した IR に derived を書き込まない", () => {
     const ir = minimalIR();
-    ensureDerived(ir);
-    const derived1 = ir.derived;
-    ensureDerived(ir);
-    expect(ir.derived).toBe(derived1);
+    withDerived(ir);
+    expect("derived" in ir).toBe(false);
   });
 
   it("rhythmByStaffMeasure は同じ長さでも chord と rest を区別する", () => {
@@ -163,9 +159,7 @@ describe("ensureDerived", () => {
     );
     ir.index.byKind[CANONICAL.elementKinds.CHORD] = [0];
     ir.index.byKind[CANONICAL.elementKinds.REST] = [1];
-    ensureDerived(ir);
-    expect(ir.derived?.rhythmByStaffMeasure["0:1:0"]).not.toBe(
-      ir.derived?.rhythmByStaffMeasure["1:1:0"],
-    );
+    const { derived } = withDerived(ir);
+    expect(derived.rhythmByStaffMeasure["0:1:0"]).not.toBe(derived.rhythmByStaffMeasure["1:1:0"]);
   });
 });

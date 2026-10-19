@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import { beatCrossingTieChecker } from "../src/beatCrossingTieChecker.js";
 import { buildIR, K } from "./helpers/irBuilder.js";
 
-// この checker は ir.derived を使わないので ensureDerived は不要。
 const run = (events: EventSpec[], measures: MeasureInfo[]) =>
   beatCrossingTieChecker.run(buildIR({ parts: [{ partName: "Vn1" }], events, measures }));
 
@@ -47,15 +46,15 @@ describe("beat-crossing-tie", () => {
     );
 
     expect(issues).toHaveLength(1);
-    expect(issues[0].tick).toBe(360);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[0].ruleId).toBe("beat-crossing-tie");
-    expect(issues[0].partName).toBe("Vn1");
-    expect(issues[0].message).toBe(
+    expect(issues[0]?.tick).toBe(360);
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[0]?.ruleId).toBe("beat-crossing-tie");
+    expect(issues[0]?.partName).toBe("Vn1");
+    expect(issues[0]?.message).toBe(
       "Vn1: 1小節目 1拍目+付点8分音符 から始まる付点8分音符が2拍目の頭をまたいでいます。" +
         "16分音符+8分音符のタイに分割することを推奨します",
     );
-    expect(issues[0].detail).toMatchObject({
+    expect(issues[0]?.detail).toMatchObject({
       position: "1拍目+付点8分音符",
       crossedBeats: "2拍目の頭",
       onsetTicks: 360,
@@ -72,9 +71,9 @@ describe("beat-crossing-tie", () => {
     const issues = run([chord(240, QUARTER), chord(840, QUARTER)], [measure(4, 4)]);
 
     expect(issues).toHaveLength(2);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[1].severity).toBe("warning");
-    expect(issues[1].detail).toMatchObject({ crossesPrimaryBoundary: true });
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[1]?.severity).toBe("warning");
+    expect(issues[1]?.detail).toMatchObject({ crossesPrimaryBoundary: true });
   });
 
   it("同じ小節に同じ音価の違反が並んでもメッセージで区別できる", () => {
@@ -97,18 +96,18 @@ describe("beat-crossing-tie", () => {
       "3拍目+付点8分音符",
     ]);
     expect(issues.map((i) => i.detail?.crossedBeats)).toEqual(["2拍目の頭", "4拍目の頭"]);
-    expect(issues[0].message).not.toBe(issues[1].message);
+    expect(issues[0]?.message).not.toBe(issues[1]?.message);
   });
 
   it("裏拍ちょうどなら「N拍目裏」と示す", () => {
     const issues = run([chord(240, QUARTER)], [measure(4, 4)]);
-    expect(issues[0].detail).toMatchObject({ position: "1拍目裏", crossedBeats: "2拍目の頭" });
+    expect(issues[0]?.detail).toMatchObject({ position: "1拍目裏", crossedBeats: "2拍目の頭" });
   });
 
   it("複数の拍境界をまたぐ場合はすべて列挙する", () => {
     // 240..1200 は 480 と 960 をまたぐ
     expect(
-      run([chord(240, { numerator: 1, denominator: 2 })], [measure(4, 4)])[0].detail,
+      run([chord(240, { numerator: 1, denominator: 2 })], [measure(4, 4)])[0]?.detail,
     ).toMatchObject({ crossedBeats: "2・3拍目の頭" });
   });
 
@@ -123,8 +122,8 @@ describe("beat-crossing-tie", () => {
       // 480..1200 は中央境界 960 をまたぐ。4分音符 ⌣ 8分音符 に分割すべきケース
       const issues = run([chord(480, DOTTED_QUARTER)], [measure(4, 4)]);
       expect(issues).toHaveLength(1);
-      expect(issues[0].severity).toBe("warning");
-      expect(issues[0].message).toBe(
+      expect(issues[0]?.severity).toBe("warning");
+      expect(issues[0]?.message).toBe(
         "Vn1: 1小節目 2拍目 から始まる付点4分音符が3拍目の頭をまたいでいます。" +
           "4分音符+8分音符のタイに分割することを推奨します",
       );
@@ -134,8 +133,8 @@ describe("beat-crossing-tie", () => {
       // 480..1440。中央境界 960 を隠すので 4分音符 ⌣ 4分音符
       const issues = run([chord(480, HALF)], [measure(4, 4)]);
       expect(issues).toHaveLength(1);
-      expect(issues[0].severity).toBe("warning");
-      expect(issues[0].detail).toMatchObject({ position: "2拍目", suggestedSplit: [480, 480] });
+      expect(issues[0]?.severity).toBe("warning");
+      expect(issues[0]?.detail).toMatchObject({ position: "2拍目", suggestedSplit: [480, 480] });
     });
 
     it("小節頭からの2分音符・付点2分音符・全音符は検出しない", () => {
@@ -165,8 +164,8 @@ describe("beat-crossing-tie", () => {
       // 3/4 の 960（3拍目頭）は中央ではない。裏拍始まりで検出はするが severity は info
       const issues = run([chord(720, QUARTER)], [measure(3, 4)]);
       expect(issues).toHaveLength(1);
-      expect(issues[0].severity).toBe("info");
-      expect(issues[0].detail).toMatchObject({ crossesPrimaryBoundary: false });
+      expect(issues[0]?.severity).toBe("info");
+      expect(issues[0]?.detail).toMatchObject({ crossesPrimaryBoundary: false });
     });
 
     it("9/8 も奇数拍数なので中央の規則を適用しない", () => {
@@ -178,15 +177,15 @@ describe("beat-crossing-tie", () => {
       // beatUnit = 720、中央 = 1440。720..2160 が中央をまたぐ
       const issues = run([chord(720, { numerator: 3, denominator: 4 })], [measure(12, 8)]);
       expect(issues).toHaveLength(1);
-      expect(issues[0].severity).toBe("warning");
-      expect(issues[0].detail).toMatchObject({ position: "2拍目", timeSig: "12/8" });
+      expect(issues[0]?.severity).toBe("warning");
+      expect(issues[0]?.detail).toMatchObject({ position: "2拍目", timeSig: "12/8" });
     });
 
     it("2/4 の 2 拍目は中央そのものなので、またぐ音符は warning", () => {
       const issues = run([chord(240, QUARTER)], [measure(2, 4)]);
       expect(issues).toHaveLength(1);
-      expect(issues[0].severity).toBe("warning");
-      expect(issues[0].detail).toMatchObject({ timeSig: "2/4" });
+      expect(issues[0]?.severity).toBe("warning");
+      expect(issues[0]?.detail).toMatchObject({ timeSig: "2/4" });
     });
   });
 
@@ -194,8 +193,8 @@ describe("beat-crossing-tie", () => {
     // 複付点4分（840）を 2 拍目裏から。720..1560 が 960・1440 をまたぐ
     const issues = run([chord(720, { numerator: 7, denominator: 16 })], [measure(4, 4)]);
     expect(issues).toHaveLength(1);
-    expect(issues[0].message).toContain("複付点4分音符が");
-    expect(issues[0].message).toContain("8分音符+4分音符+16分音符のタイ");
+    expect(issues[0]?.message).toContain("複付点4分音符が");
+    expect(issues[0]?.message).toContain("8分音符+4分音符+16分音符のタイ");
   });
 
   it("meta.measures に載っていない小節の音符は判定しない", () => {
@@ -227,8 +226,8 @@ describe("beat-crossing-tie", () => {
       [0, "Vn1", "info"],
       [1, "Vc", "warning"],
     ]);
-    expect(issues[0].message.startsWith("Vn1: ")).toBe(true);
-    expect(issues[1].message.startsWith("Vc: ")).toBe(true);
+    expect(issues[0]?.message.startsWith("Vn1: ")).toBe(true);
+    expect(issues[1]?.message.startsWith("Vc: ")).toBe(true);
   });
 
   it("拍境界をまたがない裏拍の音符は検出しない", () => {
@@ -245,8 +244,8 @@ describe("beat-crossing-tie", () => {
   it("6/8 で 8分裏から始まる付点4分は中央境界をまたぐので warning", () => {
     const issues = run([chord(240, DOTTED_QUARTER)], [measure(6, 8)]);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
-    expect(issues[0].detail).toMatchObject({
+    expect(issues[0]?.severity).toBe("warning");
+    expect(issues[0]?.detail).toMatchObject({
       suggestedSplit: [480, 240],
       crossesPrimaryBoundary: true,
       timeSig: "6/8",
@@ -256,8 +255,8 @@ describe("beat-crossing-tie", () => {
   it("3/4 は単純拍子として扱い、2拍目境界またぎを info で検出する", () => {
     const issues = run([chord(240, QUARTER)], [measure(3, 4)]);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[0].detail).toMatchObject({ timeSig: "3/4" });
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[0]?.detail).toMatchObject({ timeSig: "3/4" });
   });
 
   describe("連符は判定対象外", () => {
@@ -294,9 +293,9 @@ describe("beat-crossing-tie", () => {
     // 1440..2160 は小節線(1920)を越える。データモデル上は起きないが規則としては網羅する
     const issues = run([chord(1440, DOTTED_QUARTER)], [measure(4, 4)]);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
-    expect(issues[0].message).toContain("小節線をまたいでいます");
-    expect(issues[0].detail).toMatchObject({
+    expect(issues[0]?.severity).toBe("warning");
+    expect(issues[0]?.message).toContain("小節線をまたいでいます");
+    expect(issues[0]?.detail).toMatchObject({
       crossesBarline: true,
       durationTicks: 720,
       suggestedSplit: [480, 240],
@@ -307,7 +306,7 @@ describe("beat-crossing-tie", () => {
     // breve（2/1 = 3840 tick）は 4/4 の小節に収まらない
     const issues = run([chord(0, { numerator: 2, denominator: 1 })], [measure(4, 4)]);
     expect(issues).toHaveLength(1);
-    expect(issues[0].detail).toMatchObject({ crossesBarline: true, durationTicks: 3840 });
+    expect(issues[0]?.detail).toMatchObject({ crossesBarline: true, durationTicks: 3840 });
   });
 
   it("素/付点/複付点でない比率は音価として扱わない", () => {
@@ -351,7 +350,7 @@ describe("beat-crossing-tie", () => {
       }),
     );
     expect(issues).toHaveLength(1);
-    expect(issues[0].measure).toBe(3);
-    expect(issues[0].detail).toMatchObject({ onsetTicks: 360 });
+    expect(issues[0]?.measure).toBe(3);
+    expect(issues[0]?.detail).toMatchObject({ onsetTicks: 360 });
   });
 });

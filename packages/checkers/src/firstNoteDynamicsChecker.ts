@@ -1,8 +1,8 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
 import { createIssue } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
-import { eventIdsForStaff } from "./base/query.js";
+import { eventsForStaff } from "./base/query.js";
 
 export const firstNoteDynamicsChecker: Checker = {
   id: "first-note-dynamics",
@@ -11,14 +11,15 @@ export const firstNoteDynamicsChecker: Checker = {
   category: "dynamics",
   severity: "error",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     if (!ir.meta?.parts) return issues;
 
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
 
-    const firstChordByStaff = ir.derived?.firstChordByStaff ?? {};
+    const { firstChordByStaff } = ir.derived;
+    const dynamicKind = canonical.elementKinds.DYNAMIC;
 
     for (const staff of ir.meta.parts) {
       const firstChord = firstChordByStaff[staff.staffIdx];
@@ -27,8 +28,9 @@ export const firstNoteDynamicsChecker: Checker = {
       // 譜表に載ったダイナミクスと、global scope（全パート共通）のダイナミクスの
       // 両方を見る。MuseScore 経路は後者に置くが、MusicXML 経路には相当する表現が
       // 無く譜表に載る。
-      const dynamicIds = eventIdsForStaff(ir, staff.staffIdx, canonical.elementKinds.DYNAMIC);
-      const hasDynamics = dynamicIds.some((id) => ir.events[id].tick === firstChord.tick);
+      const hasDynamics = eventsForStaff(ir, staff.staffIdx, dynamicKind).some(
+        (ev) => ev.tick === firstChord.tick,
+      );
 
       if (!hasDynamics) {
         issues.push(

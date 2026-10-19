@@ -17,7 +17,8 @@ const SRC = path.join(__dirname, "..", "src");
 function emittedSeverities(source: string): Severity[] {
   const out: Severity[] = [];
   for (const m of source.matchAll(/[Ss]everity:\s*([^,;\n]*)/g)) {
-    for (const lit of m[1].matchAll(/"(error|warning|info)"/g)) out.push(lit[1] as Severity);
+    for (const lit of (m[1] ?? "").matchAll(/"(error|warning|info)"/g))
+      out.push(lit[1] as Severity);
   }
   for (const m of source.matchAll(/\?\s*"(error|warning|info)"\s*:\s*"(error|warning|info)"/g)) {
     out.push(m[1] as Severity, m[2] as Severity);

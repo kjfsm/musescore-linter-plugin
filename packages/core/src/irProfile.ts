@@ -43,16 +43,16 @@ function typeFromKind(kind: string): string {
 function indexIsConsistent(ir: LintIR): boolean {
   const total = ir.events.length;
   const countIds = (map: Record<string, number[]>): number =>
-    Object.keys(map).reduce((n, k) => n + map[k].length, 0);
+    Object.values(map).reduce((n, ids) => n + ids.length, 0);
 
   if (countIds(ir.index.byTick) !== total) return false;
   if (countIds(ir.index.byKind) !== total) return false;
   if (countIds(ir.index.byStaff) !== total) return false;
 
-  let byStaffAndKind = 0;
-  for (const staff of Object.keys(ir.index.byStaffAndKind)) {
-    byStaffAndKind += countIds(ir.index.byStaffAndKind[staff]);
-  }
+  const byStaffAndKind = Object.values(ir.index.byStaffAndKind).reduce(
+    (n, byKind) => n + countIds(byKind),
+    0,
+  );
   return byStaffAndKind === total;
 }
 

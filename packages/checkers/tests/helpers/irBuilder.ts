@@ -1,16 +1,19 @@
-import type { EventSpec, LintIR } from "@musescore-linter/core";
-import { buildIR, CANONICAL } from "@musescore-linter/core";
+import type { EventSpec, IndexedIR, IRSpec } from "@musescore-linter/core";
+import { buildIR as buildLintIR, CANONICAL, withDerived } from "@musescore-linter/core";
 
-// buildIR 本体は core（`packages/core/src/irBuilder.ts`）にある。ここはテスト用の
-// fixture ヘルパーだけを持つ。
 export type { EventSpec, IRSpec } from "@musescore-linter/core";
-export { buildIR, CANONICAL };
+export { CANONICAL };
+
+/** checker の `run` に直接渡せるよう、`derived` まで作った IR を返す。 */
+export function buildIR(spec: IRSpec): IndexedIR {
+  return withDerived(buildLintIR(spec));
+}
 
 const K = CANONICAL.elementKinds;
 const BK = CANONICAL.barlineKinds;
 
 /** 全チェッカーをパスするクリーンな最小 IR に追加イベントを加えたものを返す */
-export function cleanIR(extra: EventSpec[] = []): LintIR {
+export function cleanIR(extra: EventSpec[] = []): IndexedIR {
   return buildIR({
     parts: [{ partName: "Vn1" }, { partName: "Vn2" }],
     events: [
@@ -47,7 +50,7 @@ export function cleanIR(extra: EventSpec[] = []): LintIR {
 }
 
 /** 弦楽五重奏（Vn1/Vn2/Va/Vc/Cb）の 5 スタッフをパスするクリーン IR */
-export function quintetIR(extra: EventSpec[] = []): LintIR {
+export function quintetIR(extra: EventSpec[] = []): IndexedIR {
   const staffNames = ["Vn1", "Vn2", "Va", "Vc", "Cb"];
   const chords = staffNames.map((_, i) => ({
     kind: K.CHORD,

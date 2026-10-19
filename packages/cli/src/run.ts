@@ -138,7 +138,7 @@ export function run(argv: string[], io: RunIO): number {
   }
 
   if (options.dumpIR) {
-    io.stdout(JSON.stringify(irs.length === 1 ? irs[0].ir : irs, null, 2));
+    io.stdout(JSON.stringify(irs.length === 1 ? irs[0]!.ir : irs, null, 2));
     return failed ? EXIT_ERROR : EXIT_OK;
   }
 

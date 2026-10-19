@@ -118,19 +118,17 @@ export interface IRMeta {
 }
 
 export interface IRDerived {
-  _eventsCount: number;
-  firstChordByStaff: Record<number, { tick: number; measure: number }>;
+  readonly firstChordByStaff: Readonly<Record<number, { tick: number; measure: number }>>;
   // chord イベント id → アーティキュレーション名
-  articulationsByChordId: Record<number, string[]>;
+  readonly articulationsByChordId: Readonly<Record<number, readonly string[]>>;
   // staffIdx → スラー（startTick 昇順）
-  slursByStaff: Record<number, SlurInfo[]>;
+  readonly slursByStaff: Readonly<Record<number, readonly SlurInfo[]>>;
   // staffIdx → タイ（startTick 昇順）
-  tiesByStaff: Record<number, TieInfo[]>;
+  readonly tiesByStaff: Readonly<Record<number, readonly TieInfo[]>>;
   // `${staffIdx}:${measure}:${voice}` → リズム署名（声部横断の同リズム判定キー）
-  rhythmByStaffMeasure: Record<string, string>;
-  // `${staffIdx}:${measure}:${voice}` → chord（tick 昇順）。読み取り専用として扱うこと。
-  // 小節×パート単位で chord を引く checker が staff 全体を毎回 filter + sort しないための索引。
-  chordsByStaffMeasure: Record<string, LintEvent[]>;
+  readonly rhythmByStaffMeasure: Readonly<Record<string, string>>;
+  // `${staffIdx}:${measure}:${voice}` → chord（tick 昇順）
+  readonly chordsByStaffMeasure: Readonly<Record<string, readonly LintEvent[]>>;
 }
 
 export interface CanonicalKinds {
@@ -162,7 +160,11 @@ export interface LintIR {
   index: IRIndex;
   meta: IRMeta;
   registry: { canonical: CanonicalKinds };
-  derived: IRDerived | null;
+}
+
+/** checker が受け取る IR。`derived` を作ってからでないと渡せない。 */
+export interface IndexedIR extends LintIR {
+  readonly derived: IRDerived;
 }
 
 export interface Issue {
@@ -229,5 +231,5 @@ export interface Checker {
    * `resolveCheckerOptions(this.options, options)` を通してから使うこと。
    * 引数を取らない既存の checker はそのままこの型を満たす。
    */
-  run(ir: LintIR, options?: Record<string, unknown>): Issue[];
+  run(ir: IndexedIR, options?: Record<string, unknown>): Issue[];
 }

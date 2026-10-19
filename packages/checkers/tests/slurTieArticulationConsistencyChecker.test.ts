@@ -1,13 +1,11 @@
-import { ensureDerived, type LintIR } from "@musescore-linter/core";
+import type { IndexedIR } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { slurTieArticulationConsistencyChecker } from "../src/slurTieArticulationConsistencyChecker.js";
 import { buildIR, K } from "./helpers/irBuilder.js";
 
-const run = (ir: LintIR, options?: Record<string, unknown>) => {
-  ensureDerived(ir);
-  return slurTieArticulationConsistencyChecker.run(ir, options);
-};
+const run = (ir: IndexedIR, options?: Record<string, unknown>) =>
+  slurTieArticulationConsistencyChecker.run(ir, options);
 
 const q = { numerator: 1, denominator: 4 };
 
@@ -279,8 +277,8 @@ describe("slur-tie-articulation-consistency の比較範囲オプション", () 
   it("scope=group では別の括弧に属するパートを比較しない", () => {
     const issues = run(fourStaves(pairs), { scope: "group" });
     expect(issues).toHaveLength(1);
-    expect(issues[0].staffIdx).toBe(1);
-    expect(issues[0].detail).toMatchObject({ scope: "group", comparedToStaffIdx: 0 });
+    expect(issues[0]?.staffIdx).toBe(1);
+    expect(issues[0]?.detail).toMatchObject({ scope: "group", comparedToStaffIdx: 0 });
   });
 
   it("入れ子では内側の括弧が優先される", () => {

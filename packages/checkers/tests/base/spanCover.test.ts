@@ -1,4 +1,4 @@
-import { buildIR, ensureDerived } from "@musescore-linter/core";
+import { buildIR, withDerived } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { slurCoversTick, tieCoversTick } from "../../src/base/query.js";
@@ -14,7 +14,7 @@ function linearCovers(
 
 describe("slurCoversTick / tieCoversTick", () => {
   // 入れ子・重なり・隣接・別声部を混ぜた配置。startTick 昇順でなくても
-  // ensureDerived がソートするので、二分探索の前提はそこで満たされる。
+  // withDerived がソートするので、二分探索の前提はそこで満たされる。
   const slurs = [
     { staffIdx: 0, voice: 0, startTick: 480, endTick: 960 },
     { staffIdx: 0, voice: 0, startTick: 0, endTick: 1920 }, // 上を覆う外側のスラー
@@ -24,13 +24,14 @@ describe("slurCoversTick / tieCoversTick", () => {
   ];
   const ties = slurs.map((s) => ({ ...s, startPitch: null, endPitch: null }));
 
-  const ir = buildIR({
-    parts: [{ partName: "Vn1" }],
-    slurs,
-    ties,
-    events: [{ kind: "chord", staff: 0, tick: 0, measure: 1 }],
-  });
-  ensureDerived(ir);
+  const ir = withDerived(
+    buildIR({
+      parts: [{ partName: "Vn1" }],
+      slurs,
+      ties,
+      events: [{ kind: "chord", staff: 0, tick: 0, measure: 1 }],
+    }),
+  );
 
   it("全 tick・全声部で従来の全件走査と同じ答えを返す", () => {
     for (let voice = 0; voice <= 2; voice++) {

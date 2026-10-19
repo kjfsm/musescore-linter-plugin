@@ -140,8 +140,7 @@ function appendTo(ir: LintIR, e: EventSpec): LintEvent {
   pushId(ir.index.byKind, ev.kind, ev.id);
   pushId(ir.index.byStaff, ev.staffIdx, ev.id);
 
-  if (!ir.index.byStaffAndKind[ev.staffIdx]) ir.index.byStaffAndKind[ev.staffIdx] = {};
-  pushId(ir.index.byStaffAndKind[ev.staffIdx], ev.kind, ev.id);
+  pushId((ir.index.byStaffAndKind[ev.staffIdx] ??= {}), ev.kind, ev.id);
 
   if (ev.tick > ir.meta.lastTick) ir.meta.lastTick = ev.tick;
 
@@ -196,7 +195,6 @@ export function createIRBuilder(init: IRBuilderInit = {}): IRBuilder {
       ...(init.hostVersion !== undefined ? { hostVersion: init.hostVersion } : {}),
     },
     registry: { canonical: CANONICAL },
-    derived: null,
   };
 
   return {

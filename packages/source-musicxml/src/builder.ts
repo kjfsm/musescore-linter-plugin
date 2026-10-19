@@ -277,7 +277,7 @@ class PartWalker {
       if (this.draft.measureLengths[i] === undefined) {
         this.draft.measureLengths[i] = 0;
       }
-      for (const node of childrenOf(measures[i])) {
+      for (const node of childrenOf(measures[i]!)) {
         this.handleMeasureChild(node);
       }
       this.growMeasure();
@@ -788,7 +788,7 @@ function assemble(draft: ScoreDraft): LintIR {
     if (sig === undefined) continue;
     measures.push({
       measure: i + 1,
-      startTick: measureStarts[i],
+      startTick: measureStarts[i]!,
       ticks: draft.measureLengths[i] ?? 0,
       timeSigN: sig.n,
       timeSigD: sig.d,

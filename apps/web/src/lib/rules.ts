@@ -90,7 +90,7 @@ export function loadEnabledRules(storage: Storage): Record<string, boolean> {
   return rules;
 }
 
-const sameValue = (a: CheckerOptionValue, b: CheckerOptionValue): boolean =>
+const sameValue = (a: CheckerOptionValue, b: CheckerOptionValue | undefined): boolean =>
   // resolveCheckerOptions が multiselect を choices 順に正規化するので、
   // 配列でも JSON 文字列の一致で比べられる
   Array.isArray(a) || Array.isArray(b) ? JSON.stringify(a) === JSON.stringify(b) : a === b;

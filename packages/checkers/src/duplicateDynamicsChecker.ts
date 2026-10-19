@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
+import { createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 
@@ -26,16 +26,16 @@ export const duplicateDynamicsChecker: Checker = {
   category: "dynamics",
   severity: "info",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     const canonical = getCanonical(ir);
     if (!canonical) return issues;
 
     const parts = ir.meta?.parts ?? [];
     for (const part of parts) {
-      const byStaff = ir.index.byStaffAndKind[part.staffIdx] ?? {};
-      const dynIds = byStaff[canonical.elementKinds.DYNAMIC] ?? [];
-      const dynEvents = dynIds.map((id) => ir.events[id]).sort((a, b) => a.tick - b.tick);
+      const dynEvents = eventsOnStaff(ir, part.staffIdx, canonical.elementKinds.DYNAMIC).sort(
+        (a, b) => a.tick - b.tick,
+      );
 
       const hairpins = ir.meta.hairpins.filter((h) => h.staffIdx === part.staffIdx);
 

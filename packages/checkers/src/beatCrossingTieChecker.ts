@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintIR, MeasureInfo, Severity } from "@musescore-linter/core";
-import { createIssue, TICKS_PER_WHOLE } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, MeasureInfo, Severity } from "@musescore-linter/core";
+import { createIssue, eventsOfKind, TICKS_PER_WHOLE } from "@musescore-linter/core";
 
 import { getCanonical } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";
@@ -186,7 +186,7 @@ export const beatCrossingTieChecker: Checker = {
   // Checker.severity は「出しうるうち最も重いもの」なので warning を宣言する。
   severity: "warning",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const measures = ir.meta?.measures ?? [];
     if (measures.length === 0) return [];
 
@@ -198,14 +198,12 @@ export const beatCrossingTieChecker: Checker = {
 
     const canonical = getCanonical(ir);
     if (!canonical) return [];
-    const chordIds = ir.index?.byKind?.[canonical.elementKinds.CHORD] ?? [];
     const issues: Issue[] = [];
     // 違反ゼロの譜面では Map を作らずに済ませる
     let partsByStaff: Map<number, string> | null = null;
 
     // フェーズ 2: chord を 1 パス。大半の音符は「境界をまたがない」判定で脱出する。
-    for (const id of chordIds) {
-      const ev = ir.events[id];
+    for (const ev of eventsOfKind(ir, canonical.elementKinds.CHORD)) {
       const meter = meters[ev.measure];
       if (!meter) continue;
 
