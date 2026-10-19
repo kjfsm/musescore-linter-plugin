@@ -43,7 +43,8 @@ const optionChecker: Checker = {
   run: () => [],
 };
 
-const plainChecker: Checker = { ...optionChecker, id: "plain", options: undefined };
+const { options: _options, ...withoutOptions } = optionChecker;
+const plainChecker: Checker = { ...withoutOptions, id: "plain" };
 const CHECKERS = [optionChecker, plainChecker];
 
 describe("parseArgs", () => {

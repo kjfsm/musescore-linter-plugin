@@ -40,7 +40,7 @@ export interface EventSpec {
   /** BPM。null は「テンポ表記だが BPM 値が無い」を表すので undefined と区別して受ける。 */
   tempo?: number | null;
   barlineKind?: string;
-  duration?: { numerator: number; denominator: number };
+  duration?: { numerator: number; denominator: number } | undefined;
   tuplet?: boolean;
   scope?: "staff" | "global";
   subtype?: unknown;
@@ -82,7 +82,7 @@ export interface TieSpec {
 
 export interface IRSpec {
   parts?: PartSpec[];
-  partGroups?: PartGroupInfo[];
+  partGroups?: PartGroupInfo[] | undefined;
   events?: EventSpec[];
   hairpins?: HairpinSpec[];
   slurs?: SlurSpec[];
@@ -155,10 +155,10 @@ function appendTo(ir: LintIR, e: EventSpec): LintEvent {
 }
 
 export interface IRBuilderInit {
-  parts?: PartSpec[];
-  partGroups?: PartGroupInfo[];
+  parts?: PartSpec[] | undefined;
+  partGroups?: PartGroupInfo[] | undefined;
   /** MuseScore 経路のみ。実行版と型の生成元バージョンの照合結果（診断用）。 */
-  hostVersion?: HostVersionInfo;
+  hostVersion?: HostVersionInfo | undefined;
 }
 
 export interface IRBuilder {
