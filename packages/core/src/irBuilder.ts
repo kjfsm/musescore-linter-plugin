@@ -37,8 +37,6 @@ interface EventSpecBase {
   staffIdx?: number;
   voice?: number;
   scope?: "staff" | "global";
-  subtype?: unknown;
-  subStyle?: unknown;
 }
 
 type Duration = { numerator: number; denominator: number };
@@ -62,8 +60,6 @@ export type EventSpec =
       kind: BarlineEvent["kind"];
       /** 省略すると UNKNOWN */
       barlineKind?: BarlineKind;
-      /** MuseScore の BarLineType 生値。checker は barlineKind を見るのでそちらが正。 */
-      barlineType?: unknown;
     })
   | (EventSpecBase & {
       kind: TextKind;
@@ -71,6 +67,7 @@ export type EventSpec =
       textRaw?: string;
       /** BPM。null は「テンポ表記だが BPM 値が無い」を表すので undefined と区別して受ける。 */
       tempo?: number | null;
+      subtype?: unknown;
     });
 
 export interface PartSpec {
@@ -123,8 +120,6 @@ function toEvent(id: number, e: EventSpec): LintEvent {
     staffIdx,
     voice: e.voice ?? -1,
     scope: e.scope ?? (staffIdx >= 0 ? "staff" : "global"),
-    subtype: e.subtype ?? null,
-    subStyle: e.subStyle ?? null,
   } as const;
 
   switch (e.kind) {
@@ -151,7 +146,6 @@ function toEvent(id: number, e: EventSpec): LintEvent {
         ...base,
         kind: e.kind,
         barlineKind: e.barlineKind ?? CANONICAL.barlineKinds.UNKNOWN,
-        ...(e.barlineType !== undefined && { barlineType: e.barlineType }),
       };
     default:
       return {
@@ -160,6 +154,7 @@ function toEvent(id: number, e: EventSpec): LintEvent {
         textNorm: e.textNorm ?? "",
         textRaw: e.textRaw ?? "",
         tempo: e.tempo ?? null,
+        subtype: e.subtype ?? null,
       };
   }
 }

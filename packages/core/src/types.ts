@@ -29,8 +29,6 @@ interface EventBase {
   staffIdx: number; // -1 = global scope
   voice: number;
   scope: "staff" | "global";
-  subtype: unknown;
-  subStyle: unknown;
 }
 
 export interface ChordEvent extends EventBase {
@@ -54,7 +52,6 @@ export interface RestEvent extends EventBase {
 export interface BarlineEvent extends EventBase {
   kind: "bar_line";
   barlineKind: BarlineKind;
-  barlineType?: unknown;
 }
 
 export interface TextEvent extends EventBase {
@@ -62,6 +59,8 @@ export interface TextEvent extends EventBase {
   textNorm: string;
   textRaw: string;
   tempo: number | null;
+  // MuseScore 経路でのみ埋まる要素の subtype 生値。MusicXML 経路では常に null。
+  subtype: unknown;
 }
 
 export type LintEvent = ChordEvent | RestEvent | BarlineEvent | TextEvent;

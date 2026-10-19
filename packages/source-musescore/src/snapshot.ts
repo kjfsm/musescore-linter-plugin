@@ -204,7 +204,6 @@ function processAnnotations(seg: PluginSegment, measureNum: number, builder: IRB
       staffIdx: annStaffIdx >= 0 ? annStaffIdx : -1,
       voice: -1,
       subtype: ann.subtype,
-      subStyle: ann.subStyle,
       tempo,
       textNorm,
       textRaw,
@@ -304,7 +303,6 @@ function processStaffElements(
     if (barEl && isBarLine(barEl)) {
       builder.append({
         kind: CANONICAL.elementKinds.BAR_LINE,
-        barlineType: barEl.barlineType,
         barlineKind: toBarlineKind(classifyBarlineKind(barEl.barlineType, hostEnums.barLineType)),
         tick: seg.tick,
         measure: measureNum,

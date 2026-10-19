@@ -103,8 +103,6 @@ describe("withDerived", () => {
       voice: 0,
       kind: CANONICAL.elementKinds.CHORD,
       scope: "staff",
-      subtype: null,
-      subStyle: null,
     });
     ir.index.byKind[CANONICAL.elementKinds.CHORD] = [0];
     expect(withDerived(ir).derived.firstChordByStaff[0]).toEqual({ tick: 480, measure: 2 });
@@ -127,8 +125,6 @@ describe("withDerived", () => {
         voice: 0,
         kind: CANONICAL.elementKinds.CHORD,
         scope: "staff",
-        subtype: null,
-        subStyle: null,
         duration: { numerator: 1, denominator: 4 },
       },
       {
@@ -139,8 +135,6 @@ describe("withDerived", () => {
         voice: 0,
         kind: CANONICAL.elementKinds.REST,
         scope: "staff",
-        subtype: null,
-        subStyle: null,
         duration: { numerator: 1, denominator: 4 },
       },
     );
