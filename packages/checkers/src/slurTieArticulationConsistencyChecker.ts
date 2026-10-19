@@ -1,8 +1,12 @@
 import type { Checker, CheckerOptionSpec, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue, eventsOfKind, resolveCheckerOptions } from "@musescore-linter/core";
+import {
+  CANONICAL,
+  createIssue,
+  eventsOfKind,
+  resolveCheckerOptions,
+} from "@musescore-linter/core";
 
 import { bracketGroupKeyOf } from "./base/partGroups.js";
-import { getCanonical } from "./base/predicates.js";
 import {
   articulationsOf,
   buildPartNameMap,
@@ -72,8 +76,6 @@ export const slurTieArticulationConsistencyChecker: Checker = {
   options: OPTIONS,
   run(ir: IndexedIR, rawOptions?: Record<string, unknown>): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
     const opts = resolveCheckerOptions(OPTIONS, rawOptions);
     const symbols = Array.isArray(opts.groupSymbols) ? opts.groupSymbols : [];
@@ -84,7 +86,7 @@ export const slurTieArticulationConsistencyChecker: Checker = {
       partNames.get(staffIdx) ?? `Staff ${staffIdx + 1}`;
 
     const measures = new Set<number>();
-    for (const ev of eventsOfKind(ir, canonical.elementKinds.CHORD)) {
+    for (const ev of eventsOfKind(ir, CANONICAL.elementKinds.CHORD)) {
       if (ev.voice === VOICE) measures.add(ev.measure);
     }
 

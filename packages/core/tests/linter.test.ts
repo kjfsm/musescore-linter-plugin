@@ -19,7 +19,6 @@ function minimalIR(): LintIR {
       ties: [],
       measures: [],
     },
-    registry: { canonical: CANONICAL },
   };
 }
 
@@ -103,13 +102,9 @@ describe("withDerived", () => {
       staffIdx: 0,
       voice: 0,
       kind: CANONICAL.elementKinds.CHORD,
-      type: "chord",
-      textNorm: "",
-      textRaw: "",
       scope: "staff",
       subtype: null,
       subStyle: null,
-      tempo: null,
     });
     ir.index.byKind[CANONICAL.elementKinds.CHORD] = [0];
     expect(withDerived(ir).derived.firstChordByStaff[0]).toEqual({ tick: 480, measure: 2 });
@@ -131,13 +126,9 @@ describe("withDerived", () => {
         staffIdx: 0,
         voice: 0,
         kind: CANONICAL.elementKinds.CHORD,
-        type: "chord",
-        textNorm: "",
-        textRaw: "",
         scope: "staff",
         subtype: null,
         subStyle: null,
-        tempo: null,
         duration: { numerator: 1, denominator: 4 },
       },
       {
@@ -147,13 +138,9 @@ describe("withDerived", () => {
         staffIdx: 1,
         voice: 0,
         kind: CANONICAL.elementKinds.REST,
-        type: "rest",
-        textNorm: "",
-        textRaw: "",
         scope: "staff",
         subtype: null,
         subStyle: null,
-        tempo: null,
         duration: { numerator: 1, denominator: 4 },
       },
     );

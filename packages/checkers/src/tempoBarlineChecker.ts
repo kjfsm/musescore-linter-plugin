@@ -1,7 +1,5 @@
 import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue, eventsOnStaff } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 export const tempoBarlineChecker: Checker = {
   id: "tempo-barline",
@@ -12,16 +10,13 @@ export const tempoBarlineChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    if (!ir.meta?.parts?.length) return issues;
-
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
+    if (!ir.meta.parts.length) return issues;
 
     const [staff] = ir.meta.parts;
     if (!staff) return issues;
 
-    const barlineEvents = eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.BAR_LINE);
-    let tempoEvents = eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.TEMPO_TEXT);
+    const barlineEvents = eventsOnStaff(ir, staff.staffIdx, CANONICAL.elementKinds.BAR_LINE);
+    let tempoEvents = eventsOnStaff(ir, staff.staffIdx, CANONICAL.elementKinds.TEMPO_TEXT);
 
     const barlines: Record<number, string> = {};
     for (const ev of barlineEvents) {
@@ -60,8 +55,8 @@ export const tempoBarlineChecker: Checker = {
       const prevBarlineByTick = barlineCursor >= 0 ? barlineEvents[barlineCursor]! : null;
 
       const prevMeasure = tm.measure - 1;
-      const hasDoubleByMeasure = barlines[prevMeasure] === canonical.barlineKinds.DOUBLE;
-      const hasDoubleByTick = prevBarlineByTick?.barlineKind === canonical.barlineKinds.DOUBLE;
+      const hasDoubleByMeasure = barlines[prevMeasure] === CANONICAL.barlineKinds.DOUBLE;
+      const hasDoubleByTick = prevBarlineByTick?.barlineKind === CANONICAL.barlineKinds.DOUBLE;
 
       if (!hasDoubleByMeasure && !hasDoubleByTick) {
         issues.push(

@@ -1,7 +1,6 @@
 import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import { CANONICAL, createIssue } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
 import { eventsForStaff } from "./base/query.js";
 
 export const firstNoteDynamicsChecker: Checker = {
@@ -13,13 +12,10 @@ export const firstNoteDynamicsChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    if (!ir.meta?.parts) return issues;
-
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
+    if (!ir.meta.parts) return issues;
 
     const { firstChordByStaff } = ir.derived;
-    const dynamicKind = canonical.elementKinds.DYNAMIC;
+    const dynamicKind = CANONICAL.elementKinds.DYNAMIC;
 
     for (const staff of ir.meta.parts) {
       const firstChord = firstChordByStaff[staff.staffIdx];

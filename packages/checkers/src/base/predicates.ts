@@ -1,18 +1,5 @@
-import type { CanonicalKinds, LintEvent, LintIR } from "@musescore-linter/core";
-import { eventsOnStaff } from "@musescore-linter/core";
-
-export function getCanonical(ir: LintIR): CanonicalKinds | null {
-  return ir?.registry?.canonical ?? null;
-}
-
-export function isKind(ev: LintEvent, kind: string): boolean {
-  return !!ev && ev.kind === kind;
-}
-
-export function isDynamicMark(ev: LintEvent, ir: LintIR): boolean {
-  const canonical = getCanonical(ir);
-  return !!(canonical && isKind(ev, canonical.elementKinds.DYNAMIC));
-}
+import type { LintIR, TextKind } from "@musescore-linter/core";
+import { CANONICAL, eventsOnStaff } from "@musescore-linter/core";
 
 export function matchesAny(text: string, patterns: string[]): boolean {
   return patterns.includes(text);
@@ -29,33 +16,33 @@ export function matchesAny(text: string, patterns: string[]): boolean {
 // 集合で判定しているかぎりソースによる差は出ないが、集合から STAFF_TEXT を落とすと
 // MusicXML 経路が丸ごと空振りする。新しい checker を書くときはここの関数を使うこと。
 
+const K = CANONICAL.elementKinds;
+
 /** 人が書いた自由テキスト。テンポ表記を含む。 */
-export function proseTextKinds(ir: LintIR): string[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-  const k = canonical.elementKinds;
-  return [k.TEMPO_TEXT, k.STAFF_TEXT, k.SYSTEM_TEXT, k.EXPRESSION];
-}
+export const PROSE_TEXT_KINDS: readonly TextKind[] = [
+  K.TEMPO_TEXT,
+  K.STAFF_TEXT,
+  K.SYSTEM_TEXT,
+  K.EXPRESSION,
+];
 
 /**
  * 奏法・表情を指示する自由テキスト。テンポ表記は含まない。
  * 「休符に載っていたらおかしい注記」「反復記号のテキスト」のように、
  * テンポ表記を対象に含めると誤検出になる用途で使う。
  */
-export function techniqueTextKinds(ir: LintIR): string[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-  const k = canonical.elementKinds;
-  return [k.STAFF_TEXT, k.SYSTEM_TEXT, k.EXPRESSION];
-}
+export const TECHNIQUE_TEXT_KINDS: readonly TextKind[] = [
+  K.STAFF_TEXT,
+  K.SYSTEM_TEXT,
+  K.EXPRESSION,
+];
 
 /** 譜面に貼り付く注記すべて（自由テキスト + リハーサルマーク + 強弱記号）。 */
-export function annotationKinds(ir: LintIR): string[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-  const k = canonical.elementKinds;
-  return [...proseTextKinds(ir), k.REHEARSAL_MARK, k.DYNAMIC];
-}
+export const ANNOTATION_KINDS: readonly TextKind[] = [
+  ...PROSE_TEXT_KINDS,
+  K.REHEARSAL_MARK,
+  K.DYNAMIC,
+];
 
 export interface PartBucketEvent {
   text: string;
@@ -72,13 +59,8 @@ export interface PartBucket {
 }
 
 export function buildPartBuckets(ir: LintIR): PartBucket[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-
-  const textualKinds = annotationKinds(ir);
-
   const buckets: Record<string, PartBucket> = {};
-  const metaParts = ir.meta?.parts ?? [];
+  const metaParts = ir.meta.parts;
 
   for (const part of metaParts) {
     const { staffIdx } = part;
@@ -91,7 +73,7 @@ export function buildPartBuckets(ir: LintIR): PartBucket[] {
       bucket.staffIdx = staffIdx;
     }
 
-    for (const kind of textualKinds) {
+    for (const kind of ANNOTATION_KINDS) {
       for (const ev of eventsOnStaff(ir, staffIdx, kind)) {
         bucket.events.push({
           text: ev.textNorm,

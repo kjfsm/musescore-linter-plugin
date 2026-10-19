@@ -1,4 +1,4 @@
-import type { LintIR } from "@musescore-linter/core";
+import type { ElementKind, LintIR } from "@musescore-linter/core";
 import { eventsOnStaff } from "@musescore-linter/core";
 
 export interface RestSpan {
@@ -14,7 +14,7 @@ export interface RestEndpointHit {
   detail: Record<string, unknown>;
 }
 
-function tickSet(ir: LintIR, staffIdx: number, kind: string): Set<number> {
+function tickSet(ir: LintIR, staffIdx: number, kind: ElementKind): Set<number> {
   return new Set(eventsOnStaff(ir, staffIdx, kind).map((ev) => ev.tick));
 }
 
@@ -25,8 +25,8 @@ export function findRestOnlyEndpoints(
   ir: LintIR,
   spans: RestSpan[],
   kind: "hairpin" | "slur",
-  restKind: string,
-  chordKind: string,
+  restKind: ElementKind,
+  chordKind: ElementKind,
 ): RestEndpointHit[] {
   // staff ごとに rest/chord の tick 集合を遅延構築してキャッシュ
   const restCache: Record<number, Set<number>> = {};

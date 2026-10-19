@@ -85,9 +85,12 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
 
 ```js
 {
-  events: [ { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw,
-              // chord のみ: stemDirection?, beamMode?, articulations?: string[]
-              ... } ],
+  // kind を判別子にした共用体（ChordEvent | RestEvent | BarlineEvent | TextEvent）。
+  // 共通: id, kind, tick, measure, staffIdx, voice, scope
+  // chord: duration?, tuplet?, stemDirection?, beamMode?, articulations?, notes?
+  // rest: duration?, tuplet? / bar_line: barlineKind / テキスト系: textNorm, textRaw, tempo
+  // eventsOfKind(ir, kind) は kind に応じた型（EventOfKind<K>）で返す。
+  events: [ ... ],
   index: {
     // いずれも値は **イベント id（ir.events の添字）の配列**。Event 本体ではない。
     byTick,         // tick → number[]
@@ -108,7 +111,6 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
     // 型の生成元 MuseScore バージョンとの照合結果（診断用）。checker からは通常参照しない。
     hostVersion: { ok, generatedTag, running, message? },
   },
-  registry: { canonical: { elementKinds, barlineKinds } },
   derived: {                  // IndexedIR のみ。withDerived(ir) が作る
     firstChordByStaff,        // staffIdx → { tick, measure }
     articulationsByChordId,   // chord イベント id → アーティキュレーション名[]

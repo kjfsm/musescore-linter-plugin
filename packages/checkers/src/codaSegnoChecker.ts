@@ -1,15 +1,12 @@
-import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
-import { createIssue, eventsOfKind } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOfKind } from "@musescore-linter/core";
 
-import { getCanonical, techniqueTextKinds } from "./base/predicates.js";
+import { TECHNIQUE_TEXT_KINDS } from "./base/predicates.js";
 
-function collectTextEvents(ir: IndexedIR): LintEvent[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-
+function collectTextEvents(ir: IndexedIR): TextEvent[] {
   // 以前は EXPRESSION を見ておらず、MuseScore で Expression 要素として書いた
   // 「Coda」「D.C.」を取りこぼしていた。テンポ表記は反復記号を載せないので除く。
-  const kinds = [...techniqueTextKinds(ir), canonical.elementKinds.REHEARSAL_MARK];
+  const kinds = [...TECHNIQUE_TEXT_KINDS, CANONICAL.elementKinds.REHEARSAL_MARK];
 
   return kinds.flatMap((kind) => eventsOfKind(ir, kind));
 }
@@ -28,12 +25,12 @@ export const codaSegnoChecker: Checker = {
     const textEvents = collectTextEvents(ir);
     if (textEvents.length === 0) return issues;
 
-    const segnoRefs: LintEvent[] = [];
-    const segnoMarks: LintEvent[] = [];
-    const codaRefs: LintEvent[] = [];
-    const codaMarks: LintEvent[] = [];
-    const fineRefs: LintEvent[] = [];
-    const fineMarks: LintEvent[] = [];
+    const segnoRefs: TextEvent[] = [];
+    const segnoMarks: TextEvent[] = [];
+    const codaRefs: TextEvent[] = [];
+    const codaMarks: TextEvent[] = [];
+    const fineRefs: TextEvent[] = [];
+    const fineMarks: TextEvent[] = [];
 
     for (const ev of textEvents) {
       const text = ev.textNorm;

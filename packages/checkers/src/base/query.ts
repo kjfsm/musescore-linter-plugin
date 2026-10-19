@@ -1,4 +1,10 @@
-import type { IndexedIR, LintEvent, LintIR } from "@musescore-linter/core";
+import type {
+  ChordEvent,
+  ElementKind,
+  EventOfKind,
+  IndexedIR,
+  LintIR,
+} from "@musescore-linter/core";
 import { eventsAtTick, eventsOnStaff } from "@musescore-linter/core";
 
 /**
@@ -48,7 +54,11 @@ function lastIndexStartingBy<T>(
  * それに相当する表現が無く、同じ注記が譜表に載る。checker はどちらのソースから来た IR かを
  * 知らないので、両方から集めないとソースによって検出したりしなかったりする。
  */
-export function eventsForStaff(ir: LintIR, staffIdx: number, kind: string): LintEvent[] {
+export function eventsForStaff<K extends ElementKind>(
+  ir: LintIR,
+  staffIdx: number,
+  kind: K,
+): EventOfKind<K>[] {
   const onStaff = eventsOnStaff(ir, staffIdx, kind);
   return staffIdx === -1 ? onStaff : [...onStaff, ...eventsOnStaff(ir, -1, kind)];
 }
@@ -56,7 +66,7 @@ export function eventsForStaff(ir: LintIR, staffIdx: number, kind: string): Lint
 /** staffIdx → partName のマップ。ir.meta.parts から構築する。 */
 export function buildPartNameMap(ir: LintIR): Map<number, string> {
   const map = new Map<number, string>();
-  for (const part of ir.meta?.parts ?? []) {
+  for (const part of ir.meta.parts) {
     map.set(part.staffIdx, part.partName);
   }
   return map;
@@ -74,7 +84,7 @@ export function chordsIn(
   staffIdx: number,
   measure: number,
   voice: number,
-): readonly LintEvent[] {
+): readonly ChordEvent[] {
   return ir.derived.chordsByStaffMeasure[`${staffIdx}:${measure}:${voice}`] ?? [];
 }
 
@@ -164,7 +174,7 @@ export function staffGroupsSharingRhythm(
   groupKeyOf?: (staffIdx: number) => string | null,
 ): number[][] {
   const byGroup = new Map<string, Map<string, number[]>>();
-  for (const part of ir.meta?.parts ?? []) {
+  for (const part of ir.meta.parts) {
     const groupKey = groupKeyOf ? groupKeyOf(part.staffIdx) : "";
     if (groupKey === null) continue;
     const sig = rhythmSignature(ir, part.staffIdx, measure, voice);

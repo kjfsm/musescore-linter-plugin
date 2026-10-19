@@ -1,9 +1,19 @@
 import { getAll, isCheckerEnabled } from "./checkerRegistry.js";
+import { CANONICAL } from "./enumRegistry.js";
 import { eventsOfKind } from "./irQuery.js";
 import { compareIssues } from "./issue.js";
 import { make } from "./logger.js";
 import { createPerf } from "./perf.js";
-import type { Checker, IndexedIR, Issue, LintEvent, LintIR, SlurInfo, TieInfo } from "./types.js";
+import type {
+  Checker,
+  ChordEvent,
+  IndexedIR,
+  Issue,
+  LintIR,
+  RestEvent,
+  SlurInfo,
+  TieInfo,
+} from "./types.js";
 
 const log = make("linter");
 
@@ -22,15 +32,14 @@ function pushTo<K extends PropertyKey, V>(map: Record<K, V[]>, key: K, value: V)
 }
 
 export function withDerived(ir: LintIR): IndexedIR {
-  const canonical = ir.registry.canonical;
   const firstChordByStaff: Record<number, { tick: number; measure: number }> = {};
   const articulationsByChordId: Record<number, string[]> = {};
-  const chordsByStaffMeasure: Record<string, LintEvent[]> = {};
+  const chordsByStaffMeasure: Record<string, ChordEvent[]> = {};
   const slursByStaff: Record<number, SlurInfo[]> = {};
   const tiesByStaff: Record<number, TieInfo[]> = {};
   const rhythmByStaffMeasure: Record<string, string> = {};
 
-  const chords = eventsOfKind(ir, canonical.elementKinds.CHORD);
+  const chords = eventsOfKind(ir, CANONICAL.elementKinds.CHORD);
   for (const ev of chords) {
     if (ev.articulations && ev.articulations.length > 0) {
       articulationsByChordId[ev.id] = ev.articulations;
@@ -54,8 +63,8 @@ export function withDerived(ir: LintIR): IndexedIR {
   for (const tie of ir.meta.ties) pushTo(tiesByStaff, tie.staffIdx, tie);
   for (const list of Object.values(tiesByStaff)) list.sort((a, b) => a.startTick - b.startTick);
 
-  const rhythmGroups: Record<string, LintEvent[]> = {};
-  for (const ev of [...chords, ...eventsOfKind(ir, canonical.elementKinds.REST)]) {
+  const rhythmGroups: Record<string, (ChordEvent | RestEvent)[]> = {};
+  for (const ev of [...chords, ...eventsOfKind(ir, CANONICAL.elementKinds.REST)]) {
     if (ev.staffIdx < 0) continue;
     pushTo(rhythmGroups, `${ev.staffIdx}:${ev.measure}:${ev.voice}`, ev);
   }
@@ -110,7 +119,7 @@ export function runAllCheckers(
 
     try {
       const tChecker = perf.now();
-      const issues = checker.run(indexed, ruleOptions[checker.id]) ?? [];
+      const issues = checker.run(indexed, ruleOptions[checker.id]);
       perf.addSince(checker.id, tChecker);
       log.info(`'${checker.id}': ${issues.length} 件検出`);
       allIssues.push(...issues);

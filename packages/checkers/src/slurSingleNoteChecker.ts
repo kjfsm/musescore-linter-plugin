@@ -17,7 +17,7 @@ export const slurSingleNoteChecker: Checker = {
 
     const partsByStaff = buildPartNameMap(ir);
 
-    for (const slur of ir.meta?.slurs ?? []) {
+    for (const slur of ir.meta.slurs) {
       if (slur.startTick !== slur.endTick) continue;
 
       const partName = partsByStaff.get(slur.staffIdx) ?? "";

@@ -1,4 +1,5 @@
 import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
+import type { TextEvent } from "@musescore-linter/core";
 import { setPerfEnabled } from "@musescore-linter/core";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -166,8 +167,8 @@ describe("buildSnapshot", () => {
 
   it("hostEnums が strictEnum で包まれても通常の判定が壊れない", () => {
     const ir = buildSnapshot(mockScoreWithContent(), hostEnums());
-    const chordEvents = ir.events.filter((e) => e.type === "chord");
-    const barlineEvents = ir.events.filter((e) => e.type === "barline");
+    const chordEvents = ir.events.filter((e) => e.kind === "chord");
+    const barlineEvents = ir.events.filter((e) => e.kind === "bar_line");
     expect(chordEvents).toHaveLength(1);
     expect(barlineEvents).toHaveLength(1);
   });
@@ -175,7 +176,7 @@ describe("buildSnapshot", () => {
   it("3 引数契約で events が正しく生成される（旧・3引数フラット契約とは異なる）", () => {
     const ir = buildSnapshot(mockScoreWithContent(), hostEnums(), mockHost(4, 7));
     expect(ir.events.length).toBeGreaterThan(0);
-    const barline = ir.events.find((e) => e.type === "barline");
+    const barline = ir.events.find((e) => e.kind === "bar_line");
     expect(barline?.barlineKind).toBe("final");
   });
 
@@ -189,11 +190,11 @@ describe("buildSnapshot", () => {
   it("イベントは voice 昇順のあとに barline の順で生成される", () => {
     const { score } = mockScoreCountingElementAt();
     const ir = buildSnapshot(score, hostEnums());
-    expect(ir.events.map((e) => [e.type, e.voice])).toEqual([
+    expect(ir.events.map((e) => [e.kind, e.voice])).toEqual([
       ["chord", 0],
       ["rest", 1],
       ["chord", 2],
-      ["barline", -1],
+      ["bar_line", -1],
     ]);
     // id は生成順に振られる
     expect(ir.events.map((e) => e.id)).toEqual([0, 1, 2, 3]);
@@ -221,7 +222,7 @@ describe("buildSnapshot: テンポ注記", () => {
 
   it("tempo を BPM に換算する", () => {
     const ir = buildSnapshot(mockScoreWithTempo(2), hostEnums());
-    expect(ir.events[0]?.tempo).toBe(120);
+    expect(ir.events.find((e): e is TextEvent => e.kind === "tempo_text")?.tempo).toBe(120);
   });
 
   // getTempoBpm は Math.round(el.tempo * 60) を返すだけなので、tempo が未定義
@@ -230,7 +231,10 @@ describe("buildSnapshot: テンポ注記", () => {
   it("tempo が取れないときは NaN ではなく null にする", () => {
     for (const broken of [undefined, null, "fast", Number.NaN]) {
       const ir = buildSnapshot(mockScoreWithTempo(broken), hostEnums());
-      expect(ir.events[0]?.tempo, String(broken)).toBeNull();
+      expect(
+        ir.events.find((e): e is TextEvent => e.kind === "tempo_text")?.tempo,
+        String(broken),
+      ).toBeNull();
     }
   });
 });

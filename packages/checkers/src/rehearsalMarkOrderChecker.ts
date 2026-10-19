@@ -1,7 +1,5 @@
 import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue, eventsOfKind } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import { CANONICAL, createIssue, eventsOfKind } from "@musescore-linter/core";
 
 // リハーサルマーク(A, B, C... または 1, 2, 3...)が昇順に並んでいるか、重複が無いかを検査する。
 // A→C と飛ぶ(B 欠番)や、C の後に A が出る(順序逆)、同じ記号の重複を検出。
@@ -32,10 +30,8 @@ export const rehearsalMarkOrderChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const rehearsalMarks = eventsOfKind(ir, canonical.elementKinds.REHEARSAL_MARK);
+    const rehearsalMarks = eventsOfKind(ir, CANONICAL.elementKinds.REHEARSAL_MARK);
     if (rehearsalMarks.length === 0) return issues;
 
     // 複数スタッフに同じマークが同 tick で現れる場合があるので (tick|label) で重複排除

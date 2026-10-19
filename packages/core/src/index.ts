@@ -4,7 +4,8 @@ export { getAll, getById, isCheckerEnabled, register, reset } from "./checkerReg
 export type { OptionParseResult } from "./checkerOptions.js";
 export { findOptionSpec, parseCheckerOptionText, resolveCheckerOptions } from "./checkerOptions.js";
 export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";
-export { CANONICAL } from "./enumRegistry.js";
+export type { BarlineKind, ElementKind, TextKind } from "./enumRegistry.js";
+export { CANONICAL, toBarlineKind } from "./enumRegistry.js";
 export type {
   EventSpec,
   HairpinSpec,
@@ -30,11 +31,13 @@ export { createPerf, isPerfEnabled, setPerfEnabled } from "./perf.js";
 export { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "./pitchSpelling.js";
 
 export type {
-  CanonicalKinds,
+  BarlineEvent,
   Checker,
   CheckerOptionChoice,
   CheckerOptionSpec,
   CheckerOptionValue,
+  ChordEvent,
+  EventOfKind,
   HostVersionInfo,
   IndexedIR,
   IRDerived,
@@ -47,7 +50,9 @@ export type {
   NoteInfo,
   PartGroupInfo,
   PartGroupSymbol,
+  RestEvent,
   Severity,
+  TextEvent,
   TieInfo,
 } from "./types.js";
 export { compareVersions, isNewerVersion } from "./version.js";

@@ -1,11 +1,15 @@
 import { CANONICAL } from "./enumRegistry.js";
+import type { BarlineKind, TextKind } from "./enumRegistry.js";
 import type {
+  BarlineEvent,
+  ChordEvent,
   HostVersionInfo,
   LintEvent,
   LintIR,
   MeasureInfo,
   NoteInfo,
   PartGroupInfo,
+  RestEvent,
 } from "./types.js";
 
 /**
@@ -25,33 +29,49 @@ import type {
  * 実際にドリフトしていた。
  */
 
-export interface EventSpec {
-  kind: string;
-  /** 省略時は `kind` から導出する（chord/rest/bar_line 以外は "text"） */
-  type?: LintEvent["type"];
+interface EventSpecBase {
   tick?: number;
   measure?: number;
   /** `staffIdx` のエイリアス。両方省略すると -1（global scope）になる */
   staff?: number;
   staffIdx?: number;
   voice?: number;
-  textNorm?: string;
-  textRaw?: string;
-  /** BPM。null は「テンポ表記だが BPM 値が無い」を表すので undefined と区別して受ける。 */
-  tempo?: number | null;
-  barlineKind?: string;
-  duration?: { numerator: number; denominator: number } | undefined;
-  tuplet?: boolean;
   scope?: "staff" | "global";
   subtype?: unknown;
   subStyle?: unknown;
-  stemDirection?: number;
-  beamMode?: number;
-  articulations?: string[];
-  notes?: NoteInfo[];
-  /** MuseScore の BarLineType 生値。checker は barlineKind を見るのでそちらが正。 */
-  barlineType?: unknown;
 }
+
+type Duration = { numerator: number; denominator: number };
+
+export type EventSpec =
+  | (EventSpecBase & {
+      kind: ChordEvent["kind"];
+      duration?: Duration | undefined;
+      tuplet?: boolean;
+      stemDirection?: number;
+      beamMode?: number;
+      articulations?: string[];
+      notes?: NoteInfo[];
+    })
+  | (EventSpecBase & {
+      kind: RestEvent["kind"];
+      duration?: Duration | undefined;
+      tuplet?: boolean;
+    })
+  | (EventSpecBase & {
+      kind: BarlineEvent["kind"];
+      /** 省略すると UNKNOWN */
+      barlineKind?: BarlineKind;
+      /** MuseScore の BarLineType 生値。checker は barlineKind を見るのでそちらが正。 */
+      barlineType?: unknown;
+    })
+  | (EventSpecBase & {
+      kind: TextKind;
+      textNorm?: string;
+      textRaw?: string;
+      /** BPM。null は「テンポ表記だが BPM 値が無い」を表すので undefined と区別して受ける。 */
+      tempo?: number | null;
+    });
 
 export interface PartSpec {
   staffIdx?: number;
@@ -90,55 +110,68 @@ export interface IRSpec {
   measures?: MeasureInfo[];
 }
 
-function typeFromKind(kind: string): LintEvent["type"] {
-  if (kind === CANONICAL.elementKinds.CHORD) return "chord";
-  if (kind === CANONICAL.elementKinds.REST) return "rest";
-  if (kind === CANONICAL.elementKinds.BAR_LINE) return "barline";
-  return "text";
+function pushId<K extends string>(map: Partial<Record<K, number[]>>, key: K, id: number): void {
+  (map[key] ??= []).push(id);
 }
 
-function pushId(map: Record<string, number[]>, key: string | number, id: number): void {
-  const k = String(key);
-  if (!map[k]) map[k] = [];
-  map[k].push(id);
-}
-
-/** イベントを 1 件足し、索引と meta.lastTick / firstMusicTickByStaff を更新する。 */
-function appendTo(ir: LintIR, e: EventSpec): LintEvent {
-  const staffIdx = e.staff !== undefined ? e.staff : e.staffIdx !== undefined ? e.staffIdx : -1;
-  const defaultScope: "staff" | "global" = staffIdx >= 0 ? "staff" : "global";
-  const scope = e.scope ?? defaultScope;
-
-  const ev: LintEvent = {
-    id: ir.events.length,
+function toEvent(id: number, e: EventSpec): LintEvent {
+  const staffIdx = e.staff ?? e.staffIdx ?? -1;
+  const base = {
+    id,
     tick: e.tick ?? 0,
     measure: e.measure ?? 1,
     staffIdx,
     voice: e.voice ?? -1,
-    kind: e.kind,
-    type: e.type ?? (scope === "global" ? "text" : typeFromKind(e.kind)),
+    scope: e.scope ?? (staffIdx >= 0 ? "staff" : "global"),
     subtype: e.subtype ?? null,
     subStyle: e.subStyle ?? null,
-    tempo: e.tempo ?? null,
-    textNorm: e.textNorm ?? "",
-    textRaw: e.textRaw ?? "",
-    scope,
-  };
+  } as const;
 
-  if (e.barlineType !== undefined) ev.barlineType = e.barlineType;
-  if (e.barlineKind !== undefined) ev.barlineKind = e.barlineKind;
-  if (e.duration !== undefined) ev.duration = e.duration;
-  if (e.tuplet !== undefined) ev.tuplet = e.tuplet;
-  if (e.stemDirection !== undefined) ev.stemDirection = e.stemDirection;
-  if (e.beamMode !== undefined) ev.beamMode = e.beamMode;
-  if (e.articulations !== undefined) ev.articulations = e.articulations;
-  if (e.notes !== undefined) ev.notes = e.notes;
+  switch (e.kind) {
+    case "chord":
+      return {
+        ...base,
+        kind: e.kind,
+        ...(e.duration !== undefined && { duration: e.duration }),
+        ...(e.tuplet !== undefined && { tuplet: e.tuplet }),
+        ...(e.stemDirection !== undefined && { stemDirection: e.stemDirection }),
+        ...(e.beamMode !== undefined && { beamMode: e.beamMode }),
+        ...(e.articulations !== undefined && { articulations: e.articulations }),
+        ...(e.notes !== undefined && { notes: e.notes }),
+      };
+    case "rest":
+      return {
+        ...base,
+        kind: e.kind,
+        ...(e.duration !== undefined && { duration: e.duration }),
+        ...(e.tuplet !== undefined && { tuplet: e.tuplet }),
+      };
+    case "bar_line":
+      return {
+        ...base,
+        kind: e.kind,
+        barlineKind: e.barlineKind ?? CANONICAL.barlineKinds.UNKNOWN,
+        ...(e.barlineType !== undefined && { barlineType: e.barlineType }),
+      };
+    default:
+      return {
+        ...base,
+        kind: e.kind,
+        textNorm: e.textNorm ?? "",
+        textRaw: e.textRaw ?? "",
+        tempo: e.tempo ?? null,
+      };
+  }
+}
 
+/** イベントを 1 件足し、索引と meta.lastTick / firstMusicTickByStaff を更新する。 */
+function appendTo(ir: LintIR, e: EventSpec): LintEvent {
+  const ev = toEvent(ir.events.length, e);
   ir.events.push(ev);
 
-  pushId(ir.index.byTick, ev.tick, ev.id);
+  pushId(ir.index.byTick, String(ev.tick), ev.id);
   pushId(ir.index.byKind, ev.kind, ev.id);
-  pushId(ir.index.byStaff, ev.staffIdx, ev.id);
+  pushId(ir.index.byStaff, String(ev.staffIdx), ev.id);
 
   pushId((ir.index.byStaffAndKind[ev.staffIdx] ??= {}), ev.kind, ev.id);
 
@@ -194,7 +227,6 @@ export function createIRBuilder(init: IRBuilderInit = {}): IRBuilder {
       measures: [],
       ...(init.hostVersion !== undefined ? { hostVersion: init.hostVersion } : {}),
     },
-    registry: { canonical: CANONICAL },
   };
 
   return {

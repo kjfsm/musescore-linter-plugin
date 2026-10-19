@@ -100,7 +100,7 @@ describe("run: 解析結果", () => {
     const ir = JSON.parse(r.out) as LintIR;
     expect(ir.meta.parts).toHaveLength(2);
     expect(ir.events.length).toBeGreaterThan(0);
-    expect(ir.registry.canonical.elementKinds.CHORD).toBe("chord");
+    expect(ir.events.some((e) => e.kind === "chord")).toBe(true);
   });
 
   it("--rule で 1 つの checker だけに絞れる", () => {

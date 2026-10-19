@@ -1,7 +1,5 @@
 import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue, eventsOnStaff } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 export const finalBarlineChecker: Checker = {
   id: "final-barline",
@@ -12,19 +10,17 @@ export const finalBarlineChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
-    if (!ir.meta?.parts?.length) return issues;
+    if (!ir.meta.parts.length) return issues;
 
     const [staff] = ir.meta.parts;
     if (!staff) return issues;
-    const bars = eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.BAR_LINE);
+    const bars = eventsOnStaff(ir, staff.staffIdx, CANONICAL.elementKinds.BAR_LINE);
     const [firstBar] = bars;
     if (!firstBar) return issues;
 
     const lastBarline = bars.reduce((best, ev) => (ev.tick > best.tick ? ev : best), firstBar);
 
-    if (lastBarline.barlineKind === canonical.barlineKinds.FINAL) {
+    if (lastBarline.barlineKind === CANONICAL.barlineKinds.FINAL) {
       return issues;
     }
 

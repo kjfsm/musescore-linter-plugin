@@ -1,7 +1,6 @@
-import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
-import { createIssue, eventsOnStaff } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
 import { eventsForStaff } from "./base/query.js";
 
 // テキスト式の cresc./dim. の後に到達先の強弱記号が現れない箇所を検出する。
@@ -20,7 +19,7 @@ const CRESC_WORDS = new Set([
   "dimin.",
 ]);
 
-function isCrescText(ev: LintEvent): boolean {
+function isCrescText(ev: TextEvent): boolean {
   return CRESC_WORDS.has((ev.textNorm ?? "").toLowerCase().trim());
 }
 
@@ -33,10 +32,8 @@ export const crescTextResolutionChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const dynamicKind = canonical.elementKinds.DYNAMIC;
+    const dynamicKind = CANONICAL.elementKinds.DYNAMIC;
 
     // 後続の到達先候補（cresc 系でない実強弱記号）を tick 付きで集める。
     // 同 staff のものに加え、global scope(-1) の強弱記号も到達先として認める。
@@ -46,7 +43,7 @@ export const crescTextResolutionChecker: Checker = {
         .map((ev) => ev.tick);
     };
 
-    for (const staff of ir.meta?.parts ?? []) {
+    for (const staff of ir.meta.parts) {
       const resolveTicks = targetTicks(staff.staffIdx);
 
       for (const ev of eventsOnStaff(ir, staff.staffIdx, dynamicKind)) {

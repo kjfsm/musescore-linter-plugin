@@ -29,7 +29,9 @@ const measure = (
   ...overrides,
 });
 
-const chord = (tick: number, duration: EventSpec["duration"]): EventSpec => ({
+type ChordSpec = Extract<EventSpec, { kind: "chord" }>;
+
+const chord = (tick: number, duration: ChordSpec["duration"]): ChordSpec => ({
   kind: K.CHORD,
   staff: 0,
   voice: 0,

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { LintEvent, LintIR } from "@musescore-linter/core";
+import type { ElementKind, EventOfKind, LintIR } from "@musescore-linter/core";
 import {
   CANONICAL,
   eventsOfKind as eventsOfKindInIR,
@@ -19,7 +19,11 @@ const WHOLE = QUARTER * 4;
 
 const duet = readFileSync(join(__dirname, "fixtures", "duet.musicxml"), "utf8");
 
-function eventsOfKind(ir: LintIR, kind: string, staffIdx?: number): LintEvent[] {
+function eventsOfKind<Kind extends ElementKind>(
+  ir: LintIR,
+  kind: Kind,
+  staffIdx?: number,
+): EventOfKind<Kind>[] {
   return eventsOfKindInIR(ir, kind)
     .filter((ev) => staffIdx === undefined || ev.staffIdx === staffIdx)
     .sort((a, b) => a.tick - b.tick);

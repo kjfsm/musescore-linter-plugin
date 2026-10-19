@@ -1,11 +1,9 @@
-import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
-import { createIssue, eventsOnStaff } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 // 同一パート・同一 tick に異なるダイナミクスが同時に置かれている矛盾を検出する。
 // 例: 同じ音に f と p が両方付いている（コピペミス・置き換え漏れ）。
-function dynamicIdentity(ev: LintEvent): string {
+function dynamicIdentity(ev: TextEvent): string {
   if (ev.subtype !== null && ev.subtype !== undefined) {
     return `subtype:${String(ev.subtype)}`;
   }
@@ -21,13 +19,11 @@ export const simultaneousDynamicsChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const parts = ir.meta?.parts ?? [];
+    const parts = ir.meta.parts;
     for (const part of parts) {
-      const byTick: Record<number, LintEvent[]> = {};
-      for (const ev of eventsOnStaff(ir, part.staffIdx, canonical.elementKinds.DYNAMIC)) {
+      const byTick: Record<number, TextEvent[]> = {};
+      for (const ev of eventsOnStaff(ir, part.staffIdx, CANONICAL.elementKinds.DYNAMIC)) {
         const group = byTick[ev.tick] ?? [];
         group.push(ev);
         byTick[ev.tick] = group;

@@ -1,7 +1,5 @@
 import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue, eventsOnStaff } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 // リピート開始(‖:)に対応する終了(:‖)が無い箇所を検出する。
 // 終了リピート単独は「曲頭からの反復」として正当なので検出しない。
@@ -15,19 +13,17 @@ export const repeatBarlineMatchChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
-    if (!ir.meta?.parts?.length) return issues;
+    if (!ir.meta.parts.length) return issues;
 
     // リピート小節線はシステム全体に効くため、先頭スタッフのみを見て重複報告を避ける
     const [staff] = ir.meta.parts;
     if (!staff) return issues;
-    const bars = eventsOnStaff(ir, staff.staffIdx, canonical.elementKinds.BAR_LINE).sort(
+    const bars = eventsOnStaff(ir, staff.staffIdx, CANONICAL.elementKinds.BAR_LINE).sort(
       (a, b) => a.tick - b.tick,
     );
     if (bars.length === 0) return issues;
 
-    const { REPEAT_START, REPEAT_END, REPEAT_BOTH } = canonical.barlineKinds;
+    const { REPEAT_START, REPEAT_END, REPEAT_BOTH } = CANONICAL.barlineKinds;
 
     let openStart: { measure: number; tick: number } | null = null;
     const flagUnclosed = (s: { measure: number; tick: number }): void => {

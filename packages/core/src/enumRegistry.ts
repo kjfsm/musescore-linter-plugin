@@ -1,6 +1,4 @@
-import type { CanonicalKinds } from "./types.js";
-
-export const CANONICAL: CanonicalKinds = {
+export const CANONICAL = {
   elementKinds: {
     CHORD: "chord",
     REST: "rest",
@@ -23,4 +21,21 @@ export const CANONICAL: CanonicalKinds = {
     OTHER: "other",
     UNKNOWN: "unknown",
   },
-};
+} as const;
+
+type ElementKinds = typeof CANONICAL.elementKinds;
+type BarlineKinds = typeof CANONICAL.barlineKinds;
+
+export type ElementKind = ElementKinds[keyof ElementKinds];
+export type BarlineKind = BarlineKinds[keyof BarlineKinds];
+export type TextKind = Exclude<
+  ElementKind,
+  ElementKinds["CHORD"] | ElementKinds["REST"] | ElementKinds["BAR_LINE"]
+>;
+
+const BARLINE_KINDS: ReadonlySet<string> = new Set(Object.values(CANONICAL.barlineKinds));
+
+/** ソースが返す小節線種別の文字列を BarlineKind に寄せる。語彙外は UNKNOWN。 */
+export function toBarlineKind(raw: string): BarlineKind {
+  return BARLINE_KINDS.has(raw) ? (raw as BarlineKind) : CANONICAL.barlineKinds.UNKNOWN;
+}

@@ -45,7 +45,7 @@ MuseScore {
     // JSON.stringify は QJSEngine だと実測で 5 秒超かかる（V8 の約 100 倍）。実行のたびに
     // 走らせると全体の 6 割を占めるので、スナップショットタブを開いたときだけ生成する。
     // events が出力の 6 割弱を占めるため、そこだけ分割して Timer で回し、タブを離れたら
-    // 途中で中断できるようにしている。残りの index/meta/registry/derived は合わせても
+    // 途中で中断できるようにしている。残りの index/meta は合わせても
     // 小さいので最後に一括で作る。
     readonly property int snapshotChunkSize: 1000
     property var snapshotIR: null
@@ -327,7 +327,7 @@ MuseScore {
         snapshotTimer.stop();
 
         var out = ['{\n  "events": [\n', snapshotChunks.join(",\n"), "\n  ]"];
-        var keys = ["index", "meta", "registry", "derived"];
+        var keys = ["index", "meta"];
         for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
             if (snapshotIR[k] === undefined) continue;

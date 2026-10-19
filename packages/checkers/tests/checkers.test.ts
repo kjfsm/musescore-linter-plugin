@@ -1,3 +1,4 @@
+import type { BarlineKind } from "@musescore-linter/core";
 import { getCheckerList, reset, runAllCheckers } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
@@ -1971,7 +1972,7 @@ describe("rehearsal-mark-order checker", () => {
 // ─── repeat-barline-match ─────────────────────────────────────────────────
 
 describe("repeat-barline-match checker", () => {
-  const repeatBar = (tick: number, measure: number, kind: string) => ({
+  const repeatBar = (tick: number, measure: number, kind: BarlineKind) => ({
     kind: K.BAR_LINE,
     staff: 0,
     tick,

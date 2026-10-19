@@ -1,12 +1,10 @@
-import type { Checker, IndexedIR, Issue, LintEvent } from "@musescore-linter/core";
-import { createIssue, eventsOnStaff } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 // sf・rf はアクセント的に連続して使われることが多いため、重複検出の対象から除外する。
 const CONSECUTIVE_ALLOWED = new Set(["sf", "rf"]);
 
-function sameDynamic(a: LintEvent, b: LintEvent): boolean {
+function sameDynamic(a: TextEvent, b: TextEvent): boolean {
   if (
     a.subtype !== null &&
     a.subtype !== undefined &&
@@ -28,18 +26,16 @@ export const duplicateDynamicsChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const parts = ir.meta?.parts ?? [];
+    const parts = ir.meta.parts;
     for (const part of parts) {
-      const dynEvents = eventsOnStaff(ir, part.staffIdx, canonical.elementKinds.DYNAMIC).sort(
+      const dynEvents = eventsOnStaff(ir, part.staffIdx, CANONICAL.elementKinds.DYNAMIC).sort(
         (a, b) => a.tick - b.tick,
       );
 
       const hairpins = ir.meta.hairpins.filter((h) => h.staffIdx === part.staffIdx);
 
-      let prev: LintEvent | null = null;
+      let prev: TextEvent | null = null;
       for (const ev of dynEvents) {
         if (prev !== null && sameDynamic(prev, ev) && !CONSECUTIVE_ALLOWED.has(ev.textNorm)) {
           const prevTick = prev.tick;

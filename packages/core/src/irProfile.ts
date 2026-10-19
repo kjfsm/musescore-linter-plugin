@@ -25,25 +25,16 @@ export interface IRProfile {
   hasMeasures: boolean;
   /** meta.partGroups の件数。 */
   partGroupCount: number;
-  /** 全イベントで type が kind から導出される値と一致するか。 */
-  typeMatchesKind: boolean;
   /** measure が 0 のイベント数。小節番号を解決できていないイベントの数。 */
   eventsWithoutMeasure: number;
   /** 索引が events と整合しているか（id の取りこぼし・重複がない）。 */
   indexConsistent: boolean;
 }
 
-function typeFromKind(kind: string): string {
-  if (kind === CANONICAL.elementKinds.CHORD) return "chord";
-  if (kind === CANONICAL.elementKinds.REST) return "rest";
-  if (kind === CANONICAL.elementKinds.BAR_LINE) return "barline";
-  return "text";
-}
-
 function indexIsConsistent(ir: LintIR): boolean {
   const total = ir.events.length;
-  const countIds = (map: Record<string, number[]>): number =>
-    Object.values(map).reduce((n, ids) => n + ids.length, 0);
+  const countIds = (map: Partial<Record<string, number[]>>): number =>
+    Object.values(map).reduce((n, ids) => n + (ids?.length ?? 0), 0);
 
   if (countIds(ir.index.byTick) !== total) return false;
   if (countIds(ir.index.byKind) !== total) return false;
@@ -61,15 +52,17 @@ export function profileIR(ir: LintIR): IRProfile {
   let textual = 0;
   let subtypeFilled = 0;
   let hasGlobalScope = false;
-  let typeMatchesKind = true;
   let eventsWithoutMeasure = 0;
 
   for (const ev of ir.events) {
     kinds.add(ev.kind);
     if (ev.scope === "global") hasGlobalScope = true;
     if (ev.measure === 0) eventsWithoutMeasure++;
-    if (ev.type !== typeFromKind(ev.kind)) typeMatchesKind = false;
-    if (ev.type === "text") {
+    if (
+      ev.kind !== CANONICAL.elementKinds.CHORD &&
+      ev.kind !== CANONICAL.elementKinds.REST &&
+      ev.kind !== CANONICAL.elementKinds.BAR_LINE
+    ) {
       textual++;
       if (ev.subtype !== null && ev.subtype !== undefined) subtypeFilled++;
     }
@@ -80,9 +73,8 @@ export function profileIR(ir: LintIR): IRProfile {
     kinds: [...kinds].sort(),
     hasGlobalScope,
     subtypeFilledRatio: textual === 0 ? 0 : subtypeFilled / textual,
-    hasMeasures: (ir.meta?.measures?.length ?? 0) > 0,
-    partGroupCount: ir.meta?.partGroups?.length ?? 0,
-    typeMatchesKind,
+    hasMeasures: (ir.meta.measures.length ?? 0) > 0,
+    partGroupCount: ir.meta.partGroups.length ?? 0,
     eventsWithoutMeasure,
     indexConsistent: indexIsConsistent(ir),
   };

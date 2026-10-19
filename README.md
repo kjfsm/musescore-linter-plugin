@@ -439,7 +439,8 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 ```ts
 {
   events: [                      // 全イベントの単一配列（source of truth）
-    { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw, scope, barlineKind?, tempo?, duration?, ... }
+    // kind を判別子にした共用体。chord / rest / bar_line / テキスト系で持つフィールドが違う
+    { id, kind, tick, measure, staffIdx, voice, scope, ...kind ごとのフィールド }
   ],
   index: {                       // O(1) 検索用
     byTick:         { [tick]:           [eventId] },
@@ -453,7 +454,6 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
     lastTick: number,
     hairpins: [{ staffIdx, startTick, endTick }]
   },
-  registry: { canonical: { elementKinds, barlineKinds } },
   derived: {                     // IndexedIR のみ。runAllCheckers が withDerived で 1 回だけ構築
     firstChordByStaff, articulationsByChordId, slursByStaff, tiesByStaff,
     rhythmByStaffMeasure, chordsByStaffMeasure
@@ -464,7 +464,7 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 ## 設計メモ
 
 - `staves` / `unresolvedAnnotations` は廃止済み。global scope のイベントは `index.byStaff[-1]` で参照する。
-- MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。
+- MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。kind の文字列は `ElementKind` / `BarlineKind` のリテラル型で、語彙外の値は型エラーになる。
 - Issue 型は `@musescore-linter/core` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
 - checker 単体で例外が出ても他の checker は実行継続し、`ruleId: "internal"` の issue として UI に表示される。
 

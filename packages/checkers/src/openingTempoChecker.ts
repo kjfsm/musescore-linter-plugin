@@ -1,7 +1,6 @@
 import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import { CANONICAL, createIssue } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
 import { eventsForStaff } from "./base/query.js";
 
 export const openingTempoChecker: Checker = {
@@ -13,10 +12,7 @@ export const openingTempoChecker: Checker = {
   defaultEnabled: true,
   run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    if (!ir.meta?.parts?.length) return issues;
-
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
+    if (!ir.meta.parts.length) return issues;
 
     const [staff] = ir.meta.parts;
     if (!staff) return issues;
@@ -25,7 +21,7 @@ export const openingTempoChecker: Checker = {
 
     // 譜表に載ったテンポ表記と、global scope（全パート共通）のテンポ表記の両方を見る。
     // MuseScore 経路は後者に置き、MusicXML 経路は前者に置く。
-    const tempoKind = canonical.elementKinds.TEMPO_TEXT;
+    const tempoKind = CANONICAL.elementKinds.TEMPO_TEXT;
     const tempos = eventsForStaff(ir, staff.staffIdx, tempoKind);
     if (tempos.some((ev) => ev.tick <= firstMusicTick)) return issues;
 
