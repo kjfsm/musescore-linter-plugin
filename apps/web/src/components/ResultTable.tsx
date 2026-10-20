@@ -41,7 +41,8 @@ function ScorePreviewSection({ name, xml }: { name: string; xml: string }) {
         <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden />
         楽譜プレビュー
       </summary>
-      {hasOpened && <ScorePreview name={name} xml={xml} />}
+      {/* 楽譜が変わったら key で作り直して loading から始める。effect の中で状態を戻すと連鎖レンダーになる */}
+      {hasOpened && <ScorePreview key={xml} name={name} xml={xml} />}
     </details>
   );
 }

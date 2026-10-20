@@ -33,7 +33,7 @@ describe("lintCurrentScore", () => {
     const fromMuseScore = lintCurrentScore(withScore(), NO_SETTINGS, false).issues;
     const fromMusicXml = lintScore(createLinter(builtinRules), readMusicXml(duetXml), NO_SETTINGS);
     // パートの識別子だけは読み込み口ごとに違う（MuseScore は並び順、MusicXML は part の id）
-    const strip = (issues: typeof fromMusicXml) => issues.map(({ partId: _, ...rest }) => rest);
+    const strip = (issues: typeof fromMusicXml) => issues.map((i) => ({ ...i, partId: "" }));
     expect(strip(fromMuseScore)).toEqual(strip(fromMusicXml));
     expect(fromMuseScore.map((i) => i.ruleId)).toContain("tie-pitch-mismatch");
   });
