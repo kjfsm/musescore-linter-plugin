@@ -11,7 +11,7 @@ const REPO_ROOT = join(__dirname, "..", "..", "..");
 // message は表示の都合で書き換わるので比べない。位置と内容（detail）だけを比べる。
 // 意図して結果を変えたときは `pnpm vitest run -u` で更新し、差分の理由をコミットに書く。
 const SCORES = [
-  "packages/source-musicxml/tests/fixtures/duet.musicxml",
+  "packages/reader-musicxml/tests/fixtures/duet.musicxml",
   "fixtures/scores/Beethoven_Op.67_1_cut/symphony-no-5.musicxml",
   "fixtures/scores/Beethoven_Op.67_1_full/Beethoven_Op.67_1_full.musicxml",
 ];

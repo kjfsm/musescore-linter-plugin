@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { Issue, LintIR } from "@score-linter/core";
+import type { ReportedIssue } from "@score-linter/lint-app";
+import type { Score } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { formatGithub, formatPretty, meetsThreshold } from "../src/format.js";
-import { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, type RunIO, run } from "../src/run.js";
+import { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, meetsThreshold, type RunIO, run } from "../src/run.js";
 
 const DUET = join(
   __dirname,
@@ -13,7 +13,7 @@ const DUET = join(
   "..",
   "..",
   "packages",
-  "source-musicxml",
+  "reader-musicxml",
   "tests",
   "fixtures",
   "duet.musicxml",
@@ -97,26 +97,36 @@ describe("run: 解析結果", () => {
     const r = invoke(["--json", "duet.musicxml"]);
     const parsed = JSON.parse(r.out) as {
       summary: { files: number; issues: number };
-      results: { file: string; issues: Issue[] }[];
+      results: { file: string; issues: ReportedIssue[] }[];
     };
     expect(parsed.summary.files).toBe(1);
     expect(parsed.results[0]?.file).toBe("duet.musicxml");
     expect(parsed.summary.issues).toBe(parsed.results[0]?.issues.length);
   });
 
-  it("--dump-ir は LintIR をそのまま JSON で返す", () => {
-    const r = invoke(["--dump-ir", "duet.musicxml"]);
-    expect(r.code).toBe(EXIT_OK);
-    const ir = JSON.parse(r.out) as LintIR;
-    expect(ir.meta.parts).toHaveLength(2);
-    expect(ir.events.length).toBeGreaterThan(0);
-    expect(ir.events.some((e) => e.kind === "chord")).toBe(true);
+  it("--dump-score は読み込んだ楽譜のモデルをそのまま JSON で返す", () => {
+    for (const flag of ["--dump-score", "--dump-ir"]) {
+      const r = invoke([flag, "duet.musicxml"]);
+      expect(r.code).toBe(EXIT_OK);
+      const score = JSON.parse(r.out) as Score;
+      expect(score.parts.map((p) => p.name)).toEqual(["Violin I", "Violin II"]);
+      expect(score.staves[0]?.voices[0]?.events.some((e) => e.type === "chord")).toBe(true);
+    }
+  });
+
+  it("--format=markdown と --format=csv で表を出す", () => {
+    expect(invoke(["--format=markdown", "duet.musicxml"]).out.split("\n")[0]).toBe(
+      "| 重大度 | パート | 小節 | メッセージ | ルール |",
+    );
+    expect(invoke(["--format=csv", "duet.musicxml"]).out.split("\r\n")[0]).toBe(
+      '"重大度","パート","小節","メッセージ","ルール"',
+    );
   });
 
   it("--rule で 1 つの checker だけに絞れる", () => {
     const r = invoke(["--json", "--rule=tie-pitch-mismatch", "duet.musicxml"]);
     const parsed = JSON.parse(r.out) as {
-      results: { issues: Issue[] }[];
+      results: { issues: ReportedIssue[] }[];
     };
     const ids = new Set(parsed.results[0]?.issues.map((i) => i.ruleId));
     expect([...ids]).toEqual(["tie-pitch-mismatch"]);
@@ -124,16 +134,16 @@ describe("run: 解析結果", () => {
 
   it("--no-rule で個別に無効化できる", () => {
     const all = JSON.parse(invoke(["--json", "duet.musicxml"]).out) as {
-      results: { issues: Issue[] }[];
+      results: { issues: ReportedIssue[] }[];
     };
     const without = JSON.parse(
       invoke(["--json", "--no-rule=tie-pitch-mismatch", "duet.musicxml"]).out,
-    ) as { results: { issues: Issue[] }[] };
+    ) as { results: { issues: ReportedIssue[] }[] };
     expect(all.results[0]?.issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(true);
     expect(without.results[0]?.issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(false);
   });
 
-  it("存在しない checker id は終了コード 2", () => {
+  it("存在しないルール id は終了コード 2", () => {
     const r = invoke(["--rule=nope", "duet.musicxml"]);
     expect(r.code).toBe(EXIT_ERROR);
     expect(r.err).toContain("'nope' は存在しません");
@@ -169,89 +179,37 @@ describe("run: 終了コードと閾値", () => {
   });
 });
 
-describe("format", () => {
-  const issues: Issue[] = [
-    {
-      ruleId: "opening-tempo",
-      severity: "error",
-      category: "tempo",
-      message: "冒頭にテンポ表記がありません",
-      partName: "Violin I",
-      staffIdx: 0,
-      measure: 1,
-      tick: 0,
-      detail: null,
-    },
-    {
-      ruleId: "final-barline",
-      severity: "info",
-      category: "notation",
-      message: "曲末が終止線になっていません",
-      partName: "Violin I",
-      staffIdx: 0,
-      measure: 12,
-      tick: 100,
-      detail: null,
-    },
-  ];
-
-  it("meetsThreshold は severity の重さで判定する", () => {
+describe("meetsThreshold", () => {
+  it("severity の重さで判定する", () => {
     expect(meetsThreshold("warning", "error")).toBe(false);
     expect(meetsThreshold("error", "warning")).toBe(true);
     expect(meetsThreshold("info", "info")).toBe(true);
     expect(meetsThreshold("error", "none")).toBe(false);
   });
+});
 
-  it("pretty は色なしなら ANSI を含まない", () => {
-    const text = formatPretty([{ file: "a.musicxml", issues }], false);
+describe("pretty 出力", () => {
+  it("色なしなら ANSI を含まず、位置・ルール・集計を出す", () => {
+    const text = invoke(["--no-color", "duet.musicxml"]).out;
     // oxlint-disable-next-line no-control-regex -- ANSI エスケープが無いことの確認
-    expect(text).not.toMatch(/\[/);
-    expect(text).toContain("m.1");
-    expect(text).toContain("[opening-tempo]");
-    expect(text).toContain("error 1, warning 0, info 1");
+    expect(text).not.toMatch(/\u001b\[/);
+    expect(text).toContain("m.2");
+    expect(text).toContain("[tie-pitch-mismatch]");
+    expect(text).toMatch(/1 ファイル \/ \d+ 件/);
   });
 
-  it("pretty は issue が無ければその旨を出す", () => {
-    expect(formatPretty([{ file: "a.musicxml", issues: [] }], false)).toContain(
-      "問題は見つかりませんでした",
+  it("メッセージにパート名を重ねない", () => {
+    const line = invoke(["--no-color", "--rule=tie-pitch-mismatch", "duet.musicxml"])
+      .out.split("\n")
+      .find((l) => l.includes("[tie-pitch-mismatch]"));
+    expect(line).toContain("Violin II");
+    expect(line?.match(/Violin II/g)).toHaveLength(1);
+  });
+
+  it("GitHub のアノテーションはパートと小節をメッセージの頭に置く", () => {
+    const out = invoke(["--format=github", "--rule=tie-pitch-mismatch", "duet.musicxml"]).out;
+    expect(out).toMatch(
+      /^::warning file=duet.musicxml,title=tie-pitch-mismatch::Violin II 2小節目: /,
     );
-  });
-
-  it("pretty はメッセージ先頭の重複したパート名を落とす", () => {
-    const text = formatPretty(
-      [
-        {
-          file: "a.musicxml",
-          issues: [
-            {
-              ...issues[0]!,
-              message: "Violin I: 1音目にダイナミクスがありません",
-            },
-          ],
-        },
-      ],
-      false,
-    );
-    expect(text).toContain("Violin I 1音目にダイナミクスがありません");
-    expect(text).not.toContain("Violin I: 1音目");
-  });
-
-  it("github は severity をアノテーションレベルに写す", () => {
-    const lines = formatGithub([{ file: "a.musicxml", issues }]).split("\n");
-    expect(lines[0]).toBe(
-      "::error file=a.musicxml,title=opening-tempo::冒頭にテンポ表記がありません",
-    );
-    expect(lines[1]).toMatch(/^::notice /);
-  });
-
-  it("github はプロパティ中の , と : をエスケープする", () => {
-    const text = formatGithub([
-      {
-        file: "dir/a,b:c.musicxml",
-        issues: [{ ...issues[0]!, message: "改行\nを含む" }],
-      },
-    ]);
-    expect(text).toContain("file=dir/a%2Cb%3Ac.musicxml");
-    expect(text).toContain("改行%0Aを含む");
   });
 });

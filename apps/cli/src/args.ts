@@ -1,7 +1,7 @@
-import type { Checker, CheckerOptionValue, Severity } from "@score-linter/core";
-import { findOptionSpec, parseCheckerOptionText } from "@score-linter/core";
+import type { OptionValue, Rule, Severity } from "@score-linter/linter";
+import { parseOptionText } from "@score-linter/linter";
 
-export type OutputFormat = "pretty" | "json" | "github";
+export type OutputFormat = "pretty" | "json" | "github" | "markdown" | "csv";
 
 /** `--rule-option=<ruleId>.<key>=<value>` を割っただけの生の指定。値の妥当性は未検証。 */
 export interface RawRuleOption {
@@ -10,18 +10,18 @@ export interface RawRuleOption {
   value: string;
 }
 
-/** 非ゼロ終了の閾値。"none" はどんな issue でも 0 を返す。 */
+/** 非ゼロ終了の閾値。"none" はどんな指摘でも 0 を返す。 */
 export type FailOn = Severity | "none";
 
 export interface CliOptions {
   files: string[];
   format: OutputFormat;
-  dumpIR: boolean;
-  /** 明示的に無効化する checker id */
+  dumpScore: boolean;
+  /** 明示的に無効化するルールの id */
   disabledRules: string[];
-  /** 指定があればこの checker だけを有効にする */
+  /** 指定があればこのルールだけを有効にする */
   onlyRules: string[];
-  /** checker 個別のオプション指定（出現順。同じキーは後勝ち） */
+  /** ルール個別のオプション指定（出現順。同じキーは後勝ち） */
   ruleOptions: RawRuleOption[];
   failOn: FailOn;
   color: boolean;
@@ -32,13 +32,13 @@ export interface CliOptions {
 
 export class UsageError extends Error {}
 
-const FORMATS: OutputFormat[] = ["pretty", "json", "github"];
+const FORMATS: OutputFormat[] = ["pretty", "json", "github", "markdown", "csv"];
 const FAIL_ON: FailOn[] = ["error", "warning", "info", "none"];
 
 const DEFAULTS: CliOptions = {
   files: [],
   format: "pretty",
-  dumpIR: false,
+  dumpScore: false,
   disabledRules: [],
   onlyRules: [],
   ruleOptions: [],
@@ -128,8 +128,9 @@ export function parseArgs(argv: string[]): CliOptions {
       case "--json":
         options.format = "json";
         break;
+      case "--dump-score":
       case "--dump-ir":
-        options.dumpIR = true;
+        options.dumpScore = true;
         break;
       case "--format":
         options.format = oneOf(flag, requireValue(flag, value), FORMATS);
@@ -157,7 +158,7 @@ export function parseArgs(argv: string[]): CliOptions {
   return options;
 }
 
-/** `runAllCheckers` に渡す enabledRules を組み立てる。 */
+/** リンターに渡す、ルール id → 有効かを組み立てる。 */
 export function resolveEnabledRules(
   options: Pick<CliOptions, "disabledRules" | "onlyRules">,
   allRuleIds: string[],
@@ -172,35 +173,37 @@ export function resolveEnabledRules(
 }
 
 /**
- * `runAllCheckers` に渡す ruleOptions を組み立てる。
+ * リンターに渡す、ルール id → オプションの値を組み立てる。
  *
- * 人間が打った指定を受ける境界なので、`resolveCheckerOptions` のように黙って既定へ
- * 落とさず、未知の checker / key / 値はここでエラーにする。同じキーの重複指定は後勝ち。
+ * 人が打った指定を受ける境界なので、リンターのように黙って既定値へ落とさず、
+ * 未知のルール・キー・値はここでエラーにする。同じキーの重複指定は後勝ち。
  */
 export function resolveRuleOptions(
   options: Pick<CliOptions, "ruleOptions">,
-  checkers: Checker[],
-): Record<string, Record<string, CheckerOptionValue>> {
-  const byId = new Map(checkers.map((c) => [c.id, c]));
-  const out: Record<string, Record<string, CheckerOptionValue>> = {};
+  rules: readonly Rule[],
+): Record<string, Record<string, OptionValue>> {
+  const byId = new Map(rules.map((r) => [r.id, r]));
+  const out: Record<string, Record<string, OptionValue>> = {};
 
   for (const { ruleId, key, value } of options.ruleOptions) {
-    const checker = byId.get(ruleId);
-    if (!checker) {
+    const rule = byId.get(ruleId);
+    if (!rule) {
       throw new UsageError(
-        `チェッカー '${ruleId}' は存在しません（--list-rules で一覧を確認できます）`,
+        `ルール '${ruleId}' は存在しません（--list-rules で一覧を確認できます）`,
       );
     }
-    const spec = findOptionSpec(checker, key);
+    const spec = Object.prototype.hasOwnProperty.call(rule.options, key)
+      ? rule.options[key]
+      : undefined;
     if (!spec) {
-      const keys = (checker.options ?? []).map((s) => s.key);
+      const keys = Object.keys(rule.options);
       throw new UsageError(
         keys.length > 0
-          ? `チェッカー '${ruleId}' に設定 '${key}' はありません（指定できるのは ${keys.join(" / ")}）`
-          : `チェッカー '${ruleId}' に設定できる項目はありません`,
+          ? `ルール '${ruleId}' に設定 '${key}' はありません（指定できるのは ${keys.join(" / ")}）`
+          : `ルール '${ruleId}' に設定できる項目はありません`,
       );
     }
-    const parsed = parseCheckerOptionText(spec, value);
+    const parsed = parseOptionText(key, spec, value);
     if (!parsed.ok) throw new UsageError(`--rule-option=${ruleId}.${key}: ${parsed.error}`);
 
     if (!out[ruleId]) out[ruleId] = {};
@@ -210,7 +213,7 @@ export function resolveRuleOptions(
   return out;
 }
 
-/** 指定された id が実在する checker かを検証する。 */
+/** 指定された id が実在するルールかを検証する。 */
 export function assertKnownRules(
   options: Pick<CliOptions, "disabledRules" | "onlyRules">,
   allRuleIds: string[],
@@ -218,9 +221,7 @@ export function assertKnownRules(
   const known = new Set(allRuleIds);
   for (const id of [...options.onlyRules, ...options.disabledRules]) {
     if (!known.has(id)) {
-      throw new UsageError(
-        `チェッカー '${id}' は存在しません（--list-rules で一覧を確認できます）`,
-      );
+      throw new UsageError(`ルール '${id}' は存在しません（--list-rules で一覧を確認できます）`);
     }
   }
 }
@@ -233,27 +234,28 @@ export const HELP_TEXT = `score-lint — MusicXML の楽譜を静的解析する
   ファイルは .musicxml / .xml（score-partwise）と、圧縮形式の .mxl を受け付ける。
 
 オプション:
-  --format=<pretty|json|github>  出力形式（既定: pretty）
+  --format=<pretty|json|github|markdown|csv>
+                                 出力形式（既定: pretty）
                                  github は GitHub Actions のアノテーション形式
   --json                         --format=json の別名
-  --dump-ir                      issue ではなく LintIR を JSON 出力する
-                                 （ファイル 1 つなら LintIR そのもの、複数なら
-                                   [{ file, ir }, ...] の配列になる）
-  --rule=<id>                    指定した checker だけを有効にする（複数指定可）
-  --no-rule=<id>                 指定した checker を無効にする（複数指定可）
-  --rule-option=<id>.<key>=<値>  checker 個別の設定（複数指定可、同じキーは後勝ち）
+  --dump-score                   指摘ではなく、読み込んだ楽譜のモデルを JSON 出力する
+                                 （ファイル 1 つならモデルそのもの、複数なら
+                                   [{ file, score }, ...] の配列になる。--dump-ir は別名）
+  --rule=<id>                    指定したルールだけを有効にする（複数指定可）
+  --no-rule=<id>                 指定したルールを無効にする（複数指定可）
+  --rule-option=<id>.<key>=<値>  ルール個別の設定（複数指定可、同じキーは後勝ち）
                                  複数選択の値はカンマ区切り
                                  指定できる key は --list-rules で確認できる
   --fail-on=<error|warning|info|none>
-                                 この severity 以上の issue があれば終了コード 1
+                                 この severity 以上の指摘があれば終了コード 1
                                  （既定: error。none はつねに 0）
   --no-color                     色付けをやめる
-  --list-rules                   checker の一覧を表示して終了
+  --list-rules                   ルールの一覧を表示して終了
   -h, --help                     このヘルプ
   -v, --version                  バージョン
 
 終了コード:
-  0  --fail-on の閾値以上の issue なし
-  1  閾値以上の issue あり
+  0  --fail-on の閾値以上の指摘なし
+  1  閾値以上の指摘あり
   2  実行エラー（ファイルが読めない・パースできない等）
 `;
