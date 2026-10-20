@@ -33,15 +33,6 @@
     "packages/lint-app": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/core": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
-    },
-    "packages/checkers": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
-    },
-    "packages/source-musicxml": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
-    },
     "apps/cli": {
       "entry": ["scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]

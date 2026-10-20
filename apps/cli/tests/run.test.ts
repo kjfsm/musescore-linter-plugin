@@ -56,7 +56,7 @@ describe("run: 基本動作", () => {
     expect(r.err).toContain("ファイルを指定してください");
   });
 
-  it("--list-rules は checker 一覧を出す", () => {
+  it("--list-rules はルールの一覧を出す", () => {
     const r = invoke(["--list-rules"]);
     expect(r.code).toBe(EXIT_OK);
     expect(r.out).toContain("opening-tempo");
@@ -123,7 +123,7 @@ describe("run: 解析結果", () => {
     );
   });
 
-  it("--rule で 1 つの checker だけに絞れる", () => {
+  it("--rule で 1 つのルールだけに絞れる", () => {
     const r = invoke(["--json", "--rule=tie-pitch-mismatch", "duet.musicxml"]);
     const parsed = JSON.parse(r.out) as {
       results: { issues: ReportedIssue[] }[];
@@ -168,7 +168,7 @@ describe("run: 終了コードと閾値", () => {
   });
 
   it("閾値を満たす issue が無ければ 0", () => {
-    // info しか出さない checker に絞れば --fail-on=error では 0
+    // info しか出さないルールに絞れば --fail-on=error では 0
     const r = invoke(["--rule=final-barline", "duet.musicxml"]);
     expect(r.code).toBe(EXIT_OK);
   });

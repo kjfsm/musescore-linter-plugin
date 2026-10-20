@@ -65,7 +65,7 @@ export function clefFrom(
  *
  * MuseScore の `Note.line` と同じ「上ほど小さい・1 ステップ 1」という尺度だが、原点
  * （どの音を 0 とするか）は MuseScore 内部の採番と一致しない可能性がある。この値を使う
- * checker は `courtesy-accidental` のみで、同一譜表内での一致判定にしか使わないため
+ * ルールは `courtesy-accidental` のみで、同一譜表内での一致判定にしか使わないため
  * 判定結果には影響しない。
  */
 export function toStaffLine(clef: ClefState, step: string, octave: number): number {

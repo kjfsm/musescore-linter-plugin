@@ -90,7 +90,7 @@ describe("parseArgs", () => {
 });
 
 describe("resolveEnabledRules", () => {
-  it("指定が無ければ空（= 各 checker の defaultEnabled に従う）", () => {
+  it("指定が無ければ空（= 各ルールの defaultEnabled に従う）", () => {
     expect(resolveEnabledRules({ onlyRules: [], disabledRules: [] }, RULES)).toEqual({});
   });
 
@@ -112,7 +112,7 @@ describe("resolveEnabledRules", () => {
 });
 
 describe("assertKnownRules", () => {
-  it("存在しない checker id を拒否する", () => {
+  it("存在しないルール id を拒否する", () => {
     expect(() => assertKnownRules({ onlyRules: ["nope"], disabledRules: [] }, RULES)).toThrow(
       /'nope' は存在しません/,
     );

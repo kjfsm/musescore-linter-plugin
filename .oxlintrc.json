@@ -119,30 +119,6 @@
           }
         ]
       }
-    },
-    {
-      // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
-      // これまで package.json の記述と人の注意力だけで守られていたので、
-      // import を機械的に塞いでおく。MuseScore を触ってよいのは
-      // source-musescore と musescore-api だけ。
-      "files": ["packages/core/**", "packages/checkers/**"],
-      "rules": {
-        "eslint/no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "@score-linter/musescore-api-types",
-                  "@score-linter/musescore-plugin-helpers",
-                  "@score-linter/musescore-api"
-                ],
-                "message": "core / checkers は MuseScore に依存しない。入力ソース側（source-musescore）の責務。"
-              }
-            ]
-          }
-        ]
-      }
     }
   ]
 }
