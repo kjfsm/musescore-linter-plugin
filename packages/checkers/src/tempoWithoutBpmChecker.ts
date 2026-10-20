@@ -1,7 +1,6 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOfKind } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";
 
 export const tempoWithoutBpmChecker: Checker = {
@@ -11,16 +10,12 @@ export const tempoWithoutBpmChecker: Checker = {
   category: "tempo",
   severity: "warning",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const tempoIds = ir.index.byKind[canonical.elementKinds.TEMPO_TEXT] ?? [];
     const partsByStaff = buildPartNameMap(ir);
 
-    for (const id of tempoIds) {
-      const ev = ir.events[id];
+    for (const ev of eventsOfKind(ir, CANONICAL.elementKinds.TEMPO_TEXT)) {
       // null / undefined だけでなく NaN や 0 以下も「BPM なし」として扱う。
       // 入力ソースが壊れた値を入れてきても検出漏れにならないようにするため。
       if (typeof ev.tempo === "number" && Number.isFinite(ev.tempo) && ev.tempo > 0) continue;

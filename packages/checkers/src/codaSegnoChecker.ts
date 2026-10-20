@@ -1,24 +1,14 @@
-import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOfKind } from "@musescore-linter/core";
 
-import { getCanonical, techniqueTextKinds } from "./base/predicates.js";
+import { TECHNIQUE_TEXT_KINDS } from "./base/predicates.js";
 
-function collectTextEvents(ir: LintIR): LintEvent[] {
-  const canonical = getCanonical(ir);
-  if (!canonical) return [];
-
+function collectTextEvents(ir: IndexedIR): TextEvent[] {
   // 以前は EXPRESSION を見ておらず、MuseScore で Expression 要素として書いた
   // 「Coda」「D.C.」を取りこぼしていた。テンポ表記は反復記号を載せないので除く。
-  const kinds = [...techniqueTextKinds(ir), canonical.elementKinds.REHEARSAL_MARK];
+  const kinds = [...TECHNIQUE_TEXT_KINDS, CANONICAL.elementKinds.REHEARSAL_MARK];
 
-  const events: LintEvent[] = [];
-  for (const kind of kinds) {
-    const ids = ir.index.byKind[kind] ?? [];
-    for (const id of ids) {
-      events.push(ir.events[id]);
-    }
-  }
-  return events;
+  return kinds.flatMap((kind) => eventsOfKind(ir, kind));
 }
 
 const DS_RE = /\bd\.?\s*s\.?/;
@@ -30,17 +20,17 @@ export const codaSegnoChecker: Checker = {
   category: "notation",
   severity: "error",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
     const textEvents = collectTextEvents(ir);
     if (textEvents.length === 0) return issues;
 
-    const segnoRefs: LintEvent[] = [];
-    const segnoMarks: LintEvent[] = [];
-    const codaRefs: LintEvent[] = [];
-    const codaMarks: LintEvent[] = [];
-    const fineRefs: LintEvent[] = [];
-    const fineMarks: LintEvent[] = [];
+    const segnoRefs: TextEvent[] = [];
+    const segnoMarks: TextEvent[] = [];
+    const codaRefs: TextEvent[] = [];
+    const codaMarks: TextEvent[] = [];
+    const fineRefs: TextEvent[] = [];
+    const fineMarks: TextEvent[] = [];
 
     for (const ev of textEvents) {
       const text = ev.textNorm;
@@ -70,54 +60,54 @@ export const codaSegnoChecker: Checker = {
       }
     }
 
-    if (segnoRefs.length > 0 && segnoMarks.length === 0) {
-      const ref = segnoRefs[0];
+    const segnoRef = segnoRefs[0];
+    if (segnoRef && segnoMarks.length === 0) {
       issues.push(
         createIssue(codaSegnoChecker, {
-          message: `"${ref.textRaw}" がありますが、対応する Segno マークが見つかりません`,
+          message: `"${segnoRef.textRaw}" がありますが、対応する Segno マークが見つかりません`,
           partName: "",
           staffIdx: -1,
-          measure: ref.measure,
-          tick: ref.tick,
+          measure: segnoRef.measure,
+          tick: segnoRef.tick,
         }),
       );
     }
 
-    if (codaRefs.length > 0 && codaMarks.length === 0) {
-      const ref = codaRefs[0];
+    const codaRef = codaRefs[0];
+    if (codaRef && codaMarks.length === 0) {
       issues.push(
         createIssue(codaSegnoChecker, {
-          message: `"${ref.textRaw}" がありますが、対応する Coda マークが見つかりません`,
+          message: `"${codaRef.textRaw}" がありますが、対応する Coda マークが見つかりません`,
           partName: "",
           staffIdx: -1,
-          measure: ref.measure,
-          tick: ref.tick,
+          measure: codaRef.measure,
+          tick: codaRef.tick,
         }),
       );
     }
 
-    if (codaMarks.length > 0 && codaRefs.length === 0) {
-      const mark = codaMarks[0];
+    const codaMark = codaMarks[0];
+    if (codaMark && codaRefs.length === 0) {
       issues.push(
         createIssue(codaSegnoChecker, {
           message: `Coda マークがありますが、"al Coda" を参照する記号（D.S./D.C. al Coda）が見つかりません`,
           partName: "",
           staffIdx: -1,
-          measure: mark.measure,
-          tick: mark.tick,
+          measure: codaMark.measure,
+          tick: codaMark.tick,
         }),
       );
     }
 
-    if (fineRefs.length > 0 && fineMarks.length === 0) {
-      const ref = fineRefs[0];
+    const fineRef = fineRefs[0];
+    if (fineRef && fineMarks.length === 0) {
       issues.push(
         createIssue(codaSegnoChecker, {
-          message: `"${ref.textRaw}" がありますが、対応する Fine マークが見つかりません`,
+          message: `"${fineRef.textRaw}" がありますが、対応する Fine マークが見つかりません`,
           partName: "",
           staffIdx: -1,
-          measure: ref.measure,
-          tick: ref.tick,
+          measure: fineRef.measure,
+          tick: fineRef.tick,
         }),
       );
     }

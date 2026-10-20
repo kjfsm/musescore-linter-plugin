@@ -29,11 +29,11 @@ model: sonnet
 // ❌ 違反: ir.events の全件ループ
 for (var i = 0; i < ir.events.length; i++) { ... }
 
-// ✅ 正しい: ir.index を使う
-var targets = ir.index.byKind["SOME_KIND"] || [];
+// ✅ 正しい: 索引ヘルパーを使う
+const targets = eventsOfKind(ir, "SOME_KIND");
 ```
 
-- `ir.index.byKind` / `byStaffAndKind` / `byTick` を使っているか
+- 索引ヘルパー（`eventsOfKind` / `eventsOnStaff` / `eventsAtTick` / `eventsForStaff`）を使い、`ir.events[id]` を直に引いていないか
 - `ir.staves` / `ir.unresolvedAnnotations`（廃止）を参照していないか
 - 複数 checker で共有すべき前処理が `ir.derived` に乗っているか
 

@@ -4,7 +4,8 @@ export { getAll, getById, isCheckerEnabled, register, reset } from "./checkerReg
 export type { OptionParseResult } from "./checkerOptions.js";
 export { findOptionSpec, parseCheckerOptionText, resolveCheckerOptions } from "./checkerOptions.js";
 export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";
-export { CANONICAL } from "./enumRegistry.js";
+export type { BarlineKind, ElementKind, TextKind } from "./enumRegistry.js";
+export { CANONICAL, toBarlineKind } from "./enumRegistry.js";
 export type {
   EventSpec,
   HairpinSpec,
@@ -21,7 +22,8 @@ export { profileIR } from "./irProfile.js";
 export type { IssueFields } from "./issue.js";
 export { normalizePartGroups } from "./partGroups.js";
 export { compareIssues, createIssue } from "./issue.js";
-export { ensureDerived, getCheckerList, getCheckerPerfReport, runAllCheckers } from "./linter.js";
+export { eventsAtTick, eventsOfKind, eventsOnStaff } from "./irQuery.js";
+export { getCheckerList, getCheckerPerfReport, runAllCheckers, withDerived } from "./linter.js";
 export type { Logger } from "./logger.js";
 export { make as makeLogger, setLevel } from "./logger.js";
 export type { Perf } from "./perf.js";
@@ -29,12 +31,15 @@ export { createPerf, isPerfEnabled, setPerfEnabled } from "./perf.js";
 export { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "./pitchSpelling.js";
 
 export type {
-  CanonicalKinds,
+  BarlineEvent,
   Checker,
   CheckerOptionChoice,
   CheckerOptionSpec,
   CheckerOptionValue,
+  ChordEvent,
+  EventOfKind,
   HostVersionInfo,
+  IndexedIR,
   IRDerived,
   IRIndex,
   IRMeta,
@@ -45,7 +50,9 @@ export type {
   NoteInfo,
   PartGroupInfo,
   PartGroupSymbol,
+  RestEvent,
   Severity,
+  TextEvent,
   TieInfo,
 } from "./types.js";
 export { compareVersions, isNewerVersion } from "./version.js";

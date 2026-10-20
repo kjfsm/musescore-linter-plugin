@@ -1,8 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { LintEvent, LintIR } from "@musescore-linter/core";
-import { CANONICAL, tpcToAlter, tpcToName } from "@musescore-linter/core";
+import type { ElementKind, EventOfKind, LintIR } from "@musescore-linter/core";
+import {
+  CANONICAL,
+  eventsOfKind as eventsOfKindInIR,
+  tpcToAlter,
+  tpcToName,
+} from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { buildIRFromMusicXML, TICKS_PER_QUARTER } from "../src/builder.js";
@@ -14,9 +19,12 @@ const WHOLE = QUARTER * 4;
 
 const duet = readFileSync(join(__dirname, "fixtures", "duet.musicxml"), "utf8");
 
-function eventsOfKind(ir: LintIR, kind: string, staffIdx?: number): LintEvent[] {
-  return (ir.index.byKind[kind] ?? [])
-    .map((id) => ir.events[id])
+function eventsOfKind<Kind extends ElementKind>(
+  ir: LintIR,
+  kind: Kind,
+  staffIdx?: number,
+): EventOfKind<Kind>[] {
+  return eventsOfKindInIR(ir, kind)
     .filter((ev) => staffIdx === undefined || ev.staffIdx === staffIdx)
     .sort((a, b) => a.tick - b.tick);
 }
@@ -215,7 +223,7 @@ describe("buildIRFromMusicXML: パートと譜表", () => {
     const ir = buildIRFromMusicXML(
       score(measure(quarterNote("C", 4)), "").replace("<part-name></part-name>", "<part-name/>"),
     );
-    expect(ir.meta.parts[0].partName).toBe("Staff 1");
+    expect(ir.meta.parts[0]?.partName).toBe("Staff 1");
   });
 
   it("複数譜表のパートは staves の数だけ meta.parts を作り、同じ partName を共有する", () => {
@@ -255,7 +263,7 @@ describe("buildIRFromMusicXML: tick と小節", () => {
     const chords = eventsOfKind(ir, K.CHORD, 0);
     const m2 = chords.filter((c) => c.measure === 2);
     expect(m2.map((c) => c.tick)).toEqual([WHOLE, WHOLE + QUARTER * 2]);
-    expect(chords.filter((c) => c.measure === 3)[0].tick).toBe(WHOLE * 2);
+    expect(chords.filter((c) => c.measure === 3)[0]?.tick).toBe(WHOLE * 2);
   });
 
   it("backup で戻った位置に別声部を積む", () => {
@@ -286,8 +294,8 @@ describe("buildIRFromMusicXML: tick と小節", () => {
     );
     const chords = eventsOfKind(ir, K.CHORD);
     expect(chords).toHaveLength(2);
-    expect(chords[0].notes).toHaveLength(2);
-    expect(chords[1].tick).toBe(QUARTER);
+    expect(chords[0]?.notes).toHaveLength(2);
+    expect(chords[1]?.tick).toBe(QUARTER);
   });
 
   it("グレースノートは IR に含めない", () => {
@@ -307,9 +315,9 @@ describe("buildIRFromMusicXML: テキストと強弱", () => {
     const ir = buildIRFromMusicXML(duet);
     const tempos = eventsOfKind(ir, K.TEMPO_TEXT);
     expect(tempos).toHaveLength(1);
-    expect(tempos[0].textRaw).toBe("Allegro");
-    expect(tempos[0].textNorm).toBe("allegro");
-    expect(tempos[0].tempo).toBe(120);
+    expect(tempos[0]?.textRaw).toBe("Allegro");
+    expect(tempos[0]?.textNorm).toBe("allegro");
+    expect(tempos[0]?.tempo).toBe(120);
   });
 
   it("metronome の beat-unit を四分音符換算した BPM にする", () => {
@@ -321,8 +329,8 @@ describe("buildIRFromMusicXML: テキストと強弱", () => {
       ),
     );
     const tempo = eventsOfKind(ir, K.TEMPO_TEXT)[0];
-    expect(tempo.tempo).toBe(120);
-    expect(tempo.textRaw).toBe("half = 60");
+    expect(tempo?.tempo).toBe(120);
+    expect(tempo?.textRaw).toBe("half = 60");
   });
 
   it("dynamics の子要素名がそのまま textNorm になる", () => {
@@ -351,9 +359,9 @@ describe("buildIRFromMusicXML: テキストと強弱", () => {
     );
     const tempos = eventsOfKind(ir, K.TEMPO_TEXT);
     expect(tempos).toHaveLength(1);
-    expect(tempos[0].textRaw).toBe("Allegro con brio");
+    expect(tempos[0]?.textRaw).toBe("Allegro con brio");
     // BPM は書かれていないので null のまま。tempo-without-bpm がこれを拾う。
-    expect(tempos[0].tempo).toBeNull();
+    expect(tempos[0]?.tempo).toBeNull();
     expect(eventsOfKind(ir, K.STAFF_TEXT)).toHaveLength(0);
   });
 
@@ -384,7 +392,7 @@ describe("buildIRFromMusicXML: テキストと強弱", () => {
       ),
     );
     expect(eventsOfKind(ir, K.STAFF_TEXT).map((e) => e.textNorm)).toEqual(["segno", "coda"]);
-    expect(eventsOfKind(ir, K.REHEARSAL_MARK)[0].textRaw).toBe("A");
+    expect(eventsOfKind(ir, K.REHEARSAL_MARK)[0]?.textRaw).toBe("A");
   });
 });
 
@@ -427,15 +435,15 @@ describe("buildIRFromMusicXML: 音符情報", () => {
     const ir = buildIRFromMusicXML(duet);
     const chords = eventsOfKind(ir, K.CHORD, 0);
     const [c4, d4, eb4] = chords;
-    expect(c4.notes?.[0]).toMatchObject({
+    expect(c4?.notes?.[0]).toMatchObject({
       pitch: 60,
       tpc: 14,
       accidentalShown: false,
     });
-    expect(d4.notes?.[0]).toMatchObject({ pitch: 62, accidentalShown: false });
-    expect(eb4.notes?.[0]).toMatchObject({ pitch: 63, accidentalShown: true });
-    expect(tpcToName(eb4.notes?.[0].tpc ?? 0)).toBe("Eb");
-    expect(tpcToAlter(eb4.notes?.[0].tpc ?? 0)).toBe(-1);
+    expect(d4?.notes?.[0]).toMatchObject({ pitch: 62, accidentalShown: false });
+    expect(eb4?.notes?.[0]).toMatchObject({ pitch: 63, accidentalShown: true });
+    expect(tpcToName(eb4?.notes?.[0]?.tpc ?? 0)).toBe("Eb");
+    expect(tpcToAlter(eb4?.notes?.[0]?.tpc ?? 0)).toBe(-1);
   });
 
   it("同じ音名・同じオクターブなら line が一致し、オクターブ違いでは異なる", () => {
@@ -443,14 +451,14 @@ describe("buildIRFromMusicXML: 音符情報", () => {
       score(measure(`${quarterNote("E", 4)}${quarterNote("E", 4)}${quarterNote("E", 5)}`)),
     );
     const [a, b, c] = eventsOfKind(ir, K.CHORD);
-    expect(a.notes?.[0].line).toBe(b.notes?.[0].line);
-    expect(c.notes?.[0].line).toBe((a.notes?.[0].line ?? 0) - 7);
+    expect(a?.notes?.[0]?.line).toBe(b?.notes?.[0]?.line);
+    expect(c?.notes?.[0]?.line).toBe((a?.notes?.[0]?.line ?? 0) - 7);
   });
 
   it("articulation を MuseScore 名に正規化する", () => {
     const ir = buildIRFromMusicXML(duet);
     const staccato = eventsOfKind(ir, K.CHORD, 0)[1];
-    expect(staccato.articulations).toEqual(["Staccato"]);
+    expect(staccato?.articulations).toEqual(["Staccato"]);
   });
 
   it("duration は全音符を 1 とする既約分数になる", () => {
@@ -460,11 +468,11 @@ describe("buildIRFromMusicXML: 音符情報", () => {
         <note><rest/><duration>2</duration><voice>1</voice><type>half</type></note>`),
       ),
     );
-    expect(eventsOfKind(ir, K.CHORD)[0].duration).toEqual({
+    expect(eventsOfKind(ir, K.CHORD)[0]?.duration).toEqual({
       numerator: 3,
       denominator: 8,
     });
-    expect(eventsOfKind(ir, K.REST)[0].duration).toEqual({
+    expect(eventsOfKind(ir, K.REST)[0]?.duration).toEqual({
       numerator: 1,
       denominator: 2,
     });

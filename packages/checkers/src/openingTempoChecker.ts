@@ -1,8 +1,7 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { CANONICAL, createIssue } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
-import { eventIdsForStaff } from "./base/query.js";
+import { eventsForStaff } from "./base/query.js";
 
 export const openingTempoChecker: Checker = {
   id: "opening-tempo",
@@ -11,23 +10,20 @@ export const openingTempoChecker: Checker = {
   category: "tempo",
   severity: "error",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    if (!ir.meta?.parts?.length) return issues;
+    if (!ir.meta.parts.length) return issues;
 
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
-
-    const staff = ir.meta.parts[0];
+    const [staff] = ir.meta.parts;
+    if (!staff) return issues;
     const firstMusicTick = ir.meta.firstMusicTickByStaff[staff.staffIdx] ?? null;
     if (firstMusicTick === null) return issues;
 
     // 譜表に載ったテンポ表記と、global scope（全パート共通）のテンポ表記の両方を見る。
     // MuseScore 経路は後者に置き、MusicXML 経路は前者に置く。
-    const tempoIds = eventIdsForStaff(ir, staff.staffIdx, canonical.elementKinds.TEMPO_TEXT);
-    for (const id of tempoIds) {
-      if (ir.events[id].tick <= firstMusicTick) return issues;
-    }
+    const tempoKind = CANONICAL.elementKinds.TEMPO_TEXT;
+    const tempos = eventsForStaff(ir, staff.staffIdx, tempoKind);
+    if (tempos.some((ev) => ev.tick <= firstMusicTick)) return issues;
 
     issues.push(
       createIssue(openingTempoChecker, {

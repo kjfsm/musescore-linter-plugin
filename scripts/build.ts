@@ -18,7 +18,7 @@ function readBundleExports(): string[] {
   const src = fs.readFileSync(path.join(ROOT, "src/bundle-entry.ts"), "utf8");
   const block = src.match(/export \{([^}]*)\};/);
   if (!block) throw new Error("src/bundle-entry.ts の export ブロックを見つけられませんでした");
-  const names = block[1]
+  const names = block[1]!
     .split(",")
     .map((n) => n.trim())
     .filter((n) => n.length > 0);
@@ -38,7 +38,9 @@ async function main() {
     write: false,
   });
 
-  const raw = result.outputFiles[0].text;
+  const [bundle] = result.outputFiles;
+  if (!bundle) throw new Error("esbuild が出力ファイルを返しませんでした");
+  const raw = bundle.text;
 
   // QML の .import "file.js" as X で X.xxx にアクセスできるよう
   // トップレベル var として露出する

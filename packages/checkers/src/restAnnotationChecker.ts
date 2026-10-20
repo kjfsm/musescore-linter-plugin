@@ -1,7 +1,7 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
-import { getCanonical, isDynamicMark, techniqueTextKinds } from "./base/predicates.js";
+import { TECHNIQUE_TEXT_KINDS } from "./base/predicates.js";
 
 // 休符に付与してはいけない演奏技法テキスト（textNorm の完全一致）
 const DISALLOWED_TECHNIQUE_PATTERNS = new Set([
@@ -41,32 +41,27 @@ export const restAnnotationChecker: Checker = {
   category: "notation",
   severity: "error",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const parts = ir.meta?.parts ?? [];
+    const parts = ir.meta.parts;
     // 以前は SYSTEM_TEXT を見ておらず、MuseScore で SystemText として書いた
     // 「pizz.」を取りこぼしていた。テンポ表記は休符に載っていて当然なので除く。
-    const scannedKinds = [...techniqueTextKinds(ir), canonical.elementKinds.DYNAMIC];
+    const scannedKinds = [...TECHNIQUE_TEXT_KINDS, CANONICAL.elementKinds.DYNAMIC];
 
     for (const staff of parts) {
-      const byStaff = ir.index.byStaffAndKind[staff.staffIdx] ?? {};
       const restTicks = new Set<number>(
-        (byStaff[canonical.elementKinds.REST] ?? []).map((id) => ir.events[id].tick),
+        eventsOnStaff(ir, staff.staffIdx, CANONICAL.elementKinds.REST).map((ev) => ev.tick),
       );
 
       for (const kind of scannedKinds) {
-        const ids = byStaff[kind] ?? [];
-        for (const id of ids) {
-          const ev = ir.events[id];
+        for (const ev of eventsOnStaff(ir, staff.staffIdx, kind)) {
           if (!restTicks.has(ev.tick)) continue;
 
-          const isDynamic = isDynamicMark(ev, ir);
+          const isDynamic = ev.kind === CANONICAL.elementKinds.DYNAMIC;
           const isDisallowed =
             isDynamic ||
-            (techniqueTextKinds(ir).includes(ev.kind) &&
+            (TECHNIQUE_TEXT_KINDS.includes(ev.kind) &&
               DISALLOWED_TECHNIQUE_PATTERNS.has(ev.textNorm));
 
           if (!isDisallowed) continue;

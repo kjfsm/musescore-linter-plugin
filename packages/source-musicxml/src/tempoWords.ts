@@ -111,9 +111,9 @@ function tokenize(text: string): string[] {
  */
 export function looksLikeTempoText(text: string): boolean {
   const words = tokenize(text);
-  for (let i = 0; i < words.length && i <= MAX_MODIFIERS; i++) {
-    if (PRIMARY.has(words[i])) return true;
-    if (!MODIFIERS.has(words[i])) return false;
+  for (const word of words.slice(0, MAX_MODIFIERS + 1)) {
+    if (PRIMARY.has(word)) return true;
+    if (!MODIFIERS.has(word)) return false;
   }
   return false;
 }

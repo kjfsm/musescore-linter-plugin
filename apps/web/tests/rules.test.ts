@@ -43,7 +43,7 @@ describe("ruleGroups", () => {
   });
 
   it("カテゴリに日本語ラベルを付ける", () => {
-    expect(ruleGroups()[0].label).not.toBe("tempo");
+    expect(ruleGroups()[0]?.label).not.toBe("tempo");
   });
 
   it("カテゴリ内は severity 順（error→warning→info）に並べる", () => {
@@ -62,7 +62,7 @@ describe("ruleGroups", () => {
 describe("isEnabled", () => {
   // getCheckerList() は登録後でないと空。allRuleIds() が登録を保証する。
   allRuleIds();
-  const checker = getCheckerList()[0];
+  const checker = getCheckerList()[0]!;
 
   it("指定が無ければ defaultEnabled に従う", () => {
     expect(isEnabled(checker, {})).toBe(checker.defaultEnabled !== false);
@@ -85,13 +85,13 @@ describe("loadEnabledRules / saveEnabledRules", () => {
   });
 
   it("保存した設定を読み戻せる", () => {
-    const id = allRuleIds()[0];
+    const id = allRuleIds()[0]!;
     saveEnabledRules(storage, { [id]: false });
     expect(loadEnabledRules(storage)).toEqual({ [id]: false });
   });
 
   it("既定と同じ値は保存しない（checker が増えても既定に追従させるため）", () => {
-    const [a, b] = allRuleIds();
+    const [a, b] = allRuleIds() as [string, string];
     saveEnabledRules(storage, { [a]: false, [b]: true });
     const raw = JSON.parse(storage.getItem("musescore-linter:rule-overrides") ?? "{}") as Record<
       string,
@@ -124,7 +124,7 @@ describe("loadEnabledRules / saveEnabledRules", () => {
     // diffFromDefaults 向けの同種のテストと同じく、「まだ一度も登録していない」
     // 状態はモジュール内フラグ込みで作る必要があるため、モジュールごと読み直して
     // 最初の呼び出しが saveEnabledRules になるようにする。
-    const id = allRuleIds()[0]; // 読み直す前の（登録済みの）モジュールから id を借りる
+    const id = allRuleIds()[0]!; // 読み直す前の（登録済みの）モジュールから id を借りる
     vi.resetModules();
     const fresh = await import("../src/lib/rules");
     const freshStorage = fakeStorage();

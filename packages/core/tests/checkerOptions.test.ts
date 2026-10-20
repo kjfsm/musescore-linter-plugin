@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseCheckerOptionText, resolveCheckerOptions } from "../src/checkerOptions.js";
 import type { CheckerOptionSpec } from "../src/types.js";
 
-const SPECS: CheckerOptionSpec[] = [
+const SPECS: [CheckerOptionSpec, CheckerOptionSpec, CheckerOptionSpec] = [
   {
     key: "scope",
     label: "範囲",
@@ -93,9 +93,7 @@ describe("resolveCheckerOptions", () => {
 });
 
 describe("parseCheckerOptionText", () => {
-  const scope = SPECS[0];
-  const symbols = SPECS[1];
-  const strict = SPECS[2];
+  const [scope, symbols, strict] = SPECS;
 
   it("select は choices のみ受理する", () => {
     expect(parseCheckerOptionText(scope, "group")).toEqual({ ok: true, value: "group" });

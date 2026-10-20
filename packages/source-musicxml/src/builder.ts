@@ -1,4 +1,5 @@
 import type {
+  BarlineKind,
   EventSpec,
   HairpinSpec,
   LintIR,
@@ -7,6 +8,7 @@ import type {
   PartGroupInfo,
   PartSpec,
   SlurSpec,
+  TextKind,
   TieSpec,
 } from "@musescore-linter/core";
 import { buildIR, CANONICAL, TICKS_PER_QUARTER } from "@musescore-linter/core";
@@ -56,10 +58,12 @@ interface Placed {
   atMeasureEnd?: boolean;
 }
 
-type EventDraft = Omit<EventSpec, "tick" | "measure">;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+type EventDraft = DistributiveOmit<EventSpec, "tick" | "measure">;
+type ChordDraft = Extract<EventDraft, { kind: "chord" }>;
 
-interface PendingEvent extends Placed {
-  value: EventDraft;
+interface PendingEvent<D extends EventDraft = EventDraft> extends Placed {
+  value: D;
 }
 
 interface SpanDraft {
@@ -125,7 +129,7 @@ function metronomeText(metronome: XNode): string {
  * `<barline>` の bar-style と repeat から canonical な barlineKind を決める。
  * repeat が付いていれば bar-style より優先する。
  */
-function barlineKindOf(barline: XNode): string {
+function barlineKindOf(barline: XNode): BarlineKind {
   const directions = new Set(
     childrenNamed(barline, "repeat")
       .map((r) => attr(r, "direction") ?? "")
@@ -225,7 +229,7 @@ class PartWalker {
   private cursor = 0;
   private measureIdx = 0;
   private chordAnchorTick = 0;
-  private currentChord: PendingEvent | null = null;
+  private currentChord: PendingEvent<ChordDraft> | null = null;
   private readonly clefs = new Map<number, ClefState>();
   private readonly voices = new VoiceAssigner();
   private readonly openTies = new Map<string, SpanDraft>();
@@ -250,8 +254,8 @@ class PartWalker {
     return { measureIdx: this.measureIdx, localTick };
   }
 
-  private push(localTick: number, value: EventDraft): PendingEvent {
-    const pending: PendingEvent = {
+  private push<D extends EventDraft>(localTick: number, value: D): PendingEvent<D> {
+    const pending: PendingEvent<D> = {
       measureIdx: this.measureIdx,
       localTick,
       value,
@@ -277,7 +281,7 @@ class PartWalker {
       if (this.draft.measureLengths[i] === undefined) {
         this.draft.measureLengths[i] = 0;
       }
-      for (const node of childrenOf(measures[i])) {
+      for (const node of childrenOf(measures[i]!)) {
         this.handleMeasureChild(node);
       }
       this.growMeasure();
@@ -403,7 +407,7 @@ class PartWalker {
     duration: Fraction | undefined,
     tuplet: boolean,
     node: XNode,
-  ): PendingEvent {
+  ): PendingEvent<ChordDraft> {
     if (isChordNote && this.currentChord) return this.currentChord;
 
     const stem = childText(node, "stem");
@@ -434,7 +438,7 @@ class PartWalker {
     };
   }
 
-  private collectArticulations(node: XNode, chord: PendingEvent): void {
+  private collectArticulations(node: XNode, chord: PendingEvent<ChordDraft>): void {
     const names = new Set(chord.value.articulations ?? []);
     for (const notations of childrenNamed(node, "notations")) {
       for (const group of childrenOf(notations)) {
@@ -605,7 +609,7 @@ class PartWalker {
     this.emitText(K.STAFF_TEXT, text, staffIdx, localTick);
   }
 
-  private emitText(kind: string, textRaw: string, staffIdx: number, localTick: number): void {
+  private emitText(kind: TextKind, textRaw: string, staffIdx: number, localTick: number): void {
     if (textRaw === "") return;
     this.push(localTick, {
       kind,
@@ -788,7 +792,7 @@ function assemble(draft: ScoreDraft): LintIR {
     if (sig === undefined) continue;
     measures.push({
       measure: i + 1,
-      startTick: measureStarts[i],
+      startTick: measureStarts[i]!,
       ticks: draft.measureLengths[i] ?? 0,
       timeSigN: sig.n,
       timeSigD: sig.d,

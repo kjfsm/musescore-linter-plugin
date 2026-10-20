@@ -1,9 +1,19 @@
 import { getAll, isCheckerEnabled } from "./checkerRegistry.js";
 import { CANONICAL } from "./enumRegistry.js";
+import { eventsOfKind } from "./irQuery.js";
 import { compareIssues } from "./issue.js";
 import { make } from "./logger.js";
 import { createPerf } from "./perf.js";
-import type { Checker, IRDerived, Issue, LintEvent, LintIR } from "./types.js";
+import type {
+  Checker,
+  ChordEvent,
+  IndexedIR,
+  Issue,
+  LintIR,
+  RestEvent,
+  SlurInfo,
+  TieInfo,
+} from "./types.js";
 
 const log = make("linter");
 
@@ -15,88 +25,69 @@ export function getCheckerPerfReport(): string {
   return perf.report();
 }
 
-export function ensureDerived(ir: LintIR): void {
-  if (!ir?.events) return;
-  if (ir.derived?._eventsCount === ir.events.length) return;
+function pushTo<K extends PropertyKey, V>(map: Record<K, V[]>, key: K, value: V): void {
+  const list = map[key];
+  if (list) list.push(value);
+  else map[key] = [value];
+}
 
-  const canonical = ir.registry?.canonical ?? CANONICAL;
-  const derived: IRDerived = {
-    _eventsCount: ir.events.length,
-    firstChordByStaff: {},
-    articulationsByChordId: {},
-    slursByStaff: {},
-    tiesByStaff: {},
-    rhythmByStaffMeasure: {},
-    chordsByStaffMeasure: {},
-  };
+export function withDerived(ir: LintIR): IndexedIR {
+  const firstChordByStaff: Record<number, { tick: number; measure: number }> = {};
+  const articulationsByChordId: Record<number, string[]> = {};
+  const chordsByStaffMeasure: Record<string, ChordEvent[]> = {};
+  const slursByStaff: Record<number, SlurInfo[]> = {};
+  const tiesByStaff: Record<number, TieInfo[]> = {};
+  const rhythmByStaffMeasure: Record<string, string> = {};
 
-  const chordKind = canonical.elementKinds.CHORD;
-  const chordIds = ir.index?.byKind?.[chordKind] ?? [];
-  for (const id of chordIds) {
-    const ev = ir.events[id];
+  const chords = eventsOfKind(ir, CANONICAL.elementKinds.CHORD);
+  for (const ev of chords) {
+    if (ev.articulations && ev.articulations.length > 0) {
+      articulationsByChordId[ev.id] = ev.articulations;
+    }
     if (ev.staffIdx < 0) continue;
-    const existing = derived.firstChordByStaff[ev.staffIdx];
+    const existing = firstChordByStaff[ev.staffIdx];
     if (
       !existing ||
       ev.tick < existing.tick ||
       (ev.tick === existing.tick && ev.measure < existing.measure)
     ) {
-      derived.firstChordByStaff[ev.staffIdx] = {
-        tick: ev.tick,
-        measure: ev.measure,
-      };
+      firstChordByStaff[ev.staffIdx] = { tick: ev.tick, measure: ev.measure };
     }
+    pushTo(chordsByStaffMeasure, `${ev.staffIdx}:${ev.measure}:${ev.voice}`, ev);
   }
+  for (const list of Object.values(chordsByStaffMeasure)) list.sort((a, b) => a.tick - b.tick);
 
-  for (const id of chordIds) {
-    const aev = ir.events[id];
-    if (aev.articulations && aev.articulations.length > 0) {
-      derived.articulationsByChordId[aev.id] = aev.articulations;
-    }
-    if (aev.staffIdx < 0) continue;
-    const chordKey = `${aev.staffIdx}:${aev.measure}:${aev.voice}`;
-    if (!derived.chordsByStaffMeasure[chordKey]) derived.chordsByStaffMeasure[chordKey] = [];
-    derived.chordsByStaffMeasure[chordKey].push(aev);
-  }
-  for (const key of Object.keys(derived.chordsByStaffMeasure)) {
-    derived.chordsByStaffMeasure[key].sort((a, b) => a.tick - b.tick);
-  }
+  for (const slur of ir.meta.slurs) pushTo(slursByStaff, slur.staffIdx, slur);
+  for (const list of Object.values(slursByStaff)) list.sort((a, b) => a.startTick - b.startTick);
 
-  for (const slur of ir.meta?.slurs ?? []) {
-    if (!derived.slursByStaff[slur.staffIdx]) derived.slursByStaff[slur.staffIdx] = [];
-    derived.slursByStaff[slur.staffIdx].push(slur);
-  }
-  for (const k of Object.keys(derived.slursByStaff)) {
-    derived.slursByStaff[Number(k)].sort((a, b) => a.startTick - b.startTick);
-  }
+  for (const tie of ir.meta.ties) pushTo(tiesByStaff, tie.staffIdx, tie);
+  for (const list of Object.values(tiesByStaff)) list.sort((a, b) => a.startTick - b.startTick);
 
-  for (const tie of ir.meta?.ties ?? []) {
-    if (!derived.tiesByStaff[tie.staffIdx]) derived.tiesByStaff[tie.staffIdx] = [];
-    derived.tiesByStaff[tie.staffIdx].push(tie);
+  const rhythmGroups: Record<string, (ChordEvent | RestEvent)[]> = {};
+  for (const ev of [...chords, ...eventsOfKind(ir, CANONICAL.elementKinds.REST)]) {
+    if (ev.staffIdx < 0) continue;
+    pushTo(rhythmGroups, `${ev.staffIdx}:${ev.measure}:${ev.voice}`, ev);
   }
-  for (const k of Object.keys(derived.tiesByStaff)) {
-    derived.tiesByStaff[Number(k)].sort((a, b) => a.startTick - b.startTick);
-  }
-
-  const restKind = canonical.elementKinds.REST;
-  const rhythmGroups: Record<string, LintEvent[]> = {};
-  for (const id of [...chordIds, ...(ir.index?.byKind?.[restKind] ?? [])]) {
-    const rev = ir.events[id];
-    if (rev.staffIdx < 0) continue;
-    const key = `${rev.staffIdx}:${rev.measure}:${rev.voice}`;
-    if (!rhythmGroups[key]) rhythmGroups[key] = [];
-    rhythmGroups[key].push(rev);
-  }
-  for (const key of Object.keys(rhythmGroups)) {
-    const evs = rhythmGroups[key].sort((a, b) => a.tick - b.tick);
-    derived.rhythmByStaffMeasure[key] = evs
+  for (const [key, evs] of Object.entries(rhythmGroups)) {
+    rhythmByStaffMeasure[key] = evs
+      .sort((a, b) => a.tick - b.tick)
       .map(
         (e) => `${e.tick}/${e.duration?.numerator ?? 0}/${e.duration?.denominator ?? 0}/${e.kind}`,
       )
       .join(",");
   }
 
-  ir.derived = derived;
+  return {
+    ...ir,
+    derived: {
+      firstChordByStaff,
+      articulationsByChordId,
+      slursByStaff,
+      tiesByStaff,
+      rhythmByStaffMeasure,
+      chordsByStaffMeasure,
+    },
+  };
 }
 
 export function getCheckerList(): Checker[] {
@@ -117,8 +108,8 @@ export function runAllCheckers(
   const tTotal = perf.now();
 
   const tDerived = perf.now();
-  ensureDerived(ir);
-  perf.addSince("ensureDerived", tDerived);
+  const indexed = withDerived(ir);
+  perf.addSince("withDerived", tDerived);
 
   const allIssues: Issue[] = [];
   const checkers = getAll();
@@ -128,7 +119,7 @@ export function runAllCheckers(
 
     try {
       const tChecker = perf.now();
-      const issues = checker.run(ir, ruleOptions[checker.id]) ?? [];
+      const issues = checker.run(indexed, ruleOptions[checker.id]);
       perf.addSince(checker.id, tChecker);
       log.info(`'${checker.id}': ${issues.length} 件検出`);
       allIssues.push(...issues);

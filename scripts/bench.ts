@@ -49,7 +49,7 @@ function findScores(): string[] {
 
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)];
+  return sorted[Math.floor(sorted.length / 2)]!;
 }
 
 function measure(file: string): Sample {

@@ -1,3 +1,5 @@
+import type { BarlineKind, ElementKind, TextKind } from "./enumRegistry.js";
+
 export type Severity = "error" | "warning" | "info";
 
 /**
@@ -20,37 +22,68 @@ export interface NoteInfo {
   accidentalShown: boolean; // この符頭に臨時記号が表示されているか
 }
 
-export interface LintEvent {
+interface EventBase {
   id: number;
   tick: number;
   measure: number;
   staffIdx: number; // -1 = global scope
   voice: number;
-  kind: string; // canonical 文字列
-  type: "chord" | "rest" | "text" | "barline" | "other";
-  textNorm: string;
-  textRaw: string;
   scope: "staff" | "global";
-  subtype: unknown;
-  subStyle: unknown;
-  tempo: number | null;
-  barlineType?: unknown;
-  barlineKind?: string;
+}
+
+export interface ChordEvent extends EventBase {
+  kind: "chord";
   duration?: { numerator: number; denominator: number };
-  // chord/rest のみ。連符（3連符等）のブラケット内なら true。ブラケット自体が
+  // 連符（3連符等）のブラケット内なら true。ブラケット自体が
   // グルーピングを示すので、拍のグルーピングを見る checker はこれを対象外にする。
   tuplet?: boolean;
-  stemDirection?: number; // chord のみ。DirectionV 生値（0 auto / 1 up / 2 down）
-  beamMode?: number; // chord のみ。BeamMode 生値
-  articulations?: string[]; // chord のみ。アーティキュレーション名（"Staccato" 等）
-  notes?: NoteInfo[]; // chord のみ。各音符の綴り情報（音高/tpc/譜表位置/臨時記号表示）
+  stemDirection?: number; // DirectionV 生値（0 auto / 1 up / 2 down）
+  beamMode?: number; // BeamMode 生値
+  articulations?: string[]; // アーティキュレーション名（"Staccato" 等）
+  notes?: NoteInfo[];
 }
+
+export interface RestEvent extends EventBase {
+  kind: "rest";
+  duration?: { numerator: number; denominator: number };
+  tuplet?: boolean;
+}
+
+export interface BarlineEvent extends EventBase {
+  kind: "bar_line";
+  barlineKind: BarlineKind;
+}
+
+export interface TextEvent extends EventBase {
+  kind: TextKind;
+  textNorm: string;
+  textRaw: string;
+  tempo: number | null;
+  // MuseScore 経路でのみ埋まる要素の subtype 生値。MusicXML 経路では常に null。
+  subtype: unknown;
+}
+
+export type LintEvent = ChordEvent | RestEvent | BarlineEvent | TextEvent;
+
+/**
+ * kind に対応するイベント型。`Extract<LintEvent, { kind: K }>` では書けない —
+ * TextEvent の kind は共用体なので、個々のテキスト kind に対して never になる。
+ */
+export type EventOfKind<K extends ElementKind> = K extends "chord"
+  ? ChordEvent
+  : K extends "rest"
+    ? RestEvent
+    : K extends "bar_line"
+      ? BarlineEvent
+      : TextEvent;
+
+type IdsByKind = Partial<Record<ElementKind, number[]>>;
 
 export interface IRIndex {
   byTick: Record<string, number[]>;
-  byKind: Record<string, number[]>;
+  byKind: IdsByKind;
   byStaff: Record<string, number[]>;
-  byStaffAndKind: Record<string, Record<string, number[]>>;
+  byStaffAndKind: Record<string, IdsByKind>;
 }
 
 export interface HairpinInfo {
@@ -118,51 +151,28 @@ export interface IRMeta {
 }
 
 export interface IRDerived {
-  _eventsCount: number;
-  firstChordByStaff: Record<number, { tick: number; measure: number }>;
+  readonly firstChordByStaff: Readonly<Record<number, { tick: number; measure: number }>>;
   // chord イベント id → アーティキュレーション名
-  articulationsByChordId: Record<number, string[]>;
+  readonly articulationsByChordId: Readonly<Record<number, readonly string[]>>;
   // staffIdx → スラー（startTick 昇順）
-  slursByStaff: Record<number, SlurInfo[]>;
+  readonly slursByStaff: Readonly<Record<number, readonly SlurInfo[]>>;
   // staffIdx → タイ（startTick 昇順）
-  tiesByStaff: Record<number, TieInfo[]>;
+  readonly tiesByStaff: Readonly<Record<number, readonly TieInfo[]>>;
   // `${staffIdx}:${measure}:${voice}` → リズム署名（声部横断の同リズム判定キー）
-  rhythmByStaffMeasure: Record<string, string>;
-  // `${staffIdx}:${measure}:${voice}` → chord（tick 昇順）。読み取り専用として扱うこと。
-  // 小節×パート単位で chord を引く checker が staff 全体を毎回 filter + sort しないための索引。
-  chordsByStaffMeasure: Record<string, LintEvent[]>;
-}
-
-export interface CanonicalKinds {
-  elementKinds: {
-    CHORD: string;
-    REST: string;
-    BAR_LINE: string;
-    TEMPO_TEXT: string;
-    STAFF_TEXT: string;
-    SYSTEM_TEXT: string;
-    EXPRESSION: string;
-    REHEARSAL_MARK: string;
-    DYNAMIC: string;
-    UNKNOWN: string;
-  };
-  barlineKinds: {
-    DOUBLE: string;
-    FINAL: string;
-    REPEAT_START: string;
-    REPEAT_END: string;
-    REPEAT_BOTH: string;
-    OTHER: string;
-    UNKNOWN: string;
-  };
+  readonly rhythmByStaffMeasure: Readonly<Record<string, string>>;
+  // `${staffIdx}:${measure}:${voice}` → chord（tick 昇順）
+  readonly chordsByStaffMeasure: Readonly<Record<string, readonly ChordEvent[]>>;
 }
 
 export interface LintIR {
   events: LintEvent[];
   index: IRIndex;
   meta: IRMeta;
-  registry: { canonical: CanonicalKinds };
-  derived: IRDerived | null;
+}
+
+/** checker が受け取る IR。`derived` を作ってからでないと渡せない。 */
+export interface IndexedIR extends LintIR {
+  readonly derived: IRDerived;
 }
 
 export interface Issue {
@@ -229,5 +239,5 @@ export interface Checker {
    * `resolveCheckerOptions(this.options, options)` を通してから使うこと。
    * 引数を取らない既存の checker はそのままこの型を満たす。
    */
-  run(ir: LintIR, options?: Record<string, unknown>): Issue[];
+  run(ir: IndexedIR, options?: Record<string, unknown>): Issue[];
 }

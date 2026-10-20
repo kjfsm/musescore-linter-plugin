@@ -23,7 +23,7 @@ interface Checker {
   severity: "error" | "warning" | "info";
   defaultEnabled: boolean;
   options?: CheckerOptionSpec[]; // 任意。ユーザー設定の宣言（後述）
-  run(ir: LintIR, options?: Record<string, unknown>): Issue[];
+  run(ir: IndexedIR, options?: Record<string, unknown>): Issue[];
 }
 ```
 
@@ -47,6 +47,8 @@ options: [
 - **`run` の第 2 引数は未検証の生値**。値の出所は localStorage / QML の JSON / CLI 文字列で
   どれも信用できないので、冒頭で `resolveCheckerOptions(OPTIONS, rawOptions)` を通してから使う。
   `runAllCheckers` 側では正規化しない（テストが `checker.run(ir)` を直接呼ぶ経路と揃えるため）。
+- `run` が受け取るのは `IndexedIR`（`derived` を必ず持つ `LintIR`）。`withDerived(ir)` で作る。
+  `derived` を作らずに渡すとコンパイルエラーになる。
 - **`options` は純データに保つ**。QML の `Repeater` model や `JSON.stringify` を通るので、
   関数や getter を入れてはいけない。
 - 引数を取らない既存の checker はそのままでよい（第 2 引数は optional）。
@@ -83,9 +85,12 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
 
 ```js
 {
-  events: [ { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw,
-              // chord のみ: stemDirection?, beamMode?, articulations?: string[]
-              ... } ],
+  // kind を判別子にした共用体（ChordEvent | RestEvent | BarlineEvent | TextEvent）。
+  // 共通: id, kind, tick, measure, staffIdx, voice, scope
+  // chord: duration?, tuplet?, stemDirection?, beamMode?, articulations?, notes?
+  // rest: duration?, tuplet? / bar_line: barlineKind / テキスト系: textNorm, textRaw, tempo
+  // eventsOfKind(ir, kind) は kind に応じた型（EventOfKind<K>）で返す。
+  events: [ ... ],
   index: {
     // いずれも値は **イベント id（ir.events の添字）の配列**。Event 本体ではない。
     byTick,         // tick → number[]
@@ -106,8 +111,7 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
     // 型の生成元 MuseScore バージョンとの照合結果（診断用）。checker からは通常参照しない。
     hostVersion: { ok, generatedTag, running, message? },
   },
-  registry: { canonical: { elementKinds, barlineKinds } },
-  derived: {
+  derived: {                  // IndexedIR のみ。withDerived(ir) が作る
     firstChordByStaff,        // staffIdx → { tick, measure }
     articulationsByChordId,   // chord イベント id → アーティキュレーション名[]
     slursByStaff,             // staffIdx → SlurInfo[]（startTick 昇順）
@@ -122,8 +126,8 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
 
 ## パフォーマンスガイドライン
 
-1. **`ir.index` を使う** — `ir.index.byKind[K]` / `byStaffAndKind[s][K]` / `byTick[t]` から必要なイベントだけ取り出す。`ir.events` の全件ループは避ける。
-2. **`ir.derived` に共有前処理を乗せる** — 複数 checker が共有する前処理（例: `firstChordByStaff`）は `packages/core/src/linter.ts` の `ensureDerived` に追加し、`ir.derived.xxx` から参照する。
+1. **索引ヘルパーを使う** — `eventsOfKind` / `eventsOnStaff` / `eventsAtTick`（core）、global scope も含めるなら `eventsForStaff`（`base/query.ts`）。`ir.events[id]` を直に引かない（`noUncheckedIndexedAccess` で undefined になる）。`ir.events` の全件ループは避ける。
+2. **`ir.derived` に共有前処理を乗せる** — 複数 checker が共有する前処理（例: `firstChordByStaff`）は `packages/core/src/linter.ts` の `withDerived` に追加し、`ir.derived.xxx` から参照する。
 3. **例外は catch しない** — checker 内で `try/catch` を書く必要はない。`linter.runAllCheckers` が全体で catch し、失敗しても他の checker は走る。
 
 ## Checker 追加の標準手順

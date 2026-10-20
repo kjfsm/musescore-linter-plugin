@@ -16,7 +16,7 @@ const SEMITONE_BY_STEP: Record<string, number> = {
 };
 
 /** 音名 → ダイアトニックのステップ番号（0=C ... 6=B）。 */
-const STEP_INDEX: Record<string, number> = {
+const STEP_INDEX = {
   C: 0,
   D: 1,
   E: 2,
@@ -24,7 +24,7 @@ const STEP_INDEX: Record<string, number> = {
   G: 4,
   A: 5,
   B: 6,
-};
+} as const;
 
 /** MusicXML の step/alter/octave から MIDI 音高（0-127）。不明なら -1。 */
 export function toMidiPitch(step: string, alter: number, octave: number): number {
@@ -75,7 +75,7 @@ export function clefFrom(
  * 判定結果には影響しない。
  */
 export function toStaffLine(clef: ClefState, step: string, octave: number): number {
-  const stepIndex = STEP_INDEX[step];
+  const stepIndex = (STEP_INDEX as Record<string, number | undefined>)[step];
   if (stepIndex === undefined) return 0;
   return clef.topLineAbsStep - (octave * 7 + stepIndex);
 }

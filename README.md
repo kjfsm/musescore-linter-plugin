@@ -141,7 +141,7 @@ packages/
     src/
       types.ts                 LintIR / LintEvent / Issue の型定義
       irBuilder.ts             spec から LintIR を組み立てる汎用ビルダ（buildIR）
-      linter.ts                全 checker を登録順に実行・ソート（runAllCheckers、ensureDerived）
+      linter.ts                全 checker を登録順に実行・ソート（runAllCheckers、withDerived）
       checkerRegistry.ts       checker の登録・取得
       checkerOptions.ts        options 値の検証・正規化（resolveCheckerOptions 等）
       enumRegistry.ts          MuseScore enum を canonical 文字列へ正規化する層
@@ -195,7 +195,7 @@ packages/
       beatCrossingTieChecker.ts
     tests/
       checkers.test.ts         全 checker の単体テスト（vitest）
-      derived.test.ts          ensureDerived（ir.derived）の単体テスト
+      derived.test.ts          withDerived（ir.derived）の単体テスト
       beatCrossingTieChecker.test.ts / slurTieArticulationConsistencyChecker.test.ts
                                 個別ファイルに切り出した checker のテスト
       base/                    base/ ヘルパー（partGroups.ts・query.ts）の単体テスト
@@ -430,16 +430,17 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 
 新しい checker を書くときは、`ir.index` を優先的に活用してください。
 
-- `ir.index.byKind[K]` / `ir.index.byStaffAndKind[s][K]` / `ir.index.byTick[t]` で必要なイベントだけを取り出す
+- `eventsOfKind` / `eventsOnStaff` / `eventsAtTick`（`@musescore-linter/core`）、global scope も含めるなら `eventsForStaff`（`packages/checkers/src/base/query.ts`）で必要なイベントだけを取り出す
 - 全 events の線形走査は避ける
-- 共有できる前処理（例: 各 staff の firstChord）は `ir.derived` に 1 回だけ計算して再利用する（`packages/core/src/linter.ts` の `ensureDerived` に追加）
+- 共有できる前処理（例: 各 staff の firstChord）は `ir.derived` に 1 回だけ計算して再利用する（`packages/core/src/linter.ts` の `withDerived` に追加）
 
 ## LintIR の概要
 
 ```ts
 {
   events: [                      // 全イベントの単一配列（source of truth）
-    { id, kind, type, tick, measure, staffIdx, voice, textNorm, textRaw, scope, barlineKind?, tempo?, duration?, ... }
+    // kind を判別子にした共用体。chord / rest / bar_line / テキスト系で持つフィールドが違う
+    { id, kind, tick, measure, staffIdx, voice, scope, ...kind ごとのフィールド }
   ],
   index: {                       // O(1) 検索用
     byTick:         { [tick]:           [eventId] },
@@ -453,8 +454,7 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
     lastTick: number,
     hairpins: [{ staffIdx, startTick, endTick }]
   },
-  registry: { canonical: { elementKinds, barlineKinds } },
-  derived: {                     // 遅延初期化。linter.ts が 1 回だけ構築（_eventsCount で無効化判定）
+  derived: {                     // IndexedIR のみ。runAllCheckers が withDerived で 1 回だけ構築
     firstChordByStaff, articulationsByChordId, slursByStaff, tiesByStaff,
     rhythmByStaffMeasure, chordsByStaffMeasure
   }
@@ -464,7 +464,7 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 ## 設計メモ
 
 - `staves` / `unresolvedAnnotations` は廃止済み。global scope のイベントは `index.byStaff[-1]` で参照する。
-- MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。
+- MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。kind の文字列は `ElementKind` / `BarlineKind` のリテラル型で、語彙外の値は型エラーになる。
 - Issue 型は `@musescore-linter/core` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
 - checker 単体で例外が出ても他の checker は実行継続し、`ruleId: "internal"` の issue として UI に表示される。
 

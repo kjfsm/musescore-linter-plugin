@@ -21,8 +21,10 @@ Checker オブジェクトの必須フィールド・`options` の書き方・se
 実例: `packages/checkers/src/finalBarlineChecker.ts`
 
 ```ts
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import { createIssue, eventsOfKind } from "@musescore-linter/core";
+
+import { buildPartNameMap } from "./base/query.js";
 
 export const xxxChecker: Checker = {
   id: "xxx-check", // kebab-case、他と重複禁止
@@ -31,17 +33,16 @@ export const xxxChecker: Checker = {
   category: "notation", // articulation / dynamics / tempo / notation / slur-tie
   severity: "warning", // error / warning / info
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    // ir.index.byKind / byStaffAndKind / byTick を使う（ir.events の全件ループは避ける）
-    const targetIds = ir.index.byKind["TARGET_KIND"] ?? [];
-    for (const id of targetIds) {
-      const ev = ir.events[id];
+    const partNames = buildPartNameMap(ir);
+    // 索引ヘルパー（eventsOfKind / eventsOnStaff / eventsForStaff）を使う。ir.events[id] を直に引かない
+    for (const ev of eventsOfKind(ir, "TARGET_KIND")) {
       // 違反条件のチェック
       issues.push(
         createIssue(xxxChecker, {
           message: "〇〇が不足しています",
-          partName: ev.staffIdx >= 0 ? ir.meta.parts[ev.staffIdx].partName : "",
+          partName: partNames.get(ev.staffIdx) ?? "",
           staffIdx: ev.staffIdx,
           measure: ev.measure,
           tick: ev.tick,

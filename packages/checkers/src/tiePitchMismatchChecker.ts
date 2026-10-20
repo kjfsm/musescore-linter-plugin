@@ -18,7 +18,7 @@ export const tiePitchMismatchChecker: Checker = {
 
     const partsByStaff = buildPartNameMap(ir);
 
-    for (const tie of ir.meta?.ties ?? []) {
+    for (const tie of ir.meta.ties) {
       if (tie.startPitch === null || tie.endPitch === null) continue;
       if (tie.startPitch === tie.endPitch) continue;
 

@@ -1,4 +1,5 @@
-import type { LintIR } from "@musescore-linter/core";
+import type { ElementKind, LintIR } from "@musescore-linter/core";
+import { eventsOnStaff } from "@musescore-linter/core";
 
 export interface RestSpan {
   staffIdx: number;
@@ -13,9 +14,8 @@ export interface RestEndpointHit {
   detail: Record<string, unknown>;
 }
 
-function tickSet(ir: LintIR, staffIdx: number, kind: string): Set<number> {
-  const ids = ir.index.byStaffAndKind[staffIdx]?.[kind] ?? [];
-  return new Set(ids.map((id) => ir.events[id].tick));
+function tickSet(ir: LintIR, staffIdx: number, kind: ElementKind): Set<number> {
+  return new Set(eventsOnStaff(ir, staffIdx, kind).map((ev) => ev.tick));
 }
 
 // スパナー(ヘアピン/スラー)の開始/終了 tick が、その staff で
@@ -25,8 +25,8 @@ export function findRestOnlyEndpoints(
   ir: LintIR,
   spans: RestSpan[],
   kind: "hairpin" | "slur",
-  restKind: string,
-  chordKind: string,
+  restKind: ElementKind,
+  chordKind: ElementKind,
 ): RestEndpointHit[] {
   // staff ごとに rest/chord の tick 集合を遅延構築してキャッシュ
   const restCache: Record<number, Set<number>> = {};

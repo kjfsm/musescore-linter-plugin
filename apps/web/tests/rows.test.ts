@@ -21,17 +21,17 @@ function issue(over: Partial<Issue> = {}): Issue {
 describe("toRows", () => {
   it("メッセージ先頭の重複したパート名を落とす", () => {
     const [row] = toRows([issue({ message: "Violin I: 1音目にダイナミクスがありません" })]);
-    expect(row.partName).toBe("Violin I");
-    expect(row.message).toBe("1音目にダイナミクスがありません");
+    expect(row?.partName).toBe("Violin I");
+    expect(row?.message).toBe("1音目にダイナミクスがありません");
   });
 
   it("パート名で始まらないメッセージはそのまま残す", () => {
-    expect(toRows([issue()])[0].message).toBe("冒頭にテンポ表記がありません");
+    expect(toRows([issue()])[0]?.message).toBe("冒頭にテンポ表記がありません");
   });
 
   it("同じ位置の同じルールでも key が衝突しない", () => {
     const rows = toRows([issue(), issue()]);
-    expect(rows[0].key).not.toBe(rows[1].key);
+    expect(rows[0]?.key).not.toBe(rows[1]?.key);
   });
 });
 

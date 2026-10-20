@@ -47,6 +47,7 @@ import type {
   MeasureInfo,
   PartGroupInfo,
   PartGroupSymbol,
+  TextKind,
 } from "@musescore-linter/core";
 import {
   CANONICAL,
@@ -54,6 +55,7 @@ import {
   createPerf,
   makeLogger,
   normalizePartGroups,
+  toBarlineKind,
 } from "@musescore-linter/core";
 import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
 
@@ -161,7 +163,7 @@ function readPartGroups(score: Score, bracketType: BracketTypeEnum | undefined):
   return normalizePartGroups(out);
 }
 
-function resolveAnnotationKind(ann: TextAnnotation): string {
+function resolveAnnotationKind(ann: TextAnnotation): TextKind {
   if (isTempo(ann)) return CANONICAL.elementKinds.TEMPO_TEXT;
   if (isDynamic(ann)) return CANONICAL.elementKinds.DYNAMIC;
   if (isExpression(ann)) return CANONICAL.elementKinds.EXPRESSION;
@@ -196,14 +198,12 @@ function processAnnotations(seg: PluginSegment, measureNum: number, builder: IRB
       typeof rawTempo === "number" && Number.isFinite(rawTempo) && rawTempo > 0 ? rawTempo : null;
 
     builder.append({
-      type: "text",
       kind: annKind,
       tick: seg.tick,
       measure: measureNum,
       staffIdx: annStaffIdx >= 0 ? annStaffIdx : -1,
       voice: -1,
       subtype: ann.subtype,
-      subStyle: ann.subStyle,
       tempo,
       textNorm,
       textRaw,
@@ -239,11 +239,7 @@ function processStaffElements(
     if (isChord(el) && isGraceNote(el, hostEnums.noteType)) continue;
 
     if (isChord(el) || isRest(el)) {
-      const evType = isChord(el) ? "chord" : "rest";
-      const kind = isChord(el) ? CANONICAL.elementKinds.CHORD : CANONICAL.elementKinds.REST;
-      const ev = builder.append({
-        type: evType as "chord" | "rest",
-        kind,
+      const common = {
         tick: seg.tick,
         measure: measureNum,
         staffIdx,
@@ -259,13 +255,19 @@ function processStaffElements(
           : {}),
         // 連符ブラケット内か。SDK の DurationElement.tuplet をそのまま反映する。
         ...(el.tuplet ? { tuplet: true } : {}),
-      });
+      } as const;
 
-      if (isChord(el)) {
-        ev.stemDirection = el.stemDirection;
-        ev.beamMode = el.beamMode;
-        ev.articulations = getArticulationNames(el);
-        ev.notes = getNoteSpellings(el);
+      if (!isChord(el)) {
+        builder.append({ ...common, kind: CANONICAL.elementKinds.REST });
+      } else {
+        builder.append({
+          ...common,
+          kind: CANONICAL.elementKinds.CHORD,
+          stemDirection: el.stemDirection,
+          beamMode: el.beamMode,
+          articulations: getArticulationNames(el),
+          notes: getNoteSpellings(el),
+        });
         for (const note of el.notes ?? []) {
           const tie = note.tieForward;
           if (tie) {
@@ -300,10 +302,8 @@ function processStaffElements(
     const barEl = trackElements[v];
     if (barEl && isBarLine(barEl)) {
       builder.append({
-        type: "barline",
         kind: CANONICAL.elementKinds.BAR_LINE,
-        barlineType: barEl.barlineType,
-        barlineKind: classifyBarlineKind(barEl.barlineType, hostEnums.barLineType),
+        barlineKind: toBarlineKind(classifyBarlineKind(barEl.barlineType, hostEnums.barLineType)),
         tick: seg.tick,
         measure: measureNum,
         staffIdx,

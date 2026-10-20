@@ -1,7 +1,6 @@
 import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import { CANONICAL, createIssue } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
 import { buildPartNameMap, measureAtTick } from "./base/query.js";
 import { findRestOnlyEndpoints } from "./base/spannerOnRest.js";
 
@@ -17,16 +16,13 @@ export const hairpinOnRestChecker: Checker = {
   severity: "info",
   defaultEnabled: true,
   run(ir: LintIR): Issue[] {
-    const canonical = getCanonical(ir);
-    if (!canonical) return [];
-
     const partsByStaff = buildPartNameMap(ir);
     const hits = findRestOnlyEndpoints(
       ir,
-      ir.meta?.hairpins ?? [],
+      ir.meta.hairpins,
       "hairpin",
-      canonical.elementKinds.REST,
-      canonical.elementKinds.CHORD,
+      CANONICAL.elementKinds.REST,
+      CANONICAL.elementKinds.CHORD,
     );
 
     return hits.map((hit) => {

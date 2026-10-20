@@ -1,22 +1,14 @@
-import type { Checker, Issue, LintEvent, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 
 // sf・rf はアクセント的に連続して使われることが多いため、重複検出の対象から除外する。
 const CONSECUTIVE_ALLOWED = new Set(["sf", "rf"]);
 
-function sameDynamic(a: LintEvent, b: LintEvent): boolean {
-  if (
-    a.subtype !== null &&
-    a.subtype !== undefined &&
-    b.subtype !== null &&
-    b.subtype !== undefined
-  ) {
-    return a.subtype === b.subtype;
-  }
-  if (a.textNorm !== "" && a.textNorm === b.textNorm) return true;
-  return false;
+// subtype では比べない。MuseScore はテキスト中で最初に見つかった強弱記号を subtype にするので
+// 「f」と「più f」が同じ F になり、強弱記号を含まない文字はすべて OTHER に揃う
+// （v4.7.3 editing/textedit.cpp の endEdit → Dynamic::parseDynamicText）。
+function sameDynamic(a: TextEvent, b: TextEvent): boolean {
+  return a.textNorm !== "" && a.textNorm === b.textNorm;
 }
 
 export const duplicateDynamicsChecker: Checker = {
@@ -26,20 +18,18 @@ export const duplicateDynamicsChecker: Checker = {
   category: "dynamics",
   severity: "info",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    const parts = ir.meta?.parts ?? [];
+    const parts = ir.meta.parts;
     for (const part of parts) {
-      const byStaff = ir.index.byStaffAndKind[part.staffIdx] ?? {};
-      const dynIds = byStaff[canonical.elementKinds.DYNAMIC] ?? [];
-      const dynEvents = dynIds.map((id) => ir.events[id]).sort((a, b) => a.tick - b.tick);
+      const dynEvents = eventsOnStaff(ir, part.staffIdx, CANONICAL.elementKinds.DYNAMIC).sort(
+        (a, b) => a.tick - b.tick,
+      );
 
       const hairpins = ir.meta.hairpins.filter((h) => h.staffIdx === part.staffIdx);
 
-      let prev: LintEvent | null = null;
+      let prev: TextEvent | null = null;
       for (const ev of dynEvents) {
         if (prev !== null && sameDynamic(prev, ev) && !CONSECUTIVE_ALLOWED.has(ev.textNorm)) {
           const prevTick = prev.tick;

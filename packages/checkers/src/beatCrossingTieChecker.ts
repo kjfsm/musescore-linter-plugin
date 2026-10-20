@@ -1,7 +1,6 @@
-import type { Checker, Issue, LintIR, MeasureInfo, Severity } from "@musescore-linter/core";
-import { createIssue, TICKS_PER_WHOLE } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, MeasureInfo, Severity } from "@musescore-linter/core";
+import { CANONICAL, createIssue, eventsOfKind, TICKS_PER_WHOLE } from "@musescore-linter/core";
 
-import { getCanonical } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";
 
 // 拍の骨格を隠す音符（イマジナリーバーライン違反）を検出し、タイでの分割案を出す。
@@ -186,8 +185,8 @@ export const beatCrossingTieChecker: Checker = {
   // Checker.severity は「出しうるうち最も重いもの」なので warning を宣言する。
   severity: "warning",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
-    const measures = ir.meta?.measures ?? [];
+  run(ir: IndexedIR): Issue[] {
+    const measures = ir.meta.measures;
     if (measures.length === 0) return [];
 
     // フェーズ 1: 小節番号を添字とする密な配列。以降は添字 1 回で拍の枠組みが引ける。
@@ -196,16 +195,12 @@ export const beatCrossingTieChecker: Checker = {
       meters[info.measure] = toMeter(info);
     }
 
-    const canonical = getCanonical(ir);
-    if (!canonical) return [];
-    const chordIds = ir.index?.byKind?.[canonical.elementKinds.CHORD] ?? [];
     const issues: Issue[] = [];
     // 違反ゼロの譜面では Map を作らずに済ませる
     let partsByStaff: Map<number, string> | null = null;
 
     // フェーズ 2: chord を 1 パス。大半の音符は「境界をまたがない」判定で脱出する。
-    for (const id of chordIds) {
-      const ev = ir.events[id];
+    for (const ev of eventsOfKind(ir, CANONICAL.elementKinds.CHORD)) {
       const meter = meters[ev.measure];
       if (!meter) continue;
 

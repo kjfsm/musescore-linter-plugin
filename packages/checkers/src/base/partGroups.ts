@@ -17,7 +17,7 @@ export function bracketGroupKeyOf(
   symbols: readonly string[],
 ): ((staffIdx: number) => string | null) | null {
   const wanted = new Set(symbols);
-  const groups = (ir.meta?.partGroups ?? []).filter(
+  const groups = ir.meta.partGroups.filter(
     // 1 譜表しか覆わない括弧は「最小の括弧」として外側を覆い隠してしまうだけで、
     // 比較相手を生まない。候補から外さないとその譜表が永久に無検出になる。
     (g) => wanted.has(g.symbol) && g.staffCount >= 2,

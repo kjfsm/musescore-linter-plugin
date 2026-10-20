@@ -17,5 +17,5 @@ export interface HostEnums {
    * 組み合わせても動くようにするための逃げ道で、未指定なら `meta.partGroups` が空になり
    * 括弧による絞り込みは全パート比較へフォールバックする。
    */
-  bracketType?: BracketTypeEnum;
+  bracketType?: BracketTypeEnum | undefined;
 }

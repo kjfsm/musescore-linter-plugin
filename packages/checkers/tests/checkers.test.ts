@@ -1,4 +1,5 @@
-import { ensureDerived, getCheckerList, reset, runAllCheckers } from "@musescore-linter/core";
+import type { BarlineKind } from "@musescore-linter/core";
+import { getCheckerList, reset, runAllCheckers } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
@@ -36,7 +37,6 @@ import { BK, buildIR, cleanIR, K, quintetIR } from "./helpers/irBuilder.js";
 function run(ir: ReturnType<typeof buildIR>, enabledRules: Record<string, boolean> = {}) {
   reset();
   registerAll();
-  ensureDerived(ir);
   return runAllCheckers(ir, enabledRules);
 }
 
@@ -89,10 +89,9 @@ describe("opening-tempo checker", () => {
         },
       ],
     });
-    ensureDerived(ir);
     const issues = openingTempoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("error");
+    expect(issues[0]?.severity).toBe("error");
   });
 
   it("global scope の tempo があれば pass", () => {
@@ -152,10 +151,9 @@ describe("first-note-dynamics checker", () => {
         },
       ],
     });
-    ensureDerived(ir);
     const issues = firstNoteDynamicsChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].partName).toBe("Vn2");
+    expect(issues[0]?.partName).toBe("Vn2");
   });
 });
 
@@ -175,7 +173,7 @@ describe("pizz-arco checker", () => {
     ]);
     const issues = pizzArcoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("pizz. 連続指示 → warning 1件（前回小節が記録される）", () => {
@@ -207,7 +205,7 @@ describe("pizz-arco checker", () => {
     ]);
     const issues = pizzArcoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].detail?.previousMeasure).toBe(2);
+    expect(issues[0]?.detail?.previousMeasure).toBe(2);
   });
 
   it("pizz. → arco ペア対応済み → 0件", () => {
@@ -325,7 +323,7 @@ describe("rest-annotation checker", () => {
     });
     const issues = restAnnotationChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 });
 
@@ -369,7 +367,7 @@ describe("tempo-barline checker", () => {
     });
     const issues = tempoBarlineChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("テンポ変更前に複縦線あり → 0件", () => {
@@ -464,8 +462,8 @@ describe("solo-tutti checker", () => {
     ]);
     const issues = soloTuttiChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[0].detail?.previousMeasure).toBe(2);
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[0]?.detail?.previousMeasure).toBe(2);
   });
 
   it("solo → tutti ペア対応済み → 0件", () => {
@@ -537,7 +535,7 @@ describe("div-unis checker", () => {
     ]);
     const issues = divisiChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].detail?.previousMeasure).toBe(2);
+    expect(issues[0]?.detail?.previousMeasure).toBe(2);
   });
 
   it("div. → unis. ペア対応済み → 0件", () => {
@@ -583,7 +581,7 @@ describe("tempo-without-bpm checker", () => {
     });
     const issues = tempoWithoutBpmChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("BPM 値あり → 0件", () => {
@@ -659,12 +657,33 @@ describe("duplicate-dynamics checker", () => {
     ]);
     const issues = duplicateDynamicsChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[0].partName).toBe("Vn1");
-    expect(issues[0].detail?.previousMeasure).toBe(1);
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[0]?.partName).toBe("Vn1");
+    expect(issues[0]?.detail?.previousMeasure).toBe(1);
   });
 
-  it("subtype 同一で textNorm が異なっても重複扱い", () => {
+  // MuseScore はテキスト中で最初に見つかった強弱記号を subtype にするので、「più f」も F になる
+  it("subtype が同じでも修飾語付きの強弱記号は重複としない（f → più f）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.DYNAMIC, staff: 0, tick: 0, measure: 1, subtype: 9, textNorm: "f", textRaw: "f" },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          subtype: 9,
+          textNorm: "più f",
+          textRaw: "più f",
+        },
+      ],
+    });
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+  });
+
+  it("subtype が OTHER 同士でもテキストが違えば重複としない", () => {
+    const other = 0;
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
       events: [
@@ -673,22 +692,22 @@ describe("duplicate-dynamics checker", () => {
           staff: 0,
           tick: 0,
           measure: 1,
-          subtype: 7,
-          textNorm: "f",
-          textRaw: "f",
+          subtype: other,
+          textNorm: "poco a poco",
+          textRaw: "poco a poco",
         },
         {
           kind: K.DYNAMIC,
           staff: 0,
           tick: 480,
           measure: 2,
-          subtype: 7,
-          textNorm: "",
-          textRaw: "",
+          subtype: other,
+          textNorm: "molto",
+          textRaw: "molto",
         },
       ],
     });
-    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(1);
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
   });
 
   it("f → p のように変化 → 0件", () => {
@@ -856,8 +875,8 @@ describe("final-barline checker", () => {
     ]);
     const issues = finalBarlineChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[0].measure).toBe(4);
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[0]?.measure).toBe(4);
   });
 
   it("最終 barline が FINAL → 0件", () => {
@@ -914,7 +933,7 @@ describe("sul-tasto-ord checker", () => {
     ]);
     const issues = sulTastoOrdChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("sul tasto → ord. で解除 → 0件", () => {
@@ -1006,7 +1025,7 @@ describe("sul-pont-ord checker", () => {
     ]);
     const issues = sulPontOrdChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("sul ponticello → ord. で解除 → 0件", () => {
@@ -1048,7 +1067,7 @@ describe("con-legno-arco checker", () => {
     ]);
     const issues = conLegnoArcoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("col legno → arco で解除 → 0件", () => {
@@ -1102,7 +1121,7 @@ describe("con-legno-arco checker", () => {
     ]);
     const issues = conLegnoArcoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].detail?.previousMeasure).toBe(2);
+    expect(issues[0]?.detail?.previousMeasure).toBe(2);
   });
 });
 
@@ -1161,7 +1180,7 @@ describe("rest-annotation checker（追加ケース）", () => {
     });
     const issues = restAnnotationChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("error");
+    expect(issues[0]?.severity).toBe("error");
   });
 
   it("音符の位置に pizz. (STAFF_TEXT) → 0件（休符のみ対象）", () => {
@@ -1392,7 +1411,7 @@ describe("coda-segno checker", () => {
     ]);
     const issues = codaSegnoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("error");
+    expect(issues[0]?.severity).toBe("error");
   });
 
   it("D.S. al Coda があるが Segno も Coda もなし → error 2件", () => {
@@ -1425,7 +1444,7 @@ describe("coda-segno checker", () => {
     ]);
     const issues = codaSegnoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].message).toContain("al Coda");
+    expect(issues[0]?.message).toContain("al Coda");
   });
 
   it("D.S. al Coda + Segno + Coda すべて揃っている → 0件", () => {
@@ -1479,7 +1498,7 @@ describe("coda-segno checker", () => {
     ]);
     const issues = codaSegnoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].message).toContain("Fine");
+    expect(issues[0]?.message).toContain("Fine");
   });
 
   it("D.S. al Fine があるが Fine マークなし → error 1件", () => {
@@ -1505,7 +1524,7 @@ describe("coda-segno checker", () => {
     ]);
     const issues = codaSegnoChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].message).toContain("Fine");
+    expect(issues[0]?.message).toContain("Fine");
   });
 
   it("D.C. al Fine + Fine マークあり → 0件", () => {
@@ -1544,7 +1563,6 @@ describe("irBuilder quintetIR ヘルパー", () => {
 
   it("quintetIR は全チェッカーをパスする", () => {
     const ir = quintetIR();
-    ensureDerived(ir);
     const issues = run(ir);
     expect(issues).toHaveLength(0);
   });
@@ -1605,7 +1623,7 @@ describe("mute-open checker", () => {
     ]);
     const issues = muteOpenChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("mute → open で解除 → 0件", () => {
@@ -1729,7 +1747,7 @@ describe("tempo-change-resolution checker", () => {
     ]);
     const issues = tempoChangeResolutionChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("曲尾の rit.（最後の音楽小節）は誤検出しない → 0件", () => {
@@ -1810,7 +1828,7 @@ describe("simultaneous-dynamics checker", () => {
     ]);
     const issues = simultaneousDynamicsChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("同じ位置に同じ強弱が重なるだけなら衝突扱いしない → 0件", () => {
@@ -1844,7 +1862,7 @@ describe("hairpin-target-dynamic checker", () => {
     });
     const issues = hairpinTargetDynamicChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("曲尾まで伸びるヘアピン（dim. al niente 等）は誤検出しない → 0件", () => {
@@ -1941,7 +1959,7 @@ describe("rehearsal-mark-order checker", () => {
     });
     const issues = rehearsalMarkOrderChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("A → A は重複 → 1件（順序判定は重ねない）", () => {
@@ -1968,14 +1986,14 @@ describe("rehearsal-mark-order checker", () => {
     });
     const issues = rehearsalMarkOrderChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].message).toContain("重複");
+    expect(issues[0]?.message).toContain("重複");
   });
 });
 
 // ─── repeat-barline-match ─────────────────────────────────────────────────
 
 describe("repeat-barline-match checker", () => {
-  const repeatBar = (tick: number, measure: number, kind: string) => ({
+  const repeatBar = (tick: number, measure: number, kind: BarlineKind) => ({
     kind: K.BAR_LINE,
     staff: 0,
     tick,
@@ -1990,7 +2008,7 @@ describe("repeat-barline-match checker", () => {
     });
     const issues = repeatBarlineMatchChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("開始 → 終了 で対応 → 0件", () => {
@@ -2016,7 +2034,7 @@ describe("repeat-barline-match checker", () => {
     });
     const issues = repeatBarlineMatchChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].measure).toBe(2);
+    expect(issues[0]?.measure).toBe(2);
   });
 });
 
@@ -2040,8 +2058,8 @@ describe("tie-pitch-mismatch checker", () => {
     });
     const issues = tiePitchMismatchChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
-    expect(issues[0].measure).toBe(1);
+    expect(issues[0]?.severity).toBe("warning");
+    expect(issues[0]?.measure).toBe(1);
   });
 
   it("同じ音高のタイ → 0件", () => {
@@ -2112,9 +2130,9 @@ describe("courtesy-accidental checker", () => {
     });
     const issues = courtesyAccidentalChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
-    expect(issues[0].measure).toBe(2);
-    expect(issues[0].message).toContain("F");
+    expect(issues[0]?.severity).toBe("info");
+    expect(issues[0]?.measure).toBe(2);
+    expect(issues[0]?.message).toContain("F");
   });
 
   it("次小節でも臨時記号が表示されているなら提案しない → 0件", () => {
@@ -2199,7 +2217,7 @@ describe("hairpin-on-rest checker", () => {
     });
     const issues = hairpinOnRestChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("ヘアピンの開始端点が休符上 → info 1件", () => {
@@ -2213,7 +2231,7 @@ describe("hairpin-on-rest checker", () => {
     });
     const issues = hairpinOnRestChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("端点が音符上 → 0件", () => {
@@ -2256,7 +2274,7 @@ describe("slur-on-rest checker", () => {
     });
     const issues = slurOnRestChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("warning");
+    expect(issues[0]?.severity).toBe("warning");
   });
 
   it("端点が音符上 → 0件", () => {
@@ -2296,7 +2314,7 @@ describe("slur-single-note checker", () => {
     });
     const issues = slurSingleNoteChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("複数音スラー（start<end）→ 0件", () => {
@@ -2329,7 +2347,7 @@ describe("cresc-text-resolution checker", () => {
     });
     const issues = crescTextResolutionChecker.run(ir);
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe("info");
+    expect(issues[0]?.severity).toBe("info");
   });
 
   it("cresc. の後に同 staff の強弱記号 → 0件", () => {

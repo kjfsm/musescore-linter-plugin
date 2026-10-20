@@ -52,6 +52,7 @@ describe("lintParsed", () => {
 
   it("fixture に仕込まれた記譜ミスを検出する", () => {
     const [result] = lintParsed(parsed, {});
+    if (!result) throw new Error("結果が 0 件");
     expect(result.file).toBe("duet.musicxml");
     const ids = new Set(result.issues.map((i) => i.ruleId));
     expect(ids).toContain("tie-pitch-mismatch");
@@ -60,8 +61,8 @@ describe("lintParsed", () => {
   });
 
   it("同じ IR でも enabledRules を変えれば結果が変わる（再パース不要）", () => {
-    const all = lintParsed(parsed, {})[0].issues;
-    const without = lintParsed(parsed, { "tie-pitch-mismatch": false })[0].issues;
+    const all = lintParsed(parsed, {})[0]!.issues;
+    const without = lintParsed(parsed, { "tie-pitch-mismatch": false })[0]!.issues;
     expect(all.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(true);
     expect(without.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(false);
     expect(without.length).toBeLessThan(all.length);
@@ -96,8 +97,8 @@ describe("lintParsed", () => {
     ];
     const results = lintParsed(mixed, {});
     expect(results).toHaveLength(1);
-    expect(results[0].index).toBe(1);
-    expect(results[0].file).toBe("score.musicxml");
-    expect(results[0].issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(true);
+    expect(results[0]?.index).toBe(1);
+    expect(results[0]?.file).toBe("score.musicxml");
+    expect(results[0]?.issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(true);
   });
 });

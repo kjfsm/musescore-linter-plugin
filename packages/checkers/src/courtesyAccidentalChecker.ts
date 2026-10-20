@@ -1,7 +1,11 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue, tpcToAlter, tpcToName } from "@musescore-linter/core";
-
-import { getCanonical } from "./base/predicates.js";
+import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
+import {
+  CANONICAL,
+  createIssue,
+  eventsOnStaff,
+  tpcToAlter,
+  tpcToName,
+} from "@musescore-linter/core";
 
 // 親切（cautionary / courtesy）臨時記号の提案。
 // 慣習: 前の小節で臨時記号が付いた音が、次の小節で（小節線で記号が打ち消されたあと）
@@ -32,18 +36,14 @@ export const courtesyAccidentalChecker: Checker = {
   category: "notation",
   severity: "info",
   defaultEnabled: true,
-  run(ir: LintIR): Issue[] {
+  run(ir: IndexedIR): Issue[] {
     const issues: Issue[] = [];
-    const canonical = getCanonical(ir);
-    if (!canonical) return issues;
 
-    for (const part of ir.meta?.parts ?? []) {
-      const chordIds = ir.index.byStaffAndKind[part.staffIdx]?.[canonical.elementKinds.CHORD] ?? [];
-      if (chordIds.length === 0) continue;
+    for (const part of ir.meta.parts) {
+      const chords = eventsOnStaff(ir, part.staffIdx, CANONICAL.elementKinds.CHORD);
+      if (chords.length === 0) continue;
 
-      const chords = chordIds
-        .map((id) => ir.events[id])
-        .sort((a, b) => a.measure - b.measure || a.tick - b.tick || a.voice - b.voice);
+      chords.sort((a, b) => a.measure - b.measure || a.tick - b.tick || a.voice - b.voice);
 
       // 譜表位置(line) → 最後に臨時記号が明示された { measure, alter }
       const lastExplicit = new Map<number, { measure: number; alter: number }>();

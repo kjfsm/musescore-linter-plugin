@@ -1,9 +1,8 @@
-import { ensureDerived } from "@musescore-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { buildIR, K } from "./helpers/irBuilder.js";
 
-describe("ensureDerived — Tier 1 relations", () => {
+describe("withDerived — Tier 1 relations", () => {
   it("indexes articulations by chord event id", () => {
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
@@ -18,10 +17,8 @@ describe("ensureDerived — Tier 1 relations", () => {
         { kind: K.CHORD, staff: 0, tick: 480, measure: 1 },
       ],
     });
-    ensureDerived(ir);
-    expect(ir.derived).not.toBeNull();
-    expect(ir.derived?.articulationsByChordId[0]).toEqual(["Staccato"]);
-    expect(ir.derived?.articulationsByChordId[1]).toBeUndefined();
+    expect(ir.derived.articulationsByChordId[0]).toEqual(["Staccato"]);
+    expect(ir.derived.articulationsByChordId[1]).toBeUndefined();
   });
 
   it("buckets slurs by staff sorted by startTick", () => {
@@ -33,8 +30,7 @@ describe("ensureDerived — Tier 1 relations", () => {
         { staffIdx: 0, voice: 0, startTick: 0, endTick: 240 },
       ],
     });
-    ensureDerived(ir);
-    const slurs = ir.derived?.slursByStaff[0] ?? [];
+    const slurs = ir.derived.slursByStaff[0] ?? [];
     expect(slurs.map((s) => s.startTick)).toEqual([0, 480]);
   });
 
@@ -72,8 +68,7 @@ describe("ensureDerived — Tier 1 relations", () => {
         },
       ],
     });
-    ensureDerived(ir);
-    const r = ir.derived?.rhythmByStaffMeasure ?? {};
+    const r = ir.derived.rhythmByStaffMeasure;
     expect(r["0:1:0"]).toBe(r["1:1:0"]);
     expect(r["2:1:0"]).not.toBe(r["0:1:0"]);
   });

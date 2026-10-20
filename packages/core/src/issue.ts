@@ -11,7 +11,7 @@ function severityRank(sev: Severity): number {
 }
 
 export interface IssueFields {
-  severity?: Severity;
+  severity?: Severity | undefined;
   message?: string;
   partName?: string;
   staffIdx?: number;
