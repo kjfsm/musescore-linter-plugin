@@ -1,4 +1,4 @@
-import type { Checker, CheckerOptionSpec, CheckerOptionValue } from "@musescore-linter/core";
+import type { Checker, CheckerOptionSpec, CheckerOptionValue } from "@score-linter/core";
 import { ChevronRight } from "lucide-react";
 
 import { SeverityBadge } from "@/components/SeverityBadge";

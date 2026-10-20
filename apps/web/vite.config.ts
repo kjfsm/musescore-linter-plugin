@@ -17,10 +17,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.join(dir, "src"),
-      "@musescore-linter/core": pkg("core"),
-      "@musescore-linter/checkers": pkg("checkers"),
-      "@musescore-linter/source-musicxml": pkg("source-musicxml"),
-      "@musescore-linter/cli": pkg("cli"),
+      "@score-linter/core": pkg("core"),
+      "@score-linter/checkers": pkg("checkers"),
+      "@score-linter/source-musicxml": pkg("source-musicxml"),
+      "@score-linter/cli": path.join(dir, "..", "cli", "src", "index.ts"),
     },
   },
   build: {

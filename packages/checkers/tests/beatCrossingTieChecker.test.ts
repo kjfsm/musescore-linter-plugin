@@ -1,4 +1,4 @@
-import type { EventSpec, MeasureInfo } from "@musescore-linter/core";
+import type { EventSpec, MeasureInfo } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { beatCrossingTieChecker } from "../src/beatCrossingTieChecker.js";

@@ -10,8 +10,8 @@ import type {
   SlurSpec,
   TextKind,
   TieSpec,
-} from "@musescore-linter/core";
-import { buildIR, CANONICAL, TICKS_PER_QUARTER } from "@musescore-linter/core";
+} from "@score-linter/core";
+import { buildIR, CANONICAL, TICKS_PER_QUARTER } from "@score-linter/core";
 
 import { articulationNameOf } from "./articulations.js";
 import { durationFromDivisions, durationFromType, type Fraction } from "./duration.js";

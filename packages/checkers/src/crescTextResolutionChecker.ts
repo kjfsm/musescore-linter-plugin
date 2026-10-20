@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@score-linter/core";
 
 import { eventsForStaff } from "./base/query.js";
 

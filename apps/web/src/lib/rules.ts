@@ -1,10 +1,10 @@
-import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
+import type { Checker, CheckerOptionValue, Severity } from "@score-linter/core";
 import {
   getCategories,
   getCheckerList,
   isCheckerEnabled,
   resolveCheckerOptions,
-} from "@musescore-linter/core";
+} from "@score-linter/core";
 
 import { allRuleIds } from "./lint";
 

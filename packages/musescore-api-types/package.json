@@ -1,0 +1,14 @@
+{
+  "name": "@score-linter/musescore-api-types",
+  "version": "2.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./globals": "./src/globals.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

@@ -1,5 +1,5 @@
-import type { MuseScore, Score } from "@kjfsm/musescore-plugin-sdk-types";
-import { profileIR } from "@musescore-linter/core";
+import { profileIR } from "@score-linter/core";
+import type { MuseScore, Score } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
 import { buildSnapshot } from "../src/snapshot.js";

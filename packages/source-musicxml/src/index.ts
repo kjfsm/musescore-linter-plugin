@@ -1,4 +1,4 @@
-import type { LintIR } from "@musescore-linter/core";
+import type { LintIR } from "@score-linter/core";
 
 import { buildIRFromMusicXML, TICKS_PER_QUARTER } from "./builder.js";
 import { decodeXml, extractMxl, isZip } from "./mxl.js";

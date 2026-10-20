@@ -1,0 +1,21 @@
+{
+  "name": "@score-linter/plugin",
+  "version": "2.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "package": "tsx scripts/package.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.bundle.json"
+  },
+  "dependencies": {
+    "@score-linter/checkers": "workspace:*",
+    "@score-linter/core": "workspace:*",
+    "@score-linter/source-musescore": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "fflate": "^0.8.3",
+    "tsx": "^4.22.0"
+  }
+}

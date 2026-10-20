@@ -1,5 +1,5 @@
 {
-  "name": "@musescore-linter/web",
+  "name": "@score-linter/web",
   "version": "0.2.0",
   "private": true,
   "type": "module",
@@ -12,10 +12,10 @@
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
-    "@musescore-linter/checkers": "workspace:*",
-    "@musescore-linter/cli": "workspace:*",
-    "@musescore-linter/core": "workspace:*",
-    "@musescore-linter/source-musicxml": "workspace:*",
+    "@score-linter/checkers": "workspace:*",
+    "@score-linter/cli": "workspace:*",
+    "@score-linter/core": "workspace:*",
+    "@score-linter/source-musicxml": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.28.0",

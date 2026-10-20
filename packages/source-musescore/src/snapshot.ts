@@ -1,3 +1,29 @@
+import type {
+  HostVersionInfo,
+  IRBuilder,
+  LintIR,
+  MeasureInfo,
+  PartGroupInfo,
+  PartGroupSymbol,
+  TextKind,
+} from "@score-linter/core";
+import {
+  CANONICAL,
+  createIRBuilder,
+  createPerf,
+  makeLogger,
+  normalizePartGroups,
+  toBarlineKind,
+} from "@score-linter/core";
+import type { PluginSegment, TextAnnotation } from "@score-linter/musescore-api";
+import type {
+  BracketTypeEnum,
+  EngravingItem,
+  Measure,
+  MuseScore,
+  Score,
+} from "@score-linter/musescore-api-types";
+import { generatedFrom } from "@score-linter/musescore-api-types";
 import {
   checkHostVersion,
   classifyBarlineKind,
@@ -31,33 +57,7 @@ import {
   strictEnum,
   trackToStaffIdx,
   VOICES_PER_STAFF,
-} from "@kjfsm/musescore-plugin-sdk-helpers";
-import type {
-  BracketTypeEnum,
-  EngravingItem,
-  Measure,
-  MuseScore,
-  Score,
-} from "@kjfsm/musescore-plugin-sdk-types";
-import { generatedFrom } from "@kjfsm/musescore-plugin-sdk-types";
-import type {
-  HostVersionInfo,
-  IRBuilder,
-  LintIR,
-  MeasureInfo,
-  PartGroupInfo,
-  PartGroupSymbol,
-  TextKind,
-} from "@musescore-linter/core";
-import {
-  CANONICAL,
-  createIRBuilder,
-  createPerf,
-  makeLogger,
-  normalizePartGroups,
-  toBarlineKind,
-} from "@musescore-linter/core";
-import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
+} from "@score-linter/musescore-plugin-helpers";
 
 import type { HostEnums } from "./types.js";
 

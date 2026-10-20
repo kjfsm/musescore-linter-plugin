@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@score-linter/core";
 
 export const finalBarlineChecker: Checker = {
   id: "final-barline",

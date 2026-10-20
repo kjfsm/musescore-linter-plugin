@@ -1,5 +1,5 @@
-import type { ElementKind, LintIR } from "@musescore-linter/core";
-import { eventsOnStaff } from "@musescore-linter/core";
+import type { ElementKind, LintIR } from "@score-linter/core";
+import { eventsOnStaff } from "@score-linter/core";
 
 export interface RestSpan {
   staffIdx: number;

@@ -1,8 +1,8 @@
-import { registerAll } from "@musescore-linter/checkers";
-import type { FileResult } from "@musescore-linter/cli";
-import type { LintIR } from "@musescore-linter/core";
-import { getCheckerList, reset, runAllCheckers, setLevel } from "@musescore-linter/core";
-import { buildIRFromBytesWithXml } from "@musescore-linter/source-musicxml";
+import { registerAll } from "@score-linter/checkers";
+import type { FileResult } from "@score-linter/cli";
+import type { LintIR } from "@score-linter/core";
+import { getCheckerList, reset, runAllCheckers, setLevel } from "@score-linter/core";
+import { buildIRFromBytesWithXml } from "@score-linter/source-musicxml";
 
 /**
  * パース済みのファイル 1 件。IR を保持するので再 lint で読み直さなくてよい。

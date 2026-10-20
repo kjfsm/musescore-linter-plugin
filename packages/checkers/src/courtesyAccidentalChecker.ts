@@ -1,11 +1,5 @@
-import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import {
-  CANONICAL,
-  createIssue,
-  eventsOnStaff,
-  tpcToAlter,
-  tpcToName,
-} from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff, tpcToAlter, tpcToName } from "@score-linter/core";
 
 // 親切（cautionary / courtesy）臨時記号の提案。
 // 慣習: 前の小節で臨時記号が付いた音が、次の小節で（小節線で記号が打ち消されたあと）

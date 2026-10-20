@@ -23,7 +23,7 @@
   作っても「モックと duet.musicxml の違い」を測るだけで意味を持たない。結果として
   M1 / M2 の検証欄にある「`KNOWN_DIFFS` からエントリが消えること」は実行していない。
 - **S2 の検証欄と共通ゲートに残る `turbo run ... build:web` は成立しない。**
-  `build:web` は turbo タスクではなく（`build` が `@musescore-linter/web#build` を含む）、
+  `build:web` は turbo タスクではなく（`build` が `@score-linter/web#build` を含む）、
   グラフ検証ステップはまさにこれを「未定義タスク」として検出する側にある。
 - **L4 の一部（`src/bundle-entry.ts` と `scripts/build.ts` の EXPORTS 二重管理の解消）を
   M5 の中で実施した。** M5 で QML から `isCheckerEnabled` を呼ぶ必要が生じ、二重管理の
@@ -107,7 +107,7 @@ MuseScore 4 プラグインとして始まったこのリポジトリに、後�
 **S2 の理由** — CI は `pnpm lint / knip / typecheck / test:coverage / build / build:web` を直に叩いており、
 turbo の task graph が CI で一度も検証されていない。直近の「pipeline が未定義タスク build:web で落ちる」
 （コミット `1d9c3fd`）はこれが根本原因。S3 以降で turbo.json を触るので先に検証経路を作る。
-**検証**: `turbo run --dry=json` で graph をダンプし `build:web` が `@musescore-linter/web#build` に解決されること。
+**検証**: `turbo run --dry=json` で graph をダンプし `build:web` が `@score-linter/web#build` に解決されること。
 
 **S3 の理由** — `turbo.json:35-41` の `//#build` の inputs に `ScoreLinter.qml` / `qml/**` /
 `package.json`（version 注入元）が無い。QML だけ編集して `turbo build` するとキャッシュ誤ヒットで
@@ -355,11 +355,11 @@ hairpin 側は意図的に info に下げられているので、**「対称に�
 issue の整形が CLI（`packages/cli/src/format.ts`）/ QML（`qml/IssuesPanel.qml:51-88` の text/markdown/csv）/
 Web（`apps/web/src/lib/rows.ts`）の 3 系統に分裂し、`countBySeverity` は
 `format.ts:56` / `IssuesPanel.qml:24` / `ScoreLinter.qml:69-83` の三重実装。
-さらに `apps/web/package.json:17` が `@musescore-linter/cli` に依存している
+さらに `apps/web/package.json:17` が `@score-linter/cli` に依存している
 （`FileResult` 型 + `stripPartPrefix`/`countBySeverity` の 2 関数のため）
 — **ブラウザアプリ → CLI パッケージという依存方向の誤り**。
 
-共有の `@musescore-linter/report` パッケージ（純関数のみ）を新設し 4 リリースに分けて段階移行:
+共有の `@score-linter/report` パッケージ（純関数のみ）を新設し 4 リリースに分けて段階移行:
 ①`countBySeverity` + `FileResult` 型の移設 → ②CLI → ③Web → ④QML。
 QML 側は ES2017 バンドル制約があり CSV/Markdown は QML にしか実装が無いので同時切り替えは不可。
 **①は Phase 2 の M5/M6 と同じ「core にメタ情報を集める」方向なので Phase 2 末尾に前倒し可**。

@@ -11,5 +11,10 @@
   // biome の assist.actions.source.organizeImports: "on" 相当。
   // oxfmt の既定は off なので明示的に有効化する（--migrate biome は移行しない）。
   "sortImports": true,
-  "ignorePatterns": [".agents/**", ".claude/**", "**/CHANGELOG.md"]
+  "ignorePatterns": [
+    ".agents/**",
+    ".claude/**",
+    "**/CHANGELOG.md",
+    "packages/musescore-api-types/src/generated/**"
+  ]
 }

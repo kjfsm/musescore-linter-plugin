@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { CANONICAL, createIssue } from "@musescore-linter/core";
+import type { Checker, Issue, LintIR } from "@score-linter/core";
+import { CANONICAL, createIssue } from "@score-linter/core";
 
 import { buildPartNameMap, measureAtTick } from "./base/query.js";
 import { findRestOnlyEndpoints } from "./base/spannerOnRest.js";

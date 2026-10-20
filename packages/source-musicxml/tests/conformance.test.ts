@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { profileIR } from "@musescore-linter/core";
+import { profileIR } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { buildIRFromMusicXML } from "../src/builder.js";

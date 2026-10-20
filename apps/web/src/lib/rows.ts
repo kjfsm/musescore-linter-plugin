@@ -1,6 +1,6 @@
-import type { FileResult } from "@musescore-linter/cli";
-import { countBySeverity, stripPartPrefix } from "@musescore-linter/cli";
-import type { Issue, Severity } from "@musescore-linter/core";
+import type { FileResult } from "@score-linter/cli";
+import { countBySeverity, stripPartPrefix } from "@score-linter/cli";
+import type { Issue, Severity } from "@score-linter/core";
 
 export interface Row {
   key: string;

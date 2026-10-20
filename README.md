@@ -1,12 +1,12 @@
-# musescore-linter-plugin
+# score-linter
 
 MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 弦楽五重奏（Vn1・Vn2・Va・Vc・Cb）を主眼に、スコア内のテキスト指示・テンポ・ダイナミクスまわりを走査し、記譜ミスや整合性の崩れを一覧表示します。
 
 ## インストール方法
 
-1. **[最新版の ZIP をダウンロード](https://github.com/kjfsm/musescore-linter-plugin/releases/latest/download/musescore-linter-plugin.zip)** し、ZIP を展開します。
-   - ZIP URL: `https://github.com/kjfsm/musescore-linter-plugin/releases/latest/download/musescore-linter-plugin.zip`
+1. **[最新版の ZIP をダウンロード](https://github.com/kjfsm/score-linter/releases/latest/download/score-linter.zip)** し、ZIP を展開します。
+   - ZIP URL: `https://github.com/kjfsm/score-linter/releases/latest/download/score-linter.zip`
 
 2. 展開したフォルダの中身を、MuseScore 4 のプラグインフォルダに配置します。
    - **Windows:** `C:\Users\（ユーザー名）\Documents\MuseScore4\Plugins\musescore-linter-plugin\`
@@ -108,140 +108,21 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 pnpm monorepo です。ビルド・テスト・リリースは Turborepo + Changesets で行います。
 
 LintIR を **作る側**（入力ソース）と **使う側**（checker）が分かれているのが構成の要点です。
-`core` は MuseScore に依存せず、MuseScore を触るのは `source-musescore` だけ。同じ LintIR を
-MusicXML からも組み立てられるので、31 個の checker は QML プラグインからも CLI からも
-Web 版からもそのまま動きます。
+checker は MuseScore を知らず、同じ LintIR を MusicXML からも組み立てられるので、
+QML プラグイン・CLI・Web 版のどれからでも同じ checker が動きます。
 
-`packages/*` はビルド不要の再利用ライブラリで、成果物を作るのはルートの `scripts/*.ts`（esbuild）です。
-Vite を使うのは `apps/*` のフロントエンドだけ、という線引きにしています。
-
-| パッケージ         | 役割                                                          | MuseScore 依存 |
-| ------------------ | ------------------------------------------------------------- | -------------- |
-| `core`             | LintIR の型・linter・registry・issue・irBuilder               | なし           |
-| `checkers`         | 全 checker（`core` のみに依存）                               | なし           |
-| `source-musescore` | MuseScore の `curScore` から LintIR を作る（`buildSnapshot`） | あり           |
-| `source-musicxml`  | MusicXML / .mxl から LintIR を作る（`buildIRFromMusicXML`）   | なし           |
-| `musescore-api`    | SDK 型の薄いブリッジ                                          | 型のみ         |
-| `cli`              | `musescore-lint` コマンド                                     | なし           |
-| `apps/web`         | ブラウザ完結の Web 版（React + shadcn/ui）                    | なし           |
-
-```
-ScoreLinter.qml                プラグインエントリ（薄い）
-qml/
-  IssuesPanel.qml              問題タブ（バッジ・検索・フィルタ・空状態）
-  SettingsPanel.qml            設定タブ（checker 一覧から自動生成）
-  SnapshotPanel.qml            スナップショットタブ
-  IssueDelegate.qml            問題 1 行の delegate
-  SeverityBadge.qml            severity 色・カウントのバッジ
-  UpdateBanner.qml             アップデート確認結果のバナー（DL / フォルダを開く導線）
-src/
-  bundle-entry.ts              esbuild の入口（core + checkers を束ね registerAll を呼ぶ）
-packages/
-  core/                        @musescore-linter/core — LintIR・linter・registry
-    src/
-      types.ts                 LintIR / LintEvent / Issue の型定義
-      irBuilder.ts             spec から LintIR を組み立てる汎用ビルダ（buildIR）
-      linter.ts                全 checker を登録順に実行・ソート（runAllCheckers、withDerived）
-      checkerRegistry.ts       checker の登録・取得
-      checkerOptions.ts        options 値の検証・正規化（resolveCheckerOptions 等）
-      enumRegistry.ts          MuseScore enum を canonical 文字列へ正規化する層
-      issue.ts                 Issue 生成（createIssue）とソート（compareIssues）
-      constants.ts             tick の分解能の定数（TICKS_PER_QUARTER 等）
-      pitchSpelling.ts         TPC（五度圏に基づく音高綴り）⇄ 音名の変換
-      perf.ts                  実行時間の計測ユーティリティ（既定オフ）
-      version.ts               セマンティックバージョン比較（アップデート確認用）
-      logger.ts                タグ付きロガー
-      index.ts                 パッケージの公開 API
-  checkers/                    @musescore-linter/checkers — 全 checker
-    src/
-      index.ts                 全 checker を registry に登録（registerAll。checker 追加時に触る唯一のファイル）
-      base/
-        predicates.ts          共通述語（isDynamicMark 等）と buildPartBuckets
-        textPairChecker.ts     on/off ペア型 checker のファクトリ
-        partGroups.ts          パート括弧（システムブラケット）でスコープを絞るクロージャ
-        query.ts               tick → 小節番号など checker 間で共有するクエリ
-        spannerOnRest.ts       ヘアピン/スラーの端点が休符上にあるかの共通判定
-      pizzArcoChecker.ts       ┐
-      sordinoChecker.ts        │
-      soloTuttiChecker.ts      │
-      divisiChecker.ts         │ on/off ペア型（articulation・計 10 種、createTextPairChecker 使用）
-      sulTastoOrdChecker.ts    │
-      sulPontOrdChecker.ts     │
-      conLegnoArcoChecker.ts   │
-      muteOpenChecker.ts       │
-      unaCordaChecker.ts       │
-      harpTableChecker.ts      ┘
-      // 以下、独立型（計 21 種。個別の id / severity / 目的は上記「チェック項目」表を参照）
-      slurTieArticulationConsistencyChecker.ts
-      restAnnotationChecker.ts
-      tempoBarlineChecker.ts
-      openingTempoChecker.ts
-      firstNoteDynamicsChecker.ts
-      tempoWithoutBpmChecker.ts
-      tempoChangeResolutionChecker.ts
-      duplicateDynamicsChecker.ts
-      simultaneousDynamicsChecker.ts
-      hairpinTargetDynamicChecker.ts
-      finalBarlineChecker.ts
-      codaSegnoChecker.ts
-      rehearsalMarkOrderChecker.ts
-      repeatBarlineMatchChecker.ts
-      tiePitchMismatchChecker.ts
-      courtesyAccidentalChecker.ts
-      hairpinOnRestChecker.ts
-      slurOnRestChecker.ts
-      slurSingleNoteChecker.ts
-      crescTextResolutionChecker.ts
-      beatCrossingTieChecker.ts
-    tests/
-      checkers.test.ts         全 checker の単体テスト（vitest）
-      derived.test.ts          withDerived（ir.derived）の単体テスト
-      beatCrossingTieChecker.test.ts / slurTieArticulationConsistencyChecker.test.ts
-                                個別ファイルに切り出した checker のテスト
-      base/                    base/ ヘルパー（partGroups.ts・query.ts）の単体テスト
-      helpers/irBuilder.ts     テスト用の fixture ヘルパー（buildIR は core の再エクスポート、cleanIR/quintetIR を追加）
-  musescore-api/               @musescore-linter/musescore-api — SDK 型の薄い拡張層
-    src/
-      index.ts                 SDK 型に不足するプロパティ（duration / annotations 等）を補うブリッジ
-  source-musescore/            @musescore-linter/source-musescore — MuseScore → LintIR
-    src/
-      snapshot.ts              スコアを走査して LintIR を生成（buildSnapshot）
-      types.ts                 HostEnums（実行中の MuseScore の enum を受け取る）
-  source-musicxml/             @musescore-linter/source-musicxml — MusicXML → LintIR
-    src/
-      index.ts                 buildIRFromBytes/buildIRFromBytesWithXml（非圧縮/圧縮 .mxl の入口統一）
-      builder.ts               score-partwise を走査して LintIR を生成
-      xml.ts                   出現順を保持する XML パース（fast-xml-parser）
-      pitch.ts                 step/alter/octave → MIDI 音高・tpc・譜表位置
-      duration.ts              <type> と付点 → 全音符 1 の既約分数
-      articulations.ts         MusicXML の記号名 → MuseScore の名前
-      tempoWords.ts            <words> がテンポ表記かどうかを判定する語彙表（MusicXML 経路固有）
-      partGroups.ts            <part-group> → PartGroupInfo（システムブラケット）への変換
-      mxl.ts                   圧縮 MusicXML（.mxl）の展開
-  cli/                         @musescore-linter/cli — musescore-lint コマンド
-    src/
-      main.ts                  エントリ（shebang 付き）
-      index.ts                 パッケージの公開 API（run/parseArgs/format 系の再エクスポート）
-      run.ts                   解析の実行と終了コードの決定
-      args.ts                  引数解析
-      format.ts                pretty / json / github の出力整形
-apps/
-  web/                         ブラウザ完結の Web 版（Cloudflare Workers static assets）
-    src/
-      App.tsx                  状態の集約（ParsedFile[] と enabledRules の 2 つだけ）
-      lib/lint.ts              parseFile（重い）/ lintParsed（軽い）を分離
-      lib/rules.ts             checker のカテゴリ分けと localStorage 永続化
-      lib/rows.ts              表示用の整形（cli の format.ts を再利用）
-      components/              Dropzone / ResultTable / RulePanel / ScorePreview / SeverityBadge / PrivacyNote
-      components/ui/           shadcn/ui の生成コード
-    public/_headers            CSP などのセキュリティヘッダ
-    wrangler.jsonc             main を持たない assets-only Worker
-scripts/
-  build.ts                     esbuild で IIFE バンドル + QML を dist/ へ
-  build-cli.ts                 esbuild で CLI を dist-cli/ へ単一ファイル化
-  package.ts                   dist/ を ZIP 化（リリース成果物）
-  make-conversion-job.ts       MuseScore の一括変換ジョブ JSON を生成（CI 用）
-```
+| 場所                                                                          | 中身                                                             |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `apps/plugin`                                                                 | MuseScore プラグイン（QML と、esbuild で作る ES2017 のバンドル） |
+| `apps/cli`                                                                    | `score-lint` コマンド（MusicXML / .mxl）                         |
+| `apps/web`                                                                    | ブラウザ完結の Web 版（Cloudflare Workers の static assets）     |
+| `packages/core`                                                               | LintIR の型・linter・registry                                    |
+| `packages/checkers`                                                           | checker 群（`core` のみに依存）                                  |
+| `packages/source-musicxml`                                                    | MusicXML / .mxl → LintIR                                         |
+| `packages/source-musescore`                                                   | MuseScore の `curScore` → LintIR                                 |
+| `packages/musescore-api` / `musescore-api-types` / `musescore-plugin-helpers` | MuseScore プラグイン API の型とヘルパ                            |
+| `tools/musescore-api-types-generator`                                         | MuseScore の C++ ヘッダから `musescore-api-types` を生成する     |
+| `scripts/`                                                                    | ベンチマークと CI 用の補助スクリプト                             |
 
 ## 使い方
 
@@ -252,8 +133,8 @@ scripts/
 MuseScore を起動せずに、MusicXML から同じ checker をかけられます。
 
 ```bash
-pnpm build:cli                             # dist-cli/musescore-lint.mjs を作る
-./dist-cli/musescore-lint.mjs score.musicxml
+pnpm build:cli                             # apps/cli/dist/score-lint.mjs を作る
+./apps/cli/dist/score-lint.mjs score.musicxml
 
 pnpm lint:score score.musicxml             # ビルドせずに直接実行（tsx）
 ```
@@ -363,7 +244,7 @@ localStorage に保存し、どちらも「既定から変えたぶんだけ」�
 
 1. `packages/checkers/src/xxxChecker.ts` を作成し `export const xxxChecker = { ... }` を定義
    - 必須プロパティ: `id, name, description, category, severity, defaultEnabled, run(ir)`
-   - Issue は `@musescore-linter/core` の `createIssue(checker, fields)` 経由で生成
+   - Issue は `@score-linter/core` の `createIssue(checker, fields)` 経由で生成
    - on/off ペア型なら `packages/checkers/src/base/textPairChecker.ts` の `createTextPairChecker()` を利用
 2. `packages/checkers/src/index.ts` に 2 箇所追加する（**この 1 ファイルで完結する**）: 冒頭の `import`
    文と、`ALL_CHECKERS` 配列へのエントリ。配列の並び順がそのまま実行順・検出結果の並び順に
@@ -377,6 +258,7 @@ localStorage に保存し、どちらも「既定から変えたぶんだけ」�
 
 ```bash
 pnpm test   # 全パッケージで vitest を実行
+pnpm generate:types   # MuseScore の C++ ヘッダから packages/musescore-api-types を生成し直す（版は tools/musescore-api-types-generator/config.json の ref）
 ```
 
 各 checker は `tests/helpers/irBuilder.ts` で構築した最小 LintIR に対して挙動を検証します。MuseScore を起動せずに回帰テストが可能です。
@@ -389,7 +271,7 @@ push または PR をオープンすると GitHub Actions が lint / フォー�
 
 ### 楽譜の Lint（`.github/workflows/score-lint.yml`）
 
-`scores/` に置いた `.mscz` を MuseScore の CLI で MusicXML に変換し、`musescore-lint` にかけます。
+`scores/` に置いた `.mscz` を MuseScore の CLI で MusicXML に変換し、`score-lint` にかけます。
 `.musicxml` / `.mxl` を直接置いた場合は変換せずそのまま解析します。error があればワークフローが
 失敗し、issue は PR にアノテーションとして表示されます。
 
@@ -405,7 +287,7 @@ push または PR をオープンすると GitHub Actions が lint / フォー�
 ```bash
 # 手元で同じことをする場合
 xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
-./dist-cli/musescore-lint.mjs out.musicxml
+./apps/cli/dist/score-lint.mjs out.musicxml
 ```
 
 ### リリース手順
@@ -430,7 +312,7 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 
 新しい checker を書くときは、`ir.index` を優先的に活用してください。
 
-- `eventsOfKind` / `eventsOnStaff` / `eventsAtTick`（`@musescore-linter/core`）、global scope も含めるなら `eventsForStaff`（`packages/checkers/src/base/query.ts`）で必要なイベントだけを取り出す
+- `eventsOfKind` / `eventsOnStaff` / `eventsAtTick`（`@score-linter/core`）、global scope も含めるなら `eventsForStaff`（`packages/checkers/src/base/query.ts`）で必要なイベントだけを取り出す
 - 全 events の線形走査は避ける
 - 共有できる前処理（例: 各 staff の firstChord）は `ir.derived` に 1 回だけ計算して再利用する（`packages/core/src/linter.ts` の `withDerived` に追加）
 
@@ -465,7 +347,7 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 
 - `staves` / `unresolvedAnnotations` は廃止済み。global scope のイベントは `index.byStaff[-1]` で参照する。
 - MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。kind の文字列は `ElementKind` / `BarlineKind` のリテラル型で、語彙外の値は型エラーになる。
-- Issue 型は `@musescore-linter/core` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
+- Issue 型は `@score-linter/core` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
 - checker 単体で例外が出ても他の checker は実行継続し、`ruleId: "internal"` の issue として UI に表示される。
 
 ## 注意点

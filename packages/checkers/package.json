@@ -1,5 +1,5 @@
 {
-  "name": "@musescore-linter/checkers",
+  "name": "@score-linter/checkers",
   "version": "2.5.0",
   "private": true,
   "main": "src/index.ts",
@@ -8,6 +8,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@musescore-linter/core": "workspace:*"
+    "@score-linter/core": "workspace:*"
   }
 }

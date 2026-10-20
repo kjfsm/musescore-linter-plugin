@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue, MeasureInfo, Severity } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOfKind, TICKS_PER_WHOLE } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, MeasureInfo, Severity } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOfKind, TICKS_PER_WHOLE } from "@score-linter/core";
 
 import { buildPartNameMap } from "./base/query.js";
 

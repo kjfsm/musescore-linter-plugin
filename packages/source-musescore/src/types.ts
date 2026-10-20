@@ -2,7 +2,7 @@ import type {
   BarLineTypeEnum,
   BracketTypeEnum,
   NoteTypeEnum,
-} from "@kjfsm/musescore-plugin-sdk-types";
+} from "@score-linter/musescore-api-types";
 
 /**
  * QML から `buildSnapshot(curScore, { noteType: NoteType, barLineType: BarLineType }, plugin)` で

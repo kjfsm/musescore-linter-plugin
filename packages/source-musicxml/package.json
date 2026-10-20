@@ -1,5 +1,5 @@
 {
-  "name": "@musescore-linter/source-musicxml",
+  "name": "@score-linter/source-musicxml",
   "version": "1.1.0",
   "private": true,
   "main": "src/index.ts",
@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@musescore-linter/core": "workspace:*",
+    "@score-linter/core": "workspace:*",
     "fast-xml-parser": "^5.10.1",
     "fflate": "^0.8.3"
   }

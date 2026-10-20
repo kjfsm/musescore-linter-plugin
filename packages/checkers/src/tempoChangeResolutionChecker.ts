@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOfKind } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOfKind } from "@score-linter/core";
 
 import { PROSE_TEXT_KINDS } from "./base/predicates.js";
 import { buildPartNameMap } from "./base/query.js";

@@ -1,4 +1,4 @@
-import type { LintIR } from "@musescore-linter/core";
+import type { LintIR } from "@score-linter/core";
 
 /**
  * staffIdx → 比較グループキーを引くクロージャを返す。

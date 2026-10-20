@@ -1,11 +1,5 @@
-import type {
-  ChordEvent,
-  ElementKind,
-  EventOfKind,
-  IndexedIR,
-  LintIR,
-} from "@musescore-linter/core";
-import { eventsAtTick, eventsOnStaff } from "@musescore-linter/core";
+import type { ChordEvent, ElementKind, EventOfKind, IndexedIR, LintIR } from "@score-linter/core";
+import { eventsAtTick, eventsOnStaff } from "@score-linter/core";
 
 /**
  * tick を含む小節の番号。求まらなければ 0。

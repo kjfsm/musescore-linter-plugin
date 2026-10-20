@@ -2,7 +2,7 @@
 description: throw / never-catch 規約。Checker の run() は例外を throw させてよい
 paths:
   - "packages/**/src/**"
-  - "src/**"
+  - "apps/**/src/**"
 ---
 
 # エラー処理の規約

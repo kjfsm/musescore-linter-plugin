@@ -1,10 +1,5 @@
-import type { Checker, CheckerOptionSpec, IndexedIR, Issue } from "@musescore-linter/core";
-import {
-  CANONICAL,
-  createIssue,
-  eventsOfKind,
-  resolveCheckerOptions,
-} from "@musescore-linter/core";
+import type { Checker, CheckerOptionSpec, IndexedIR, Issue } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOfKind, resolveCheckerOptions } from "@score-linter/core";
 
 import { bracketGroupKeyOf } from "./base/partGroups.js";
 import {

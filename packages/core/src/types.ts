@@ -5,7 +5,7 @@ export type Severity = "error" | "warning" | "info";
 /**
  * 型の生成元 MuseScore バージョン（`generatedFrom.tag`）と実行中の版の照合結果。
  * `buildSnapshot` にホスト（`MuseScore { }` オブジェクト）を渡したときのみ設定される。
- * MuseScore 経路（`@musescore-linter/source-musescore`）でのみ埋まる診断用フィールドで、
+ * MuseScore 経路（`@score-linter/source-musescore`）でのみ埋まる診断用フィールドで、
  * 他のソース（MusicXML 等）からの IR では常に undefined。
  */
 export interface HostVersionInfo {

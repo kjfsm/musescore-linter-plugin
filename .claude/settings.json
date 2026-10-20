@@ -11,8 +11,6 @@
 
 			"Read(./**/dist/**)",
 			"Edit(./**/dist/**)",
-			"Read(./dist-cli/**)",
-			"Edit(./dist-cli/**)",
 			"Read(./.turbo/**)",
 			"Edit(./.turbo/**)",
 			"Read(./coverage/**)",

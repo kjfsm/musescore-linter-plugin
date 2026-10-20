@@ -1,4 +1,4 @@
-import { buildIR, withDerived } from "@musescore-linter/core";
+import { buildIR, withDerived } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { slurCoversTick, tieCoversTick } from "../../src/base/query.js";

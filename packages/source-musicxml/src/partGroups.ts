@@ -1,5 +1,5 @@
-import type { PartGroupInfo, PartGroupSymbol } from "@musescore-linter/core";
-import { normalizePartGroups } from "@musescore-linter/core";
+import type { PartGroupInfo, PartGroupSymbol } from "@score-linter/core";
+import { normalizePartGroups } from "@score-linter/core";
 
 import type { XNode } from "./xml.js";
 import { attr, childText, childrenOf, tagOf } from "./xml.js";

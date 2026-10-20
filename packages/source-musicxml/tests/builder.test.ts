@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { ElementKind, EventOfKind, LintIR } from "@musescore-linter/core";
+import type { ElementKind, EventOfKind, LintIR } from "@score-linter/core";
 import {
   CANONICAL,
   eventsOfKind as eventsOfKindInIR,
   tpcToAlter,
   tpcToName,
-} from "@musescore-linter/core";
+} from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { buildIRFromMusicXML, TICKS_PER_QUARTER } from "../src/builder.js";

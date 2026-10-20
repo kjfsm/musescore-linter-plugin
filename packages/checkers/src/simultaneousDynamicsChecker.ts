@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@score-linter/core";
 
 // 同一パート・同一 tick に異なるダイナミクスが同時に置かれている矛盾を検出する。
 // 例: 同じ音に f と p が両方付いている（コピペミス・置き換え漏れ）。

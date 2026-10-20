@@ -1,5 +1,5 @@
-import type { PartGroupInfo } from "@musescore-linter/core";
-import { buildIR } from "@musescore-linter/core";
+import type { PartGroupInfo } from "@score-linter/core";
+import { buildIR } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { bracketGroupKeyOf } from "../../src/base/partGroups.js";

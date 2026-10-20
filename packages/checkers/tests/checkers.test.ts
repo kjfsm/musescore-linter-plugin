@@ -1,5 +1,5 @@
-import type { BarlineKind } from "@musescore-linter/core";
-import { getCheckerList, reset, runAllCheckers } from "@musescore-linter/core";
+import type { BarlineKind } from "@score-linter/core";
+import { getCheckerList, reset, runAllCheckers } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { codaSegnoChecker } from "../src/codaSegnoChecker.js";
