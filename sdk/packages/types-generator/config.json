@@ -1,0 +1,27 @@
+{
+  "$comment": "Pin to the latest MuseScore 4 stable. Update tag and re-run `pnpm generate:types`.",
+  "repository": "musescore/MuseScore",
+  "ref": "v4.7.3",
+  "headers": [
+    "src/engraving/api/v1/qmlpluginapi.h",
+    "src/engraving/api/v1/scoreelement.h",
+    "src/engraving/api/v1/score.h",
+    "src/engraving/api/v1/cursor.h",
+    "src/engraving/api/v1/elements.h",
+    "src/engraving/api/v1/part.h",
+    "src/engraving/api/v1/instrument.h",
+    "src/engraving/api/v1/excerpt.h",
+    "src/engraving/api/v1/selection.h",
+    "src/engraving/api/v1/playevent.h",
+    "src/engraving/api/v1/style.h",
+    "src/engraving/api/v1/apistructs.h"
+  ],
+  "enumHeaders": [
+    "src/engraving/dom/chord.h",
+    "src/engraving/dom/accidental.h",
+    "src/engraving/types/types.h",
+    "src/engraving/dom/ottava.h",
+    "src/engraving/dom/hairpin.h",
+    "src/engraving/dom/timesig.h"
+  ]
+}

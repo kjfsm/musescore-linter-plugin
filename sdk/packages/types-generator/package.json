@@ -1,0 +1,20 @@
+{
+  "name": "@kjfsm/musescore-plugin-sdk-types-generator",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Generate @kjfsm/musescore-plugin-sdk-types from the MuseScore C++ headers using tree-sitter-cpp.",
+  "type": "module",
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf .turbo .cache *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  }
+}

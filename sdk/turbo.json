@@ -1,0 +1,38 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "outputLogs": "errors-only",
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "plugin.qml", "tsconfig.json", "package.json"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "outputLogs": "errors-only",
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "outputLogs": "errors-only",
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint": {
+      "outputLogs": "errors-only",
+      "outputs": []
+    },
+    "publint": {
+      "outputLogs": "errors-only",
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "attw": {
+      "outputLogs": "errors-only",
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}
