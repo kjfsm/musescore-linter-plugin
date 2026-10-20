@@ -136,7 +136,9 @@ export interface PartGroupInfo {
 }
 
 export interface IRMeta {
-  parts: { staffIdx: number; partName: string }[];
+  // partId は同じパートに属する譜表で同じ値になる。partName は同名の別パート
+  // （Horn in F が 2 つ等）がありうるので、譜表をパートに束ねるキーには使えない。
+  parts: { staffIdx: number; partId: string; partName: string }[];
   // 括弧を持たない・読み取れないソースでは空配列。
   partGroups: PartGroupInfo[];
   firstMusicTickByStaff: (number | null)[];

@@ -34,6 +34,10 @@ describe("MusicXML 経路の LintIR 契約プロファイル", () => {
     expect(profile.eventsWithoutMeasure).toBe(0);
   });
 
+  it("meta.parts の各譜表にパート識別子を埋める", () => {
+    expect(buildIRFromMusicXML(duet).meta.parts.map((p) => p.partId)).toEqual(["P1", "P2"]);
+  });
+
   // ─── ここから下は MuseScore 経路との表現の違い ───
   //
   // いずれも MusicXML 側に相当する表現が無いことによるもので、埋めようとすると

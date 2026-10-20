@@ -100,7 +100,7 @@ on/off ペア型の checker は `packages/checkers/src/base/textPairChecker.ts` 
     // staffIdx === -1 は global scope（全パート共通の注記）
   },
   meta: {
-    parts: [{staffIdx, partName}], firstMusicTickByStaff, lastTick,
+    parts: [{staffIdx, partId, partName}], firstMusicTickByStaff, lastTick,  // partId は同じパートの譜表で同じ値
     // システムブラケット。取れないソースでは []。入れ子は「同じ譜表を覆う括弧が
     // 複数ある」状態で表し、内側かどうかは staffCount の小ささで決まる。
     partGroups: [{symbol: "bracket"|"square"|"brace"|"line", startStaffIdx, staffCount}],

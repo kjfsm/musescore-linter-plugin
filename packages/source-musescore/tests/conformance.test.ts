@@ -67,7 +67,7 @@ function mockScore(): Score {
   return {
     nstaves: 1,
     ntracks: 4,
-    parts: [],
+    parts: [{ startTrack: 0, endTrack: 4, longName: "Violin I" }],
     firstMeasure: measure,
     staves: [],
   } as unknown as Score;
@@ -103,6 +103,11 @@ describe("MuseScore 経路の LintIR 契約プロファイル", () => {
   it("firstMusicTickByStaff が最初の音符/休符の tick になる", () => {
     const ir = buildSnapshot(mockScore(), hostEnums(), undefined as unknown as MuseScore);
     expect(ir.meta.firstMusicTickByStaff).toEqual([0]);
+  });
+
+  it("meta.parts の各譜表にパート識別子を埋める", () => {
+    const ir = buildSnapshot(mockScore(), hostEnums(), undefined as unknown as MuseScore);
+    expect(ir.meta.parts).toEqual([{ staffIdx: 0, partId: "part-0", partName: "Violin I" }]);
   });
 
   // ─── ここから下が MusicXML 経路との差分（MusicXML 側は満たしていない） ───

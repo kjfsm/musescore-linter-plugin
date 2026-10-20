@@ -214,8 +214,18 @@ describe("buildIRFromMusicXML: パートと譜表", () => {
   it("part-list の順に staffIdx を採番し partName を引き継ぐ", () => {
     const ir = buildIRFromMusicXML(duet);
     expect(ir.meta.parts).toEqual([
-      { staffIdx: 0, partName: "Violin I" },
-      { staffIdx: 1, partName: "Violin II" },
+      { staffIdx: 0, partId: "P1", partName: "Violin I" },
+      { staffIdx: 1, partId: "P2", partName: "Violin II" },
+    ]);
+  });
+
+  it("同名の別パートは part id で区別する", () => {
+    const named = (id: string) =>
+      `<score-part id="${id}"><part-name>Horn in F</part-name></score-part>`;
+    const ir = buildIRFromMusicXML(scoreWithPartList(named("P1") + named("P2"), ["P1", "P2"]));
+    expect(ir.meta.parts).toEqual([
+      { staffIdx: 0, partId: "P1", partName: "Horn in F" },
+      { staffIdx: 1, partId: "P2", partName: "Horn in F" },
     ]);
   });
 
@@ -226,7 +236,7 @@ describe("buildIRFromMusicXML: パートと譜表", () => {
     expect(ir.meta.parts[0]?.partName).toBe("Staff 1");
   });
 
-  it("複数譜表のパートは staves の数だけ meta.parts を作り、同じ partName を共有する", () => {
+  it("複数譜表のパートは staves の数だけ meta.parts を作り、同じ partId と partName を共有する", () => {
     const ir = buildIRFromMusicXML(
       score(
         `<measure number="1">
@@ -242,8 +252,8 @@ describe("buildIRFromMusicXML: パートと譜表", () => {
       ),
     );
     expect(ir.meta.parts).toEqual([
-      { staffIdx: 0, partName: "Piano" },
-      { staffIdx: 1, partName: "Piano" },
+      { staffIdx: 0, partId: "P1", partName: "Piano" },
+      { staffIdx: 1, partId: "P1", partName: "Piano" },
     ]);
     expect(eventsOfKind(ir, K.CHORD, 0)).toHaveLength(1);
     expect(eventsOfKind(ir, K.CHORD, 1)).toHaveLength(1);

@@ -59,16 +59,15 @@ export interface PartBucket {
 }
 
 export function buildPartBuckets(ir: LintIR): PartBucket[] {
-  const buckets: Record<string, PartBucket> = {};
+  const buckets = new Map<string, PartBucket>();
   const metaParts = ir.meta.parts;
 
   for (const part of metaParts) {
-    const { staffIdx } = part;
-    const key = part.partName || `Staff ${staffIdx + 1}`;
-    let bucket = buckets[key];
+    const { staffIdx, partId } = part;
+    let bucket = buckets.get(partId);
     if (!bucket) {
-      bucket = { partName: key, staffIdx, events: [] };
-      buckets[key] = bucket;
+      bucket = { partName: part.partName || `Staff ${staffIdx + 1}`, staffIdx, events: [] };
+      buckets.set(partId, bucket);
     } else if (staffIdx < bucket.staffIdx) {
       bucket.staffIdx = staffIdx;
     }
@@ -86,7 +85,7 @@ export function buildPartBuckets(ir: LintIR): PartBucket[] {
     }
   }
 
-  return Object.values(buckets)
+  return [...buckets.values()]
     .map((bucket) => {
       bucket.events.sort((a, b) => {
         if (a.measure !== b.measure) return a.measure - b.measure;

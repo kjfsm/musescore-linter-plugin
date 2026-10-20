@@ -104,18 +104,26 @@ function buildHostVersionInfo(host: MuseScore | undefined): HostVersionInfo | un
   };
 }
 
-function getPartName(score: Score, staffIdx: number): string {
-  if (!score.parts) return `Staff ${staffIdx + 1}`;
+function getPartSpec(score: Score, staffIdx: number): { partId: string; partName: string } {
+  const fallback = { partId: `staff-${staffIdx}`, partName: `Staff ${staffIdx + 1}` };
+  if (!score.parts) return fallback;
   let trackOffset = 0;
+  let partIdx = 0;
   for (const part of score.parts) {
     const staveCount = trackToStaffIdx(part.endTrack) - trackToStaffIdx(part.startTrack);
     if (staffIdx >= trackOffset && staffIdx < trackOffset + staveCount) {
       const name = part.longName ?? "";
-      return name.length > 0 ? name : `Staff ${staffIdx + 1}`;
+      return {
+        // Part.musicXmlId は MusicXML から読み込んでいないスコアで一意に埋まるか
+        // 確かめられていないので、score.parts の並び順を識別子にする。
+        partId: `part-${partIdx}`,
+        partName: name.length > 0 ? name : fallback.partName,
+      };
     }
     trackOffset += staveCount;
+    partIdx++;
   }
-  return `Staff ${staffIdx + 1}`;
+  return fallback;
 }
 
 const BRACKET_SYMBOL_BY_MEMBER: Record<string, PartGroupSymbol> = {
@@ -346,7 +354,7 @@ export function buildSnapshot(score: Score, hostEnums: HostEnums, host?: MuseSco
   const builder = createIRBuilder({
     parts: Array.from({ length: numStaves }, (_, i) => ({
       staffIdx: i,
-      partName: getPartName(score, i),
+      ...getPartSpec(score, i),
     })),
     partGroups: readPartGroups(score, wrappedHostEnums.bracketType),
     hostVersion: buildHostVersionInfo(host),

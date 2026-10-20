@@ -737,6 +737,7 @@ export function buildIRFromMusicXML(xmlText: string): LintIR {
       const staffIdx = staffOffset + s;
       draft.parts.push({
         staffIdx,
+        partId: partId || `staff-${staffOffset}`,
         partName: rawName.length > 0 ? rawName : `Staff ${staffIdx + 1}`,
       });
     }
