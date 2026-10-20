@@ -13,8 +13,9 @@ paths:
 ## 定義の形
 
 `defineRule({ id, meta, options, run })`。`id` は kebab-case で、組み込みのルールの中で重複させない
-（`createLinter` が throw する）。`meta.category` の値は `tempo` / `dynamics` / `articulation` / `slur-tie` / `notation`
-（設定画面の並びとラベルは `packages/lint-app/src/catalog.ts`。新しいカテゴリを足したら表にも足す）。
+（`createLinter` が throw する）。`meta.category` は `RuleCategory` 型の値
+（`tempo` / `dynamics` / `articulation` / `slur-tie` / `notation`）。カテゴリを足すと、設定画面の並びとラベルの表
+（`packages/lint-app/src/catalog.ts`）の書き忘れを型検査が知らせる。
 
 ```ts
 export const xxx = defineRule({

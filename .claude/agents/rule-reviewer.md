@@ -16,7 +16,6 @@ model: sonnet
 
 - `id`: kebab-case で他と重複していないか
 - `meta.name`, `meta.description`: 適切な日本語説明か
-- `meta.category`: `tempo` / `dynamics` / `articulation` / `slur-tie` / `notation` のいずれか（新しい値なら `packages/lint-app/src/catalog.ts` に足されているか）
 - `meta.severity`: このルールが出しうる最も重いものか。`report` で `meta.severity` より重い severity を渡していないか
 - `options`: 設定項目を宣言しているなら純データか。`run` の中で生の値を検証し直していないか
 - `packages/linter/src/rules/index.ts` の `builtinRules` に登録されているか（関連するペアの隣か）

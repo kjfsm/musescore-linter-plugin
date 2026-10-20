@@ -2,9 +2,8 @@ import type { Score } from "@score-linter/score-model";
 import { partOfStaff } from "@score-linter/score-model";
 
 import { resolveOptions } from "./options.js";
-import type { Issue, OptionSpecs, Report, Rule, Severity } from "./types.js";
-
-const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
+import { compareSeverity } from "./severity.js";
+import type { Issue, OptionSpecs, Report, Rule } from "./types.js";
 
 /** オプションの宣言を `S` に保ったまま Rule を作る。型引数を書かずに済ませるための入口。 */
 export function defineRule<const S extends OptionSpecs = Record<never, never>>(
@@ -39,13 +38,16 @@ export interface LinterOptions {
 
 export interface Linter {
   readonly rules: readonly Rule[];
-  isEnabled(rule: Rule, config?: LinterConfig): boolean;
   lint(score: Score, config?: LinterConfig): LintResult;
+}
+
+export function isRuleEnabled(rule: Rule, config: LinterConfig = {}): boolean {
+  return config.enabled?.[rule.id] ?? rule.meta.defaultEnabled;
 }
 
 function issueFrom(score: Score, rule: Rule, report: Report): Issue {
   const severity = report.severity ?? rule.meta.severity;
-  if (SEVERITY_RANK[severity] < SEVERITY_RANK[rule.meta.severity]) {
+  if (compareSeverity(severity, rule.meta.severity) < 0) {
     throw new Error(
       `meta.severity（${rule.meta.severity}）より重い ${severity} を報告しました。meta.severity を直してください`,
     );
@@ -78,17 +80,13 @@ export function createLinter(rules: readonly Rule[], options: LinterOptions = {}
   }
   const { now } = options;
 
-  const isEnabled = (rule: Rule, config: LinterConfig = {}): boolean =>
-    config.enabled?.[rule.id] ?? rule.meta.defaultEnabled;
-
   return {
     rules,
-    isEnabled,
     lint(score, config = {}) {
       const issues: Issue[] = [];
       const timings: RuleTiming[] = [];
       for (const rule of rules) {
-        if (!isEnabled(rule, config)) continue;
+        if (!isRuleEnabled(rule, config)) continue;
         const found: Issue[] = [];
         const started = now?.();
         try {

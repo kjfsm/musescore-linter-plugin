@@ -45,10 +45,15 @@ export type OptionValues<S extends OptionSpecs> = {
 
 export type OptionValue = boolean | string | string[];
 
+export type RuleCategory = "tempo" | "dynamics" | "articulation" | "slur-tie" | "notation";
+
+/** `internal` はルールではなく、エンジンやホストが出す指摘。 */
+export type IssueCategory = RuleCategory | "internal";
+
 export interface RuleMeta {
   name: string;
   description: string;
-  category: string;
+  category: RuleCategory;
   /**
    * このルールが出しうる指摘のうち最も重いもの。設定画面は実行前にこれを表示するので、
    * 実際の指摘から導くことはできない。これより重い指摘を報告するとエンジンが内部エラーにする。
@@ -91,7 +96,7 @@ export interface IssueLocation {
 export interface Issue {
   ruleId: string;
   severity: Severity;
-  category: string;
+  category: IssueCategory;
   message: string;
   at: IssueLocation;
   detail: Record<string, unknown> | null;

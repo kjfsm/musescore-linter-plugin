@@ -1,43 +1,21 @@
 import {
-  countBySeverity,
+  createLintApp,
   type FileResult,
   formatCsv,
   formatMarkdown,
   formatText,
-  presentIssues,
+  type HostDiagnostic,
   type ReportedIssue,
-  ruleGroups,
-  type RuleGroup,
-  ruleOptionValues,
   type Settings,
-  toLinterConfig,
 } from "@score-linter/lint-app";
-import type { Issue, OptionValue, RuleTiming, Severity } from "@score-linter/linter";
-import { builtinRules, createLinter } from "@score-linter/linter";
+import type { RuleTiming, Severity } from "@score-linter/linter";
+import { builtinRules } from "@score-linter/linter";
 import type { MuseScore } from "@score-linter/musescore-api-types";
 import { connect } from "@score-linter/musescore-plugin-helpers";
 import { type MuseScoreOrigins, readMuseScore } from "@score-linter/reader-musescore";
 import type { Score } from "@score-linter/score-model";
 
-export const rules = builtinRules;
-
-export function ruleCatalog(): RuleGroup[] {
-  return ruleGroups(rules);
-}
-
-/** 設定画面のチェックボックスとオプションに出す値。どのルールも既定値で埋める。 */
-export function settingsView(settings: Settings): {
-  enabled: Record<string, boolean>;
-  options: Record<string, Record<string, OptionValue>>;
-} {
-  const enabled: Record<string, boolean> = {};
-  const options: Record<string, Record<string, OptionValue>> = {};
-  for (const rule of rules) {
-    enabled[rule.id] = settings.enabled[rule.id] ?? rule.meta.defaultEnabled;
-    options[rule.id] = ruleOptionValues(rule, settings);
-  }
-  return { enabled, options };
-}
+export const app = createLintApp(builtinRules);
 
 /** QML が保持して、スナップショット・ジャンプ・コピーに使う 1 回分の結果。 */
 export interface LintRun {
@@ -64,17 +42,6 @@ function perfReport(readMs: number, timings: RuleTiming[]): string {
   ].join("\n");
 }
 
-function hostIssue(ruleId: string, message: string, measure: number): Issue {
-  return {
-    ruleId,
-    severity: "warning",
-    category: "internal",
-    message,
-    at: { partId: null, staff: null, measure, tick: 0 },
-    detail: null,
-  };
-}
-
 /**
  * `host` は QML の `MuseScore { }` のルートオブジェクト。時刻は Date.now() — QML のエンジンには
  * performance.now() が無い。
@@ -88,27 +55,28 @@ export function lintCurrentScore(host: MuseScore, settings: Settings, measure: b
   const { score, origins, unreadMeasures } = readMuseScore(helpers, msScore);
   const readMs = Date.now() - started;
 
-  const linter = createLinter(rules, measure ? { now: () => Date.now() } : {});
-  const result = linter.lint(score, toLinterConfig(settings));
   const version = helpers.checkVersion();
-  const hostIssues: Issue[] = [];
-  if (!version.ok) hostIssues.push(hostIssue("internal-version-mismatch", version.message, 0));
-  for (const serial of unreadMeasures) {
-    hostIssues.push(
-      hostIssue(
-        "internal-unread-measure",
-        "この小節は読み取りの途中で失敗しました。指摘が欠けている可能性があります",
-        serial,
-      ),
-    );
+  const diagnostics: HostDiagnostic[] = [];
+  if (!version.ok) {
+    diagnostics.push({ id: "internal-version-mismatch", message: version.message, measure: 0 });
   }
-  const issues = presentIssues(score, [...hostIssues, ...result.issues]);
+  for (const serial of unreadMeasures) {
+    diagnostics.push({
+      id: "internal-unread-measure",
+      message: "この小節は読み取りの途中で失敗しました。指摘が欠けている可能性があります",
+      measure: serial,
+    });
+  }
+  const { issues, counts, timings } = app.lint(score, settings, {
+    diagnostics,
+    ...(measure ? { now: () => Date.now() } : {}),
+  });
 
   return {
     issues,
-    counts: countBySeverity(issues),
+    counts,
     parts: score.parts.map((p) => ({ id: p.id, name: p.name })),
-    perfText: measure ? perfReport(readMs, result.timings) : "",
+    perfText: measure ? perfReport(readMs, timings) : "",
     score,
     origins,
   };

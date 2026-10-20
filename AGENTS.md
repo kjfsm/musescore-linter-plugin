@@ -9,7 +9,7 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 （ソースにもホストにも依存しない）。`reader-musicxml`・`reader-musescore` が Score を作り、
 `linter` のルールは `score-model` だけを見る。MuseScore を触るのは `reader-musescore` と
 `musescore-plugin-helpers`・`musescore-api-types` だけ。`lint-app` は設定・並べ替え・件数・出力の整形を持ち、
-ホスト（`apps/plugin`・`cli`・`web`）はそれを呼ぶだけにする。
+ホスト（`apps/plugin`・`cli`・`web`）は `createLintApp` の返す入口を呼ぶだけにする（`createLinter` を直接組み立てない）。
 
 - 層の境界は各 package.json の依存と `.oxlintrc.json` の `no-restricted-imports` で守る。
   依存を足すときは両方を見直す。

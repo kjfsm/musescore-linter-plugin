@@ -1,10 +1,10 @@
-import { lintScore, type ReportedIssue, type Settings } from "@score-linter/lint-app";
-import { builtinRules, createLinter } from "@score-linter/linter";
+import { createLintApp, type ReportedIssue, type Settings } from "@score-linter/lint-app";
+import type { Severity } from "@score-linter/linter";
+import { builtinRules } from "@score-linter/linter";
 import { readMusicXmlBytes } from "@score-linter/reader-musicxml";
 import type { Score } from "@score-linter/score-model";
 
-export const rules = builtinRules;
-const linter = createLinter(rules);
+export const app = createLintApp(builtinRules);
 
 /**
  * 読み込んだファイル 1 件。Score を持っておくので、設定を変えたときに読み直さなくてよい。
@@ -37,15 +37,16 @@ export interface LintedFile {
   index: number;
   file: string;
   issues: ReportedIssue[];
+  counts: Record<Severity, number>;
 }
 
 /** 読めなかったファイルは飛ばすが、`index` は parsed の位置のまま保つ。 */
 export function lintParsed(parsed: ParsedFile[], settings: Settings): LintedFile[] {
   return parsed
-    .map((p, index) =>
-      p.score === undefined
-        ? undefined
-        : { index, file: p.name, issues: lintScore(linter, p.score, settings) },
-    )
+    .map((p, index) => {
+      if (p.score === undefined) return undefined;
+      const { issues, counts } = app.lint(p.score, settings);
+      return { index, file: p.name, issues, counts };
+    })
     .filter((r): r is LintedFile => r !== undefined);
 }

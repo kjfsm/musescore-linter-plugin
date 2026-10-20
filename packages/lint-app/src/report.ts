@@ -1,4 +1,5 @@
-import type { Issue, Severity } from "@score-linter/linter";
+import type { Issue, IssueCategory, Severity } from "@score-linter/linter";
+import { compareSeverity } from "@score-linter/linter";
 import type { Score } from "@score-linter/score-model";
 import { measureBySerial, partOfStaff, stableSortBy } from "@score-linter/score-model";
 
@@ -9,7 +10,7 @@ import { measureBySerial, partOfStaff, stableSortBy } from "@score-linter/score-
 export interface ReportedIssue {
   ruleId: string;
   severity: Severity;
-  category: string;
+  category: IssueCategory;
   message: string;
   partId: string | null;
   /** 楽譜全体に対する指摘では空文字列。 */
@@ -23,14 +24,12 @@ export interface ReportedIssue {
   detail: Record<string, unknown> | null;
 }
 
-const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
-
 /** 小節 → 譜表（楽譜全体の指摘が先）→ 重い順 → tick。同じなら報告された順。 */
-export function compareIssues(a: ReportedIssue, b: ReportedIssue): number {
+function compareIssues(a: ReportedIssue, b: ReportedIssue): number {
   return (
     a.measure - b.measure ||
     a.staffIdx - b.staffIdx ||
-    SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] ||
+    compareSeverity(a.severity, b.severity) ||
     a.tick - b.tick
   );
 }

@@ -1,5 +1,4 @@
 import {
-  countBySeverity,
   type FileResult,
   formatCsv,
   formatMarkdown,
@@ -30,14 +29,18 @@ export function toRows(issues: ReportedIssue[]): Row[] {
   }));
 }
 
-export function summarize(results: LintedFile[]): Record<Severity, number> {
-  return countBySeverity(results.reduce<ReportedIssue[]>((acc, r) => acc.concat(r.issues), []));
+export function summarize(results: Pick<LintedFile, "counts">[]): Record<Severity, number> {
+  const total: Record<Severity, number> = { error: 0, warning: 0, info: 0 };
+  for (const { counts } of results) {
+    for (const severity of Object.keys(total) as Severity[]) total[severity] += counts[severity];
+  }
+  return total;
 }
 
 export type ExportFormat = "markdown" | "csv";
 
 export function exportResults(
-  results: LintedFile[],
+  results: Pick<LintedFile, "file" | "issues">[],
   format: ExportFormat,
 ): { text: string; mimeType: string; extension: string } {
   const files: FileResult[] = results.map(({ file, issues }) => ({ file, issues }));

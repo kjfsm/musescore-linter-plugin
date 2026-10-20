@@ -36,12 +36,12 @@ describe("toRows", () => {
 });
 
 describe("summarize", () => {
-  it("全ファイルの指摘を重さごとに数える", () => {
+  it("全ファイルの件数を重さごとに足し合わせる", () => {
     const results = [
-      { index: 0, file: "a", issues: [issue(), issue({ severity: "info" })] },
-      { index: 1, file: "b", issues: [issue({ severity: "warning" })] },
+      { counts: { error: 1, warning: 0, info: 2 } },
+      { counts: { error: 0, warning: 3, info: 1 } },
     ];
-    expect(summarize(results)).toEqual({ error: 1, warning: 1, info: 1 });
+    expect(summarize(results)).toEqual({ error: 1, warning: 3, info: 3 });
   });
 });
 

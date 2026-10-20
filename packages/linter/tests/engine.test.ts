@@ -1,7 +1,7 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { createLinter, defineRule } from "../src/engine.js";
+import { createLinter, defineRule, isRuleEnabled } from "../src/engine.js";
 import { builtinRules } from "../src/rules/index.js";
 import type { Rule, Severity } from "../src/types.js";
 import { cleanScore, quintetScore, runAll } from "./helpers.js";
@@ -20,7 +20,7 @@ function reporting(id: string, count = 1, overrides: Partial<Rule["meta"]> = {})
     meta: {
       name: id,
       description: "",
-      category: "test",
+      category: "notation",
       severity: "warning",
       defaultEnabled: true,
       ...overrides,
@@ -62,7 +62,7 @@ describe("createLinter", () => {
       meta: {
         name: "r",
         description: "",
-        category: "cat",
+        category: "notation",
         severity: "warning",
         defaultEnabled: true,
       },
@@ -76,7 +76,7 @@ describe("createLinter", () => {
     expect(issues[0]).toEqual({
       ruleId: "r",
       severity: "warning",
-      category: "cat",
+      category: "notation",
       message: "m",
       at: { partId: "P2", staff: 1, measure: 3, tick: 960 },
       detail: { k: 1 },
@@ -92,18 +92,18 @@ describe("ルールの有効・無効", () => {
   const linter = createLinter([on, off]);
 
   it("指定が無ければ defaultEnabled に従う", () => {
-    expect(linter.isEnabled(on)).toBe(true);
-    expect(linter.isEnabled(off)).toBe(false);
-    expect(linter.isEnabled(on, { enabled: {} })).toBe(true);
+    expect(isRuleEnabled(on)).toBe(true);
+    expect(isRuleEnabled(off)).toBe(false);
+    expect(isRuleEnabled(on, { enabled: {} })).toBe(true);
   });
 
   it("明示指定は defaultEnabled より優先される", () => {
-    expect(linter.isEnabled(on, { enabled: { on: false } })).toBe(false);
-    expect(linter.isEnabled(off, { enabled: { off: true } })).toBe(true);
+    expect(isRuleEnabled(on, { enabled: { on: false } })).toBe(false);
+    expect(isRuleEnabled(off, { enabled: { off: true } })).toBe(true);
   });
 
   it("他のルールの指定には影響されない", () => {
-    expect(linter.isEnabled(on, { enabled: { other: false } })).toBe(true);
+    expect(isRuleEnabled(on, { enabled: { other: false } })).toBe(true);
   });
 
   it("無効なルールは実行されない", () => {
@@ -120,7 +120,7 @@ describe("ルールの例外", () => {
     meta: {
       name: "bad",
       description: "",
-      category: "test",
+      category: "notation",
       severity: "warning",
       defaultEnabled: true,
     },
@@ -150,7 +150,13 @@ describe("severity の契約", () => {
   function reportingSeverity(meta: Severity, reported: Severity | undefined): Rule {
     return defineRule({
       id: "r",
-      meta: { name: "r", description: "", category: "t", severity: meta, defaultEnabled: true },
+      meta: {
+        name: "r",
+        description: "",
+        category: "notation",
+        severity: meta,
+        defaultEnabled: true,
+      },
       options: {},
       run({ report }) {
         report({
@@ -187,7 +193,13 @@ describe("オプションの受け渡し", () => {
   function optionProbe(id: string, seen: Record<string, unknown>): Rule {
     return defineRule({
       id,
-      meta: { name: id, description: "", category: "t", severity: "info", defaultEnabled: true },
+      meta: {
+        name: id,
+        description: "",
+        category: "notation",
+        severity: "info",
+        defaultEnabled: true,
+      },
       options: {
         scope: {
           label: "範囲",
@@ -244,7 +256,13 @@ describe("実行時間の計測", () => {
   it("例外を投げたルールの時間も記録する", () => {
     const bad = defineRule({
       id: "bad",
-      meta: { name: "bad", description: "", category: "t", severity: "info", defaultEnabled: true },
+      meta: {
+        name: "bad",
+        description: "",
+        category: "notation",
+        severity: "info",
+        defaultEnabled: true,
+      },
       options: {},
       run() {
         throw new Error("boom");

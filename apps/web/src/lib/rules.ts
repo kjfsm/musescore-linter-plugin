@@ -1,17 +1,17 @@
-import { parseSettings, serializeSettings, type Settings } from "@score-linter/lint-app";
+import type { Settings } from "@score-linter/lint-app";
 
-import { rules } from "./lint";
+import { app } from "./lint";
 
 // 旧版と同じ置き場所。ON/OFF とオプションを別のキーに置く形も旧版のまま。
 const ENABLED_KEY = "musescore-linter:rule-overrides";
 const OPTIONS_KEY = "musescore-linter:rule-options";
 
 export function loadSettings(storage: Storage): Settings {
-  return parseSettings(rules, storage.getItem(ENABLED_KEY), storage.getItem(OPTIONS_KEY));
+  return app.parseSettings(storage.getItem(ENABLED_KEY), storage.getItem(OPTIONS_KEY));
 }
 
 export function saveSettings(storage: Storage, settings: Settings): void {
-  const { enabled, options } = serializeSettings(settings);
+  const { enabled, options } = app.serializeSettings(settings);
   storage.setItem(ENABLED_KEY, enabled);
   storage.setItem(OPTIONS_KEY, options);
 }

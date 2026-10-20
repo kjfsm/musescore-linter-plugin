@@ -1,14 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { lintScore, parseSettings } from "@score-linter/lint-app";
-import { builtinRules, createLinter } from "@score-linter/linter";
 import type { MuseScore } from "@score-linter/musescore-api-types";
 import { readMusicXml } from "@score-linter/reader-musicxml";
 import { describe, expect, it } from "vitest";
 
 import { duetScore, host } from "../../../packages/reader-musescore/tests/fixtures/duetMock.js";
-import { formatForCopy, lintCurrentScore, selectionFor, settingsView } from "../src/lint.js";
+import { app, formatForCopy, lintCurrentScore, selectionFor } from "../src/lint.js";
 
 const NO_SETTINGS = { enabled: {}, options: {} };
 const withScore = (): MuseScore => ({ ...host, curScore: duetScore() }) as unknown as MuseScore;
@@ -31,7 +29,7 @@ const duetXml = readFileSync(
 describe("lintCurrentScore", () => {
   it("MuseScore から読んでも、同じ楽譜の MusicXML と同じ指摘を返す", () => {
     const fromMuseScore = lintCurrentScore(withScore(), NO_SETTINGS, false).issues;
-    const fromMusicXml = lintScore(createLinter(builtinRules), readMusicXml(duetXml), NO_SETTINGS);
+    const fromMusicXml = app.lint(readMusicXml(duetXml), NO_SETTINGS).issues;
     // パートの識別子だけは読み込み口ごとに違う（MuseScore は並び順、MusicXML は part の id）
     const strip = (issues: typeof fromMusicXml) => issues.map((i) => ({ ...i, partId: "" }));
     expect(strip(fromMuseScore)).toEqual(strip(fromMusicXml));
@@ -46,7 +44,7 @@ describe("lintCurrentScore", () => {
   });
 
   it("設定で無効にしたルールは走らせない", () => {
-    const settings = parseSettings(builtinRules, '{"tie-pitch-mismatch":false}', null);
+    const settings = app.parseSettings('{"tie-pitch-mismatch":false}', null);
     const run = lintCurrentScore(withScore(), settings, false);
     expect(run.issues.some((i) => i.ruleId === "tie-pitch-mismatch")).toBe(false);
   });
@@ -99,17 +97,5 @@ describe("formatForCopy", () => {
     );
     expect(formatForCopy(issues, "text")).not.toContain("ファイル");
     expect(formatForCopy([], "csv")).toBe("");
-  });
-});
-
-describe("settingsView", () => {
-  it("どのルールも既定値で埋める", () => {
-    const view = settingsView(parseSettings(builtinRules, '{"pizz-arco":false}', null));
-    expect(view.enabled["pizz-arco"]).toBe(false);
-    expect(view.enabled["opening-tempo"]).toBe(true);
-    expect(view.options["slur-tie-articulation-consistency"]).toEqual({
-      scope: "all",
-      groupSymbols: ["bracket", "square"],
-    });
   });
 });

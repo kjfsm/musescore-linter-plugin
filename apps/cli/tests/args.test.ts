@@ -14,7 +14,7 @@ const RULES = ["opening-tempo", "pizz-arco", "final-barline"];
 const meta = {
   name: "test",
   description: "",
-  category: "test",
+  category: "notation",
   severity: "info",
   defaultEnabled: true,
 } as const;
