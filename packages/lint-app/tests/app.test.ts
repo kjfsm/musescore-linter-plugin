@@ -168,6 +168,14 @@ describe("createLintApp の設定", () => {
 });
 
 describe("createLintApp のカタログ", () => {
+  it("ルールの情報の一覧は、カテゴリで分けずにルールの並びのまま", () => {
+    const { ruleInfos } = createLintApp([
+      rule("n", { category: "notation" }),
+      rule("t", { category: "tempo" }),
+    ]);
+    expect(ruleInfos.map((r) => r.id)).toEqual(["n", "t"]);
+  });
+
   it("カテゴリを決まった順に並べ、ルールの無いカテゴリは出さない", () => {
     const { catalog } = createLintApp([
       rule("n", { category: "notation" }),

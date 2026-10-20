@@ -40,12 +40,12 @@ export interface RuleGroup {
  * 設定画面に出すカテゴリごとのルール。
  * カテゴリの中は severity の重い順、同じ severity の中はルールの並び（関連するペアが隣り合う）。
  */
-export function ruleGroups(rules: readonly Rule[]): RuleGroup[] {
-  const categories = [...new Set(rules.map((r) => r.meta.category))].sort(
+export function ruleGroups(infos: readonly RuleInfo[]): RuleGroup[] {
+  const categories = [...new Set(infos.map((r) => r.category))].sort(
     (a, b) => CATEGORIES[a].rank - CATEGORIES[b].rank,
   );
   return categories.map((category) => {
-    const members = rules.map(describeRule).filter((r) => r.category === category);
+    const members = infos.filter((r) => r.category === category);
     const ordered = members
       .map((r, i) => ({ r, i }))
       .sort((a, b) => compareSeverity(a.r.severity, b.r.severity) || a.i - b.i)

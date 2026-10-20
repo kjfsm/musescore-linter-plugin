@@ -1,6 +1,5 @@
 import {
   createLintApp,
-  describeRule,
   type FileResult,
   formatResults,
   type LintApp,
@@ -40,10 +39,9 @@ export function meetsThreshold(severity: Severity, failOn: FailOn): boolean {
 }
 
 function listRules(io: RunIO, app: LintApp): number {
-  const infos = app.rules.map(describeRule);
-  const idWidth = Math.max(0, ...infos.map((r) => r.id.length));
+  const idWidth = Math.max(0, ...app.ruleInfos.map((r) => r.id.length));
   io.stdout(
-    infos
+    app.ruleInfos
       .map((r) => {
         const { severity, category, name, defaultEnabled } = r;
         const head = `${r.id.padEnd(idWidth)}  ${severity.padEnd(7)}  ${category.padEnd(12)}  ${name}${defaultEnabled ? "" : "（既定で無効）"}`;
@@ -104,11 +102,11 @@ export function run(argv: string[], io: RunIO, rules: readonly Rule[] = builtinR
     return EXIT_ERROR;
   }
 
-  const allRuleIds = rules.map((r) => r.id);
+  const allRuleIds = app.rules.map((r) => r.id);
   let ruleOptions: ReturnType<typeof resolveRuleOptions>;
   try {
     assertKnownRules(options, allRuleIds);
-    ruleOptions = resolveRuleOptions(options, rules);
+    ruleOptions = resolveRuleOptions(options, app.rules);
   } catch (error) {
     if (error instanceof UsageError) {
       io.stderr(describeError(error));

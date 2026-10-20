@@ -38,8 +38,11 @@ export interface LinterOptions {
 
 export interface Linter {
   readonly rules: readonly Rule[];
-  isEnabled(rule: Rule, config?: LinterConfig): boolean;
   lint(score: Score, config?: LinterConfig): LintResult;
+}
+
+export function isRuleEnabled(rule: Rule, config: LinterConfig = {}): boolean {
+  return config.enabled?.[rule.id] ?? rule.meta.defaultEnabled;
 }
 
 function issueFrom(score: Score, rule: Rule, report: Report): Issue {
@@ -77,17 +80,13 @@ export function createLinter(rules: readonly Rule[], options: LinterOptions = {}
   }
   const { now } = options;
 
-  const isEnabled = (rule: Rule, config: LinterConfig = {}): boolean =>
-    config.enabled?.[rule.id] ?? rule.meta.defaultEnabled;
-
   return {
     rules,
-    isEnabled,
     lint(score, config = {}) {
       const issues: Issue[] = [];
       const timings: RuleTiming[] = [];
       for (const rule of rules) {
-        if (!isEnabled(rule, config)) continue;
+        if (!isRuleEnabled(rule, config)) continue;
         const found: Issue[] = [];
         const started = now?.();
         try {

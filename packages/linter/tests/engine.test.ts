@@ -1,7 +1,7 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { createLinter, defineRule } from "../src/engine.js";
+import { createLinter, defineRule, isRuleEnabled } from "../src/engine.js";
 import { builtinRules } from "../src/rules/index.js";
 import type { Rule, Severity } from "../src/types.js";
 import { cleanScore, quintetScore, runAll } from "./helpers.js";
@@ -92,18 +92,18 @@ describe("ルールの有効・無効", () => {
   const linter = createLinter([on, off]);
 
   it("指定が無ければ defaultEnabled に従う", () => {
-    expect(linter.isEnabled(on)).toBe(true);
-    expect(linter.isEnabled(off)).toBe(false);
-    expect(linter.isEnabled(on, { enabled: {} })).toBe(true);
+    expect(isRuleEnabled(on)).toBe(true);
+    expect(isRuleEnabled(off)).toBe(false);
+    expect(isRuleEnabled(on, { enabled: {} })).toBe(true);
   });
 
   it("明示指定は defaultEnabled より優先される", () => {
-    expect(linter.isEnabled(on, { enabled: { on: false } })).toBe(false);
-    expect(linter.isEnabled(off, { enabled: { off: true } })).toBe(true);
+    expect(isRuleEnabled(on, { enabled: { on: false } })).toBe(false);
+    expect(isRuleEnabled(off, { enabled: { off: true } })).toBe(true);
   });
 
   it("他のルールの指定には影響されない", () => {
-    expect(linter.isEnabled(on, { enabled: { other: false } })).toBe(true);
+    expect(isRuleEnabled(on, { enabled: { other: false } })).toBe(true);
   });
 
   it("無効なルールは実行されない", () => {

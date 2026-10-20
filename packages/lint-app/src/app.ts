@@ -1,19 +1,10 @@
-import type { Issue, OptionValue, Rule, RuleTiming, Severity } from "@score-linter/linter";
+import type { Issue, Rule, RuleTiming, Severity } from "@score-linter/linter";
 import { createLinter } from "@score-linter/linter";
 import type { Score } from "@score-linter/score-model";
 
-import { type RuleGroup, ruleGroups } from "./catalog.js";
+import { describeRule, type RuleGroup, ruleGroups, type RuleInfo } from "./catalog.js";
 import { countBySeverity, presentIssues, type ReportedIssue } from "./report.js";
-import {
-  normalizeSettings,
-  parseSettings,
-  serializeSettings,
-  type Settings,
-  type SettingsView,
-  settingsView,
-  withRuleEnabled,
-  withRuleOption,
-} from "./settings.js";
+import { type Settings, type SettingsOps, settingsOps } from "./settings.js";
 
 /** ホストだけが知っている警告（版の食い違い・読めなかった小節など）。 */
 export interface HostDiagnostic {
@@ -40,18 +31,11 @@ export interface LintOutcome {
  * ホストが lint に使う唯一の入口。ルールの一覧はここで一度だけ受け取る。
  * メソッドは this を使わないので、取り出して QML のバンドルからそのまま公開してよい。
  */
-export interface LintApp {
+export interface LintApp extends SettingsOps {
   readonly rules: readonly Rule[];
+  /** ルールの並びのまま。 */
+  readonly ruleInfos: RuleInfo[];
   readonly catalog: RuleGroup[];
-  parseSettings(
-    enabledJson: string | null | undefined,
-    optionsJson: string | null | undefined,
-  ): Settings;
-  serializeSettings(settings: Settings): { enabled: string; options: string };
-  normalizeSettings(raw: { enabled?: unknown; options?: unknown }): Settings;
-  withRuleEnabled(settings: Settings, ruleId: string, enabled: boolean): Settings;
-  withRuleOption(settings: Settings, ruleId: string, key: string, value: OptionValue): Settings;
-  settingsView(settings: Settings): SettingsView;
   lint(score: Score, settings: Settings, request?: LintRequest): LintOutcome;
 }
 
@@ -68,19 +52,13 @@ function diagnosticIssue({ id, message, measure }: HostDiagnostic): Issue {
 
 export function createLintApp(rules: readonly Rule[]): LintApp {
   const linter = createLinter(rules);
-  const catalog = ruleGroups(rules);
+  const ruleInfos = rules.map(describeRule);
 
   return {
+    ...settingsOps(rules),
     rules,
-    catalog,
-    parseSettings: (enabledJson, optionsJson) => parseSettings(rules, enabledJson, optionsJson),
-    serializeSettings,
-    normalizeSettings: (raw) => normalizeSettings(rules, raw),
-    withRuleEnabled: (settings, ruleId, enabled) =>
-      withRuleEnabled(rules, settings, ruleId, enabled),
-    withRuleOption: (settings, ruleId, key, value) =>
-      withRuleOption(rules, settings, ruleId, key, value),
-    settingsView: (settings) => settingsView(rules, settings),
+    ruleInfos,
+    catalog: ruleGroups(ruleInfos),
     lint(score, settings, request = {}) {
       const { now, diagnostics = [] } = request;
       // 時計は createLinter の引数でしか渡せず、呼ぶたびに渡される時計が違いうるので、その都度作る
