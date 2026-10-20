@@ -1,5 +1,28 @@
 # musescore-linter-plugin
 
+## 2.5.0
+
+### Minor Changes
+
+- [#149](https://github.com/kjfsm/score-linter/pull/149) [`d1d8d0a`](https://github.com/kjfsm/score-linter/commit/d1d8d0a36c96e5503308dfbdc1df3d98d89f5cfd) Thanks [@kjfsm](https://github.com/kjfsm)! - チェックの仕組みを作り直しました。チェックの結果は、次の点を除いて変わりません。
+  
+  - 指摘のメッセージにパート名と小節番号が入らなくなり、パート名は一覧の欄に 1 回だけ表示されます。小節番号は楽譜に表示されている番号で出します。
+  - 同じ位置にある「f」と「f espr.」のように、修飾語だけが違う強弱記号は「同時ダイナミクスの衝突」として指摘しなくなりました。「p」と「f」のように記号が違えば、これまでどおり指摘します。
+  - 奏法の指示の表記として「s.p.」「unison」「modo ordinario」「nat.」も読むようになり、前後の空白や大文字小文字の違いも同じ指示として扱います。
+  - MuseScore プラグインで、「Allegro」のようにテンポの語で始まる譜表テキストをテンポ表記として扱います（MusicXML から読んだときと同じ扱いです）。
+  - MuseScore プラグインの設定は、既定値から変えた項目だけを保存します。チェックの既定値が変わったとき、自分で変えていない項目には新しい既定値が効きます。
+  - MuseScore プラグインのスナップショットタブと CLI の `--dump-ir`（新しい名前は `--dump-score`）が出力する内部データの形式が変わりました。
+  - CLI に `--format=markdown` と `--format=csv` を足しました。GitHub アノテーションはメッセージの頭にパート名と小節番号を付けます。
+  - Web 版で、結果を Markdown と CSV で書き出せるようにしました。ファイルはこれまでどおりどこにも送信されません。
+
+### Patch Changes
+
+- [#134](https://github.com/kjfsm/score-linter/pull/134) [`afadcc2`](https://github.com/kjfsm/score-linter/commit/afadcc268e54be248ff826381e451818e4f056f2) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore プラグインで、「重複ダイナミクス」チェックが「f」の後の「più f」や「p」の後の「subito p」を重複として誤検出していたのを直しました。強弱記号を含まない別々の文字（「poco a poco」と「molto」など）を重複扱いすることもなくなります。
+
+- [#134](https://github.com/kjfsm/score-linter/pull/134) [`830a2d3`](https://github.com/kjfsm/score-linter/commit/830a2d3fa69734ebf70222b391f515314c469b75) Thanks [@kjfsm](https://github.com/kjfsm)! - MuseScore プラグインのスナップショットタブと CLI の `--dump-ir` が出力する内部データの形式を整理しました。`registry` と各イベントの `type` がなくなり、イベントの種類は `kind` だけで表します。テキスト以外のイベント（音符・休符・小節線）には `textNorm` / `textRaw` / `tempo` / `subtype` が出なくなり、どのイベントにも `subStyle` が、小節線には `barlineType` が出なくなりました。スナップショットタブには `derived` も出なくなります。チェック結果は変わりません。
+
+- [#140](https://github.com/kjfsm/score-linter/pull/140) [`113f6e7`](https://github.com/kjfsm/score-linter/commit/113f6e71bf91a2aa0fcbd51e12bd5b1d2dfa80b6) Thanks [@kjfsm](https://github.com/kjfsm)! - 同じ名前のパートが複数ある譜面（「Horn in F」が 2 つなど）で、pizz./arco や con sord./senza sord. などの指示の対応チェックがパートどうしで混ざり、片方のパートの指示がもう片方の解除として扱われていたのを直しました。パートは名前ではなくパートそのものの単位でまとめるようになり、ピアノのような複数譜表のパートは引き続き 1 つにまとまります。スナップショットタブと CLI の `--dump-ir` が出力する `meta.parts` には、各譜表が属するパートを表す `partId` が加わります。
+
 ## 2.4.0
 
 ### Minor Changes
