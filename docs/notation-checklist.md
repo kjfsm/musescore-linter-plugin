@@ -12,152 +12,134 @@
 
 ## タグ凡例
 
-| タグ  | 意味                                                               |
-| ----- | ------------------------------------------------------------------ |
-| `NOW` | 現行 LintIR だけで実装可能                                         |
-| `SDK` | SDK 拡張（音高・拍子・楽器情報など）が必要。必要データを備考に明記 |
-| `MS`  | MuseScore が自動で検出できる → 優先度低 or 対象外                  |
-| ✅    | 既存実装あり / このバッチで実装済み                                |
+| タグ    | 意味                                                                                                   |
+| ------- | ------------------------------------------------------------------------------------------------------ |
+| `NOW`   | 今の `Score`（`packages/score-model/src/types.ts`）だけで実装可能                                      |
+| `MODEL` | `Score` に情報を足す必要がある（`score-model` の型と、両方の reader の変更）。必要なデータを備考に明記 |
+| `MS`    | MuseScore が自動で検出できる → 優先度低 or 対象外                                                      |
+| ✅      | 実装済み                                                                                               |
 
-## 現行 LintIR で取れるデータ（実装可否の根拠）
+## 今の Score で取れるデータ（実装可否の根拠）
 
-`packages/core/src/snapshot.ts` が `Score` を走査して `LintEvent` を生成する。
+- **取れる**: パート（id・名前・譜表）、譜表ごとの声部の chord / rest（tick・小節・音価・連符かどうか・
+  音高・tpc・譜表位置・臨時記号の表示・アーティキュレーション名）、小節線の種類（二重線・終止線・
+  リピート開始/終了/両方）、小節（通し番号・表示上の番号・長さ・拍子）、スラー・タイ（両端の音高つき）・ヘアピン、
+  システムブラケット、注記（テキストと、解釈済みの奏法・強弱・テンポ・反復記号・リハーサルマーク）。
+- **取れない**: 調号、音部記号、楽器メタ情報（楽器族・移調・MIDI program・有/無音程）、連符の比率、
+  装飾音、歌詞、グリッサンド/トレモロ、符幹の向き・連桁の設定。
 
-- **取れる**: chord/rest（tick・measure・staffIdx・voice・duration・stemDirection・beamMode・articulations[]）、
-  text 系（tempo_text・dynamic・staff_text・system_text・expression・rehearsal_mark の textNorm/textRaw/tempo/subtype）、
-  barline（barlineKind = double/final/repeat/other）、`meta.hairpins[]`、`meta.slurs[]`、`meta.parts[]`（partName のみ）。
-- **取れない**: 調号、音部記号、楽器メタ情報
-  （instrumentId・楽器族・移調・MIDI program・有/無音程）、連符の比率、装飾音、歌詞、グリッサンド/トレモロ、
-  リピートの開始/終了の区別（現状 `repeat` に一括）。
+`Score` に足すときは、`score-model` の型を変えたうえで `reader-musicxml` と `reader-musescore` の両方で
+埋め、`packages/reader-musescore/tests/conformance.test.ts` で同じ値になることを確かめる。
 
 ---
 
 ## A. ダイナミクス / ヘアピン
 
-| #   | 項目                                                    | タグ | severity | 優先 | 状態 | 備考                                                                           |
-| --- | ------------------------------------------------------- | ---- | -------- | ---- | ---- | ------------------------------------------------------------------------------ |
-| A1  | 休符にダイナミクス                                      | NOW  | info     | –    | ✅   | 既存 `rest-annotation`（演奏技法テキストは error のまま）                      |
-| A2  | ヘアピン（cresc/dim）の到達先ダイナミクスが無い         | NOW  | info     | 高   | ✅   | `hairpin-target-dynamic`（曲尾のヘアピンは除外して誤検出を低減）               |
-| A3  | ヘアピンが休符上で開始/終了                             | NOW  | info     | 中   | ✅   | `hairpin-on-rest`（旧 `spanner-on-rest` から分割。同 tick に音符があれば許容） |
-| A4  | `cresc.`/`dim.`/`decresc.` テキストの後に強弱変化が無い | NOW  | info     | 中   | ✅   | `cresc-text-resolution`（後続 tick or global の強弱記号で解決とみなす）        |
-| A5  | 同一 tick・同 staff に異なるダイナミクスが同時          | NOW  | warning  | 中   | ✅   | このバッチ `simultaneous-dynamics`                                             |
-| A6  | 重複ダイナミクス                                        | NOW  | info     | –    | ✅   | 既存 `duplicate-dynamics`                                                      |
-| A7  | `sf`/`fp`/`sfz` 等が文脈なく単独連続                    | NOW  | info     | 低   |      | textNorm パターン                                                              |
+| #   | 項目                                                    | タグ | severity | 優先 | 状態 | 備考                                                                    |
+| --- | ------------------------------------------------------- | ---- | -------- | ---- | ---- | ----------------------------------------------------------------------- |
+| A1  | 休符にダイナミクス                                      | NOW  | info     | –    | ✅   | `rest-annotation`（演奏技法テキストは error のまま）                    |
+| A2  | ヘアピン（cresc/dim）の到達先ダイナミクスが無い         | NOW  | info     | 高   | ✅   | `hairpin-target-dynamic`（曲尾のヘアピンは除外して誤検出を低減）        |
+| A3  | ヘアピンが休符上で開始/終了                             | NOW  | info     | 中   | ✅   | `hairpin-on-rest`（同 tick に音符があれば許容）                         |
+| A4  | `cresc.`/`dim.`/`decresc.` テキストの後に強弱変化が無い | NOW  | info     | 中   | ✅   | `cresc-text-resolution`（後続 tick or global の強弱記号で解決とみなす） |
+| A5  | 同一 tick・同 staff に異なるダイナミクスが同時          | NOW  | warning  | 中   | ✅   | `simultaneous-dynamics`                                                 |
+| A6  | 重複ダイナミクス                                        | NOW  | info     | –    | ✅   | `duplicate-dynamics`                                                    |
+| A7  | `sf`/`fp`/`sfz` 等が文脈なく単独連続                    | NOW  | info     | 低   |      | 注記の Directive                                                        |
 
 ## B. テンポ / ルバート
 
 | #   | 項目                                                    | タグ | severity | 優先 | 状態 | 備考                                                                              |
 | --- | ------------------------------------------------------- | ---- | -------- | ---- | ---- | --------------------------------------------------------------------------------- |
 | B1  | `rit.`/`rall.`/`accel.` の後に `a tempo`/新テンポが無い | NOW  | warning  | 高   | ✅   | `tempo-change-resolution`（後続の新テンポも解除とみなす／曲尾の最終 rit. は除外） |
-| B2  | 冒頭テンポ表記                                          | NOW  | error    | –    | ✅   | 既存 `opening-tempo`                                                              |
-| B3  | BPM 値なしテンポ                                        | NOW  | warning  | –    | ✅   | 既存 `tempo-without-bpm`                                                          |
-| B4  | テンポ変更前の複縦線                                    | NOW  | info     | –    | ✅   | 既存 `tempo-barline`                                                              |
-| B5  | 同一 tick に複数テンポ表記                              | NOW  | info     | 低   |      | byTick                                                                            |
+| B2  | 冒頭テンポ表記                                          | NOW  | error    | –    | ✅   | `opening-tempo`                                                                   |
+| B3  | BPM 値なしテンポ                                        | NOW  | warning  | –    | ✅   | `tempo-without-bpm`                                                               |
+| B4  | テンポ変更前の複縦線                                    | NOW  | info     | –    | ✅   | `tempo-barline`                                                                   |
+| B5  | 同一 tick に複数テンポ表記                              | NOW  | info     | 低   |      | 同 tick の注記を比較                                                              |
 
 ## C. 奏法テキスト on/off ペア（弦 + 非弦）
 
-すべて `createTextPairChecker` で安価に追加可能。
+すべて `techniquePair()`（`packages/linter/src/rules/techniquePairs.ts`）で安価に追加できる。奏法の表記は `score-model` の `interpret.ts` に足す。
 
 | #     | ペア                                                                                              | 楽器      | タグ     | severity | 優先 | 状態                                                           |
 | ----- | ------------------------------------------------------------------------------------------------- | --------- | -------- | -------- | ---- | -------------------------------------------------------------- |
-| C1–C7 | pizz/arco・con sord/senza sord・solo/tutti・div/unis・sul tasto/ord・sul pont/ord・con legno/arco | 弦        | NOW      | warning  | –    | ✅ 既存                                                        |
-| C8    | `mute`/`open`・`straight/cup/harmon mute`・`stopped`/`open`                                       | 金管      | NOW      | warning  | 高   | ✅ このバッチ `mute-open`（C9/H2 を統合）                      |
+| C1–C7 | pizz/arco・con sord/senza sord・solo/tutti・div/unis・sul tasto/ord・sul pont/ord・con legno/arco | 弦        | NOW      | warning  | –    | ✅                                                             |
+| C8    | `mute`/`open`・`straight/cup/harmon mute`・`stopped`/`open`                                       | 金管      | NOW      | warning  | 高   | ✅ `mute-open`（C9/H2 を統合）                                 |
 | C9    | （C8 に統合）                                                                                     | 金管      | NOW      | –        | –    | ✅                                                             |
-| C10   | `con sord.`/`senza sord.` を木管・金管にも適用                                                    | 木管/金管 | NOW      | –        | –    | ✅ 既存 `sordino` で楽器非依存にカバー済み                     |
-| C11   | `una corda`/`tre corde`                                                                           | 鍵盤      | NOW      | warning  | 高   | ✅ このバッチ `una-corda`                                      |
+| C10   | `con sord.`/`senza sord.` を木管・金管にも適用                                                    | 木管/金管 | NOW      | –        | –    | ✅ `sordino` で楽器非依存にカバー済み                          |
+| C11   | `una corda`/`tre corde`                                                                           | 鍵盤      | NOW      | warning  | 高   | ✅ `una-corda`                                                 |
 | C12   | `Ped.`/`*`（テキスト式ペダル踏み/離し）                                                           | 鍵盤      | NOW / MS | warning  | 中   | MuseScore のペダルライン使用時は不要                           |
-| C13   | `près de la table`/`ordinario`                                                                    | ハープ    | NOW      | warning  | 中   | ✅ このバッチ `harp-table`                                     |
+| C13   | `près de la table`/`ordinario`                                                                    | ハープ    | NOW      | warning  | 中   | ✅ `harp-table`                                                |
 | C14   | `flz.`（フラッター）                                                                              | 木管/金管 | NOW      | info     | 中   | 明示的な解除を持たないことが多く on/off モデルに不向き。要検討 |
 | C15   | `senza vibrato`/`vibrato`                                                                         | 弦/管     | NOW      | info     | 低   | ノイズになりやすい                                             |
 | C16   | `bisbigliando`/通常                                                                               | ハープ    | NOW      | info     | 低   |                                                                |
 
 ## D. 「基本的に間違い」系（記譜の禁則）
 
-| #   | 項目                                                | タグ | severity     | 優先 | 状態 | 備考                                                                                |
-| --- | --------------------------------------------------- | ---- | ------------ | ---- | ---- | ----------------------------------------------------------------------------------- |
-| D1  | 休符に奏法テキスト/ダイナミクス                     | NOW  | error/info   | –    | ✅   | 既存 `rest-annotation`（奏法テキストは error、ダイナミクスは info）。語彙拡充の余地 |
-| D2  | 休符にスラー/ヘアピンの端点                         | NOW  | warning/info | 中   | ✅   | `slur-on-rest`（warning）/ `hairpin-on-rest`（info、A3 と統合）                     |
-| D3  | スラーが単一音（start==end）                        | NOW  | info         | 中   | ✅   | `slur-single-note`。`meta.slurs` の start==end                                      |
-| D4  | グリッサンド/タイの端点が休符                       | SDK  | warning      | 中   |      | 要: タイ/グリッサンド span                                                          |
-| D5  | タイの途中音に新ダイナミクス/アーティキュレーション | SDK  | warning      | 中   |      | 要: タイ情報                                                                        |
-| D6  | 異音程をタイで結んでいる（スラーにすべき）          | SDK  | warning      | 高   | ✅   | `tie-pitch-mismatch`。helpers 2.2.0 + snapshot 配線済みで実スコア発火               |
-| D7  | 移調楽器の記譜音と実音の取り違え                    | SDK  | warning      | 中   |      | 要: 移調情報（音域自体は MS）                                                       |
+| #   | 項目                                                | タグ  | severity     | 優先 | 状態 | 備考                                                                           |
+| --- | --------------------------------------------------- | ----- | ------------ | ---- | ---- | ------------------------------------------------------------------------------ |
+| D1  | 休符に奏法テキスト/ダイナミクス                     | NOW   | error/info   | –    | ✅   | `rest-annotation`（奏法テキストは error、ダイナミクスは info）。語彙拡充の余地 |
+| D2  | 休符にスラー/ヘアピンの端点                         | NOW   | warning/info | 中   | ✅   | `slur-on-rest`（warning）/ `hairpin-on-rest`（info、A3 と統合）                |
+| D3  | スラーが単一音（start==end）                        | NOW   | info         | 中   | ✅   | `slur-single-note`。スラーの start==end                                        |
+| D4  | グリッサンド/タイの端点が休符                       | MODEL | warning      | 中   |      | 要: タイ/グリッサンド span                                                     |
+| D5  | タイの途中音に新ダイナミクス/アーティキュレーション | NOW   | warning      | 中   |      | タイは `Score.ties`                                                            |
+| D6  | 異音程をタイで結んでいる（スラーにすべき）          | NOW   | warning      | 高   | ✅   | `tie-pitch-mismatch`                                                           |
+| D7  | 移調楽器の記譜音と実音の取り違え                    | MODEL | warning      | 中   |      | 要: 移調情報（音域自体は MS）                                                  |
 
 ## E. 構造 / 反復 / リハーサルマーク / 小節線
 
-| #   | 項目                                               | タグ | severity | 優先 | 状態 | 備考                                                                                                     |
-| --- | -------------------------------------------------- | ---- | -------- | ---- | ---- | -------------------------------------------------------------------------------------------------------- |
-| E1  | 終止線の確認                                       | NOW  | info     | –    | ✅   | 既存 `final-barline`                                                                                     |
-| E2  | コーダ/セーニョ整合                                | NOW  | error    | –    | ✅   | 既存 `coda-segno`                                                                                        |
-| E3  | リピート開始/終了の対応                            | SDK  | warning  | 高   | ✅   | `repeat-barline-match`。SDK `classifyBarlineKind` を start/end/both に細分。helpers 2.2.0 で実スコア発火 |
-| E4  | リハーサルマークの順序（昇順・欠番）               | NOW  | info     | 中   | ✅   | このバッチ `rehearsal-mark-order`（E5 重複も統合）                                                       |
-| E5  | リハーサルマーク重複                               | NOW  | info     | 低   | ✅   | E4 に統合                                                                                                |
-| E6  | セクション境界（二重線）前後のリハーサルマーク有無 | NOW  | info     | 低   |      |                                                                                                          |
+| #   | 項目                                               | タグ | severity | 優先 | 状態 | 備考                                    |
+| --- | -------------------------------------------------- | ---- | -------- | ---- | ---- | --------------------------------------- |
+| E1  | 終止線の確認                                       | NOW  | info     | –    | ✅   | `final-barline`                         |
+| E2  | コーダ/セーニョ整合                                | NOW  | error    | –    | ✅   | `coda-segno`                            |
+| E3  | リピート開始/終了の対応                            | NOW  | warning  | 高   | ✅   | `repeat-barline-match`                  |
+| E4  | リハーサルマークの順序（昇順・欠番）               | NOW  | info     | 中   | ✅   | `rehearsal-mark-order`（E5 重複も統合） |
+| E5  | リハーサルマーク重複                               | NOW  | info     | 低   | ✅   | E4 に統合                               |
+| E6  | セクション境界（二重線）前後のリハーサルマーク有無 | NOW  | info     | 低   |      |                                         |
 
 ## F. リズム / 連桁の浄書（拍の見せ方）
 
-| #   | 項目                                                  | タグ | severity     | 優先 | 状態 | 備考                                                                                                        |
-| --- | ----------------------------------------------------- | ---- | ------------ | ---- | ---- | ----------------------------------------------------------------------------------------------------------- |
-| F1  | 4/4 等で拍頭（特に 3 拍目）が休符のまとめ過ぎで隠れる | NOW  | info         | 高   |      | 拍子は `meta.measures` で取得済み。休符側への適用が残り                                                     |
-| F2  | 小節線をまたぐ音価（タイで書くべき長音）              | NOW  | warning      | 中   |      | 拍子・タイとも取得済み                                                                                      |
-| F3  | 拍境界をまたぐ音符（イマジナリーバーライン）          | SDK  | info/warning | 中   | ✅   | `beat-crossing-tie`。主要境界（偶数拍子の中央）は小節頭始まりのみ例外。加算拍子と慣習的例外パターンは対象外 |
-| F4  | 連符の不適切な記法                                    | SDK  | info         | 低   |      | 要: 連符情報                                                                                                |
-| F5  | stem 方向の不統一（同 voice 内、beamMode と矛盾）     | NOW  | info         | 低   |      | stemDirection/beamMode で部分的に可                                                                         |
+| #   | 項目                                                  | タグ  | severity     | 優先 | 状態 | 備考                                                                                                        |
+| --- | ----------------------------------------------------- | ----- | ------------ | ---- | ---- | ----------------------------------------------------------------------------------------------------------- |
+| F1  | 4/4 等で拍頭（特に 3 拍目）が休符のまとめ過ぎで隠れる | NOW   | info         | 高   |      | `Measure.timeSignature` で取得できる                                                                        |
+| F2  | 小節線をまたぐ音価（タイで書くべき長音）              | NOW   | warning      | 中   |      | 拍子・タイとも取得できる                                                                                    |
+| F3  | 拍境界をまたぐ音符（イマジナリーバーライン）          | NOW   | info/warning | 中   | ✅   | `beat-crossing-tie`。主要境界（偶数拍子の中央）は小節頭始まりのみ例外。加算拍子と慣習的例外パターンは対象外 |
+| F4  | 連符の不適切な記法                                    | MODEL | info         | 低   |      | 要: 連符情報                                                                                                |
+| F5  | stem 方向の不統一（同 voice 内、beamMode と矛盾）     | MODEL | info         | 低   |      | 符幹の向き・連桁の設定が要る                                                                                |
 
 ## G. スラー / フレージング / アーティキュレーション整合
 
-| #   | 項目                                               | タグ | severity | 優先 | 状態 | 備考                                                       |
-| --- | -------------------------------------------------- | ---- | -------- | ---- | ---- | ---------------------------------------------------------- |
-| G1  | 同リズム間のスラー/タイ/アーティキュレーション整合 | NOW  | info     | –    | ✅   | 既存 `slur-tie-articulation-consistency`（タイも比較対象） |
-| G2  | スラーとタイの混同（同度連結なのにスラー）         | SDK  | warning  | 中   |      | D6 と同根                                                  |
-| G3  | アーティキュレーションがタイ中間音に付く           | SDK  | info     | 低   |      | 要: タイ                                                   |
+| #   | 項目                                               | タグ | severity | 優先 | 状態 | 備考                                                  |
+| --- | -------------------------------------------------- | ---- | -------- | ---- | ---- | ----------------------------------------------------- |
+| G1  | 同リズム間のスラー/タイ/アーティキュレーション整合 | NOW  | info     | –    | ✅   | `slur-tie-articulation-consistency`（タイも比較対象） |
+| G2  | スラーとタイの混同（同度連結なのにスラー）         | NOW  | warning  | 中   |      | D6 と同根（`Score.ties`・`Score.slurs`）              |
+| G3  | アーティキュレーションがタイ中間音に付く           | NOW  | info     | 低   |      | `Score.ties`                                          |
 
 ## H. 楽器別（非弦中心）
 
-| #   | 項目                                               | 楽器   | タグ | severity | 優先 | 備考                                |
-| --- | -------------------------------------------------- | ------ | ---- | -------- | ---- | ----------------------------------- |
-| H1  | 長い連続音にブレス記号が無い（管楽器の長フレーズ） | 管     | SDK  | info     | 中   | 要: 楽器族 + 連続音長。閾値は要相談 |
-| H2  | ミュート指定後の `open` 戻し漏れ                   | 金管   | NOW  | warning  | 高   | ✅ C8 `mute-open` に統合            |
-| H3  | 移調楽器で「in B♭」等の調表記漏れ                  | 移調   | SDK  | info     | 低   | 要: 移調情報                        |
-| H4  | ハープのペダル変更指示/グリッサンドのペダル整合    | ハープ | SDK  | info     | 低   | 要: 音高 + ペダル図。難度高         |
-| H5  | ピアノ両手譜表の声部書き分け不整合                 | 鍵盤   | NOW  | info     | 低   | staffIdx ペア + voice               |
-| H6  | 無音程楽器に有音程記譜                             | 打楽器 | SDK  | info     | 低   | 要: 楽器（無音程フラグ）            |
-| H7  | 1 音節に複数音符でスラー（メリスマ）が無い         | 声楽   | SDK  | info     | 低   | 要: 歌詞                            |
-| H8  | 歌詞のハイフネーション/メリスマ線の欠落            | 声楽   | SDK  | info     | 低   | 要: 歌詞                            |
+| #   | 項目                                               | 楽器   | タグ  | severity | 優先 | 備考                                |
+| --- | -------------------------------------------------- | ------ | ----- | -------- | ---- | ----------------------------------- |
+| H1  | 長い連続音にブレス記号が無い（管楽器の長フレーズ） | 管     | MODEL | info     | 中   | 要: 楽器族 + 連続音長。閾値は要相談 |
+| H2  | ミュート指定後の `open` 戻し漏れ                   | 金管   | NOW   | warning  | 高   | ✅ C8 `mute-open` に統合            |
+| H3  | 移調楽器で「in B♭」等の調表記漏れ                  | 移調   | MODEL | info     | 低   | 要: 移調情報                        |
+| H4  | ハープのペダル変更指示/グリッサンドのペダル整合    | ハープ | MODEL | info     | 低   | 要: 音高 + ペダル図。難度高         |
+| H5  | ピアノ両手譜表の声部書き分け不整合                 | 鍵盤   | NOW   | info     | 低   | staffIdx ペア + voice               |
+| H6  | 無音程楽器に有音程記譜                             | 打楽器 | MODEL | info     | 低   | 要: 楽器（無音程フラグ）            |
+| H7  | 1 音節に複数音符でスラー（メリスマ）が無い         | 声楽   | MODEL | info     | 低   | 要: 歌詞                            |
+| H8  | 歌詞のハイフネーション/メリスマ線の欠落            | 声楽   | MODEL | info     | 低   | 要: 歌詞                            |
 
 ## I. 装飾 / 特殊奏法
 
-| #   | 項目                                         | タグ | severity | 優先 | 備考                    |
-| --- | -------------------------------------------- | ---- | -------- | ---- | ----------------------- |
-| I1  | トレモロ表記とテンポの整合（過剰な beam 数） | SDK  | info     | 低   | 要: トレモロ情報        |
-| I2  | グリッサンド線の始終点が同音                 | SDK  | info     | 低   | 要: 音高 + グリッサンド |
-| I3  | トリル/装飾音に臨時記号の指定漏れ            | SDK  | info     | 低   | 要: 装飾音 + 音高       |
+| #   | 項目                                         | タグ  | severity | 優先 | 備考                    |
+| --- | -------------------------------------------- | ----- | -------- | ---- | ----------------------- |
+| I1  | トレモロ表記とテンポの整合（過剰な beam 数） | MODEL | info     | 低   | 要: トレモロ情報        |
+| I2  | グリッサンド線の始終点が同音                 | MODEL | info     | 低   | 要: 音高 + グリッサンド |
+| I3  | トリル/装飾音に臨時記号の指定漏れ            | MODEL | info     | 低   | 要: 装飾音 + 音高       |
 
 ## J. 音高 / 臨時記号の綴り
 
-| #   | 項目                                    | タグ | severity | 優先   | 備考                                                                                                      |
-| --- | --------------------------------------- | ---- | -------- | ------ | --------------------------------------------------------------------------------------------------------- |
-| J1  | 不要な臨時記号（同小節で既に有効）      | SDK  | info     | 中     | 要: 音高/tpc + 小節（拍子）                                                                               |
-| J2  | 親切記号（courtesy accidental）の提案   | SDK  | info     | 中     | ✅ `courtesy-accidental`。前小節の臨時記号と次小節の同一譜表位置を突合。helpers 2.2.0 + snapshot 配線済み |
-| J3  | ダブルシャープ/フラットなど不自然な綴り | SDK  | info     | 低     | 要: tpc                                                                                                   |
-| J4  | 異名同音の不統一（声部間）              | SDK  | info     | 低     | 要: tpc                                                                                                   |
-| J5  | 音域逸脱                                | MS   | –        | 対象外 | MuseScore が表示                                                                                          |
-
----
-
-## SDK 拡張計画（`SDK` 項目を解放するため）
-
-データ供給経路は **SDK types/helpers → `packages/musescore-api` ブリッジ → `snapshot.ts` → LintEvent/meta**。
-優先度順に段階導入（採否は次ステップで判断）:
-
-1. **音高（最優先・波及大）**: `Note.pitch`/`Note.tpc` を SDK types で公開 → helpers に `getNotePitches` / `getNoteSpellings` →
-   `snapshot.ts` の chord 処理で `ev.notes`（音高/tpc/譜表位置/臨時記号表示）付与。解放: D6, G2, J1–J4, I2。`tpc` 演算は core の `pitchSpelling.ts`。
-2. **拍子**（配線済み）: helpers の `getMeasureTimeSig` → `meta.measures[]`（拍子・小節先頭 tick・小節長）。解放: F3（実装済み）、F1/F2/J1 の小節境界。
-3. **楽器メタ**: `Part.instrumentId`/移調/MIDI program/有音程フラグを `meta.parts[]` に拡充。解放: H1, H3, H6, D7。
-4. **タイ / グリッサンド**: 既存の `note.spannerForward` 経路で `meta.ties`/`meta.glissandos`。解放: D4, D5, D6, F2, G2, G3。
-5. **連符・装飾・歌詞**: 後追い。解放: F4, I1, I3, H7, H8。
-6. **リピート種別**: `enumRegistry` に `REPEAT_START`/`REPEAT_END` を追加（barlineType の正規化）。解放: E3。
-
-> SDK の generated 型は手編集禁止（`config.json` 更新 → `pnpm generate:types`）。
-> 公開済み C++ ヘッダに該当プロパティが無い場合は helper 側の手書き型で補う。
-> types を触る場合は `pnpm changeset`（`.claude/rules/releasing.md`）。
+| #   | 項目                                    | タグ | severity | 優先   | 備考                                                                   |
+| --- | --------------------------------------- | ---- | -------- | ------ | ---------------------------------------------------------------------- |
+| J1  | 不要な臨時記号（同小節で既に有効）      | NOW  | info     | 中     | `Note.tpc`・`Note.accidentalShown`・`Measure` で足りる                 |
+| J2  | 親切記号（courtesy accidental）の提案   | NOW  | info     | 中     | ✅ `courtesy-accidental`。前小節の臨時記号と次小節の同一譜表位置を突合 |
+| J3  | ダブルシャープ/フラットなど不自然な綴り | NOW  | info     | 低     | `Note.tpc` で足りる                                                    |
+| J4  | 異名同音の不統一（声部間）              | NOW  | info     | 低     | `Note.tpc` で足りる                                                    |
+| J5  | 音域逸脱                                | MS   | –        | 対象外 | MuseScore が表示                                                       |

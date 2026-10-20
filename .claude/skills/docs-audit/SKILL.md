@@ -23,8 +23,10 @@ description: AGENTS.md / README.md / docs/ 配下のドキュメント全体を�
 ```
 README.md
 AGENTS.md
+docs/*.md
 .claude/rules/*.md
 .claude/skills/*/SKILL.md
+.claude/agents/*.md
 ```
 
 `find . -name "*.md" -not -path "*/node_modules/*" -not -path "*/.turbo/*"` で追加分を拾う。
@@ -34,8 +36,8 @@ AGENTS.md
 `subagent_type: "general-purpose"` のサブエージェントに各ファイルを全文読ませる。Explore は抜粋しか読まないので、ファイル同士の突き合わせには向かない。
 
 検出観点:
-1. **重複**: 同じ内容（手順 / チェック項目表 / LintIR 仕様 / コマンド集）が複数ファイルに書かれている箇所
-2. **矛盾**: 廃止された API（`ir.staves` / `ir.unresolvedAnnotations`）や古い手順への参照
+1. **重複**: 同じ内容（手順 / チェック項目表 / Score・ルールの契約 / コマンド集）が複数ファイルに書かれている箇所
+2. **矛盾**: 存在しないパッケージ・型・関数（旧 LintIR・checker・registry など）や古い手順への参照
 3. **古い参照**: 削除されたファイルや変更されたセクション名へのリンク
 4. **AGENTS.md の肥大**: README.md や rules/ と被っていて参照に置き換えられる箇所
 
@@ -52,7 +54,7 @@ AGENTS.md
 1. `ファイル:行` に廃止 API への参照が残存 → 対応
 
 ## 🟡 AGENTS.md 削減候補
-1. 〇〇セクション（L○-○）→ rules/checker-contract.md と重複
+1. 〇〇セクション（L○-○）→ rules/rule-contract.md と重複
 
 ## 🟠 その他重複・古さ
 1. ...

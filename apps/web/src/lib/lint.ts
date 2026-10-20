@@ -1,82 +1,51 @@
-import { registerAll } from "@score-linter/checkers";
-import type { FileResult } from "@score-linter/cli";
-import type { LintIR } from "@score-linter/core";
-import { getCheckerList, reset, runAllCheckers, setLevel } from "@score-linter/core";
-import { buildIRFromBytesWithXml } from "@score-linter/source-musicxml";
+import { lintScore, type ReportedIssue, type Settings } from "@score-linter/lint-app";
+import { builtinRules, createLinter } from "@score-linter/linter";
+import { readMusicXmlBytes } from "@score-linter/reader-musicxml";
+import type { Score } from "@score-linter/score-model";
+
+export const rules = builtinRules;
+const linter = createLinter(rules);
 
 /**
- * パース済みのファイル 1 件。IR を保持するので再 lint で読み直さなくてよい。
- * `xml` は楽譜プレビュー（OSMD）向けに、デコード済みの MusicXML 文字列をそのまま保持する。
+ * 読み込んだファイル 1 件。Score を持っておくので、設定を変えたときに読み直さなくてよい。
+ * `xml` は楽譜のプレビュー（OSMD）に、デコード済みの MusicXML をそのまま渡すため。
  */
 export type ParsedFile =
-  | { name: string; ir: LintIR; xml: string; error?: undefined }
-  | { name: string; ir?: undefined; xml?: undefined; error: string };
-
-let registered = false;
-
-/**
- * checker レジストリはモジュールレベルの配列なので、多重登録を避けて作り直す。
- * ブラウザではプロセスが 1 つなので初回だけでよい（CLI の registerCheckers と同じ理由）。
- */
-function ensureCheckersRegistered(): void {
-  if (registered) return;
-  // checker ごとの検出件数ログは開発者コンソールを汚すので出さない
-  setLevel("warn");
-  reset();
-  registerAll();
-  registered = true;
-}
-
-export function allRuleIds(): string[] {
-  ensureCheckersRegistered();
-  return getCheckerList().map((c) => c.id);
-}
+  | { name: string; score: Score; xml: string; error?: undefined }
+  | { name: string; score?: undefined; xml?: undefined; error: string };
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
 /**
- * バイト列を IR まで読む。重いのはこちら側なので、ルールの ON/OFF を切り替えた
- * だけのときは呼び直さず {@link lintParsed} だけを再実行する。
- *
- * パース失敗を error として返すのは、ここが UI の I/O 境界だから。
- * 「checker 内で catch しない」規約は checker 実装に対するもので、ここは対象外。
+ * バイト列を Score まで読む。重いのはこちらなので、設定を切り替えただけのときは
+ * 呼び直さず {@link lintParsed} だけを走らせる。読めなかったファイルは error として返す
+ * （UI の入出力の境界なので、例外を画面まで飛ばさない）。
  */
 export function parseFile(name: string, bytes: Uint8Array): ParsedFile {
-  ensureCheckersRegistered();
   try {
-    const { ir, xml } = buildIRFromBytesWithXml(bytes);
-    return { name, ir, xml };
+    const { score, xml } = readMusicXmlBytes(bytes);
+    return { name, score, xml };
   } catch (error) {
     return { name, error: describeError(error) };
   }
 }
 
-/**
- * lint 結果 1 件。`index` は parsed 配列内での位置で、同名ファイルを
- * 取り違えないための一意キー。file だけでは別フォルダの同名ファイルを
- * 区別できない。
- */
-export interface LintedFile extends FileResult {
+/** `index` は parsed の中の位置。別のフォルダの同名ファイルを取り違えないためのキー。 */
+export interface LintedFile {
   index: number;
+  file: string;
+  issues: ReportedIssue[];
 }
 
-/** パース済みの IR に checker を掛ける。パースに失敗したファイルは飛ばす。 */
-export function lintParsed(
-  parsed: ParsedFile[],
-  enabledRules: Record<string, boolean>,
-  ruleOptions: Record<string, Record<string, unknown>> = {},
-): LintedFile[] {
-  ensureCheckersRegistered();
-  // parsed.filter(...) で先にパース失敗を落とすと、結果配列が parsed と長さ・index
-  // ともにずれてしまい、呼び出し側で「元の何番目のファイルか」を復元できなくなる。
-  // map してから filter する形にして、パース失敗の穴を残したまま元の index を保つ。
+/** 読めなかったファイルは飛ばすが、`index` は parsed の位置のまま保つ。 */
+export function lintParsed(parsed: ParsedFile[], settings: Settings): LintedFile[] {
   return parsed
     .map((p, index) =>
-      p.ir === undefined
+      p.score === undefined
         ? undefined
-        : { index, file: p.name, issues: runAllCheckers(p.ir, enabledRules, ruleOptions) },
+        : { index, file: p.name, issues: lintScore(linter, p.score, settings) },
     )
     .filter((r): r is LintedFile => r !== undefined);
 }

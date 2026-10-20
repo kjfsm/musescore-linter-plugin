@@ -1,4 +1,4 @@
-import type { Severity } from "@score-linter/core";
+import type { Severity } from "@score-linter/linter";
 import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";

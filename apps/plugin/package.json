@@ -9,11 +9,15 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.bundle.json"
   },
   "dependencies": {
-    "@score-linter/checkers": "workspace:*",
-    "@score-linter/core": "workspace:*",
-    "@score-linter/source-musescore": "workspace:*"
+    "@score-linter/lint-app": "workspace:*",
+    "@score-linter/linter": "workspace:*",
+    "@score-linter/musescore-api-types": "workspace:*",
+    "@score-linter/musescore-plugin-helpers": "workspace:*",
+    "@score-linter/reader-musescore": "workspace:*",
+    "@score-linter/score-model": "workspace:*"
   },
   "devDependencies": {
+    "@score-linter/reader-musicxml": "workspace:*",
     "esbuild": "^0.28.0",
     "fflate": "^0.8.3",
     "tsx": "^4.22.0"

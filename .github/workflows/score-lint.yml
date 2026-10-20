@@ -14,17 +14,19 @@ on:
     paths:
       - "fixtures/scores/**"
       - "apps/cli/**"
-      - "packages/source-musicxml/**"
-      - "packages/checkers/**"
-      - "packages/core/**"
+      - "packages/reader-musicxml/**"
+      - "packages/score-model/**"
+      - "packages/linter/**"
+      - "packages/lint-app/**"
       - ".github/workflows/score-lint.yml"
   pull_request:
     paths:
       - "fixtures/scores/**"
       - "apps/cli/**"
-      - "packages/source-musicxml/**"
-      - "packages/checkers/**"
-      - "packages/core/**"
+      - "packages/reader-musicxml/**"
+      - "packages/score-model/**"
+      - "packages/linter/**"
+      - "packages/lint-app/**"
       - ".github/workflows/score-lint.yml"
   workflow_dispatch:
     inputs:
@@ -107,7 +109,7 @@ jobs:
           mkdir -p build/selfcheck
           xvfb-run -a build/musescore/AppRun \
             -o build/selfcheck/duet.musicxml \
-            packages/source-musicxml/tests/fixtures/duet.mscz
+            packages/reader-musicxml/tests/fixtures/duet.mscz
           test -s build/selfcheck/duet.musicxml
           ./apps/cli/dist/score-lint.mjs --fail-on=none build/selfcheck/duet.musicxml
 

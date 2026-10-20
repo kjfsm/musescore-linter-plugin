@@ -1,40 +1,47 @@
-import type { Checker, CheckerOptionSpec, CheckerOptionValue } from "@score-linter/core";
+import {
+  type OptionInfo,
+  type RuleInfo,
+  ruleGroups,
+  ruleOptionValues,
+  type Settings,
+  withRuleEnabled,
+  withRuleOption,
+} from "@score-linter/lint-app";
+import type { OptionValue } from "@score-linter/linter";
 import { ChevronRight } from "lucide-react";
 
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { effectiveOptions, isEnabled, type RuleOptions, ruleGroups } from "@/lib/rules";
+import { rules } from "@/lib/lint";
 
 export interface RulePanelProps {
-  enabledRules: Record<string, boolean>;
-  onChange: (rules: Record<string, boolean>) => void;
-  ruleOptions: RuleOptions;
-  onOptionsChange: (options: RuleOptions) => void;
+  settings: Settings;
+  onChange: (settings: Settings) => void;
 }
 
+const ruleById = new Map(rules.map((r) => [r.id, r]));
+
 /**
- * checker の options 宣言から入力欄を組み立てる。
- *
  * select に Radix の Select を使わないのは、インラインスタイルを注入するため
  * `style-src 'self'` の CSP に引っかかるから（ファイル冒頭のコメントと同じ理由）。
  * ネイティブの `<select>` なら CSP を通る。
  */
 function OptionField({
-  checker,
+  rule,
   spec,
   value,
   disabled,
   onChange,
 }: {
-  checker: Checker;
-  spec: CheckerOptionSpec;
-  value: CheckerOptionValue;
+  rule: RuleInfo;
+  spec: OptionInfo;
+  value: OptionValue | undefined;
   disabled: boolean;
-  onChange: (value: CheckerOptionValue) => void;
+  onChange: (value: OptionValue) => void;
 }) {
-  const id = `rule-${checker.id}-${spec.key}`;
+  const id = `rule-${rule.id}-${spec.key}`;
 
   if (spec.type === "boolean") {
     return (
@@ -111,27 +118,20 @@ function OptionField({
  * Radix はアニメーション用の CSS 変数を style 属性で注入するため、
  * _headers の `style-src 'self'`（'unsafe-inline' なし）に違反してしまう。
  */
-export function RulePanel({
-  enabledRules,
-  onChange,
-  ruleOptions,
-  onOptionsChange,
-}: RulePanelProps) {
-  const groups = ruleGroups();
-  const all = groups.flatMap((g) => g.checkers);
-  const activeCount = all.filter((c) => isEnabled(c, enabledRules)).length;
+export function RulePanel({ settings, onChange }: RulePanelProps) {
+  const groups = ruleGroups(rules);
+  const all = groups.flatMap((g) => g.rules);
+  const isEnabled = (rule: RuleInfo) => settings.enabled[rule.id] ?? rule.defaultEnabled;
+  const activeCount = all.filter(isEnabled).length;
 
   function setAll(enabled: boolean) {
-    onChange(Object.fromEntries(all.map((c) => [c.id, enabled])));
+    onChange(all.reduce((s, r) => withRuleEnabled(rules, s, r.id, enabled), settings));
   }
 
-  function setOption(checker: Checker, key: string, value: CheckerOptionValue) {
-    // 既定値との差分に畳むのは保存側（saveRuleOptions）の仕事なので、ここでは素直に上書きする
-    onOptionsChange({
-      ...ruleOptions,
-      [checker.id]: { ...effectiveOptions(checker, ruleOptions), [key]: value },
-    });
-  }
+  const optionValues = (rule: RuleInfo) => {
+    const found = ruleById.get(rule.id);
+    return found ? ruleOptionValues(found, settings) : {};
+  };
 
   return (
     <details className="group rounded-xl border bg-card">
@@ -156,10 +156,7 @@ export function RulePanel({
           type="button"
           size="sm"
           variant="ghost"
-          onClick={() => {
-            onChange({});
-            onOptionsChange({});
-          }}
+          onClick={() => onChange({ enabled: {}, options: {} })}
         >
           既定に戻す
         </Button>
@@ -169,7 +166,7 @@ export function RulePanel({
 
       <div className="flex flex-col gap-3 px-4 py-4">
         {groups.map((group) => {
-          const activeInGroup = group.checkers.filter((c) => isEnabled(c, enabledRules)).length;
+          const activeInGroup = group.rules.filter(isEnabled).length;
           return (
             <details key={group.category} className="group/cat rounded-lg border" open>
               <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
@@ -179,48 +176,44 @@ export function RulePanel({
                 />
                 {group.label}
                 <span className="text-xs font-normal text-muted-foreground">
-                  {activeInGroup} / {group.checkers.length} 有効
+                  {activeInGroup} / {group.rules.length} 有効
                 </span>
               </summary>
               <ul className="flex flex-col gap-2 px-3 pb-3 pt-1">
-                {group.checkers.map((checker) => (
-                  <li key={checker.id} className="flex items-start gap-3">
+                {group.rules.map((rule) => (
+                  <li key={rule.id} className="flex items-start gap-3">
                     <Checkbox
-                      id={`rule-${checker.id}`}
+                      id={`rule-${rule.id}`}
                       className="mt-1"
-                      checked={isEnabled(checker, enabledRules)}
+                      checked={isEnabled(rule)}
                       onCheckedChange={(checked) =>
-                        onChange({
-                          ...enabledRules,
-                          [checker.id]: checked === true,
-                        })
+                        onChange(withRuleEnabled(rules, settings, rule.id, checked === true))
                       }
                     />
                     <div className="flex flex-col gap-2">
-                      <label htmlFor={`rule-${checker.id}`} className="cursor-pointer text-sm">
-                        <span className="font-medium">{checker.name}</span>
-                        <SeverityBadge severity={checker.severity} className="ml-2" />
-                        <span className="block text-muted-foreground">{checker.description}</span>
+                      <label htmlFor={`rule-${rule.id}`} className="cursor-pointer text-sm">
+                        <span className="font-medium">{rule.name}</span>
+                        <SeverityBadge severity={rule.severity} className="ml-2" />
+                        <span className="block text-muted-foreground">{rule.description}</span>
                       </label>
 
-                      {checker.options &&
-                        checker.options.length > 0 && (
-                          // 無効なルールでも非表示にはしない。消えると設定が失われたように見える。
-                          <div className="flex flex-col gap-2 border-l-2 py-1 pl-3">
-                            {checker.options.map((spec) => (
-                              <OptionField
-                                key={spec.key}
-                                checker={checker}
-                                spec={spec}
-                                value={
-                                  effectiveOptions(checker, ruleOptions)[spec.key] ?? spec.default
-                                }
-                                disabled={!isEnabled(checker, enabledRules)}
-                                onChange={(value) => setOption(checker, spec.key, value)}
-                              />
-                            ))}
-                          </div>
-                        )}
+                      {rule.options.length > 0 && (
+                        // 無効なルールでも非表示にはしない。消えると設定が失われたように見える。
+                        <div className="flex flex-col gap-2 border-l-2 py-1 pl-3">
+                          {rule.options.map((spec) => (
+                            <OptionField
+                              key={spec.key}
+                              rule={rule}
+                              spec={spec}
+                              value={optionValues(rule)[spec.key]}
+                              disabled={!isEnabled(rule)}
+                              onChange={(value) =>
+                                onChange(withRuleOption(rules, settings, rule.id, spec.key, value))
+                              }
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </li>
                 ))}

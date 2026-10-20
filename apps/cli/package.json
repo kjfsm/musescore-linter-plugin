@@ -9,9 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@score-linter/checkers": "workspace:*",
-    "@score-linter/core": "workspace:*",
-    "@score-linter/source-musicxml": "workspace:*"
+    "@score-linter/lint-app": "workspace:*",
+    "@score-linter/linter": "workspace:*",
+    "@score-linter/reader-musicxml": "workspace:*",
+    "@score-linter/score-model": "workspace:*"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

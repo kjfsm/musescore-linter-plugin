@@ -31,11 +31,40 @@
   ],
   "overrides": [
     {
-      // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
-      // これまで package.json の記述と人の注意力だけで守られていたので、
-      // import を機械的に塞いでおく。MuseScore を触ってよいのは
-      // source-musescore と musescore-api だけ。
-      "files": ["packages/core/**", "packages/checkers/**"],
+      // 境界の本体は package.json の依存宣言で、ここは宣言を書き足されたときの保険。
+      "files": ["packages/score-model/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*"],
+                "message": "score-model は他のパッケージに依存しない。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/reader-musicxml/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*", "!@score-linter/score-model"],
+                "message": "reader-musicxml は score-model だけに依存する。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/reader-musescore/src/**"],
       "rules": {
         "eslint/no-restricted-imports": [
           "error",
@@ -43,11 +72,44 @@
             "patterns": [
               {
                 "group": [
-                  "@score-linter/musescore-api-types",
-                  "@score-linter/musescore-plugin-helpers",
-                  "@score-linter/musescore-api"
+                  "@score-linter/*",
+                  "!@score-linter/score-model",
+                  "!@score-linter/musescore-api-types",
+                  "!@score-linter/musescore-plugin-helpers"
                 ],
-                "message": "core / checkers は MuseScore に依存しない。入力ソース側（source-musescore）の責務。"
+                "message": "reader-musescore は score-model と MuseScore の型・ヘルパだけに依存する。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/linter/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*", "!@score-linter/score-model"],
+                "message": "linter は score-model だけに依存する。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/lint-app/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*", "!@score-linter/score-model", "!@score-linter/linter"],
+                "message": "lint-app は linter と score-model だけに依存する。"
               }
             ]
           }

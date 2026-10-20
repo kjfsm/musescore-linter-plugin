@@ -23,15 +23,14 @@ MuseScore {
     readonly property string releasesPageUrl: "https://github.com/" + repoSlug + "/releases/latest"
     readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/score-linter.zip"
 
+    // 既定値から変えた分だけを持つ設定。保存もこの形で行う（Bundle.serializeSettings）。
+    property var settings: ({ enabled: {}, options: {} })
     property var enabledRules: ({})
-    // ruleId → { key: 値 }。checker の options 宣言から解決した値を持つ。
     property var ruleOptions: ({})
     property var issuesList: []
     property var checkerList: []
-    // カテゴリの並び順と表示名は Bundle 側（core）に一本化してある。
-    // ここを QML 内の配列で持っていた頃は、カテゴリを増やしたときに配列へ
-    // 足し忘れると、そのカテゴリの checker が設定タブから丸ごと消えていた。
-    property var checkerCategories: []
+    property var ruleGroupList: []
+    property var lastRun: null
     property string snapshotText: ""
     property bool hasRun: false
 
@@ -44,16 +43,14 @@ MuseScore {
     // ─── スナップショット JSON の遅延生成 ───
     // JSON.stringify は QJSEngine だと実測で 5 秒超かかる（V8 の約 100 倍）。実行のたびに
     // 走らせると全体の 6 割を占めるので、スナップショットタブを開いたときだけ生成する。
-    // events が出力の 6 割弱を占めるため、そこだけ分割して Timer で回し、タブを離れたら
-    // 途中で中断できるようにしている。残りの index/meta は合わせても
-    // 小さいので最後に一括で作る。
+    // Bundle.createSnapshotWriter が要素ごとに分けて書くので、Timer で少しずつ進め、
+    // タブを離れたら途中で止める。
     readonly property int snapshotChunkSize: 1000
-    property var snapshotIR: null
     property bool snapshotBuilding: false
     property int snapshotDone: 0
     property int snapshotTotal: 0
     property int snapshotBuildMs: 0
-    property var snapshotChunks: []
+    property var snapshotWriter: null
     property double snapshotStartedAt: 0
 
     // タブの出入りで生成の開始・中断を切り替える（2 = スナップショットタブ）
@@ -69,28 +66,16 @@ MuseScore {
     property string latestVersion: ""
     property string updateMessage: ""
 
-    // 実行統計
-    readonly property int errorCount: {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) if (issuesList[i].severity === "error") n++;
-        return n;
-    }
-    readonly property int warningCount: {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) if (issuesList[i].severity === "warning") n++;
-        return n;
-    }
-    readonly property int infoCount: {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) if (issuesList[i].severity === "info") n++;
-        return n;
-    }
+    // 件数は Bundle 側（lint-app）が数える。他のホストと数え方を揃えるため。
+    property var issueCounts: ({ error: 0, warning: 0, info: 0 })
+    readonly property int errorCount: issueCounts.error
+    readonly property int warningCount: issueCounts.warning
+    readonly property int infoCount: issueCounts.info
 
     QtObject {
         id: persistedSettings
+        // 中身は Bundle.serializeSettings が作る、既定値から変えた分だけの JSON
         property string rulesJson: "{}"
-        // checker 個別の設定は rulesJson に混ぜない。loadEnabledRules が全値を !! で
-        // 真偽値に潰すため、同じ袋に入れると配列や文字列の設定が壊れる。
         property string ruleOptionsJson: "{}"
         property bool perfEnabled: false
     }
@@ -101,86 +86,48 @@ MuseScore {
 
     function initialize() {
         try {
-            checkerList = Bundle.getCheckerList();
-            checkerCategories = Bundle.getCategories();
+            ruleGroupList = Bundle.ruleCatalog();
+            var all = [];
+            for (var i = 0; i < ruleGroupList.length; i++) all = all.concat(ruleGroupList[i].rules);
+            checkerList = all;
+            // 壊れた保存値・未知のルールは Bundle 側が捨てて既定値に戻す
+            applySettings(Bundle.loadSettings(persistedSettings.rulesJson, persistedSettings.ruleOptionsJson), false);
         } catch (e) {
-            console.error("[ScoreLinter] checker 取得失敗: " + e);
+            console.error("[ScoreLinter] ルールの取得に失敗: " + e);
             checkerList = [];
-            checkerCategories = [];
+            ruleGroupList = [];
         }
-        loadEnabledRules();
-        loadRuleOptions();
     }
 
-    function loadEnabledRules() {
-        var persisted = {};
-        try {
-            persisted = JSON.parse(persistedSettings.rulesJson || "{}") || {};
-        } catch (e) {
-            console.warn("[ScoreLinter] rulesJson パース失敗、初期状態で復元: " + e);
-            persisted = {};
-        }
-        var rules = {};
-        for (var i = 0; i < checkerList.length; i++) {
-            var c = checkerList[i];
-            // 有効判定は Bundle 側（core）に一本化してある
-            rules[c.id] = Bundle.isCheckerEnabled(c, persisted);
-        }
-        enabledRules = rules;
+    function applySettings(next, persist) {
+        settings = next;
+        var view = Bundle.settingsView(next);
+        enabledRules = view.enabled;
+        ruleOptions = view.options;
+        if (!persist) return;
+        var saved = Bundle.serializeSettings(next);
+        persistedSettings.rulesJson = saved.enabled;
+        persistedSettings.ruleOptionsJson = saved.options;
     }
 
     function setRuleEnabled(ruleId, checked) {
-        var rules = {};
-        for (var k in enabledRules) if (enabledRules.hasOwnProperty(k)) rules[k] = enabledRules[k];
-        rules[ruleId] = checked;
-        enabledRules = rules;
-        persistedSettings.rulesJson = JSON.stringify(rules);
-    }
-
-    // 保存済みの値を checker の options 宣言に沿って解決する。未知の checker/key や
-    // 不正な値は Bundle 側（resolveCheckerOptions）が既定へ落としてくれる。
-    function loadRuleOptions() {
-        var persisted = {};
-        try {
-            persisted = JSON.parse(persistedSettings.ruleOptionsJson || "{}") || {};
-        } catch (e) {
-            console.warn("[ScoreLinter] ruleOptionsJson パース失敗、初期状態で復元: " + e);
-            persisted = {};
-        }
-        var out = {};
-        for (var i = 0; i < checkerList.length; i++) {
-            var c = checkerList[i];
-            if (!c.options || c.options.length === 0) continue;
-            out[c.id] = Bundle.resolveCheckerOptions(c.options, persisted[c.id]);
-        }
-        ruleOptions = out;
+        applySettings(Bundle.setRuleEnabled(settings, ruleId, checked), true);
     }
 
     function setRuleOption(ruleId, key, value) {
-        var next = {};
-        for (var k in ruleOptions) if (ruleOptions.hasOwnProperty(k)) next[k] = ruleOptions[k];
-        var forRule = {};
-        if (next[ruleId]) {
-            for (var j in next[ruleId]) {
-                if (next[ruleId].hasOwnProperty(j)) forRule[j] = next[ruleId][j];
-            }
-        }
-        forRule[key] = value;
-        next[ruleId] = forRule;
-        ruleOptions = next;
-        persistedSettings.ruleOptionsJson = JSON.stringify(next);
+        applySettings(Bundle.setRuleOption(settings, ruleId, key, value), true);
     }
 
     function runLinter() {
         var tStart = Date.now();
 
-        // 前回の LintIR と JSON を先に手放してから走査する。QJSEngine は巨大なオブジェクト
+        // 前回の結果と JSON を先に手放してから走査する。QJSEngine は巨大なオブジェクト
         // グラフが 2 つ生きているとチェッカー実行中に GC が繰り返し走り、実測で 2 回目以降が
         // 7 倍遅くなった（701 ms → 5143 ms）。参照を切るだけでは回収の時機を選べないので、
         // 使えるなら明示的に走らせる。
         cancelSnapshotBuild();
         snapshotText = "";
-        snapshotIR = null;
+        lastRun = null;
         snapshotBuildMs = 0;
         perfText = "";
 
@@ -193,6 +140,7 @@ MuseScore {
 
         if (!curScore) {
             issuesList = [internalIssue("スコアが開かれていません")];
+            issueCounts = { error: 1, warning: 0, info: 0 };
             hasRun = true;
             elapsedMs = Date.now() - tStart;
             tabBar.currentIndex = 0;
@@ -200,70 +148,44 @@ MuseScore {
         }
 
         try {
-            // 内訳の集計は bundle 側（core/perf.ts）で行う。false のときは計時も記録もしない。
-            Bundle.setPerfEnabled(persistedSettings.perfEnabled);
+            // `plugin`（このルートオブジェクト）を渡すと、Bundle 側が実行中の MuseScore の enum
+            // （NoteType・BarLineType など）に結び付けて読む。値を焼き込まないので版の差に強い。
+            var tLint = Date.now();
+            var run = Bundle.lintCurrentScore(plugin, settings, persistedSettings.perfEnabled);
+            var msLint = Date.now() - tLint;
+            lastRun = run;
 
-            // `NoteType` / `BarLineType` は MuseScore オブジェクトのプロパティ（実行時に値を解決する
-            // enum）。値を焼き込まず、実行時の enum を hostEnums として渡す。`plugin`（このルート
-            // オブジェクト自身）も渡すと、型の生成元 MuseScore バージョンとの照合・実行時 enum の
-            // 未知メンバ検出（strictEnum）を Bundle 側（SDK ヘルパ）が行い、結果を
-            // snapshot.meta.hostVersion に記録する。
-            var hostEnums = { noteType: NoteType, barLineType: BarLineType, bracketType: BracketType };
-
-            var tSnapshot = Date.now();
-            var snapshot = Bundle.buildSnapshot(curScore, hostEnums, plugin);
-            var msSnapshot = Date.now() - tSnapshot;
-
-            // JSON 化はここでは行わない。スナップショットタブを開いたときに初めて作る。
-            snapshotIR = snapshot;
-
-            var issues = [];
-            var hv = snapshot.meta && snapshot.meta.hostVersion;
-            if (hv && !hv.ok) {
-                issues.push(internalWarning(hv.message));
-            }
-
-            var tCheckers = Date.now();
-            issuesList = issues.concat(Bundle.runAllCheckers(snapshot, enabledRules, ruleOptions));
-            var msCheckers = Date.now() - tCheckers;
+            issuesList = run.issues;
+            issueCounts = run.counts;
 
             hasRun = true;
             elapsedMs = Date.now() - tStart;
 
             if (persistedSettings.perfEnabled) {
-                perfText = buildPerfText(msGc, msSnapshot, msCheckers);
+                perfText = buildPerfText(msGc, msLint, run.perfText);
                 console.log(perfText);
             }
             tabBar.currentIndex = 0;
         } catch (e) {
             console.error("[ScoreLinter] runLinter 失敗: " + e);
             issuesList = [internalIssue("実行中にエラーが発生しました: " + e)];
+            issueCounts = { error: 1, warning: 0, info: 0 };
             hasRun = true;
             elapsedMs = Date.now() - tStart;
         }
     }
 
-    function buildPerfText(msGc, msSnapshot, msCheckers) {
+    function buildPerfText(msGc, msLint, detail) {
         // ラベルは桁を揃えるため ASCII のみ（monospace 表示なので全角が混ざるとずれる）
         var lines = [
             "[ScoreLinter:runLinter]",
-            "  total           " + elapsedMs  + " ms",
-            "  gc              " + msGc       + " ms",
-            "  buildSnapshot   " + msSnapshot + " ms",
-            "  runAllCheckers  " + msCheckers + " ms"
+            "  total             " + elapsedMs + " ms",
+            "  gc                " + msGc      + " ms",
+            "  lintCurrentScore  " + msLint    + " ms"
         ];
-        var reports = ["getSnapshotPerfReport", "getCheckerPerfReport"];
-        for (var i = 0; i < reports.length; i++) {
-            var detail = "";
-            try {
-                detail = Bundle[reports[i]]();
-            } catch (e) {
-                console.warn("[ScoreLinter] " + reports[i] + " の取得に失敗: " + e);
-            }
-            if (detail && detail.length > 0) {
-                lines.push("");
-                lines.push(detail);
-            }
+        if (detail && detail.length > 0) {
+            lines.push("");
+            lines.push(detail);
         }
         return lines.join("\n");
     }
@@ -279,11 +201,11 @@ MuseScore {
 
     function startSnapshotBuild() {
         // 生成済み・生成中・未実行のいずれでもないときだけ着手する
-        if (snapshotBuilding || snapshotText.length > 0 || !snapshotIR) return;
+        if (snapshotBuilding || snapshotText.length > 0 || !lastRun) return;
 
-        snapshotChunks = [];
+        snapshotWriter = Bundle.createSnapshotWriter(lastRun.score);
         snapshotDone = 0;
-        snapshotTotal = snapshotIR.events ? snapshotIR.events.length : 0;
+        snapshotTotal = snapshotWriter.total;
         snapshotStartedAt = Date.now();
         snapshotBuilding = true;
         snapshotTimer.start();
@@ -293,29 +215,20 @@ MuseScore {
         if (!snapshotBuilding) return;
         snapshotTimer.stop();
         snapshotBuilding = false;
-        snapshotChunks = [];
+        snapshotWriter = null;
         snapshotDone = 0;
         snapshotTotal = 0;
     }
 
     function buildSnapshotChunk() {
-        if (!snapshotIR || !snapshotIR.events) {
+        if (!snapshotWriter) {
             cancelSnapshotBuild();
             return;
         }
         try {
-            var events = snapshotIR.events;
-            var end = Math.min(snapshotDone + snapshotChunkSize, snapshotTotal);
-            var buf = [];
-            // 1 イベント 1 行。インデント付きで丸ごと stringify するより速く、行単位で
-            // 追いやすい。JSON としては同じ。
-            for (var i = snapshotDone; i < end; i++) {
-                buf.push("    " + JSON.stringify(events[i]));
-            }
-            snapshotChunks.push(buf.join(",\n"));
-            snapshotDone = end;
-
-            if (snapshotDone >= snapshotTotal) finishSnapshotBuild();
+            var finished = snapshotWriter.step(snapshotChunkSize);
+            snapshotDone = snapshotWriter.done;
+            if (finished) finishSnapshotBuild();
         } catch (e) {
             console.error("[ScoreLinter] スナップショット生成に失敗: " + e);
             cancelSnapshotBuild();
@@ -325,27 +238,13 @@ MuseScore {
 
     function finishSnapshotBuild() {
         snapshotTimer.stop();
-
-        var out = ['{\n  "events": [\n', snapshotChunks.join(",\n"), "\n  ]"];
-        var keys = ["index", "meta"];
-        for (var i = 0; i < keys.length; i++) {
-            var k = keys[i];
-            if (snapshotIR[k] === undefined) continue;
-            // events より 1 段浅い位置に出るのでインデントを足して揃える。文字列値の中の
-            // 改行は stringify が \\n へエスケープするので、生の \n は構造由来だけ。
-            var body = JSON.stringify(snapshotIR[k], null, 2).split("\n").join("\n  ");
-            out.push(',\n  "' + k + '": ' + body);
-        }
-        out.push("\n}");
-
-        snapshotText = out.join("");
-        snapshotChunks = [];
+        snapshotText = snapshotWriter.text();
+        snapshotWriter = null;
         snapshotBuilding = false;
         snapshotBuildMs = Date.now() - snapshotStartedAt;
         console.log("[ScoreLinter] スナップショット生成: " + snapshotBuildMs + " ms");
     }
 
-    // Bundle.setPerfEnabled（bundle 側の計測フラグ）と紛らわしくないよう名前を分けている。
     function setPerfLogging(checked) {
         persistedSettings.perfEnabled = checked;
         if (!checked) perfText = "";
@@ -353,35 +252,18 @@ MuseScore {
 
     function internalIssue(msg) {
         return {
-            ruleId: "internal", severity: "error", category: "internal",
-            message: msg, partName: "", staffIdx: -1, measure: 0, tick: 0, detail: null
-        };
-    }
-
-    function internalWarning(msg) {
-        return {
-            ruleId: "internal-version-mismatch", severity: "warning", category: "internal",
-            message: msg, partName: "", staffIdx: -1, measure: 0, tick: 0, detail: null
+            ruleId: "internal", severity: "error", category: "internal", message: msg,
+            partId: null, partName: "", staffIdx: -1, measure: 0, measureLabel: "", tick: 0, detail: null
         };
     }
 
     function jumpToIssue(issue) {
-        if (!curScore || !issue || issue.measure <= 0) return;
-
-        // 小節番号から Measure オブジェクトを取得
-        var m = curScore.firstMeasure;
-        for (var i = 1; i < issue.measure && m; i++) {
-            m = m.nextMeasure;
-        }
-        if (!m || !m.firstSegment) return;
-
-        var staffIdx = (issue.staffIdx !== undefined && issue.staffIdx >= 0) ? issue.staffIdx : 0;
-        var startTick = m.firstSegment.tick;
-        var lastSeg = m.lastSegment;
-        var endTick = lastSeg ? lastSeg.tick + 1 : startTick + 1;
+        if (!curScore || !lastRun || !issue) return;
+        var range = Bundle.selectionFor(lastRun, issue);
+        if (!range) return;
 
         curScore.startCmd();
-        curScore.selection.selectRange(startTick, endTick, staffIdx, staffIdx + 1);
+        curScore.selection.selectRange(range.startTick, range.endTick, range.staff, range.staff + 1);
         curScore.endCmd();
     }
 
@@ -393,23 +275,14 @@ MuseScore {
         clipboardHelper.deselect();
     }
 
-    // パート絞り込み用のパート一覧。snapshotIR から直接読む。
-    //
-    // 以前は snapshotText（スナップショットタブを開いたときだけ組み立てられる巨大な
-    // JSON 文字列）を JSON.parse し直していた。そのため
-    //   - タブを開くまでは絞り込みが常に空
-    //   - 開いたあとはバインディングが再評価されるたびに数 MB のパースが UI スレッドで走る
-    // という二重の問題があった。snapshotIR は runLinter の時点で手元にあるので、
-    // 文字列化を経由する理由がない。
     function parts() {
-        if (snapshotIR && snapshotIR.meta && snapshotIR.meta.parts) return snapshotIR.meta.parts;
-        return [];
+        return lastRun ? lastRun.parts : [];
     }
 
     // ─── アップデート確認 ───────────────────────────────────────────────────
     // GitHub Releases API から最新版を取得し、現在版と比較する。
     // 比較ロジックは bundle 側（Bundle.isNewerVersion）に集約してテスト可能にしている。
-    // UI 層なのでネットワーク/parse 失敗は握りつぶしてエラー表示に倒す（never-catch は Checker 内限定）。
+    // UI 層なのでネットワーク/parse 失敗は握りつぶしてエラー表示に倒す（catch してはいけないのはルールの run の中だけ）。
     function checkForUpdate() {
         updateState = "checking";
         updateMessage = "";
@@ -687,8 +560,9 @@ MuseScore {
                             issuesList: plugin.issuesList
                             hasRun: plugin.hasRun
                             parts: plugin.parts()
+                            counts: plugin.issueCounts
                             checkers: plugin.checkerList
-                            onCopyRequested: plugin.copyToClipboard(text)
+                            onCopyRequested: plugin.copyToClipboard(Bundle.formatForCopy(issues, format))
                             onJumpRequested: plugin.jumpToIssue(issue)
                         }
                     }
@@ -700,7 +574,7 @@ MuseScore {
                         anchors.fill: parent
                         anchors.margins: 10
                         checkers: plugin.checkerList
-                        categories: plugin.checkerCategories
+                        groups: plugin.ruleGroupList
                         enabledRules: plugin.enabledRules
                         ruleOptions: plugin.ruleOptions
                         perfEnabled: persistedSettings.perfEnabled
@@ -721,7 +595,7 @@ MuseScore {
                         buildDone: plugin.snapshotDone
                         buildTotal: plugin.snapshotTotal
                         buildMs: plugin.snapshotBuildMs
-                        hasSnapshot: plugin.snapshotIR !== null
+                        hasSnapshot: plugin.lastRun !== null
                         onCopyRequested: plugin.copyToClipboard(text)
                     }
                 }

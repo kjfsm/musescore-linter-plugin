@@ -7,10 +7,10 @@ ScrollView {
     clip: true
 
     property var checkers: []
-    // [{ id, label }]。並び順も core が決める。
-    property var categories: []
+    // [{ category, label, rules }]。カテゴリの並びとカテゴリ内の並びは Bundle 側が決める。
+    property var groups: []
     property var enabledRules: ({})
-    // ruleId → { key: 値 }。checker の options 宣言に沿って解決済みの値が入る。
+    // ruleId → { key: 値 }。既定値で埋めた値が入る。
     property var ruleOptions: ({})
     property bool perfEnabled: false
 
@@ -54,14 +54,6 @@ ScrollView {
             if (spec.choices[i].value === current) return i;
         }
         return 0;
-    }
-
-    function checkersByCategory(cat) {
-        var out = [];
-        for (var i = 0; i < checkers.length; i++) {
-            if (checkers[i].category === cat) out.push(checkers[i]);
-        }
-        return out;
     }
 
     function allEnabled() {
@@ -159,7 +151,7 @@ ScrollView {
 
         // ─── カテゴリ別セクション ───
         Repeater {
-            model: root.categories
+            model: root.groups
 
             ColumnLayout {
                 id: section
@@ -168,9 +160,9 @@ ScrollView {
                 Layout.rightMargin: 8
                 spacing: 0
 
-                property string catId: modelData.id
+                property string catId: modelData.category
                 property string catLabel: modelData.label
-                property var catCheckers: root.checkersByCategory(modelData.id)
+                property var catCheckers: modelData.rules
                 visible: catCheckers.length > 0
 
                 // カテゴリヘッダー（折りたたみ可能）

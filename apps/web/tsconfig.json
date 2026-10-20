@@ -9,11 +9,7 @@
     // （tests/ は node:fs を使うので tsconfig.node.json 側で見る）
     "types": [],
     "paths": {
-      "@/*": ["./src/*"],
-      "@score-linter/core": ["../../packages/core/src/index.ts"],
-      "@score-linter/checkers": ["../../packages/checkers/src/index.ts"],
-      "@score-linter/source-musicxml": ["../../packages/source-musicxml/src/index.ts"],
-      "@score-linter/cli": ["../cli/src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"]

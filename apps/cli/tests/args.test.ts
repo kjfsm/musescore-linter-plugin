@@ -1,4 +1,4 @@
-import type { Checker } from "@score-linter/core";
+import { defineRule } from "@score-linter/linter";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -11,16 +11,19 @@ import {
 
 const RULES = ["opening-tempo", "pizz-arco", "final-barline"];
 
-const optionChecker: Checker = {
-  id: "scoped",
-  name: "scoped",
+const meta = {
+  name: "test",
   description: "",
   category: "test",
   severity: "info",
   defaultEnabled: true,
-  options: [
-    {
-      key: "scope",
+} as const;
+
+const optionRule = defineRule({
+  id: "scoped",
+  meta,
+  options: {
+    scope: {
       label: "範囲",
       type: "select",
       choices: [
@@ -29,8 +32,7 @@ const optionChecker: Checker = {
       ],
       default: "all",
     },
-    {
-      key: "symbols",
+    symbols: {
       label: "記号",
       type: "multiselect",
       choices: [
@@ -39,13 +41,12 @@ const optionChecker: Checker = {
       ],
       default: ["bracket"],
     },
-  ],
-  run: () => [],
-};
+  },
+  run() {},
+});
 
-const { options: _options, ...withoutOptions } = optionChecker;
-const plainChecker: Checker = { ...withoutOptions, id: "plain" };
-const CHECKERS = [optionChecker, plainChecker];
+const plainRule = defineRule({ id: "plain", meta, options: {}, run() {} });
+const RULE_LIST = [optionRule, plainRule];
 
 describe("parseArgs", () => {
   it("フラグでない引数はすべてファイルとして扱う", () => {
@@ -89,7 +90,7 @@ describe("parseArgs", () => {
 });
 
 describe("resolveEnabledRules", () => {
-  it("指定が無ければ空（= 各 checker の defaultEnabled に従う）", () => {
+  it("指定が無ければ空（= 各ルールの defaultEnabled に従う）", () => {
     expect(resolveEnabledRules({ onlyRules: [], disabledRules: [] }, RULES)).toEqual({});
   });
 
@@ -111,7 +112,7 @@ describe("resolveEnabledRules", () => {
 });
 
 describe("assertKnownRules", () => {
-  it("存在しない checker id を拒否する", () => {
+  it("存在しないルール id を拒否する", () => {
     expect(() => assertKnownRules({ onlyRules: ["nope"], disabledRules: [] }, RULES)).toThrow(
       /'nope' は存在しません/,
     );
@@ -149,14 +150,14 @@ describe("resolveRuleOptions", () => {
   const opts = (...argv: string[]) => parseArgs(argv);
 
   it("指定が無ければ空", () => {
-    expect(resolveRuleOptions(opts(), CHECKERS)).toEqual({});
+    expect(resolveRuleOptions(opts(), RULE_LIST)).toEqual({});
   });
 
   it("select と multiselect を値に変換する", () => {
     expect(
       resolveRuleOptions(
         opts("--rule-option=scoped.scope=group", "--rule-option=scoped.symbols=square,bracket"),
-        CHECKERS,
+        RULE_LIST,
       ),
     ).toEqual({ scoped: { scope: "group", symbols: ["bracket", "square"] } });
   });
@@ -165,34 +166,34 @@ describe("resolveRuleOptions", () => {
     expect(
       resolveRuleOptions(
         opts("--rule-option=scoped.scope=group", "--rule-option=scoped.scope=all"),
-        CHECKERS,
+        RULE_LIST,
       ),
     ).toEqual({ scoped: { scope: "all" } });
   });
 
-  it("存在しない checker はエラー", () => {
-    expect(() => resolveRuleOptions(opts("--rule-option=nope.scope=all"), CHECKERS)).toThrow(
+  it("存在しないルールはエラー", () => {
+    expect(() => resolveRuleOptions(opts("--rule-option=nope.scope=all"), RULE_LIST)).toThrow(
       /'nope' は存在しません/,
     );
   });
 
   it("存在しない key はエラーで、指定できる key を示す", () => {
-    expect(() => resolveRuleOptions(opts("--rule-option=scoped.nope=1"), CHECKERS)).toThrow(
+    expect(() => resolveRuleOptions(opts("--rule-option=scoped.nope=1"), RULE_LIST)).toThrow(
       /scope \/ symbols/,
     );
   });
 
-  it("options を持たない checker にはその旨を返す", () => {
-    expect(() => resolveRuleOptions(opts("--rule-option=plain.scope=all"), CHECKERS)).toThrow(
+  it("オプションを持たないルールにはその旨を返す", () => {
+    expect(() => resolveRuleOptions(opts("--rule-option=plain.scope=all"), RULE_LIST)).toThrow(
       /設定できる項目はありません/,
     );
   });
 
   it("choices 外の値はエラー", () => {
-    expect(() => resolveRuleOptions(opts("--rule-option=scoped.scope=nope"), CHECKERS)).toThrow(
+    expect(() => resolveRuleOptions(opts("--rule-option=scoped.scope=nope"), RULE_LIST)).toThrow(
       /all \/ group/,
     );
-    expect(() => resolveRuleOptions(opts("--rule-option=scoped.symbols=nope"), CHECKERS)).toThrow(
+    expect(() => resolveRuleOptions(opts("--rule-option=scoped.symbols=nope"), RULE_LIST)).toThrow(
       /nope/,
     );
   });

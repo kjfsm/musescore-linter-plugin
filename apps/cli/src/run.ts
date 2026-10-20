@@ -1,23 +1,19 @@
-import { registerAll } from "@score-linter/checkers";
-import type { LintIR } from "@score-linter/core";
-import { getCheckerList, reset, runAllCheckers, setLevel } from "@score-linter/core";
-import { buildIRFromBytes } from "@score-linter/source-musicxml";
+import { type FileResult, formatResults, presentIssues } from "@score-linter/lint-app";
+import type { Rule, Severity } from "@score-linter/linter";
+import { builtinRules, createLinter } from "@score-linter/linter";
+import { readMusicXmlBytes } from "@score-linter/reader-musicxml";
+import type { Score } from "@score-linter/score-model";
 
 import {
   assertKnownRules,
+  type CliOptions,
+  type FailOn,
   HELP_TEXT,
   parseArgs,
   resolveEnabledRules,
   resolveRuleOptions,
   UsageError,
 } from "./args.js";
-import {
-  type FileResult,
-  formatGithub,
-  formatJson,
-  formatPretty,
-  meetsThreshold,
-} from "./format.js";
 
 export const EXIT_OK = 0;
 export const EXIT_ISSUES = 1;
@@ -32,26 +28,23 @@ export interface RunIO {
 declare const __CLI_VERSION__: string | undefined;
 const VERSION = typeof __CLI_VERSION__ === "string" ? __CLI_VERSION__ : "dev";
 
-function registerCheckers(): void {
-  // checker レジストリはモジュールレベルの配列なので、多重登録を避けて毎回作り直す
-  reset();
-  registerAll();
+const SEVERITY_RANK: Record<Severity, number> = { error: 3, warning: 2, info: 1 };
+
+export function meetsThreshold(severity: Severity, failOn: FailOn): boolean {
+  if (failOn === "none") return false;
+  return SEVERITY_RANK[severity] >= SEVERITY_RANK[failOn];
 }
 
-function listRules(io: RunIO): number {
-  registerCheckers();
-  const checkers = getCheckerList();
-  // checker が 0 件だと Math.max() は -Infinity になる。padEnd は ToLength で
-  // クランプするので実害は出ないが、幅が 0 であることを型でなく式で示しておく
-  // （format.ts の partWidth と同じ形）。
-  const idWidth = Math.max(...checkers.map((c) => c.id.length), 0);
+function listRules(io: RunIO, rules: readonly Rule[]): number {
+  const idWidth = Math.max(0, ...rules.map((r) => r.id.length));
   io.stdout(
-    checkers
-      .map((c) => {
-        const head = `${c.id.padEnd(idWidth)}  ${c.severity.padEnd(7)}  ${c.category.padEnd(12)}  ${c.name}${c.defaultEnabled ? "" : "（既定で無効）"}`;
-        // オプション行は id 幅の計算に混ぜず、ぶら下げて出す
-        const opts = (c.options ?? []).map((o) => {
-          // multiselect はカンマ区切りで複数指定できることが書式から分かるようにする
+    rules
+      .map((r) => {
+        const { severity, category, name, defaultEnabled } = r.meta;
+        const head = `${r.id.padEnd(idWidth)}  ${severity.padEnd(7)}  ${category.padEnd(12)}  ${name}${defaultEnabled ? "" : "（既定で無効）"}`;
+        // オプションの行は id の幅の計算に混ぜず、ぶら下げて出す
+        const opts = Object.keys(r.options).map((key) => {
+          const o = r.options[key]!;
           const values =
             o.type === "boolean"
               ? "true|false"
@@ -59,7 +52,7 @@ function listRules(io: RunIO): number {
                 ? o.choices.map((ch) => ch.value).join("|")
                 : `${o.choices.map((ch) => ch.value).join("|")}（カンマ区切りで複数可）`;
           const def = Array.isArray(o.default) ? o.default.join(",") : String(o.default);
-          return `    --rule-option=${c.id}.${o.key}=<${values}>  ${o.label}（既定: ${def || "なし"}）`;
+          return `    --rule-option=${r.id}.${key}=<${values}>  ${o.label}（既定: ${def || "なし"}）`;
         });
         return [head, ...opts].join("\n");
       })
@@ -69,12 +62,18 @@ function listRules(io: RunIO): number {
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return String(error);
+  return error instanceof Error ? error.message : String(error);
 }
 
-export function run(argv: string[], io: RunIO): number {
-  let options: ReturnType<typeof parseArgs>;
+function render(results: FileResult[], options: CliOptions): string {
+  return formatResults(results, options.format === "pretty" ? "text" : options.format, {
+    color: options.color,
+  });
+}
+
+/** `rules` はテストで差し替えるための引数。 */
+export function run(argv: string[], io: RunIO, rules: readonly Rule[] = builtinRules): number {
+  let options: CliOptions;
   try {
     options = parseArgs(argv);
   } catch (error) {
@@ -93,23 +92,18 @@ export function run(argv: string[], io: RunIO): number {
     io.stdout(VERSION);
     return EXIT_OK;
   }
-  if (options.listRules) return listRules(io);
+  if (options.listRules) return listRules(io, rules);
 
   if (options.files.length === 0) {
     io.stderr(`解析するファイルを指定してください\n\n${HELP_TEXT}`);
     return EXIT_ERROR;
   }
 
-  // checker ごとの検出件数ログは CLI の出力を汚すので既定では出さない
-  setLevel("warn");
-  registerCheckers();
-
-  const checkers = getCheckerList();
-  const allRuleIds = checkers.map((c) => c.id);
-  let ruleOptions: Record<string, Record<string, unknown>>;
+  const allRuleIds = rules.map((r) => r.id);
+  let ruleOptions: ReturnType<typeof resolveRuleOptions>;
   try {
     assertKnownRules(options, allRuleIds);
-    ruleOptions = resolveRuleOptions(options, checkers);
+    ruleOptions = resolveRuleOptions(options, rules);
   } catch (error) {
     if (error instanceof UsageError) {
       io.stderr(describeError(error));
@@ -117,47 +111,37 @@ export function run(argv: string[], io: RunIO): number {
     }
     throw error;
   }
-  const enabledRules = resolveEnabledRules(options, allRuleIds);
+  const linter = createLinter(rules);
+  const config = { enabled: resolveEnabledRules(options, allRuleIds), options: ruleOptions };
 
   const results: FileResult[] = [];
-  const irs: { file: string; ir: LintIR }[] = [];
+  const scores: { file: string; score: Score }[] = [];
   let failed = false;
 
   for (const file of options.files) {
     try {
-      const ir = buildIRFromBytes(io.readFile(file));
-      if (options.dumpIR) {
-        irs.push({ file, ir });
+      const { score } = readMusicXmlBytes(io.readFile(file));
+      if (options.dumpScore) {
+        scores.push({ file, score });
         continue;
       }
-      results.push({ file, issues: runAllCheckers(ir, enabledRules, ruleOptions) });
+      results.push({ file, issues: presentIssues(score, linter.lint(score, config).issues) });
     } catch (error) {
       failed = true;
       io.stderr(`${file}: ${describeError(error)}`);
     }
   }
 
-  if (options.dumpIR) {
-    io.stdout(JSON.stringify(irs.length === 1 ? irs[0]!.ir : irs, null, 2));
+  if (options.dumpScore) {
+    io.stdout(JSON.stringify(scores.length === 1 ? scores[0]!.score : scores, null, 2));
     return failed ? EXIT_ERROR : EXIT_OK;
   }
 
-  io.stdout(renderResults(results, options));
+  io.stdout(render(results, options));
 
   if (failed) return EXIT_ERROR;
   const hasBlocking = results.some((r) =>
     r.issues.some((i) => meetsThreshold(i.severity, options.failOn)),
   );
   return hasBlocking ? EXIT_ISSUES : EXIT_OK;
-}
-
-function renderResults(results: FileResult[], options: ReturnType<typeof parseArgs>): string {
-  switch (options.format) {
-    case "json":
-      return formatJson(results);
-    case "github":
-      return formatGithub(results);
-    default:
-      return formatPretty(results, options.color);
-  }
 }

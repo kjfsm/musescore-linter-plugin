@@ -6,7 +6,7 @@
     },
     "apps/plugin": {
       "entry": ["src/bundle-entry.ts", "scripts/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]
     },
     "packages/musescore-api-types": {
       "project": ["src/**/*.ts"]
@@ -18,19 +18,19 @@
       "entry": ["scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/musescore-api": {
-      "project": ["src/**/*.ts"]
-    },
-    "packages/core": {
+    "packages/score-model": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/checkers": {
+    "packages/reader-musicxml": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/source-musescore": {
+    "packages/reader-musescore": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/source-musicxml": {
+    "packages/linter": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/lint-app": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "apps/cli": {

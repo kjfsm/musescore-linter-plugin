@@ -99,7 +99,7 @@ export function ResultTable({ parsed, results }: ResultTableProps) {
                     {rows.map((row) => (
                       <TableRow key={row.key}>
                         <TableCell className="tabular-nums">
-                          {row.measure > 0 ? `m.${row.measure}` : "—"}
+                          {row.measureLabel ? `m.${row.measureLabel}` : "—"}
                         </TableCell>
                         <TableCell>
                           <SeverityBadge severity={row.severity} />

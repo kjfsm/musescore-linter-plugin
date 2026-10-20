@@ -14,15 +14,15 @@ importers:
       '@changesets/cli':
         specifier: ^2.31.0
         version: 2.31.0(@types/node@25.8.0)
-      '@score-linter/checkers':
+      '@score-linter/linter':
         specifier: workspace:*
-        version: link:packages/checkers
-      '@score-linter/core':
+        version: link:packages/linter
+      '@score-linter/reader-musicxml':
         specifier: workspace:*
-        version: link:packages/core
-      '@score-linter/source-musicxml':
+        version: link:packages/reader-musicxml
+      '@score-linter/score-model':
         specifier: workspace:*
-        version: link:packages/source-musicxml
+        version: link:packages/score-model
       '@types/node':
         specifier: ^25.8.0
         version: 25.8.0
@@ -59,15 +59,18 @@ importers:
 
   apps/cli:
     dependencies:
-      '@score-linter/checkers':
+      '@score-linter/lint-app':
         specifier: workspace:*
-        version: link:../../packages/checkers
-      '@score-linter/core':
+        version: link:../../packages/lint-app
+      '@score-linter/linter':
         specifier: workspace:*
-        version: link:../../packages/core
-      '@score-linter/source-musicxml':
+        version: link:../../packages/linter
+      '@score-linter/reader-musicxml':
         specifier: workspace:*
-        version: link:../../packages/source-musicxml
+        version: link:../../packages/reader-musicxml
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../../packages/score-model
     devDependencies:
       esbuild:
         specifier: ^0.28.0
@@ -78,16 +81,28 @@ importers:
 
   apps/plugin:
     dependencies:
-      '@score-linter/checkers':
+      '@score-linter/lint-app':
         specifier: workspace:*
-        version: link:../../packages/checkers
-      '@score-linter/core':
+        version: link:../../packages/lint-app
+      '@score-linter/linter':
         specifier: workspace:*
-        version: link:../../packages/core
-      '@score-linter/source-musescore':
+        version: link:../../packages/linter
+      '@score-linter/musescore-api-types':
         specifier: workspace:*
-        version: link:../../packages/source-musescore
+        version: link:../../packages/musescore-api-types
+      '@score-linter/musescore-plugin-helpers':
+        specifier: workspace:*
+        version: link:../../packages/musescore-plugin-helpers
+      '@score-linter/reader-musescore':
+        specifier: workspace:*
+        version: link:../../packages/reader-musescore
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../../packages/score-model
     devDependencies:
+      '@score-linter/reader-musicxml':
+        specifier: workspace:*
+        version: link:../../packages/reader-musicxml
       esbuild:
         specifier: ^0.28.0
         version: 0.28.1
@@ -103,18 +118,18 @@ importers:
       '@fontsource-variable/geist':
         specifier: ^5.3.0
         version: 5.3.0
-      '@score-linter/checkers':
+      '@score-linter/lint-app':
         specifier: workspace:*
-        version: link:../../packages/checkers
-      '@score-linter/cli':
+        version: link:../../packages/lint-app
+      '@score-linter/linter':
         specifier: workspace:*
-        version: link:../cli
-      '@score-linter/core':
+        version: link:../../packages/linter
+      '@score-linter/reader-musicxml':
         specifier: workspace:*
-        version: link:../../packages/core
-      '@score-linter/source-musicxml':
+        version: link:../../packages/reader-musicxml
+      '@score-linter/score-model':
         specifier: workspace:*
-        version: link:../../packages/source-musicxml
+        version: link:../../packages/score-model
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -165,19 +180,20 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.0)(yaml@2.9.0)
 
-  packages/checkers:
+  packages/lint-app:
     dependencies:
-      '@score-linter/core':
+      '@score-linter/linter':
         specifier: workspace:*
-        version: link:../core
-
-  packages/core: {}
-
-  packages/musescore-api:
-    devDependencies:
-      '@score-linter/musescore-api-types':
+        version: link:../linter
+      '@score-linter/score-model':
         specifier: workspace:*
-        version: link:../musescore-api-types
+        version: link:../score-model
+
+  packages/linter:
+    dependencies:
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../score-model
 
   packages/musescore-api-types: {}
 
@@ -187,32 +203,35 @@ importers:
         specifier: workspace:*
         version: link:../musescore-api-types
 
-  packages/source-musescore:
+  packages/reader-musescore:
     dependencies:
-      '@score-linter/core':
-        specifier: workspace:*
-        version: link:../core
-      '@score-linter/musescore-api':
-        specifier: workspace:*
-        version: link:../musescore-api
       '@score-linter/musescore-api-types':
         specifier: workspace:*
         version: link:../musescore-api-types
       '@score-linter/musescore-plugin-helpers':
         specifier: workspace:*
         version: link:../musescore-plugin-helpers
-
-  packages/source-musicxml:
-    dependencies:
-      '@score-linter/core':
+      '@score-linter/score-model':
         specifier: workspace:*
-        version: link:../core
+        version: link:../score-model
+    devDependencies:
+      '@score-linter/reader-musicxml':
+        specifier: workspace:*
+        version: link:../reader-musicxml
+
+  packages/reader-musicxml:
+    dependencies:
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../score-model
       fast-xml-parser:
         specifier: ^5.10.1
         version: 5.10.1
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
+
+  packages/score-model: {}
 
   tools/musescore-api-types-generator: {}
 

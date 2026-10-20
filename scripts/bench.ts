@@ -1,5 +1,5 @@
 // 性能ベースラインの計測。fixtures/scores/ の実楽譜に対して
-// 「MusicXML のパース」と「全 checker の実行」を計り、checker 別の内訳を出す。
+// 「MusicXML の読み込み」と「全ルールの実行」を計り、ルール別の内訳を出す。
 //
 // CI では閾値で落とさない（GitHub runner のブレが大きく偽陽性になるため）。
 // 数値を job summary に出すだけにして、回帰の判断は PR 前後の比較で行う。
@@ -8,14 +8,9 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { registerAll } from "@score-linter/checkers";
-import {
-  getCheckerPerfReport,
-  type LintIR,
-  runAllCheckers,
-  setPerfEnabled,
-} from "@score-linter/core";
-import { buildIRFromBytes } from "@score-linter/source-musicxml";
+import { builtinRules, createLinter, type RuleTiming } from "@score-linter/linter";
+import { readMusicXmlBytes } from "@score-linter/reader-musicxml";
+import type { Score } from "@score-linter/score-model";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -28,11 +23,11 @@ const RUNS = 5;
 interface Sample {
   name: string;
   bytes: number;
-  events: number;
+  notes: number;
   issues: number;
   parseMs: number;
   lintMs: number;
-  checkerReport: string;
+  ruleReport: string;
 }
 
 function findScores(): string[] {
@@ -52,43 +47,57 @@ function median(values: number[]): number {
   return sorted[Math.floor(sorted.length / 2)]!;
 }
 
+function countNotes(score: Score): number {
+  let n = 0;
+  for (const staff of score.staves) for (const voice of staff.voices) n += voice.events.length;
+  return n;
+}
+
+function ruleReport(timings: RuleTiming[]): string {
+  const width = Math.max(0, ...timings.map((t) => t.ruleId.length));
+  return timings
+    .slice()
+    .sort((a, b) => b.ms - a.ms)
+    .map((t) => `  ${t.ruleId.padEnd(width)}  ${t.ms.toFixed(2)} ms`)
+    .join("\n");
+}
+
 function measure(file: string): Sample {
   const bytes = fs.readFileSync(file);
 
   const parseTimes: number[] = [];
-  let ir: LintIR | null = null;
+  let score: Score | null = null;
   for (let i = 0; i < WARMUP + RUNS; i++) {
     const t0 = performance.now();
-    ir = buildIRFromBytes(bytes);
+    score = readMusicXmlBytes(bytes).score;
     const elapsed = performance.now() - t0;
     if (i >= WARMUP) parseTimes.push(elapsed);
   }
-  if (!ir) throw new Error(`IR を構築できませんでした: ${file}`);
+  if (!score) throw new Error(`楽譜を読めませんでした: ${file}`);
 
   const lintTimes: number[] = [];
   let issues = 0;
+  let timings: RuleTiming[] = [];
   for (let i = 0; i < WARMUP + RUNS; i++) {
-    // derived は runAllCheckers 内で構築されるが、2 回目以降はキャッシュが効いて
-    // しまうので、毎回作り直した IR に対して計る。
-    const fresh = buildIRFromBytes(bytes);
+    // 問い合わせの結果は Score ごとに覚えられるので、毎回読み直した Score に対して計る
+    const fresh = readMusicXmlBytes(bytes).score;
+    const linter = createLinter(builtinRules, { now: () => performance.now() });
     const t0 = performance.now();
-    issues = runAllCheckers(fresh).length;
+    const result = linter.lint(fresh);
     const elapsed = performance.now() - t0;
+    issues = result.issues.length;
+    timings = result.timings;
     if (i >= WARMUP) lintTimes.push(elapsed);
   }
-
-  // checker 別の内訳は最後の 1 回ぶんを採る（Perf は ms 精度なので合算しない）。
-  const fresh = buildIRFromBytes(bytes);
-  runAllCheckers(fresh);
 
   return {
     name: path.relative(ROOT, file),
     bytes: bytes.length,
-    events: ir.events.length,
+    notes: countNotes(score),
     issues,
     parseMs: median(parseTimes),
     lintMs: median(lintTimes),
-    checkerReport: getCheckerPerfReport(),
+    ruleReport: ruleReport(timings),
   };
 }
 
@@ -98,19 +107,19 @@ function formatMarkdown(samples: Sample[]): string {
     "",
     `計測: 各 ${RUNS} 回の中央値（ウォームアップ ${WARMUP} 回を除く）`,
     "",
-    "| 楽譜 | サイズ | イベント数 | 検出 | パース | lint |",
+    "| 楽譜 | サイズ | 音符・休符 | 検出 | 読み込み | lint |",
     "| --- | ---: | ---: | ---: | ---: | ---: |",
   ];
   for (const s of samples) {
     lines.push(
-      `| ${s.name} | ${(s.bytes / 1024).toFixed(0)} KB | ${s.events} | ${s.issues} | ` +
+      `| ${s.name} | ${(s.bytes / 1024).toFixed(0)} KB | ${s.notes} | ${s.issues} | ` +
         `${s.parseMs.toFixed(1)} ms | ${s.lintMs.toFixed(1)} ms |`,
     );
   }
   for (const s of samples) {
-    if (!s.checkerReport) continue;
-    lines.push("", `<details><summary>checker 別内訳: ${s.name}</summary>`, "", "```");
-    lines.push(s.checkerReport);
+    if (!s.ruleReport) continue;
+    lines.push("", `<details><summary>ルール別内訳: ${s.name}</summary>`, "", "```");
+    lines.push(s.ruleReport);
     lines.push("```", "", "</details>");
   }
   return lines.join("\n");
@@ -123,18 +132,15 @@ function main(): void {
     return;
   }
 
-  registerAll();
-  setPerfEnabled(true);
-
   const samples = files.map(measure);
 
   for (const s of samples) {
     console.log(`\n${s.name}`);
     console.log(
-      `  ${(s.bytes / 1024).toFixed(0)} KB / ${s.events} events / ${s.issues} issues` +
+      `  ${(s.bytes / 1024).toFixed(0)} KB / ${s.notes} notes / ${s.issues} issues` +
         `  parse ${s.parseMs.toFixed(1)} ms  lint ${s.lintMs.toFixed(1)} ms`,
     );
-    if (s.checkerReport) console.log(s.checkerReport);
+    if (s.ruleReport) console.log(s.ruleReport);
   }
 
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;

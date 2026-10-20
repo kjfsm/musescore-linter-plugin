@@ -7,7 +7,10 @@ Item {
 
     property var issuesList: []
     property bool hasRun: false
+    // [{ id, name }]。同じ名前のパートも別に並ぶので、絞り込みは id で行う
     property var parts: []
+    // 重さごとの件数。Bundle 側が数えたもの
+    property var counts: ({ error: 0, warning: 0, info: 0 })
     property var checkers: []
 
     // フィルタ状態
@@ -18,16 +21,9 @@ Item {
     property string partFilter: ""
     property string ruleFilter: ""
 
-    signal copyRequested(string text)
+    // format は "text" / "markdown" / "csv"。整形は Bundle 側が持つ。
+    signal copyRequested(string format, var issues)
     signal jumpRequested(var issue)
-
-    function countBySeverity(sev) {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) {
-            if (issuesList[i].severity === sev) n++;
-        }
-        return n;
-    }
 
     function filteredIssues() {
         var out = [];
@@ -37,7 +33,7 @@ Item {
             if (it.severity === "error"   && !showError)   continue;
             if (it.severity === "warning" && !showWarning) continue;
             if (it.severity === "info"    && !showInfo)    continue;
-            if (partFilter !== "" && it.partName !== partFilter) continue;
+            if (partFilter !== "" && it.partId !== partFilter) continue;
             if (ruleFilter !== "" && it.ruleId   !== ruleFilter) continue;
             if (needle !== "") {
                 var hay = ((it.message || "") + " " + (it.partName || "")).toLowerCase();
@@ -46,47 +42,6 @@ Item {
             out.push(it);
         }
         return out;
-    }
-
-    function buildCopyText(arr) {
-        if (!arr || arr.length === 0) return "";
-        var lines = [];
-        for (var i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var part = it.partName ? (it.partName + ": ") : "";
-            var measure = it.measure > 0 ? (" 小節" + it.measure) : "";
-            lines.push("[" + (it.severity || "info").toUpperCase() + "] " + part + it.message + measure);
-        }
-        return lines.join("\n");
-    }
-
-    function buildCopyMarkdown(arr) {
-        if (!arr || arr.length === 0) return "";
-        var lines = ["| 重大度 | パート | 小節 | メッセージ |",
-                     "|--------|--------|------|------------|"];
-        for (var i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var sev = (it.severity || "info").toUpperCase();
-            var part = it.partName || "（グローバル）";
-            var meas = it.measure > 0 ? String(it.measure) : "-";
-            var msg = (it.message || "").replace(/\|/g, "\\|");
-            lines.push("| " + sev + " | " + part + " | " + meas + " | " + msg + " |");
-        }
-        return lines.join("\n");
-    }
-
-    function buildCopyCsv(arr) {
-        if (!arr || arr.length === 0) return "";
-        var lines = ['"重大度","パート","小節","メッセージ"'];
-        for (var i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var sev = (it.severity || "info").toUpperCase();
-            var part = it.partName || "";
-            var meas = it.measure > 0 ? String(it.measure) : "";
-            var msg = (it.message || "").replace(/"/g, '""');
-            lines.push('"' + sev + '","' + part + '","' + meas + '","' + msg + '"');
-        }
-        return lines.join("\n");
     }
 
     ColumnLayout {
@@ -100,19 +55,19 @@ Item {
 
             SeverityBadge {
                 severity: "error"
-                count: countBySeverity("error")
+                count: root.counts.error
                 active: showError
                 onClicked: showError = !showError
             }
             SeverityBadge {
                 severity: "warning"
-                count: countBySeverity("warning")
+                count: root.counts.warning
                 active: showWarning
                 onClicked: showWarning = !showWarning
             }
             SeverityBadge {
                 severity: "info"
-                count: countBySeverity("info")
+                count: root.counts.info
                 active: showInfo
                 onClicked: showInfo = !showInfo
             }
@@ -143,11 +98,11 @@ Item {
                 font.pixelSize: 11
                 model: {
                     var m = ["パート ▾"];
-                    for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i].partName);
+                    for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i].name);
                     return m;
                 }
                 onCurrentIndexChanged: {
-                    root.partFilter = currentIndex === 0 ? "" : model[currentIndex];
+                    root.partFilter = currentIndex === 0 ? "" : root.parts[currentIndex - 1].id;
                 }
             }
 
@@ -182,15 +137,15 @@ Item {
                     id: copyMenu
                     MenuItem {
                         text: "テキストでコピー"
-                        onTriggered: root.copyRequested(buildCopyText(filteredIssues()))
+                        onTriggered: root.copyRequested("text", filteredIssues())
                     }
                     MenuItem {
                         text: "Markdown 表でコピー"
-                        onTriggered: root.copyRequested(buildCopyMarkdown(filteredIssues()))
+                        onTriggered: root.copyRequested("markdown", filteredIssues())
                     }
                     MenuItem {
                         text: "CSV でコピー"
-                        onTriggered: root.copyRequested(buildCopyCsv(filteredIssues()))
+                        onTriggered: root.copyRequested("csv", filteredIssues())
                     }
                 }
             }
@@ -274,7 +229,7 @@ Item {
                         if (!root.showError)   f.push("ERROR 非表示");
                         if (!root.showWarning) f.push("WARN 非表示");
                         if (!root.showInfo)    f.push("INFO 非表示");
-                        if (root.partFilter)   f.push("パート: " + root.partFilter);
+                        if (root.partFilter)   f.push("パート: " + partCombo.currentText);
                         if (root.ruleFilter)   f.push("ルール: " + root.ruleFilter);
                         if (root.searchText)   f.push("\"" + root.searchText + "\"");
                         return f.join("  ·  ");

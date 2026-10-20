@@ -1,0 +1,271 @@
+import { buildScore } from "@score-linter/score-model";
+import { describe, expect, it } from "vitest";
+
+import {
+  crescTextResolution,
+  duplicateDynamics,
+  firstNoteDynamics,
+  hairpinOnRest,
+  hairpinTargetDynamic,
+  simultaneousDynamics,
+} from "../src/rules/dynamics.js";
+import { cleanScore, runRule } from "./helpers.js";
+
+const dynamic = (text: string, tick: number, measure: number, staff = 0) => ({
+  staff,
+  tick,
+  measure,
+  text,
+  kind: "dynamic" as const,
+});
+
+describe("first-note-dynamics", () => {
+  it("1音目にダイナミクスが無いパートだけを error で報告する", () => {
+    const score = buildScore({
+      parts: [
+        { id: "P1", name: "Vn1" },
+        { id: "P2", name: "Vn2" },
+      ],
+      chords: [
+        { staff: 0, tick: 0 },
+        { staff: 1, tick: 0 },
+      ],
+      annotations: [dynamic("f", 0, 1)],
+    });
+    const issues = runRule(firstNoteDynamics, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      ruleId: "first-note-dynamics",
+      severity: "error",
+      at: { partId: "P2", staff: 1, measure: 1, tick: 0 },
+    });
+  });
+
+  it("楽譜全体に付いた強弱記号は全パートの1音目に効く", () => {
+    const score = buildScore({
+      parts: [{ id: "P1" }, { id: "P2" }],
+      chords: [
+        { staff: 0, tick: 0 },
+        { staff: 1, tick: 0 },
+      ],
+      annotations: [{ tick: 0, text: "f", kind: "dynamic" }],
+    });
+    expect(runRule(firstNoteDynamics, score)).toEqual([]);
+  });
+});
+
+describe("duplicate-dynamics", () => {
+  it("同パートで f → f が連続したら info で報告し、前回の小節を detail に持つ", () => {
+    const score = cleanScore({ annotations: [dynamic("f", 480, 2)] });
+    const issues = runRule(duplicateDynamics, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "info",
+      at: { partId: "P1", staff: 0, measure: 2, tick: 480 },
+      detail: { previousMeasure: 1 },
+    });
+  });
+
+  it("f → più f は変化なので重複としない", () => {
+    const score = buildScore({
+      chords: [{ tick: 0 }],
+      annotations: [dynamic("f", 0, 1), dynamic("più f", 480, 2)],
+    });
+    expect(runRule(duplicateDynamics, score)).toEqual([]);
+  });
+
+  it("記号を持たない強弱テキストは、テキストが違えば重複としない", () => {
+    const score = buildScore({
+      annotations: [dynamic("poco a poco", 0, 1), dynamic("molto", 480, 2)],
+    });
+    expect(runRule(duplicateDynamics, score)).toEqual([]);
+  });
+
+  it("f → p のように変化していれば報告しない", () => {
+    const score = cleanScore({ annotations: [dynamic("p", 480, 2)] });
+    expect(runRule(duplicateDynamics, score)).toEqual([]);
+  });
+
+  it("別パートの強弱記号とは比べない", () => {
+    expect(runRule(duplicateDynamics, cleanScore())).toEqual([]);
+  });
+
+  it("2つの強弱記号の間でヘアピンが始まっていれば報告しない", () => {
+    const score = buildScore({
+      annotations: [dynamic("f", 0, 1), dynamic("f", 960, 3)],
+      hairpins: [{ startTick: 240, endTick: 720 }],
+    });
+    expect(runRule(duplicateDynamics, score)).toEqual([]);
+  });
+
+  it("別パートのヘアピンは数えず、重複として報告する", () => {
+    const score = buildScore({
+      parts: [{ id: "P1" }, { id: "P2" }],
+      annotations: [dynamic("f", 0, 1), dynamic("f", 960, 3)],
+      hairpins: [{ staff: 1, startTick: 240, endTick: 720 }],
+    });
+    expect(runRule(duplicateDynamics, score)).toHaveLength(1);
+  });
+
+  it("2つ目の強弱記号以降に始まるヘアピンでは免除しない", () => {
+    const score = buildScore({
+      annotations: [dynamic("f", 0, 1), dynamic("f", 480, 2)],
+      hairpins: [{ startTick: 480, endTick: 960 }],
+    });
+    expect(runRule(duplicateDynamics, score)).toHaveLength(1);
+  });
+
+  it.each(["sf", "rf"])("%s → %s の連続はアクセントとして許す", (mark) => {
+    const score = buildScore({
+      annotations: [dynamic(mark, 0, 1), dynamic(mark, 480, 2)],
+    });
+    expect(runRule(duplicateDynamics, score)).toEqual([]);
+  });
+});
+
+describe("simultaneous-dynamics", () => {
+  it("同じ位置に p と f があれば衝突として warning で報告する", () => {
+    const score = cleanScore({ annotations: [dynamic("p", 0, 1)] });
+    const issues = runRule(simultaneousDynamics, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "warning",
+      at: { partId: "P1", staff: 0, measure: 1, tick: 0 },
+      detail: { dynamics: ["f", "p"] },
+    });
+  });
+
+  it("同じ f が重なるだけなら衝突としない", () => {
+    const score = cleanScore({ annotations: [dynamic("f", 0, 1)] });
+    expect(runRule(simultaneousDynamics, score)).toEqual([]);
+  });
+
+  it("f と f espr. は修飾語だけの違いなので衝突しない", () => {
+    const score = cleanScore({ annotations: [dynamic("f espr.", 0, 1)] });
+    expect(runRule(simultaneousDynamics, score)).toEqual([]);
+  });
+
+  it("別の譜表の強弱記号とは衝突しない", () => {
+    const score = buildScore({
+      parts: [{ id: "P1" }, { id: "P2" }],
+      annotations: [dynamic("f", 0, 1, 0), dynamic("p", 0, 1, 1)],
+    });
+    expect(runRule(simultaneousDynamics, score)).toEqual([]);
+  });
+});
+
+describe("hairpin-target-dynamic", () => {
+  const chordsAt = (...ticks: number[]) => ticks.map((tick) => ({ tick }));
+
+  it("曲中のヘアピン終端にダイナミクスが無ければ info で報告する", () => {
+    // 終端 480 より後に音(960)があるので、曲尾のヘアピンではない
+    const score = buildScore({
+      chords: chordsAt(0, 480, 960),
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    const issues = runRule(hairpinTargetDynamic, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "info",
+      at: { partId: "P1", staff: 0, tick: 480 },
+      detail: { startTick: 0, endTick: 480 },
+    });
+  });
+
+  it("曲尾まで伸びるヘアピン（dim. al niente など）は報告しない", () => {
+    const score = buildScore({
+      chords: chordsAt(0, 480),
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    expect(runRule(hairpinTargetDynamic, score)).toEqual([]);
+  });
+
+  it("ヘアピン終端にダイナミクスがあれば報告しない", () => {
+    const score = buildScore({
+      chords: chordsAt(0, 480, 960),
+      annotations: [dynamic("ff", 480, 2)],
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    expect(runRule(hairpinTargetDynamic, score)).toEqual([]);
+  });
+});
+
+describe("hairpin-on-rest", () => {
+  it("終了端点が休符上なら info で報告する", () => {
+    const score = buildScore({
+      chords: [{ tick: 0 }],
+      rests: [{ tick: 480 }],
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    const issues = runRule(hairpinOnRest, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "info",
+      at: { partId: "P1", staff: 0, tick: 480 },
+      detail: { kind: "hairpin", startTick: 0, endTick: 480 },
+    });
+    expect(issues[0]?.message).toContain("終了");
+  });
+
+  it("開始端点が休符上なら info で報告する", () => {
+    const score = buildScore({
+      rests: [{ tick: 0 }],
+      chords: [{ tick: 480 }],
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    const issues = runRule(hairpinOnRest, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "info", at: { tick: 0 } });
+    expect(issues[0]?.message).toContain("開始");
+  });
+
+  it("両端点が音符上なら報告しない", () => {
+    const score = buildScore({
+      chords: [{ tick: 0 }, { tick: 480 }],
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    expect(runRule(hairpinOnRest, score)).toEqual([]);
+  });
+
+  it("同じ tick に別の声部の音符と休符があれば音符を優先して報告しない", () => {
+    const score = buildScore({
+      chords: [
+        { voice: 0, tick: 0 },
+        { voice: 0, tick: 480 },
+      ],
+      rests: [{ voice: 1, tick: 480 }],
+      hairpins: [{ startTick: 0, endTick: 480 }],
+    });
+    expect(runRule(hairpinOnRest, score)).toEqual([]);
+  });
+});
+
+describe("cresc-text-resolution", () => {
+  it("cresc. の後に強弱記号が無ければ info で報告する", () => {
+    const score = buildScore({
+      chords: [{ tick: 0 }],
+      annotations: [dynamic("cresc.", 0, 1)],
+    });
+    const issues = runRule(crescTextResolution, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "info",
+      at: { partId: "P1", staff: 0, measure: 1, tick: 0 },
+    });
+    expect(issues[0]?.message).toContain("cresc.");
+  });
+
+  it("cresc. の後に同じ譜表の強弱記号があれば報告しない", () => {
+    const score = buildScore({
+      annotations: [dynamic("cresc.", 0, 1), dynamic("f", 480, 1)],
+    });
+    expect(runRule(crescTextResolution, score)).toEqual([]);
+  });
+
+  it("cresc. の後に楽譜全体の強弱記号があれば報告しない", () => {
+    const score = buildScore({
+      annotations: [dynamic("cresc.", 0, 1), { tick: 480, text: "f", kind: "dynamic" }],
+    });
+    expect(runRule(crescTextResolution, score)).toEqual([]);
+  });
+});
