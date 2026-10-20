@@ -4,6 +4,16 @@
     ".": {
       "entry": ["src/bundle-entry.ts", "scripts/*.ts"]
     },
+    "packages/musescore-api-types": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/musescore-plugin-helpers": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "tools/musescore-api-types-generator": {
+      "entry": ["scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]
+    },
     "packages/musescore-api": {
       "project": ["src/**/*.ts"]
     },

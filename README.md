@@ -201,6 +201,8 @@ packages/
       base/                    base/ ヘルパー（partGroups.ts・query.ts）の単体テスト
       helpers/irBuilder.ts     テスト用の fixture ヘルパー（buildIR は core の再エクスポート、cleanIR/quintetIR を追加）
   musescore-api/               @musescore-linter/musescore-api — SDK 型の薄い拡張層
+  musescore-api-types/         MuseScore プラグイン API の型（生成物。旧 musescore-plugin-sdk-types）
+  musescore-plugin-helpers/    MuseScore プラグイン API のヘルパ（旧 musescore-plugin-sdk-helpers）
     src/
       index.ts                 SDK 型に不足するプロパティ（duration / annotations 等）を補うブリッジ
   source-musescore/            @musescore-linter/source-musescore — MuseScore → LintIR
@@ -377,6 +379,7 @@ localStorage に保存し、どちらも「既定から変えたぶんだけ」�
 
 ```bash
 pnpm test   # 全パッケージで vitest を実行
+pnpm generate:types   # MuseScore の C++ ヘッダから packages/musescore-api-types を生成し直す（版は tools/musescore-api-types-generator/config.json の ref）
 ```
 
 各 checker は `tests/helpers/irBuilder.ts` で構築した最小 LintIR に対して挙動を検証します。MuseScore を起動せずに回帰テストが可能です。

@@ -1,8 +1,0 @@
-{
-  "files": [],
-  "references": [
-    { "path": "./packages/types" },
-    { "path": "./packages/types-generator" },
-    { "path": "./examples/hello-world" }
-  ]
-}

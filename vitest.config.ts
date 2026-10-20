@@ -15,7 +15,7 @@ export default defineConfig({
         test: {
           name: "packages",
           globals: true,
-          include: ["packages/*/tests/**/*.test.ts"],
+          include: ["packages/*/tests/**/*.test.ts", "tools/*/tests/**/*.test.ts"],
         },
       },
       {

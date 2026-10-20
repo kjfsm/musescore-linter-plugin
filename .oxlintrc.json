@@ -22,7 +22,14 @@
     // Hooks のルール違反を確実に検出できるよう明示的に有効化する。
     "react/rules-of-hooks": "error"
   },
-  "ignorePatterns": ["dist/**", "dist-cli/**", "coverage/**", "out/**"],
+  "ignorePatterns": [
+    "dist/**",
+    "dist-cli/**",
+    "coverage/**",
+    "out/**",
+    // tools/musescore-api-types-generator の生成物。手で直さず生成元を直す
+    "packages/musescore-api-types/src/generated/**"
+  ],
   "overrides": [
     {
       // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
@@ -36,7 +43,11 @@
           {
             "patterns": [
               {
-                "group": ["@kjfsm/musescore-plugin-sdk-*", "@musescore-linter/musescore-api"],
+                "group": [
+                  "@musescore-linter/musescore-api-types",
+                  "@musescore-linter/musescore-plugin-helpers",
+                  "@musescore-linter/musescore-api"
+                ],
                 "message": "core / checkers は MuseScore に依存しない。入力ソース側（source-musescore）の責務。"
               }
             ]

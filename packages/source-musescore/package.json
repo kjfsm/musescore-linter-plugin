@@ -8,9 +8,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kjfsm/musescore-plugin-sdk-helpers": "^4.0.0",
-    "@kjfsm/musescore-plugin-sdk-types": "^2.1.0",
     "@musescore-linter/core": "workspace:*",
-    "@musescore-linter/musescore-api": "workspace:*"
+    "@musescore-linter/musescore-api": "workspace:*",
+    "@musescore-linter/musescore-api-types": "workspace:*",
+    "@musescore-linter/musescore-plugin-helpers": "workspace:*"
   }
 }
