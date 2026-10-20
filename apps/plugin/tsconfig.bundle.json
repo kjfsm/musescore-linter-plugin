@@ -15,6 +15,8 @@
     "src/qml-globals.d.ts",
     "../../packages/score-model/src/**/*.ts",
     "../../packages/linter/src/**/*.ts",
-    "../../packages/lint-app/src/**/*.ts"
+    "../../packages/lint-app/src/**/*.ts",
+    "../../packages/reader-musescore/src/**/*.ts",
+    "../../packages/musescore-plugin-helpers/src/**/*.ts"
   ]
 }

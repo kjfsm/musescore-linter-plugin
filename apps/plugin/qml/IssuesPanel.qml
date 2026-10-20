@@ -7,6 +7,7 @@ Item {
 
     property var issuesList: []
     property bool hasRun: false
+    // パート名の文字列の配列
     property var parts: []
     property var checkers: []
 
@@ -18,7 +19,8 @@ Item {
     property string partFilter: ""
     property string ruleFilter: ""
 
-    signal copyRequested(string text)
+    // format は "text" / "markdown" / "csv"。整形は Bundle 側が持つ。
+    signal copyRequested(string format, var issues)
     signal jumpRequested(var issue)
 
     function countBySeverity(sev) {
@@ -46,47 +48,6 @@ Item {
             out.push(it);
         }
         return out;
-    }
-
-    function buildCopyText(arr) {
-        if (!arr || arr.length === 0) return "";
-        var lines = [];
-        for (var i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var part = it.partName ? (it.partName + ": ") : "";
-            var measure = it.measure > 0 ? (" 小節" + it.measure) : "";
-            lines.push("[" + (it.severity || "info").toUpperCase() + "] " + part + it.message + measure);
-        }
-        return lines.join("\n");
-    }
-
-    function buildCopyMarkdown(arr) {
-        if (!arr || arr.length === 0) return "";
-        var lines = ["| 重大度 | パート | 小節 | メッセージ |",
-                     "|--------|--------|------|------------|"];
-        for (var i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var sev = (it.severity || "info").toUpperCase();
-            var part = it.partName || "（グローバル）";
-            var meas = it.measure > 0 ? String(it.measure) : "-";
-            var msg = (it.message || "").replace(/\|/g, "\\|");
-            lines.push("| " + sev + " | " + part + " | " + meas + " | " + msg + " |");
-        }
-        return lines.join("\n");
-    }
-
-    function buildCopyCsv(arr) {
-        if (!arr || arr.length === 0) return "";
-        var lines = ['"重大度","パート","小節","メッセージ"'];
-        for (var i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var sev = (it.severity || "info").toUpperCase();
-            var part = it.partName || "";
-            var meas = it.measure > 0 ? String(it.measure) : "";
-            var msg = (it.message || "").replace(/"/g, '""');
-            lines.push('"' + sev + '","' + part + '","' + meas + '","' + msg + '"');
-        }
-        return lines.join("\n");
     }
 
     ColumnLayout {
@@ -143,7 +104,7 @@ Item {
                 font.pixelSize: 11
                 model: {
                     var m = ["パート ▾"];
-                    for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i].partName);
+                    for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i]);
                     return m;
                 }
                 onCurrentIndexChanged: {
@@ -182,15 +143,15 @@ Item {
                     id: copyMenu
                     MenuItem {
                         text: "テキストでコピー"
-                        onTriggered: root.copyRequested(buildCopyText(filteredIssues()))
+                        onTriggered: root.copyRequested("text", filteredIssues())
                     }
                     MenuItem {
                         text: "Markdown 表でコピー"
-                        onTriggered: root.copyRequested(buildCopyMarkdown(filteredIssues()))
+                        onTriggered: root.copyRequested("markdown", filteredIssues())
                     }
                     MenuItem {
                         text: "CSV でコピー"
-                        onTriggered: root.copyRequested(buildCopyCsv(filteredIssues()))
+                        onTriggered: root.copyRequested("csv", filteredIssues())
                     }
                 }
             }

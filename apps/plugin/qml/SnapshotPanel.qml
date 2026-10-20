@@ -22,7 +22,7 @@ ColumnLayout {
         Layout.fillWidth: true
 
         Label {
-            text: "スナップショット（LintIR の JSON）"
+            text: "スナップショット（読み込んだ楽譜のモデルの JSON）"
             font.pixelSize: 14
             font.bold: true
             Layout.fillWidth: true

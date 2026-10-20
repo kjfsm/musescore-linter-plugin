@@ -1,30 +1,50 @@
-import { registerAll } from "@score-linter/checkers";
 import {
-  compareVersions,
-  getCategories,
-  getCheckerList,
-  getCheckerPerfReport,
-  isCheckerEnabled,
-  isNewerVersion,
-  resolveCheckerOptions,
-  runAllCheckers,
-  setPerfEnabled,
-} from "@score-linter/core";
-import { buildSnapshot, getSnapshotPerfReport } from "@score-linter/source-musescore";
+  createSnapshotWriter,
+  parseSettings,
+  serializeSettings,
+  type Settings,
+  withRuleEnabled,
+  withRuleOption,
+} from "@score-linter/lint-app";
+import type { OptionValue } from "@score-linter/linter";
 
-// バンドルロード時に全チェッカーを登録
-registerAll();
+import {
+  formatForCopy,
+  lintCurrentScore,
+  ruleCatalog,
+  rules,
+  selectionFor,
+  settingsView,
+} from "./lint.js";
+import { isNewerVersion } from "./version.js";
+
+function loadSettings(enabledJson: string, optionsJson: string): Settings {
+  return parseSettings(rules, enabledJson, optionsJson);
+}
+
+function setRuleEnabled(settings: Settings, ruleId: string, enabled: boolean): Settings {
+  return withRuleEnabled(rules, settings, ruleId, enabled);
+}
+
+function setRuleOption(
+  settings: Settings,
+  ruleId: string,
+  key: string,
+  value: OptionValue,
+): Settings {
+  return withRuleOption(rules, settings, ruleId, key, value);
+}
 
 export {
-  buildSnapshot,
-  compareVersions,
-  getCategories,
-  getCheckerList,
-  getCheckerPerfReport,
-  getSnapshotPerfReport,
-  isCheckerEnabled,
+  createSnapshotWriter,
+  formatForCopy,
   isNewerVersion,
-  resolveCheckerOptions,
-  runAllCheckers,
-  setPerfEnabled,
+  lintCurrentScore,
+  loadSettings,
+  ruleCatalog,
+  selectionFor,
+  serializeSettings,
+  setRuleEnabled,
+  setRuleOption,
+  settingsView,
 };

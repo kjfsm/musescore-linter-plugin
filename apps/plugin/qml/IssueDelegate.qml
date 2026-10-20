@@ -77,8 +77,8 @@ Rectangle {
 
             // 小節番号
             Label {
-                visible: !!issue && issue.measure > 0
-                text: issue ? ("小節 " + issue.measure) : ""
+                visible: !!issue && !!issue.measureLabel
+                text: issue ? ("小節 " + issue.measureLabel) : ""
                 color: "#616161"
                 font.pixelSize: 12
                 font.bold: true

@@ -109,6 +109,9 @@ function repeatMarksOf(norm: string): RepeatMark[] {
 /**
  * ソースが要素の構造として持っている手がかり。テキストからの推測より優先する。
  * 例: MusicXML の `<sound tempo>`・`<dynamics>` の子要素、MuseScore の奏法の種類。
+ *
+ * ただし `technique` だけはテキストで読めなかったときに使う。MuseScore の奏法の種類は
+ * テキストより粗く、弦の con sord. と金管のミュートがどちらも Mute になる。
  */
 export interface AnnotationHints {
   kind?: AnnotationKind;
@@ -146,7 +149,7 @@ export function interpretAnnotation(
     if (dynamic) directives.push({ type: "dynamic", ...dynamic });
   }
 
-  const technique = hints.technique ?? TECHNIQUE_BY_TEXT[norm];
+  const technique = TECHNIQUE_BY_TEXT[norm] ?? hints.technique;
   if (technique) directives.push({ type: "technique", technique });
 
   const direction = DYNAMIC_CHANGE_BY_TEXT[norm];

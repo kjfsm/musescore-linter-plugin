@@ -72,39 +72,6 @@ export function getClefTypeAt(segment: Segment, staffIdx: number): ClefType | nu
   return null;
 }
 
-// SMuFL symbol name → dynamic abbreviation
-const SMUFL_DYNAMIC: Record<string, string> = {
-  dynamicPPPPP: "ppppp",
-  dynamicPPPP: "pppp",
-  dynamicPPP: "ppp",
-  dynamicPP: "pp",
-  dynamicPiano: "p",
-  dynamicMezzo: "m",
-  dynamicForte: "f",
-  dynamicFF: "ff",
-  dynamicFFF: "fff",
-  dynamicFFFF: "ffff",
-  dynamicFFFFF: "fffff",
-  dynamicSforzando: "sf",
-  dynamicNiente: "n",
-  dynamicRinforzando: "r",
-  dynamicZ: "z",
-  dynamicFP: "fp",
-  dynamicSforzandoPiano: "sfp",
-  dynamicSforzandoPianissimo: "sfpp",
-  dynamicForteForte: "ff",
-  dynamicPianoPiano: "pp",
-};
-
-/**
- * Converts Dynamic.plainText (SMuFL symbol names concatenated, e.g. "dynamicMezzodynamicPiano")
- * to a human-readable abbreviation ("mp").
- */
-export function parseDynamicText(raw: string): string {
-  const tokens = raw.split(/(?=dynamic[A-Z])/).filter(Boolean);
-  return tokens.map((t) => SMUFL_DYNAMIC[t] ?? t).join("");
-}
-
 // --- Element-type predicates ---
 
 // Single source of truth: ElementType member name → runtime element name(s).
