@@ -22,6 +22,7 @@ import {
   repeatBarlineMatch,
   restAnnotation,
 } from "./notation.js";
+import { mergeableTie, restGrouping } from "./rhythm.js";
 import {
   duplicateSlur,
   slurOnRest,
@@ -98,4 +99,6 @@ export const builtinRules: readonly Rule[] = [
   tieContinuationDynamic,
   crescTextResolution,
   beatCrossingTie,
+  mergeableTie,
+  restGrouping,
 ];
