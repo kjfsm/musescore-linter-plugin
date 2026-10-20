@@ -18,7 +18,6 @@ export function ScorePreview({ name, xml }: ScorePreviewProps) {
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
 
     // ここでの catch は UI の I/O 境界（parseFile の catch と同種）であり、
     // checker 内 catch 禁止のルールとは無関係。
