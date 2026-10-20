@@ -4,7 +4,7 @@ paths:
   - "apps/plugin/ScoreLinter.qml"
   - "apps/plugin/qml/**"
   - "packages/musescore-plugin-helpers/**"
-  - "packages/source-musescore/**"
+  - "packages/reader-musescore/**"
 ---
 
 # MuseScore 4.6 プラグイン API の罠
@@ -43,7 +43,7 @@ curScore.endCmd();
 `ListModel` などに入れた `cursor.element` は、QML の GC が C++ 側の参照を保たないので、後で `null` になる。
 `tick`・`staffIdx` のようなスカラーだけを持ち、使うときに走査し直して要素を取り直す。
 
-## プラグイン側で回避できないとき
+## helpers に足りないとき
 
-回避策が SDK(`@kjfsm/musescore-plugin-sdk-helpers`)に置くべき形なら、AGENTS.md の
-「ライブラリ側の機能が不足している場合」に従い、ここで回避実装を足さずに報告する。
+MuseScore API を扱う処理が `packages/musescore-plugin-helpers` に足りなければ、`reader-musescore` やホストで
+回避せず helpers に足す（AGENTS.md「MuseScore API の型と helpers」）。

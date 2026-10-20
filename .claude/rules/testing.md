@@ -1,5 +1,5 @@
 ---
-description: vitest 単体テストの責務・irBuilder 使い方
+description: vitest 単体テストの責務・buildScore とテストヘルパの使い方
 paths:
   - "packages/*/tests/**"
   - "apps/*/tests/**"
@@ -11,54 +11,58 @@ paths:
 
 ## ユニットテスト（`packages/*/tests/**/*.test.ts`, `apps/*/tests/**/*.test.ts`）
 
-**対象**: 各 Checker の `run(ir)` 関数。純粋関数として irBuilder で組み立てた LintIR を渡してテストする。
-テストランナーは vitest（設定は `vitest.config.ts`、`include` にこの 2 パターンを指定）。
+テストランナーは vitest（設定はルートの `vitest.config.ts`）。`packages/*/tests` と `apps/*/tests` の 2 プロジェクトで、
+`pnpm test` が全パッケージを 1 回で走らせる。
 
-checker のテストは `packages/checkers/tests/checkers.test.ts` に集約されている。冒頭の `run()`
-ヘルパーが `reset()` → `registerAll()` → `runAllCheckers(ir, enabledRules)`
-をまとめて行う。個別 checker の `run(ir)` を直に呼ぶテストと、`run()` ヘルパー経由で registry 全体を
-通すテストの両方が存在する。
+### ルール（`packages/linter/tests/`）
+
+**対象**: 組み込みの各ルール。`buildScore(spec)`（`@score-linter/score-model`）で必要な要素だけを書いた
+`Score` を作り、ルールを 1 つだけ有効にして走らせ、返った `Issue` を検証する。
+テストファイルは `src/rules/` のファイルと対にする（`tempo.ts` ↔ `tempo.test.ts`）。
+
+`packages/linter/tests/helpers.ts`:
+
+- `runRule(rule, score, options?)` — そのルールだけを有効にした `createLinter([rule])` で lint する。
+  `options` は生の値で渡す（エンジンが正規化する）。
+- `runAll(score, enabled?)` — `builtinRules` を既定の設定で走らせる。
+- `cleanScore(extra?, partNames?)` / `quintetScore(extra?)` — どの組み込みルールにも引っかからない最小の楽譜
+  （冒頭にテンポ表記、各パートの 1 音目に強弱記号）に、`extra` の要素を足したもの。違反を 1 つだけ足して検証する。
 
 ```ts
-// 典型的なテストパターン（cleanIR に違反イベントを 1 件足す）
-const ir = cleanIR([
-  {
-    kind: K.STAFF_TEXT,
-    staff: 0,
-    tick: 480,
-    measure: 2,
-    textNorm: "pizz.",
-    textRaw: "pizz.",
-  },
-]);
-const issues = pizzArcoChecker.run(ir);
+const score = cleanScore({ annotations: [{ staff: 0, measure: 2, tick: 480, text: "pizz." }] });
+const issues = runRule(pizzArco, score);
 expect(issues).toHaveLength(1);
-expect(issues[0].severity).toBe("warning");
+expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 2 } });
 ```
 
-**`packages/checkers/tests/helpers/irBuilder.ts`**: テスト用の fixture ヘルパー。`buildIR` は
-core の `buildIR` に `withDerived` を掛けて `IndexedIR` を返すので、`checker.run` に直接渡せる。
-`CANONICAL`（`K` = `elementKinds`、`BK` = `barlineKinds` としてエクスポート）は core の再エクスポート。
-このファイル自身が持つのは `cleanIR(extra)`（全 checker をパスする最小 IR に追加イベントを足す）と
-`quintetIR(extra)`（弦楽五重奏 5 staff 版）の 2 つの fixture ビルダだけ。
+指摘の `message` に位置は入らない（プレースホルダのまま）。位置は `at`、他の位置は `detail` で検証する。
+
+### 他の層
+
+| 場所                                  | 検証すること                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
+| `packages/score-model/tests/`         | 問い合わせ関数・テキストの解釈（`interpretAnnotation`）                           |
+| `packages/reader-musicxml/tests/`     | MusicXML / .mxl から作った Score                                                  |
+| `packages/reader-musescore/tests/`    | MuseScore のモックから作った Score。`conformance.test.ts` は MusicXML 版と一致を見る |
+| `packages/lint-app/tests/`            | 設定・並べ替え・件数・整形・スナップショット                                      |
+| `apps/cli/tests/`                     | 引数・出力。`golden.test.ts` は 3 曲の検出結果を `fixtures/golden/` と比べる       |
+| `apps/plugin/tests/`                  | バンドルが呼ぶ `lint.ts`（MuseScore のモックを使う）                              |
 
 ## カバレッジ方針
 
 - 正例（違反なし）と負例（違反あり）の両方を書く
-- `ir.index.byKind` / `byStaffAndKind` を使うパスと global scope（`staffIdx: -1` / `scope: "global"`）を通るパスをそれぞれカバーする
-- 新しい checker を追加したら必ず対応するテストケースを追加する
+- 楽譜全体に付いた注記（`staff` も `partId` も無い）とパートに付いた注記の両方を通るルールは、両方を通す
+- 新しいルールを追加したら必ず対応するテストケースを追加する
+- golden の更新（`pnpm vitest run -u`）は、検出結果を意図して変えたときだけ。差分の理由をコミットに書く
 
 ## 実行コマンド
 
 ```bash
-pnpm test              # vitest run（ルートの vitest.config.ts、全パッケージ横断）
-pnpm test:coverage      # vitest run --coverage
-pnpm dev                # vitest（watch モード）
-pnpm pipeline           # turbo run typecheck test build build:plugin build:cli package
+pnpm test              # vitest run（全パッケージ横断）
+pnpm test:coverage     # vitest run --coverage
+pnpm dev               # vitest（watch モード）
+pnpm pipeline          # turbo run typecheck test build package
 ```
 
-`test` スクリプトを持つのはルートだけで、全パッケージのテストを 1 回で走らせる
-（各パッケージの `typecheck` 完了が前提）。`pnpm typecheck` はルート自身の `src/` と
-`scripts/` だけを見るので、全体を確かめるときは `pnpm pipeline` を使う。パッケージ単位に分けていた頃は alias だけが違う
-`vitest.config.ts` が 5 本並んでいたが、全体で 1 秒未満なので分割する利点がない。
-通常の開発では `pnpm test` で十分。
+`pnpm typecheck` はルート自身の `tsc --noEmit` だけを見る。各パッケージの型検査（プラグインの
+`tsconfig.bundle.json` を含む）は `pnpm pipeline` が回す。

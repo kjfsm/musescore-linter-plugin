@@ -69,7 +69,7 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 
 ### チェック項目ごとの設定
 
-一部の checker は ON/OFF に加えて設定値を持ちます。設定タブ（プラグイン / Web 版）に
+一部のルールは ON/OFF に加えて設定値を持ちます。設定タブ（プラグイン / Web 版）に
 自動で入力欄が出るほか、CLI では `--rule-option=<id>.<key>=<値>` で指定できます
 （指定できる key は `--list-rules` で確認できます）。
 
@@ -83,46 +83,45 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 オーケストラスコアなら、`bracket` だけを選べば「木管全体」「金管全体」「弦全体」の単位、
 `bracket,square` なら「Fl 1st/2nd のペア」単位で比較されます。どの括弧にも属さないパート
 （例: Timpani）は比較対象から外れます。**選んだ種類の括弧がスコアに 1 つも無ければ、
-従来どおり全パート横断で比較します**（括弧を持たない楽譜で無検出にならないようにするため）。
+全パート横断で比較します**（括弧を持たない楽譜で無検出にならないようにするため）。
 
 > `brace`（ピアノ・ハープの大譜表）は **MuseScore プラグイン経路でのみ**効きます。MusicXML では
 > 大譜表が `<part-group>` ではなく `<staves>` で暗黙表現されるため、Web 版と CLI では `brace` を
 > 選んでも括弧として認識されません（結果として全パート横断へフォールバックします）。
 
-> 今後追加しうるチェック項目の網羅カタログ（実装可否・優先度・必要な SDK 拡張つき）は
-> [`docs/notation-checklist.md`](./docs/notation-checklist.md)、
-> 音高・拍子・楽器情報を IR に載せる段階プランは
-> [`docs/sdk-extension-plan.md`](./docs/sdk-extension-plan.md) を参照。
+> 今後追加しうるチェック項目の網羅カタログ（実装可否・優先度つき）は
+> [`docs/notation-checklist.md`](./docs/notation-checklist.md) を参照。
 
 ## UI の機能
 
 - **severity バッジ**（error / warning / info）のクリックで絞り込み
 - **検索ボックス**（メッセージ・パート名）で絞り込み
 - **パートフィルタ / ルールフィルタ**（ComboBox）
-- **「問題をコピー」** でフィルタ後の一覧をクリップボードへ
-- **スナップショットタブ** で LintIR（JSON）を確認・コピー（テスト fixture 作成用）
+- **スナップショットタブ** で読み込んだ楽譜のモデル（Score の JSON）を確認・コピー（テスト fixture 作成用）
+- **「コピー」** でフィルタ後の一覧をクリップボードへ（テキスト・Markdown・CSV。Web 版は Markdown / CSV のファイル書き出し）
 - **「アップデート確認」** で最新版をチェックし、新版があればダウンロード導線を表示（上記「アップデート方法」参照）
 
 ## ファイル構成
 
 pnpm monorepo です。ビルド・テスト・リリースは Turborepo + Changesets で行います。
 
-LintIR を **作る側**（入力ソース）と **使う側**（checker）が分かれているのが構成の要点です。
-checker は MuseScore を知らず、同じ LintIR を MusicXML からも組み立てられるので、
-QML プラグイン・CLI・Web 版のどれからでも同じ checker が動きます。
+楽譜を **読む側**（reader）と **検査する側**（ルール）が分かれているのが構成の要点です。
+ルールは MuseScore を知らず、`score-model` の `Score` だけを見ます。同じ `Score` を MuseScore からも
+MusicXML からも組み立てられるので、QML プラグイン・CLI・Web 版のどれからでも同じルールが動きます。
 
-| 場所                                                                          | 中身                                                             |
-| ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `apps/plugin`                                                                 | MuseScore プラグイン（QML と、esbuild で作る ES2017 のバンドル） |
-| `apps/cli`                                                                    | `score-lint` コマンド（MusicXML / .mxl）                         |
-| `apps/web`                                                                    | ブラウザ完結の Web 版（Cloudflare Workers の static assets）     |
-| `packages/core`                                                               | LintIR の型・linter・registry                                    |
-| `packages/checkers`                                                           | checker 群（`core` のみに依存）                                  |
-| `packages/source-musicxml`                                                    | MusicXML / .mxl → LintIR                                         |
-| `packages/source-musescore`                                                   | MuseScore の `curScore` → LintIR                                 |
-| `packages/musescore-api` / `musescore-api-types` / `musescore-plugin-helpers` | MuseScore プラグイン API の型とヘルパ                            |
-| `tools/musescore-api-types-generator`                                         | MuseScore の C++ ヘッダから `musescore-api-types` を生成する     |
-| `scripts/`                                                                    | ベンチマークと CI 用の補助スクリプト                             |
+| 場所                                                        | 中身                                                                                |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `apps/plugin`                                               | MuseScore プラグイン（QML と、esbuild で作る ES2017 のバンドル）                    |
+| `apps/cli`                                                  | `score-lint` コマンド（MusicXML / .mxl）                                            |
+| `apps/web`                                                  | ブラウザ完結の Web 版（Cloudflare Workers の static assets）                        |
+| `packages/score-model`                                      | ソースに依存しない楽譜モデル（Score）・問い合わせ関数・注記の解釈・テスト用ビルダー |
+| `packages/reader-musicxml`                                  | MusicXML / .mxl → Score                                                             |
+| `packages/reader-musescore`                                 | 実行中の MuseScore → Score                                                          |
+| `packages/linter`                                           | ルールの定義（`defineRule`）・エンジン（`createLinter`）・組み込みのルール          |
+| `packages/lint-app`                                         | 設定・並べ替え・件数・出力の整形・スナップショットの書き手（ホスト共通）            |
+| `packages/musescore-api-types` / `musescore-plugin-helpers` | MuseScore プラグイン API の型とヘルパ                                               |
+| `tools/musescore-api-types-generator`                       | MuseScore の C++ ヘッダから `musescore-api-types` を生成する                        |
+| `scripts/`                                                  | ベンチマークと CI 用の補助スクリプト                                                |
 
 ## 使い方
 
@@ -130,7 +129,7 @@ QML プラグイン・CLI・Web 版のどれからでも同じ checker が動き
 
 ## CLI（MusicXML / .mxl）
 
-MuseScore を起動せずに、MusicXML から同じ checker をかけられます。
+MuseScore を起動せずに、MusicXML から同じルールをかけられます。
 
 ```bash
 pnpm build:cli                             # apps/cli/dist/score-lint.mjs を作る
@@ -140,28 +139,30 @@ pnpm lint:score score.musicxml             # ビルドせずに直接実行（ts
 ```
 
 ```
---format=<pretty|json|github>  出力形式（既定: pretty。github は Actions のアノテーション）
+--format=<pretty|json|github|markdown|csv>
+                               出力形式（既定: pretty。github は Actions のアノテーション）
 --json                         --format=json の別名
---dump-ir                      issue ではなく LintIR を JSON 出力
-                               （1 ファイルなら LintIR そのもの、複数なら [{ file, ir }] の配列）
---rule=<id> / --no-rule=<id>   checker の絞り込み（複数指定可）
---rule-option=<id>.<key>=<値>  checker 個別の設定（複数指定可、同じキーは後勝ち）
+--dump-score                   指摘ではなく、読み込んだ Score を JSON 出力
+                               （1 ファイルなら Score そのもの、複数なら [{ file, score }] の配列。
+                               --dump-ir は別名）
+--rule=<id> / --no-rule=<id>   ルールの絞り込み（複数指定可）
+--rule-option=<id>.<key>=<値>  ルール個別の設定（複数指定可、同じキーは後勝ち）
                                複数選択の値はカンマ区切り。指定できる key は --list-rules で確認
 --fail-on=<error|warning|info|none>
                                この severity 以上で終了コード 1（既定: error）
---list-rules                   checker の一覧（設定できる項目もあわせて表示）
+--list-rules                   ルールの一覧（設定できる項目もあわせて表示）
 ```
 
-終了コードは 0（閾値以上の issue なし）/ 1（あり）/ 2（実行エラー）です。
+全オプションは `score-lint --help`。終了コードは 0（閾値以上の指摘なし）/ 1（あり）/ 2（実行エラー）です。
 
-`--dump-ir` の出力は、UI のスナップショットタブがコピーする LintIR と同じ形式なので、
+`--dump-score` の出力は、プラグインのスナップショットタブがコピーする Score と同じ形式なので、
 **MuseScore 経路と MusicXML 経路の突き合わせ**に使えます。
 
 ## Web 版（ブラウザ完結）
 
-MusicXML をドラッグ&ドロップすると、その場で同じ checker が走り、OSMD (OpenSheetMusicDisplay) による
+MusicXML をドラッグ&ドロップすると、その場で同じルールが走り、OSMD (OpenSheetMusicDisplay) による
 楽譜プレビューも見られます（各ファイルの「楽譜プレビュー」を開くと表示、既定では閉じています）。
-MuseScore も Node も要りません。
+MuseScore も Node も要りません。結果は Markdown / CSV でも書き出せます（ブラウザの中でファイルを作るだけで、通信はしません）。
 
 **読み込んだファイルはサーバーに送信されません。** このサイトは Cloudflare Workers の
 static assets だけで構成されており、`wrangler.jsonc` に `main` を書いていないため
@@ -196,63 +197,52 @@ CSP の `style-src 'self'`（`'unsafe-inline'` なし）を維持するため、
 
 ### MusicXML 経路の既知の差分
 
-両経路が同じ LintIR を作れているかは、`profileIR`（`packages/core/src/irProfile.ts`）で
-取った契約プロファイルを両ソースのテストで突き合わせて追跡しています
-（`packages/source-*/tests/conformance.test.ts`）。下記のうち **★** を付けたものが
-そのプロファイルに現れる差分で、埋まるたびにテストの期待値を書き換えていきます。
+どちらの読み込み口でも同じ `Score` になることは、duet の MuseScore 版のモックと MusicXML 版の
+fixture を突き合わせるテスト（`packages/reader-musescore/tests/conformance.test.ts`）で確かめています。
+実際の楽譜では次の差が出ます。
 
-- ★ `scope: "global"`（全パート共通の注記）を作りません。`opening-tempo` /
-  `first-note-dynamics` / `cresc-text-resolution` / `hairpin-target-dynamic` が持つ
-  global スコープへのフォールバックは、MusicXML 経路では通りません。
-- ★ テキスト系イベントの `subtype` を埋めません（MusicXML に相当する情報がないため）。
-  `duplicate-dynamics` / `simultaneous-dynamics` は `textNorm` の比較に劣化します。
-- ★ `expression` / `system_text` の kind を作らず、すべて `staff_text` に落ちます。
-  `rest-annotation` / `tempo-change-resolution` / `coda-segno` の一部の判定が空振りします。
 - `tempo-without-bpm` は、MuseScore が書き出した MusicXML ではほぼ発火しません。書き出し時に
   テンポ表記へ `<sound tempo>` を必ず付けるためです。逆に Sibelius / Finale などが書き出した
   「テンポ語だけで BPM を持たない」MusicXML では発火します。
 - アーティキュレーション名は英語の MuseScore 名（`Staccato` 等）になります。日本語 UI の
   MuseScore が返す名前とは文字列が異なりますが、これを使う
-  `slur-tie-articulation-consistency` は同一 IR 内のパート間比較しかしないため判定は変わりません。
-- `NoteInfo.line`（譜表位置）は「最上線を 0、下方向へ 1 ステップ +1」で算出します。MuseScore
+  `slur-tie-articulation-consistency` は同一 Score 内のパート間比較しかしないため判定は変わりません。
+- `Note.line`（譜表位置）は「最上線を 0、下方向へ 1 ステップ +1」で算出します。MuseScore
   内部の採番と原点が違う可能性がありますが、これを使う `courtesy-accidental` は同一譜表内の
   一致判定しかしないため判定は変わりません。
 - MuseScore で書き出した MusicXML は、MuseScore 自身が記譜を正規化したあとの姿です
   （例: 異音程のタイは取り込み時に `let-ring` へ変換され、`tie-pitch-mismatch` は出なくなる）。
 - パート括弧（`<part-group>`）はスコアによっては書き出されません。その場合
-  `meta.partGroups` は空になり、比較範囲を「括弧内のみ」にしても全パート横断で判定されます。
+  `Score.partGroups` は空になり、比較範囲を「括弧内のみ」にしても全パート横断で判定されます。
 
 ## 設定の永続化
 
-設定は QML の 2 つのプロパティに JSON 文字列で保存されます。
-これにより新しい checker を追加しても QML を触る必要はありません（後述の追加手順参照）。
+設定は「既定値から変えた分だけ」を JSON で保存します（`packages/lint-app` の `serializeSettings` /
+`parseSettings`）。ルールの既定値を変えても、触っていない設定には新しい既定値が効きます。
+未知のルール・キーや型の合わない値は読み込み時に捨てて既定値に戻します。
 
-- `rulesJson` — checker の ON/OFF
-- `ruleOptionsJson` — checker 個別の設定（`options` 宣言を持つ checker のみ）
-
-ON/OFF 側は値を真偽値として読み書きするので、両者は必ず別プロパティに分けます。
+- プラグイン: QML の 2 つのプロパティ `rulesJson`（ルールの ON/OFF）と `ruleOptionsJson`（ルール個別の設定）に保存します。
+  新しいルールを足しても QML は触りません。
+- Web 版: localStorage の `musescore-linter:rule-overrides` と `musescore-linter:rule-options` に保存します。
 
 > プラグイン側の保持先は `QtObject` なので、**設定はプラグインを閉じると消えます**（セッション内のみ）。
 > セッションをまたいで残したい場合は `Qt.labs.settings` の `Settings` に置き換える必要があります。
 
-Web 版は `musescore-linter:rule-overrides` と `musescore-linter:rule-options` の 2 キーに分けて
-localStorage に保存し、どちらも「既定から変えたぶんだけ」を残すのでブラウザを閉じても残ります。
+## 新しいルールの追加手順
 
-## 新しい checker の追加手順
+詳細は `/rule-add` skill と `.claude/rules/rule-contract.md` を参照。
 
-詳細は `/checker-add` skill と `.claude/rules/checker-contract.md` を参照。
-
-1. `packages/checkers/src/xxxChecker.ts` を作成し `export const xxxChecker = { ... }` を定義
-   - 必須プロパティ: `id, name, description, category, severity, defaultEnabled, run(ir)`
-   - Issue は `@score-linter/core` の `createIssue(checker, fields)` 経由で生成
-   - on/off ペア型なら `packages/checkers/src/base/textPairChecker.ts` の `createTextPairChecker()` を利用
-2. `packages/checkers/src/index.ts` に 2 箇所追加する（**この 1 ファイルで完結する**）: 冒頭の `import`
-   文と、`ALL_CHECKERS` 配列へのエントリ。配列の並び順がそのまま実行順・検出結果の並び順に
-   なるので、関連しあうペア（pizz./arco など）の隣に入れること
-3. `packages/checkers/tests/checkers.test.ts` にテストを追加（fixture は `tests/helpers/irBuilder.ts` の `buildIR({...})` で構築）
+1. `packages/linter/src/rules/` の、主題の近いファイル（`tempo.ts`・`dynamics.ts`・`notation.ts` など）に
+   `defineRule({ id, meta, options, run })` で定義する。指摘は `run` の `report({ at, message, detail })` で返す。
+   新しい奏法の on/off ペアなら `techniquePairs.ts` の `techniquePair()` に設定を渡す
+   （奏法の表記は `packages/score-model/src/interpret.ts` が解釈する）
+2. `packages/linter/src/rules/index.ts` の `builtinRules` に足す。並びがそのまま実行順・設定画面の並びになるので、
+   関連するペアの隣に入れる
+3. `packages/linter/tests/` の対応するテストファイルに、`tests/helpers.ts` の `cleanScore()` と `runRule()` で
+   正例・負例を書く
 4. README の「チェック項目」表を更新
 
-**QML も `ScoreLinter.qml` も触る必要はありません。**設定 UI は checker のメタデータ一覧から自動生成されます。
+**QML も `ScoreLinter.qml` も Web の UI も触る必要はありません。**設定 UI は各ルールの `meta` と `options` から自動生成されます。
 
 ## テストの実行
 
@@ -261,7 +251,8 @@ pnpm test   # 全パッケージで vitest を実行
 pnpm generate:types   # MuseScore の C++ ヘッダから packages/musescore-api-types を生成し直す（版は tools/musescore-api-types-generator/config.json の ref）
 ```
 
-各 checker は `tests/helpers/irBuilder.ts` で構築した最小 LintIR に対して挙動を検証します。MuseScore を起動せずに回帰テストが可能です。
+ルールは `buildScore()` で組んだ最小の `Score` に対して検証します。MuseScore を起動せずに回帰テストが可能です。
+CLI の `apps/cli/tests/golden.test.ts` は、3 曲の検出結果を `fixtures/golden/` と突き合わせます。
 
 ## CI / リリースフロー
 
@@ -310,45 +301,22 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 
 ## パフォーマンスガイド
 
-新しい checker を書くときは、`ir.index` を優先的に活用してください。
+ルールで楽譜を引くときは、`score-model` の問い合わせ関数（`annotationsOn`・`chordsOnStaff`・`slursOn` など）を使います。
+結果は `Score` ごとに `WeakMap` で覚えられ、使われた分だけ計算されるので、複数のルールが同じ問い合わせをしても
+前処理は 1 回です。`score.staves[i].voices` を全ルールが毎回走査するのは避けてください。
 
-- `eventsOfKind` / `eventsOnStaff` / `eventsAtTick`（`@score-linter/core`）、global scope も含めるなら `eventsForStaff`（`packages/checkers/src/base/query.ts`）で必要なイベントだけを取り出す
-- 全 events の線形走査は避ける
-- 共有できる前処理（例: 各 staff の firstChord）は `ir.derived` に 1 回だけ計算して再利用する（`packages/core/src/linter.ts` の `withDerived` に追加）
+## Score の概要
 
-## LintIR の概要
+`Score` は、パート・譜表（声部ごとの音符と休符、小節線）・小節・スパナー（スラー・タイ・ヘアピン）・
+括弧・注記を持つ純データです。注記には、テキストを解釈した `Directive`（奏法・強弱・テンポ・反復記号など）が付きます。
+型の定義は `packages/score-model/src/types.ts`。
 
-```ts
-{
-  events: [                      // 全イベントの単一配列（source of truth）
-    // kind を判別子にした共用体。chord / rest / bar_line / テキスト系で持つフィールドが違う
-    { id, kind, tick, measure, staffIdx, voice, scope, ...kind ごとのフィールド }
-  ],
-  index: {                       // O(1) 検索用
-    byTick:         { [tick]:           [eventId] },
-    byKind:         { [kind]:           [eventId] },
-    byStaff:        { [staffIdx]:       [eventId] },   // staffIdx === -1 は global scope
-    byStaffAndKind: { [staffIdx]: { [kind]: [eventId] } }
-  },
-  meta: {
-    parts: [{ staffIdx, partId, partName }],
-    firstMusicTickByStaff: [tick|null, ...],
-    lastTick: number,
-    hairpins: [{ staffIdx, startTick, endTick }]
-  },
-  derived: {                     // IndexedIR のみ。runAllCheckers が withDerived で 1 回だけ構築
-    firstChordByStaff, articulationsByChordId, slursByStaff, tiesByStaff,
-    rhythmByStaffMeasure, chordsByStaffMeasure
-  }
-}
-```
-
-## 設計メモ
-
-- `staves` / `unresolvedAnnotations` は廃止済み。global scope のイベントは `index.byStaff[-1]` で参照する。
-- MuseScore API の列挙値は `packages/core/src/enumRegistry.ts` で canonical な文字列（`"chord"`, `"tempo_text"` など）へ正規化し、checker は文字列比較のみを行う。kind の文字列は `ElementKind` / `BarlineKind` のリテラル型で、語彙外の値は型エラーになる。
-- Issue 型は `@score-linter/core` の `createIssue(checker, fields)` で生成し、severity/category は checker のメタデータから自動付与。
-- checker 単体で例外が出ても他の checker は実行継続し、`ruleId: "internal"` の issue として UI に表示される。
+- 位置は譜表・小節の通し番号（`serial`）・tick で指します。楽譜に表示されている小節番号（`label`）はアウフタクトなどで
+  通し番号とずれるので、表示のときだけ使います。
+- ルールのメッセージにはパート名と小節番号を入れません。他の位置を指したいときは `{{measure:key}}`・`{{part:key}}`
+  のプレースホルダで `detail` の値を指し、表示時に `lint-app` が解決します。
+- ルールが例外を投げても他のルールは実行され、`ruleId: "internal"` の指摘として表示されます。
+  `meta.severity` より重い指摘を報告した場合も内部エラーになります。
 
 ## 注意点
 

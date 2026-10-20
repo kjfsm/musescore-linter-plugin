@@ -1,5 +1,5 @@
 ---
-description: throw / never-catch 規約。Checker の run() は例外を throw させてよい
+description: throw / never-catch 規約。ルールの run() は例外を throw させてよい
 paths:
   - "packages/**/src/**"
   - "apps/**/src/**"
@@ -7,34 +7,37 @@ paths:
 
 # エラー処理の規約
 
-## Checker 内での例外処理
+## ルール内での例外処理
 
-**Checker の `run(ir)` 関数内で `try/catch` を書いてはいけない。**
+**ルールの `run` の中で `try/catch` を書いてはいけない。**
 
-`linter.runAllCheckers` がすべての checker を wrap して catch する。checker が例外を throw しても他の checker は走り続け、ユーザーには「この checker が失敗した」という情報が返る。個別 catch で握りつぶすと、バグが静かに隠れる。
+`createLinter` の `lint` が各ルールの実行を wrap して catch する。ルールが例外を throw しても
+他のルールは走り続け、`ruleId: "internal"`・severity `error` の指摘として「このルールが失敗した」と返る。
+例外を投げたルールがそれまでに `report` した指摘は残らない。個別に catch して握りつぶすと、バグが静かに隠れる。
 
-```js
+```ts
 // ❌ 違反: バグが隠れる
-run(ir) {
+run({ score, report }) {
   try {
-    return doCheck(ir);
-  } catch (e) {
-    return [];
+    doCheck(score, report);
+  } catch {
+    return;
   }
 }
 
-// ✅ 正しい: 例外は linter が catch する
-run(ir) {
-  return doCheck(ir);
+// ✅ 正しい: 例外はエンジンが catch する
+run({ score, report }) {
+  doCheck(score, report);
 }
 ```
 
 ## 一般的な throw / Result の使い分け
 
-| 状況 | パターン |
-|------|---------|
-| 予測される失敗（バリデーション等） | `{ ok: false, error: { kind, ... } }` Result 型 |
-| 本当に例外的 / 想定外 | 生 `throw new Error(...)` |
+| 状況                                         | パターン                                       |
+| -------------------------------------------- | ---------------------------------------------- |
+| 人が打った値の検証（CLI の引数・設定の文字列） | `{ ok: false, error }` の結果型（`parseOptionText`） |
+| 保存値の読み込み（壊れていても続けたい）      | 捨てて既定値に戻す（`resolveOptions`・`parseSettings`）。投げない |
+| 本当に例外的 / 想定外                        | 生 `throw new Error(...)`                      |
 
 ## やってはいけないこと
 
