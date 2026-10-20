@@ -187,6 +187,8 @@ importers:
         specifier: workspace:*
         version: link:../musescore-api-types
 
+  packages/score-model: {}
+
   packages/source-musescore:
     dependencies:
       '@score-linter/core':

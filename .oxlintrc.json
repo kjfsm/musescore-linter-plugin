@@ -31,6 +31,24 @@
   ],
   "overrides": [
     {
+      // score-model はどのソースにもホストにも依存しない。境界の本体は package.json の依存宣言で、
+      // ここは宣言を書き足されたときの保険。
+      "files": ["packages/score-model/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*"],
+                "message": "score-model は他のパッケージに依存しない。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
       // これまで package.json の記述と人の注意力だけで守られていたので、
       // import を機械的に塞いでおく。MuseScore を触ってよいのは
