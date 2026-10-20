@@ -24,6 +24,9 @@
     "packages/score-model": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
+    "packages/reader-musicxml": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
     "packages/core": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },

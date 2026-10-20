@@ -1,0 +1,15 @@
+{
+  "name": "@score-linter/reader-musicxml",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@score-linter/score-model": "workspace:*",
+    "fast-xml-parser": "^5.10.1",
+    "fflate": "^0.8.3"
+  }
+}

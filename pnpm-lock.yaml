@@ -187,6 +187,18 @@ importers:
         specifier: workspace:*
         version: link:../musescore-api-types
 
+  packages/reader-musicxml:
+    dependencies:
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../score-model
+      fast-xml-parser:
+        specifier: ^5.10.1
+        version: 5.10.1
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
+
   packages/score-model: {}
 
   packages/source-musescore:

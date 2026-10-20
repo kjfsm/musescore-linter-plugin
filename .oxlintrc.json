@@ -49,6 +49,23 @@
       }
     },
     {
+      // reader-musicxml が読んでよいのは score-model だけ。linter やホストを知らない。
+      "files": ["packages/reader-musicxml/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*", "!@score-linter/score-model"],
+                "message": "reader-musicxml は score-model だけに依存する。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
       // これまで package.json の記述と人の注意力だけで守られていたので、
       // import を機械的に塞いでおく。MuseScore を触ってよいのは
