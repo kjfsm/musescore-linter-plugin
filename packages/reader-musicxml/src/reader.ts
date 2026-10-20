@@ -4,6 +4,7 @@ import type {
   Fraction,
   Note,
   PartGroup,
+  RepeatMark,
   Score,
   TimeSignature,
 } from "@score-linter/score-model";
@@ -123,6 +124,26 @@ function metronomeText(metronome: XNode): string {
   const perMinute = childText(metronome, "per-minute") ?? "";
   const dot = hasChild(metronome, "beat-unit-dot") ? "." : "";
   return `${unit}${dot} = ${perMinute}`.trim();
+}
+
+// <sound> の再生の指示のうち、反復記号として読めるもの
+const SOUND_REPEATS: readonly [string, RepeatMark][] = [
+  ["segno", "segno"],
+  ["coda", "coda"],
+  ["fine", "fine"],
+  ["dalsegno", "dal-segno"],
+  ["dacapo", "da-capo"],
+  ["tocoda", "to-coda"],
+];
+
+function soundRepeats(sound: XNode): RepeatMark[] {
+  const marks: RepeatMark[] = [];
+  for (const [name, mark] of SOUND_REPEATS) {
+    const value = attr(sound, name);
+    // dacapo は yes/no、それ以外は飛び先のラベル（空でなければよい）
+    if (value !== undefined && value !== "" && value !== "no") marks.push(mark);
+  }
+  return marks;
 }
 
 /** repeat が付いていれば bar-style より優先する。どちらも無ければ null。 */
@@ -260,7 +281,10 @@ class PartWalker {
       this.chordAnchorTick = 0;
       this.currentChord = null;
       if (this.draft.measureLengths[i] === undefined) this.draft.measureLengths[i] = 0;
-      if (this.ctx.isFirstPart) this.draft.labels[i] = attr(measure, "number");
+      // MusicXML 4.0 の text 属性が表示される番号。number は識別子で、表示とずれることがある
+      if (this.ctx.isFirstPart) {
+        this.draft.labels[i] = attr(measure, "text") ?? attr(measure, "number");
+      }
       for (const node of childrenOf(measure)) this.handleMeasureChild(node);
       this.growMeasure();
       if (this.timeSignature !== undefined && this.draft.timeSignatures[i] === undefined) {
@@ -513,10 +537,10 @@ class PartWalker {
             this.emitAnnotation(textOf(item), { kind: "rehearsal" }, staff, localTick);
             break;
           case "segno":
-            this.emitAnnotation("Segno", { repeat: "segno" }, staff, localTick);
+            this.emitAnnotation("Segno", { repeats: ["segno"] }, staff, localTick);
             break;
           case "coda":
-            this.emitAnnotation("Coda", { repeat: "coda" }, staff, localTick);
+            this.emitAnnotation("Coda", { repeats: ["coda"] }, staff, localTick);
             break;
           case "wedge":
             this.handleWedge(item, staff, localTick);
@@ -535,10 +559,13 @@ class PartWalker {
           : null;
 
     const text = words.join(" ").trim() || (metronome ? metronomeText(metronome) : "");
-    const hints: AnnotationHints =
-      bpm !== null || metronome !== undefined
-        ? { kind: "tempo", bpm: bpm === null ? null : Math.round(bpm) }
-        : {};
+    const repeats = sound ? soundRepeats(sound) : [];
+    const hints: AnnotationHints = {
+      ...(bpm !== null || metronome !== undefined
+        ? { kind: "tempo" as const, bpm: bpm === null ? null : Math.round(bpm) }
+        : {}),
+      ...(repeats.length > 0 ? { repeats } : {}),
+    };
     this.emitAnnotation(text, hints, staff, localTick);
   }
 

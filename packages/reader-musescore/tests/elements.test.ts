@@ -3,6 +3,15 @@ import { describe, expect, it } from "vitest";
 
 import { barlineKindOf, dynamicText, notesOf, tiePitches } from "../src/elements.js";
 
+describe("dynamicText（修飾語付き）", () => {
+  it("修飾語の付いた強弱記号でも、記号の部分だけを文字に直す", () => {
+    expect(dynamicText("dynamicForte espr.")).toBe("f espr.");
+    expect(dynamicText("più dynamicForte")).toBe("più f");
+    expect(dynamicText("dynamicMezzodynamicPiano")).toBe("mp");
+    expect(dynamicText("dynamicPPP")).toBe("ppp");
+  });
+});
+
 describe("dynamicText", () => {
   it("SMuFL 名を強弱記号の文字に直す", () => {
     expect(dynamicText("dynamicForte")).toBe("f");

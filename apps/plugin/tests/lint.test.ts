@@ -41,7 +41,7 @@ describe("lintCurrentScore", () => {
   it("件数とパート名を表示用に返す", () => {
     const run = lintCurrentScore(withScore(), NO_SETTINGS, false);
     expect(run.counts.warning).toBe(run.issues.filter((i) => i.severity === "warning").length);
-    expect(run.partNames).toEqual(["Violin I", "Violin II"]);
+    expect(run.parts.map((p) => p.name)).toEqual(["Violin I", "Violin II"]);
     expect(run.perfText).toBe("");
   });
 
@@ -57,9 +57,15 @@ describe("lintCurrentScore", () => {
     expect(text).toContain("pizz-arco");
   });
 
-  it("型の生成元と版が違えば警告を返す", () => {
+  it("型の生成元と版が違えば、警告を指摘として先頭に置き、件数にも数える", () => {
     const old = { ...host, curScore: duetScore(), mscoreMajorVersion: 3 } as unknown as MuseScore;
-    expect(lintCurrentScore(old, NO_SETTINGS, false).warning).toMatch(/バージョン不一致/);
+    const run = lintCurrentScore(old, NO_SETTINGS, false);
+    expect(run.issues[0]).toMatchObject({
+      ruleId: "internal-version-mismatch",
+      severity: "warning",
+    });
+    expect(run.issues[0]?.message).toMatch(/バージョン不一致/);
+    expect(run.counts.warning).toBe(run.issues.filter((i) => i.severity === "warning").length);
   });
 
   it("楽譜が開かれていなければ投げる", () => {

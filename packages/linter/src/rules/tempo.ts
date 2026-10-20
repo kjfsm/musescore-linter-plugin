@@ -1,5 +1,10 @@
 import type { Annotation } from "@score-linter/score-model";
-import { annotationsAffecting, firstEventTick, stableSortBy } from "@score-linter/score-model";
+import {
+  annotationsAffecting,
+  firstEventTick,
+  lastEventMeasure,
+  stableSortBy,
+} from "@score-linter/score-model";
 
 import { defineRule } from "../engine.js";
 import { directiveOf, ofKind, staffOfScope } from "./support.js";
@@ -125,24 +130,25 @@ export const tempoChangeResolution = defineRule({
     );
 
     // 曲尾の rit. は a tempo を要らないので、最後の音楽小節は見ない
-    let lastMusicMeasure = 0;
-    for (const staff of score.staves) {
-      for (const voice of staff.voices) {
-        for (const e of voice.events)
-          if (e.measure > lastMusicMeasure) lastMusicMeasure = e.measure;
-      }
-    }
+    const lastMusicMeasure = lastEventMeasure(score);
 
     const changes = (a: Annotation, change: "gradual" | "reset") =>
       a.directives.some((d) => d.type === "tempo-change" && d.change === change);
     const resolves = (a: Annotation) =>
       changes(a, "reset") || (a.kind === "tempo" && bpmOf(a) !== null);
 
+    // latestResolveAfter[i] は i より後ろにある解除のうち最も遅い tick
+    const latestResolveAfter: number[] = [];
+    let latest = Number.NEGATIVE_INFINITY;
+    for (let i = events.length - 1; i >= 0; i--) {
+      latestResolveAfter[i] = latest;
+      if (resolves(events[i]!)) latest = Math.max(latest, events[i]!.tick);
+    }
+
     for (let i = 0; i < events.length; i++) {
       const ev = events[i]!;
       if (!changes(ev, "gradual")) continue;
-      const resolved = events.slice(i + 1).some((next) => next.tick > ev.tick && resolves(next));
-      if (resolved) continue;
+      if (latestResolveAfter[i]! > ev.tick) continue;
       if (lastMusicMeasure > 0 && ev.measure >= lastMusicMeasure) continue;
 
       const label = ev.text.trim();

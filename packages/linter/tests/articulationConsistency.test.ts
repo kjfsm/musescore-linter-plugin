@@ -78,18 +78,7 @@ describe("slur-tie-articulation-consistency", () => {
     expect(run(score)).toHaveLength(0);
   });
 
-  it("上/下スタッカートなど配置違いは同一視して検出しない", () => {
-    const score = buildScore({
-      parts: names("Vc", "Cb"),
-      chords: [
-        { staff: 0, tick: 0, duration: q, articulations: ["上スタッカート"] },
-        { staff: 1, tick: 0, duration: q, articulations: ["下スタッカート"] },
-      ],
-    });
-    expect(run(score)).toHaveLength(0);
-  });
-
-  it("正規化しても異なるアーティキュレーションなら検出する", () => {
+  it("異なるアーティキュレーションなら検出する", () => {
     const score = buildScore({
       parts: names("Vc", "Cb"),
       chords: [

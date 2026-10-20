@@ -118,7 +118,7 @@ export interface AnnotationHints {
   bpm?: number | null;
   dynamic?: { mark: string; modifier: string };
   technique?: Technique;
-  repeat?: RepeatMark;
+  repeats?: readonly RepeatMark[];
 }
 
 function validBpm(bpm: number | null | undefined): number | null {
@@ -158,8 +158,8 @@ export function interpretAnnotation(
   if (GRADUAL_TEMPO_RE.test(norm)) directives.push({ type: "tempo-change", change: "gradual" });
   if (TEMPO_RESET_RE.test(norm)) directives.push({ type: "tempo-change", change: "reset" });
 
-  const marks = repeatMarksOf(norm);
-  if (hints.repeat && !marks.includes(hints.repeat)) marks.unshift(hints.repeat);
+  const marks = [...(hints.repeats ?? [])];
+  for (const mark of repeatMarksOf(norm)) if (!marks.includes(mark)) marks.push(mark);
   for (const mark of marks) directives.push({ type: "repeat", mark });
 
   return { kind, directives };

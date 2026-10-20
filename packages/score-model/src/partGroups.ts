@@ -1,3 +1,4 @@
+import { stableSortBy } from "./sort.js";
 import type { PartGroup } from "./types.js";
 
 /**
@@ -18,5 +19,5 @@ export function normalizePartGroups(groups: readonly PartGroup[]): PartGroup[] {
     seen.add(key);
     out.push({ ...group });
   }
-  return out.sort((a, b) => a.firstStaff - b.firstStaff || b.staffCount - a.staffCount);
+  return stableSortBy(out, (a, b) => a.firstStaff - b.firstStaff || b.staffCount - a.staffCount);
 }

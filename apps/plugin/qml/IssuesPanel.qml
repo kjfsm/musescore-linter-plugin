@@ -7,8 +7,10 @@ Item {
 
     property var issuesList: []
     property bool hasRun: false
-    // パート名の文字列の配列
+    // [{ id, name }]。同じ名前のパートも別に並ぶので、絞り込みは id で行う
     property var parts: []
+    // 重さごとの件数。Bundle 側が数えたもの
+    property var counts: ({ error: 0, warning: 0, info: 0 })
     property var checkers: []
 
     // フィルタ状態
@@ -23,14 +25,6 @@ Item {
     signal copyRequested(string format, var issues)
     signal jumpRequested(var issue)
 
-    function countBySeverity(sev) {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) {
-            if (issuesList[i].severity === sev) n++;
-        }
-        return n;
-    }
-
     function filteredIssues() {
         var out = [];
         var needle = (searchText || "").toLowerCase();
@@ -39,7 +33,7 @@ Item {
             if (it.severity === "error"   && !showError)   continue;
             if (it.severity === "warning" && !showWarning) continue;
             if (it.severity === "info"    && !showInfo)    continue;
-            if (partFilter !== "" && it.partName !== partFilter) continue;
+            if (partFilter !== "" && it.partId !== partFilter) continue;
             if (ruleFilter !== "" && it.ruleId   !== ruleFilter) continue;
             if (needle !== "") {
                 var hay = ((it.message || "") + " " + (it.partName || "")).toLowerCase();
@@ -61,19 +55,19 @@ Item {
 
             SeverityBadge {
                 severity: "error"
-                count: countBySeverity("error")
+                count: root.counts.error
                 active: showError
                 onClicked: showError = !showError
             }
             SeverityBadge {
                 severity: "warning"
-                count: countBySeverity("warning")
+                count: root.counts.warning
                 active: showWarning
                 onClicked: showWarning = !showWarning
             }
             SeverityBadge {
                 severity: "info"
-                count: countBySeverity("info")
+                count: root.counts.info
                 active: showInfo
                 onClicked: showInfo = !showInfo
             }
@@ -104,11 +98,11 @@ Item {
                 font.pixelSize: 11
                 model: {
                     var m = ["パート ▾"];
-                    for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i]);
+                    for (var i = 0; i < root.parts.length; i++) m.push(root.parts[i].name);
                     return m;
                 }
                 onCurrentIndexChanged: {
-                    root.partFilter = currentIndex === 0 ? "" : model[currentIndex];
+                    root.partFilter = currentIndex === 0 ? "" : root.parts[currentIndex - 1].id;
                 }
             }
 
@@ -235,7 +229,7 @@ Item {
                         if (!root.showError)   f.push("ERROR 非表示");
                         if (!root.showWarning) f.push("WARN 非表示");
                         if (!root.showInfo)    f.push("INFO 非表示");
-                        if (root.partFilter)   f.push("パート: " + root.partFilter);
+                        if (root.partFilter)   f.push("パート: " + partCombo.currentText);
                         if (root.ruleFilter)   f.push("ルール: " + root.ruleFilter);
                         if (root.searchText)   f.push("\"" + root.searchText + "\"");
                         return f.join("  ·  ");

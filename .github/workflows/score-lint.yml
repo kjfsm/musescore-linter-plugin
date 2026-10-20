@@ -109,7 +109,7 @@ jobs:
           mkdir -p build/selfcheck
           xvfb-run -a build/musescore/AppRun \
             -o build/selfcheck/duet.musicxml \
-            packages/source-musicxml/tests/fixtures/duet.mscz
+            packages/reader-musicxml/tests/fixtures/duet.mscz
           test -s build/selfcheck/duet.musicxml
           ./apps/cli/dist/score-lint.mjs --fail-on=none build/selfcheck/duet.musicxml
 

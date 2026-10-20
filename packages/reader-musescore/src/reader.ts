@@ -56,6 +56,8 @@ export interface MuseScoreOrigins {
 export interface MuseScoreRead {
   score: Score;
   origins: MuseScoreOrigins;
+  /** 読み取りの途中で失敗した小節の通し番号。その小節の要素は途中までしか入っていない。 */
+  unreadMeasures: number[];
 }
 
 function readParts(score: MsScore): PartInit[] {
@@ -203,7 +205,9 @@ function readStaff(
     builder.addChord(staff, voice, {
       ...common,
       notes: notesOf(el),
-      articulations: getArticulationNames(el),
+      // subtypeName() は符尾の向きで「上スタッカート」「下スタッカート」のような配置違いを返すが、
+      // 記号としては同じ
+      articulations: getArticulationNames(el).map((name) => name.replace(/^[上下]/, "")),
     });
     for (const note of el.notes ?? []) {
       const tie = note.tieForward;
@@ -229,13 +233,14 @@ function readStaff(
 }
 
 /**
- * 実行中の MuseScore の楽譜から Score を作る。1 小節の読み取りに失敗しても、その小節を
- * 飛ばして続ける（小節は数えるので、以降の通し番号はずれない）。
+ * 実行中の MuseScore の楽譜から Score を作る。1 小節の読み取りに失敗しても残りの小節は読み続け
+ * （小節は数えるので、以降の通し番号はずれない）、失敗した小節を `unreadMeasures` で返す。
  */
 export function readMuseScore(helpers: ConnectedHelpers, msScore: MsScore): MuseScoreRead {
   const builder = createScoreBuilder(readParts(msScore));
   readPartGroups(msScore, helpers, builder);
   const origins: MuseScoreOrigins = { measures: [] };
+  const unreadMeasures: number[] = [];
 
   let serial = 0;
   let nextStart = 0;
@@ -263,11 +268,11 @@ export function readMuseScore(helpers: ConnectedHelpers, msScore: MsScore): Muse
           readStaff(seg, serial, staff, helpers, builder);
         }
       }
-    } catch (error) {
-      // 壊れた 1 小節のために楽譜全体の結果を失わない
-      console.warn(`[ScoreLinter] ${serial} 小節目の読み取りに失敗: ${error}`);
+    } catch {
+      // 壊れた 1 小節のために楽譜全体の結果を失わない。失敗は呼び出し側が利用者に伝える。
+      unreadMeasures.push(serial);
     }
   }
 
-  return { score: builder.finish(), origins };
+  return { score: builder.finish(), origins, unreadMeasures };
 }

@@ -159,3 +159,46 @@ describe("tempo-change-resolution", () => {
     expect(runRule(tempoChangeResolution, score)).toEqual([]);
   });
 });
+
+describe("パートと楽譜全体に付いたテンポの注記", () => {
+  it("tempo-without-bpm はパートの注記をパートの最初の譜表に、楽譜全体の注記を譜表なしで報告する", () => {
+    const score = cleanScore({
+      annotations: [
+        { partId: "P2", measure: 2, tick: 480, text: "Adagio", kind: "tempo" },
+        { measure: 3, tick: 960, text: "Presto", kind: "tempo" },
+      ],
+    });
+    const issues = runRule(tempoWithoutBpm, score);
+    expect(issues.map((i) => i.at)).toEqual([
+      { partId: "P2", staff: 1, measure: 2, tick: 480 },
+      { partId: null, staff: null, measure: 3, tick: 960 },
+    ]);
+  });
+
+  it("tempo-change-resolution はパートの注記も楽譜全体の注記も見て、どちらでも解除できる", () => {
+    const later = { staff: 0, tick: 1920, measure: 3 };
+    const partRit = cleanScore({
+      annotations: [{ partId: "P2", measure: 2, tick: 480, text: "rit." }],
+      chords: [later],
+    });
+    expect(runRule(tempoChangeResolution, partRit)[0]?.at).toMatchObject({ staff: 1, measure: 2 });
+
+    const scoreRit = cleanScore({
+      annotations: [{ measure: 2, tick: 480, text: "rit." }],
+      chords: [later],
+    });
+    expect(runRule(tempoChangeResolution, scoreRit)[0]?.at).toMatchObject({
+      staff: null,
+      measure: 2,
+    });
+
+    const resolvedByScore = cleanScore({
+      annotations: [
+        { partId: "P2", measure: 2, tick: 480, text: "rit." },
+        { measure: 2, tick: 960, text: "a tempo" },
+      ],
+      chords: [later],
+    });
+    expect(runRule(tempoChangeResolution, resolvedByScore)).toEqual([]);
+  });
+});

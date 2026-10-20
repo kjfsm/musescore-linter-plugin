@@ -633,3 +633,33 @@ describe("readMusicXml: エラー", () => {
     expect(() => readMusicXml("<html><body/></html>")).toThrow(/score-partwise/);
   });
 });
+
+describe("readMusicXml: <sound> の反復記号と小節の表示番号", () => {
+  it("<sound> の dacapo・dalsegno・fine を反復記号の手がかりにする", () => {
+    const score = readMusicXml(
+      scoreXml(
+        measure(
+          `<direction><direction-type><words>Fine</words></direction-type><sound fine="yes"/></direction>
+          <direction><direction-type><words>ritorno</words></direction-type><sound dalsegno="s1"/></direction>
+          <direction><direction-type><words>volta</words></direction-type><sound dacapo="no"/></direction>
+          ${quarterNote("C", 4)}`,
+        ),
+      ),
+    );
+    const marks = score.annotations.map((a) =>
+      a.directives.flatMap((d) => (d.type === "repeat" ? [d.mark] : [])),
+    );
+    expect(marks).toEqual([["fine"], ["dal-segno"], []]);
+  });
+
+  it("measure の text 属性があればそれを表示上の番号にする", () => {
+    const score = readMusicXml(
+      scoreXml(
+        `<measure number="X1" text="1a">
+          <attributes><divisions>1</divisions></attributes>${quarterNote("C", 4)}
+        </measure>${measure(quarterNote("D", 4), 2)}`,
+      ),
+    );
+    expect(score.measures.map((m) => m.label)).toEqual(["1a", "2"]);
+  });
+});

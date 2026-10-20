@@ -8,12 +8,6 @@ import { bracketGroupKeyOf } from "./support.js";
 const VOICE = 0;
 
 /**
- * MuseScore の subtypeName() は符尾の向きで「上スタッカート」「下スタッカート」のような
- * 配置違いを返すが、記号としては同じなので接頭辞を落として比べる。
- */
-const normalizeArticulation = (name: string): string => name.replace(/^[上下]/, "");
-
-/**
  * 小節の和音ごとの「スラーに入るか・タイに入るか・アーティキュレーション」を 1 つの文字列に
  * したもの。同じリズムなら和音の tick が揃うので、この文字列が一致すれば記号も一致している。
  */
@@ -22,7 +16,7 @@ function profileOf(score: Score, staff: number, measure: number): string {
   const ties = tiesOn(score, staff);
   return chordsIn(score, staff, VOICE, measure)
     .map((ch) => {
-      const arts = ch.articulations.map(normalizeArticulation).sort().join("+");
+      const arts = [...ch.articulations].sort().join("+");
       const slur = spanCovers(slurs, VOICE, ch.tick) ? "S" : "-";
       const tie = spanCovers(ties, VOICE, ch.tick) ? "T" : "-";
       return `${ch.tick}:${slur}:${tie}:${arts}`;

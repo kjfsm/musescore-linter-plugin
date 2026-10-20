@@ -43,6 +43,6 @@ export function exportResults(
   const files: FileResult[] = results.map(({ file, issues }) => ({ file, issues }));
   return format === "csv"
     ? // Excel が UTF-8 と判断できるよう BOM を付ける
-      { text: `﻿${formatCsv(files)}`, mimeType: "text/csv", extension: "csv" }
+      { text: `\uFEFF${formatCsv(files)}`, mimeType: "text/csv", extension: "csv" }
     : { text: formatMarkdown(files), mimeType: "text/markdown", extension: "md" };
 }

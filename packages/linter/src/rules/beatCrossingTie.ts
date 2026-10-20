@@ -225,7 +225,7 @@ export const beatCrossingTie = defineRule({
           if (!crossesBarline) {
             // 小節の頭から始まる音符は、中央をまたいでも内部の構造を隠さない
             if (onset === 0) continue;
-            // 次の境界までは beatUnit - rem。除算 1 回でまたぎの判定と拍頭の判定を兼ねる。
+            // 次の境界までは beatUnit - rem
             if (rem + durTicks <= meter.beatUnit) continue;
             if (!crossesPrimary && rem === 0) continue;
           }

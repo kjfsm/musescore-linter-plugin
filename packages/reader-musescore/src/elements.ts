@@ -28,12 +28,16 @@ const SMUFL_DYNAMIC: Record<string, string> = {
  * 強弱記号のテキストを人が読む文字に直す。MuseScore の Dynamic の plainText は SMuFL の
  * シンボル名が連なった形で届く（「mp」は "dynamicMezzodynamicPiano"）。
  */
+// 長い名前から試す（dynamicPP が dynamicPPP の頭に当たらないように）
+const SMUFL_NAME_RE = new RegExp(
+  Object.keys(SMUFL_DYNAMIC)
+    .sort((a, b) => b.length - a.length)
+    .join("|"),
+  "g",
+);
+
 export function dynamicText(raw: string): string {
-  return raw
-    .split(/(?=dynamic[A-Z])/)
-    .filter(Boolean)
-    .map((t) => SMUFL_DYNAMIC[t] ?? t)
-    .join("");
+  return raw.replace(SMUFL_NAME_RE, (name) => SMUFL_DYNAMIC[name] ?? name);
 }
 
 export function notesOf(chord: Chord): Note[] {

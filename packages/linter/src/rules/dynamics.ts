@@ -64,7 +64,8 @@ export const duplicateDynamics = defineRule({
         const prev: Annotation | null = previous;
         previous = a;
         if (!prev || text === "" || text !== normalizeText(prev.text)) continue;
-        if (CONSECUTIVE_ALLOWED.has(text)) continue;
+        const dynamic = directiveOf(a, "dynamic");
+        if (dynamic && dynamic.modifier === "" && CONSECUTIVE_ALLOWED.has(dynamic.mark)) continue;
         if (hairpins.some((h) => h.startTick >= prev.tick && h.startTick < a.tick)) continue;
         report({
           at: { staff, measure: a.measure, tick: a.tick },

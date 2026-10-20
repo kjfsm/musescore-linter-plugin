@@ -12,7 +12,8 @@ function download(results: LintedFile[], format: ExportFormat) {
   a.href = url;
   a.download = `score-lint.${extension}`;
   a.click();
-  URL.revokeObjectURL(url);
+  // click() はダウンロードを始めるだけで待たない。すぐに無効にすると取りこぼすブラウザがある
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function ExportButtons({ results }: { results: LintedFile[] }) {

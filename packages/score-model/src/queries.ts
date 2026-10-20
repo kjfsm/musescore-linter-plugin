@@ -216,6 +216,18 @@ export const lastTick = memoize((score: Score): number => {
   return last;
 });
 
+/** 音符か休符がある最後の小節の通し番号。どちらも無ければ 0。 */
+export const lastEventMeasure = memoize((score: Score): number => {
+  let last = 0;
+  for (const staff of score.staves) {
+    for (const voice of staff.voices) {
+      const tail = voice.events[voice.events.length - 1];
+      if (tail && tail.measure > last) last = tail.measure;
+    }
+  }
+  return last;
+});
+
 const annotationsByStaff = memoize((score: Score) => {
   const own = score.staves.map((): Annotation[] => []);
   const affecting = score.staves.map((): Annotation[] => []);
@@ -278,7 +290,7 @@ export function hairpinsOn(score: Score, staff: number): readonly Hairpin[] {
  * startTick 昇順のスパナーのうち、voice の tick を覆う（`startTick <= tick < endTick`）ものがあるか。
  *
  * 二分探索で「startTick <= tick」の最後まで飛び、そこから手前へ endTick を見る。
- * 手前へ戻る幅は同時に開いているスパナーの数で、実際の楽譜ではごく少ない。
+ * 覆うものが見つかればそこで止まるが、見つからなければ先頭まで戻る（最悪で全件）。
  */
 export function spanCovers(
   spans: readonly { voice: number; startTick: number; endTick: number }[],

@@ -12,7 +12,7 @@ import {
   type Settings,
   toLinterConfig,
 } from "@score-linter/lint-app";
-import type { OptionValue, Severity } from "@score-linter/linter";
+import type { Issue, OptionValue, RuleTiming, Severity } from "@score-linter/linter";
 import { builtinRules, createLinter } from "@score-linter/linter";
 import type { MuseScore } from "@score-linter/musescore-api-types";
 import { connect } from "@score-linter/musescore-plugin-helpers";
@@ -41,19 +41,18 @@ export function settingsView(settings: Settings): {
 
 /** QML が保持して、スナップショット・ジャンプ・コピーに使う 1 回分の結果。 */
 export interface LintRun {
+  /** 版の食い違いと読めなかった小節の警告も、指摘として同じ順・同じ数え方に入る。 */
   issues: ReportedIssue[];
   counts: Record<Severity, number>;
-  /** パートの絞り込みに出す名前。楽譜の並び順、重複なし。 */
-  partNames: string[];
-  /** 型の生成元と実行中の MuseScore の版が食い違うときの警告。 */
-  warning: string | null;
+  /** パートの絞り込みに出すパート。同じ名前のパートも別に並ぶ。 */
+  parts: { id: string; name: string }[];
   /** 計測を頼まれたときだけ埋まる。 */
   perfText: string;
   score: Score;
   origins: MuseScoreOrigins;
 }
 
-function perfReport(readMs: number, timings: { ruleId: string; ms: number }[]): string {
+function perfReport(readMs: number, timings: RuleTiming[]): string {
   const rows: [string, number][] = [
     ["readMuseScore", readMs],
     ...timings.map((t): [string, number] => [t.ruleId, t.ms]),
@@ -63,6 +62,17 @@ function perfReport(readMs: number, timings: { ruleId: string; ms: number }[]): 
     "[ScoreLinter:lint]",
     ...rows.map(([label, ms]) => `  ${label}${" ".repeat(width - label.length)}  ${ms} ms`),
   ].join("\n");
+}
+
+function hostIssue(ruleId: string, message: string, measure: number): Issue {
+  return {
+    ruleId,
+    severity: "warning",
+    category: "internal",
+    message,
+    at: { partId: null, staff: null, measure, tick: 0 },
+    detail: null,
+  };
 }
 
 /**
@@ -75,23 +85,29 @@ export function lintCurrentScore(host: MuseScore, settings: Settings, measure: b
   if (!msScore) throw new Error("スコアが開かれていません");
 
   const started = Date.now();
-  const { score, origins } = readMuseScore(helpers, msScore);
+  const { score, origins, unreadMeasures } = readMuseScore(helpers, msScore);
   const readMs = Date.now() - started;
 
   const linter = createLinter(rules, measure ? { now: () => Date.now() } : {});
   const result = linter.lint(score, toLinterConfig(settings));
-  const issues = presentIssues(score, result.issues);
   const version = helpers.checkVersion();
-
-  const partNames: string[] = [];
-  for (const part of score.parts)
-    if (partNames.indexOf(part.name) === -1) partNames.push(part.name);
+  const hostIssues: Issue[] = [];
+  if (!version.ok) hostIssues.push(hostIssue("internal-version-mismatch", version.message, 0));
+  for (const serial of unreadMeasures) {
+    hostIssues.push(
+      hostIssue(
+        "internal-unread-measure",
+        "この小節は読み取りの途中で失敗しました。指摘が欠けている可能性があります",
+        serial,
+      ),
+    );
+  }
+  const issues = presentIssues(score, [...hostIssues, ...result.issues]);
 
   return {
     issues,
     counts: countBySeverity(issues),
-    partNames,
-    warning: version.ok ? null : version.message,
+    parts: score.parts.map((p) => ({ id: p.id, name: p.name })),
     perfText: measure ? perfReport(readMs, result.timings) : "",
     score,
     origins,

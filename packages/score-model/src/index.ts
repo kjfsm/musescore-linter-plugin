@@ -13,6 +13,7 @@ export {
   firstChord,
   firstEventTick,
   hairpinsOn,
+  lastEventMeasure,
   lastTick,
   measureAt,
   measureBySerial,

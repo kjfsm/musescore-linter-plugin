@@ -298,12 +298,12 @@ describe("readMuseScore: 小節", () => {
   });
 
   it("1 小節の読み取りが失敗しても続け、以降の通し番号はずれない", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const broken = segment(4 * QUARTER);
     broken.elementAt.mockImplementation(() => {
       throw new Error("壊れた小節");
     });
-    const score = read(
+    const { score, unreadMeasures } = readMuseScore(
+      connect(host),
       scoreOf([
         measure(0, [segment(0, { 0: chord() })]),
         measure(1, [broken]),
@@ -312,8 +312,31 @@ describe("readMuseScore: 小節", () => {
     );
     expect(score.measures.map((m) => m.serial)).toEqual([1, 2, 3]);
     expect(score.staves[0]?.voices[0]?.events.map((e) => e.measure)).toEqual([1, 3]);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(String(warn.mock.calls[0]?.[0])).toContain("2 小節目");
+    expect(unreadMeasures).toEqual([2]);
+  });
+
+  it("読み取りに失敗した小節が無ければ unreadMeasures は空", () => {
+    const { unreadMeasures } = readMuseScore(
+      connect(host),
+      scoreOf([measure(0, [segment(0, { 0: chord() })])]),
+    );
+    expect(unreadMeasures).toEqual([]);
+  });
+
+  it("アーティキュレーションの配置違いの接頭辞（上・下）を落とす", () => {
+    const art = (name: string) => ({ subtypeName: () => name });
+    const score = read(
+      scoreOf([
+        measure(0, [
+          segment(0, { 0: chord({ articulations: [art("上スタッカート"), art("アクセント")] }) }),
+        ]),
+      ]),
+    );
+    const first = score.staves[0]?.voices[0]?.events[0];
+    expect(first?.type === "chord" ? first.articulations : null).toEqual([
+      "スタッカート",
+      "アクセント",
+    ]);
   });
 });
 

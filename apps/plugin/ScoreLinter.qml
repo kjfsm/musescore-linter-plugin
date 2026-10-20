@@ -66,22 +66,11 @@ MuseScore {
     property string latestVersion: ""
     property string updateMessage: ""
 
-    // 実行統計
-    readonly property int errorCount: {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) if (issuesList[i].severity === "error") n++;
-        return n;
-    }
-    readonly property int warningCount: {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) if (issuesList[i].severity === "warning") n++;
-        return n;
-    }
-    readonly property int infoCount: {
-        var n = 0;
-        for (var i = 0; i < issuesList.length; i++) if (issuesList[i].severity === "info") n++;
-        return n;
-    }
+    // 件数は Bundle 側（lint-app）が数える。他のホストと数え方を揃えるため。
+    property var issueCounts: ({ error: 0, warning: 0, info: 0 })
+    readonly property int errorCount: issueCounts.error
+    readonly property int warningCount: issueCounts.warning
+    readonly property int infoCount: issueCounts.info
 
     QtObject {
         id: persistedSettings
@@ -151,6 +140,7 @@ MuseScore {
 
         if (!curScore) {
             issuesList = [internalIssue("スコアが開かれていません")];
+            issueCounts = { error: 1, warning: 0, info: 0 };
             hasRun = true;
             elapsedMs = Date.now() - tStart;
             tabBar.currentIndex = 0;
@@ -165,9 +155,8 @@ MuseScore {
             var msLint = Date.now() - tLint;
             lastRun = run;
 
-            var issues = [];
-            if (run.warning) issues.push(internalWarning(run.warning));
-            issuesList = issues.concat(run.issues);
+            issuesList = run.issues;
+            issueCounts = run.counts;
 
             hasRun = true;
             elapsedMs = Date.now() - tStart;
@@ -180,6 +169,7 @@ MuseScore {
         } catch (e) {
             console.error("[ScoreLinter] runLinter 失敗: " + e);
             issuesList = [internalIssue("実行中にエラーが発生しました: " + e)];
+            issueCounts = { error: 1, warning: 0, info: 0 };
             hasRun = true;
             elapsedMs = Date.now() - tStart;
         }
@@ -267,13 +257,6 @@ MuseScore {
         };
     }
 
-    function internalWarning(msg) {
-        return {
-            ruleId: "internal-version-mismatch", severity: "warning", category: "internal", message: msg,
-            partId: null, partName: "", staffIdx: -1, measure: 0, measureLabel: "", tick: 0, detail: null
-        };
-    }
-
     function jumpToIssue(issue) {
         if (!curScore || !lastRun || !issue) return;
         var range = Bundle.selectionFor(lastRun, issue);
@@ -293,13 +276,13 @@ MuseScore {
     }
 
     function parts() {
-        return lastRun ? lastRun.partNames : [];
+        return lastRun ? lastRun.parts : [];
     }
 
     // ─── アップデート確認 ───────────────────────────────────────────────────
     // GitHub Releases API から最新版を取得し、現在版と比較する。
     // 比較ロジックは bundle 側（Bundle.isNewerVersion）に集約してテスト可能にしている。
-    // UI 層なのでネットワーク/parse 失敗は握りつぶしてエラー表示に倒す（never-catch は Checker 内限定）。
+    // UI 層なのでネットワーク/parse 失敗は握りつぶしてエラー表示に倒す（catch してはいけないのはルールの run の中だけ）。
     function checkForUpdate() {
         updateState = "checking";
         updateMessage = "";
@@ -577,6 +560,7 @@ MuseScore {
                             issuesList: plugin.issuesList
                             hasRun: plugin.hasRun
                             parts: plugin.parts()
+                            counts: plugin.issueCounts
                             checkers: plugin.checkerList
                             onCopyRequested: plugin.copyToClipboard(Bundle.formatForCopy(issues, format))
                             onJumpRequested: plugin.jumpToIssue(issue)
