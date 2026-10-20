@@ -217,7 +217,7 @@ fixture を突き合わせるテスト（`packages/reader-musescore/tests/confor
 
 ## 設定の永続化
 
-設定は「既定値から変えた分だけ」を JSON で保存します（`packages/lint-app` の `serializeSettings` /
+設定は「既定値から変えた分だけ」を JSON で保存します（`packages/lint-app` の `createLintApp` が返す `serializeSettings` /
 `parseSettings`）。ルールの既定値を変えても、触っていない設定には新しい既定値が効きます。
 未知のルール・キーや型の合わない値は読み込み時に捨てて既定値に戻します。
 

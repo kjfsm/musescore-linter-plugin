@@ -2,9 +2,8 @@ import type { Score } from "@score-linter/score-model";
 import { partOfStaff } from "@score-linter/score-model";
 
 import { resolveOptions } from "./options.js";
-import type { Issue, OptionSpecs, Report, Rule, Severity } from "./types.js";
-
-const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
+import { compareSeverity } from "./severity.js";
+import type { Issue, OptionSpecs, Report, Rule } from "./types.js";
 
 /** オプションの宣言を `S` に保ったまま Rule を作る。型引数を書かずに済ませるための入口。 */
 export function defineRule<const S extends OptionSpecs = Record<never, never>>(
@@ -45,7 +44,7 @@ export interface Linter {
 
 function issueFrom(score: Score, rule: Rule, report: Report): Issue {
   const severity = report.severity ?? rule.meta.severity;
-  if (SEVERITY_RANK[severity] < SEVERITY_RANK[rule.meta.severity]) {
+  if (compareSeverity(severity, rule.meta.severity) < 0) {
     throw new Error(
       `meta.severity（${rule.meta.severity}）より重い ${severity} を報告しました。meta.severity を直してください`,
     );

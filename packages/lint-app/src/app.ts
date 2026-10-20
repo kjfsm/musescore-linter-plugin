@@ -1,0 +1,93 @@
+import type { Issue, OptionValue, Rule, RuleTiming, Severity } from "@score-linter/linter";
+import { createLinter } from "@score-linter/linter";
+import type { Score } from "@score-linter/score-model";
+
+import { type RuleGroup, ruleGroups } from "./catalog.js";
+import { countBySeverity, presentIssues, type ReportedIssue } from "./report.js";
+import {
+  normalizeSettings,
+  parseSettings,
+  serializeSettings,
+  type Settings,
+  type SettingsView,
+  settingsView,
+  withRuleEnabled,
+  withRuleOption,
+} from "./settings.js";
+
+/** ホストだけが知っている警告（版の食い違い・読めなかった小節など）。 */
+export interface HostDiagnostic {
+  id: string;
+  message: string;
+  /** 小節の通し番号。楽譜全体なら 0。 */
+  measure: number;
+}
+
+export interface LintRequest {
+  diagnostics?: readonly HostDiagnostic[];
+  /** ミリ秒を返す時計。渡したときだけ {@link LintOutcome.timings} が埋まる。 */
+  now?: () => number;
+}
+
+export interface LintOutcome {
+  /** ホストの警告も含めて、表示する順に並べたもの。 */
+  issues: ReportedIssue[];
+  counts: Record<Severity, number>;
+  timings: RuleTiming[];
+}
+
+/**
+ * ホストが lint に使う唯一の入口。ルールの一覧はここで一度だけ受け取る。
+ * メソッドは this を使わないので、取り出して QML のバンドルからそのまま公開してよい。
+ */
+export interface LintApp {
+  readonly rules: readonly Rule[];
+  readonly catalog: RuleGroup[];
+  parseSettings(
+    enabledJson: string | null | undefined,
+    optionsJson: string | null | undefined,
+  ): Settings;
+  serializeSettings(settings: Settings): { enabled: string; options: string };
+  normalizeSettings(raw: { enabled?: unknown; options?: unknown }): Settings;
+  withRuleEnabled(settings: Settings, ruleId: string, enabled: boolean): Settings;
+  withRuleOption(settings: Settings, ruleId: string, key: string, value: OptionValue): Settings;
+  settingsView(settings: Settings): SettingsView;
+  lint(score: Score, settings: Settings, request?: LintRequest): LintOutcome;
+}
+
+function diagnosticIssue({ id, message, measure }: HostDiagnostic): Issue {
+  return {
+    ruleId: id,
+    severity: "warning",
+    category: "internal",
+    message,
+    at: { partId: null, staff: null, measure, tick: 0 },
+    detail: null,
+  };
+}
+
+export function createLintApp(rules: readonly Rule[]): LintApp {
+  const linter = createLinter(rules);
+  const catalog = ruleGroups(rules);
+
+  return {
+    rules,
+    catalog,
+    parseSettings: (enabledJson, optionsJson) => parseSettings(rules, enabledJson, optionsJson),
+    serializeSettings,
+    normalizeSettings: (raw) => normalizeSettings(rules, raw),
+    withRuleEnabled: (settings, ruleId, enabled) =>
+      withRuleEnabled(rules, settings, ruleId, enabled),
+    withRuleOption: (settings, ruleId, key, value) =>
+      withRuleOption(rules, settings, ruleId, key, value),
+    settingsView: (settings) => settingsView(rules, settings),
+    lint(score, settings, request = {}) {
+      const { now, diagnostics = [] } = request;
+      // 時計は createLinter の引数でしか渡せず、呼ぶたびに渡される時計が違いうるので、その都度作る
+      const result = (now ? createLinter(rules, { now }) : linter).lint(score, settings);
+      // 同じ位置・同じ重さならホストの警告が先。安定ソートなので、渡す順がそのまま残る
+      const issues = presentIssues(score, [...diagnostics.map(diagnosticIssue), ...result.issues]);
+      return { issues, counts: countBySeverity(issues), timings: result.timings };
+    },
+  };
+}

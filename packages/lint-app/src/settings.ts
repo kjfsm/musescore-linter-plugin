@@ -1,4 +1,4 @@
-import type { LinterConfig, OptionValue, Rule } from "@score-linter/linter";
+import type { OptionValue, Rule } from "@score-linter/linter";
 import { resolveOptions } from "@score-linter/linter";
 
 /**
@@ -73,17 +73,19 @@ export function withRuleOption(
   });
 }
 
-export function isRuleEnabled(rule: Rule, settings: Settings): boolean {
-  return settings.enabled[rule.id] ?? rule.meta.defaultEnabled;
+/** 設定画面に表示する値。Settings と同じ形だが、どのルールも既定値で埋まっている。 */
+export interface SettingsView {
+  enabled: Record<string, boolean>;
+  options: Record<string, Record<string, OptionValue>>;
 }
 
-/** 既定値で埋めたうえで、変えた分を反映した値。設定画面に表示する値。 */
-export function ruleOptionValues(rule: Rule, settings: Settings): Record<string, OptionValue> {
-  return resolveOptions(rule.options, settings.options[rule.id]);
-}
-
-export function toLinterConfig(settings: Settings): LinterConfig {
-  return { enabled: settings.enabled, options: settings.options };
+export function settingsView(rules: readonly Rule[], settings: Settings): SettingsView {
+  const view: SettingsView = { enabled: {}, options: {} };
+  for (const rule of rules) {
+    view.enabled[rule.id] = settings.enabled[rule.id] ?? rule.meta.defaultEnabled;
+    view.options[rule.id] = resolveOptions(rule.options, settings.options[rule.id]);
+  }
+  return view;
 }
 
 function parseJson(text: string | null | undefined): unknown {

@@ -1,12 +1,4 @@
-import {
-  type OptionInfo,
-  type RuleInfo,
-  ruleGroups,
-  ruleOptionValues,
-  type Settings,
-  withRuleEnabled,
-  withRuleOption,
-} from "@score-linter/lint-app";
+import type { OptionInfo, RuleInfo, Settings } from "@score-linter/lint-app";
 import type { OptionValue } from "@score-linter/linter";
 import { ChevronRight } from "lucide-react";
 
@@ -14,14 +6,12 @@ import { SeverityBadge } from "@/components/SeverityBadge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { rules } from "@/lib/lint";
+import { app } from "@/lib/lint";
 
 export interface RulePanelProps {
   settings: Settings;
   onChange: (settings: Settings) => void;
 }
-
-const ruleById = new Map(rules.map((r) => [r.id, r]));
 
 /**
  * select に Radix の Select を使わないのは、インラインスタイルを注入するため
@@ -119,19 +109,17 @@ function OptionField({
  * _headers の `style-src 'self'`（'unsafe-inline' なし）に違反してしまう。
  */
 export function RulePanel({ settings, onChange }: RulePanelProps) {
-  const groups = ruleGroups(rules);
+  const groups = app.catalog;
   const all = groups.flatMap((g) => g.rules);
-  const isEnabled = (rule: RuleInfo) => settings.enabled[rule.id] ?? rule.defaultEnabled;
+  const view = app.settingsView(settings);
+  const isEnabled = (rule: RuleInfo) => view.enabled[rule.id] === true;
   const activeCount = all.filter(isEnabled).length;
 
   function setAll(enabled: boolean) {
-    onChange(all.reduce((s, r) => withRuleEnabled(rules, s, r.id, enabled), settings));
+    onChange(all.reduce((s, r) => app.withRuleEnabled(s, r.id, enabled), settings));
   }
 
-  const optionValues = (rule: RuleInfo) => {
-    const found = ruleById.get(rule.id);
-    return found ? ruleOptionValues(found, settings) : {};
-  };
+  const optionValues = (rule: RuleInfo) => view.options[rule.id] ?? {};
 
   return (
     <details className="group rounded-xl border bg-card">
@@ -187,7 +175,7 @@ export function RulePanel({ settings, onChange }: RulePanelProps) {
                       className="mt-1"
                       checked={isEnabled(rule)}
                       onCheckedChange={(checked) =>
-                        onChange(withRuleEnabled(rules, settings, rule.id, checked === true))
+                        onChange(app.withRuleEnabled(settings, rule.id, checked === true))
                       }
                     />
                     <div className="flex flex-col gap-2">
@@ -208,7 +196,7 @@ export function RulePanel({ settings, onChange }: RulePanelProps) {
                               value={optionValues(rule)[spec.key]}
                               disabled={!isEnabled(rule)}
                               onChange={(value) =>
-                                onChange(withRuleOption(rules, settings, rule.id, spec.key, value))
+                                onChange(app.withRuleOption(settings, rule.id, spec.key, value))
                               }
                             />
                           ))}

@@ -115,6 +115,29 @@
           }
         ]
       }
+    },
+    {
+      "files": ["apps/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@score-linter/linter",
+                "importNames": ["createLinter"],
+                "message": "ホストは lint-app の createLintApp を通して lint する。"
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@score-linter/*/src/**"],
+                "message": "パッケージの入口（index.ts）が公開するものだけを使う。"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

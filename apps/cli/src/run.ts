@@ -1,6 +1,12 @@
-import { type FileResult, formatResults, presentIssues } from "@score-linter/lint-app";
+import {
+  createLintApp,
+  describeRule,
+  type FileResult,
+  formatResults,
+  type LintApp,
+} from "@score-linter/lint-app";
 import type { Rule, Severity } from "@score-linter/linter";
-import { builtinRules, createLinter } from "@score-linter/linter";
+import { builtinRules, compareSeverity } from "@score-linter/linter";
 import { readMusicXmlBytes } from "@score-linter/reader-musicxml";
 import type { Score } from "@score-linter/score-model";
 
@@ -28,23 +34,21 @@ export interface RunIO {
 declare const __CLI_VERSION__: string | undefined;
 const VERSION = typeof __CLI_VERSION__ === "string" ? __CLI_VERSION__ : "dev";
 
-const SEVERITY_RANK: Record<Severity, number> = { error: 3, warning: 2, info: 1 };
-
 export function meetsThreshold(severity: Severity, failOn: FailOn): boolean {
   if (failOn === "none") return false;
-  return SEVERITY_RANK[severity] >= SEVERITY_RANK[failOn];
+  return compareSeverity(severity, failOn) <= 0;
 }
 
-function listRules(io: RunIO, rules: readonly Rule[]): number {
-  const idWidth = Math.max(0, ...rules.map((r) => r.id.length));
+function listRules(io: RunIO, app: LintApp): number {
+  const infos = app.rules.map(describeRule);
+  const idWidth = Math.max(0, ...infos.map((r) => r.id.length));
   io.stdout(
-    rules
+    infos
       .map((r) => {
-        const { severity, category, name, defaultEnabled } = r.meta;
+        const { severity, category, name, defaultEnabled } = r;
         const head = `${r.id.padEnd(idWidth)}  ${severity.padEnd(7)}  ${category.padEnd(12)}  ${name}${defaultEnabled ? "" : "（既定で無効）"}`;
         // オプションの行は id の幅の計算に混ぜず、ぶら下げて出す
-        const opts = Object.keys(r.options).map((key) => {
-          const o = r.options[key]!;
+        const opts = r.options.map((o) => {
           const values =
             o.type === "boolean"
               ? "true|false"
@@ -52,7 +56,7 @@ function listRules(io: RunIO, rules: readonly Rule[]): number {
                 ? o.choices.map((ch) => ch.value).join("|")
                 : `${o.choices.map((ch) => ch.value).join("|")}（カンマ区切りで複数可）`;
           const def = Array.isArray(o.default) ? o.default.join(",") : String(o.default);
-          return `    --rule-option=${r.id}.${key}=<${values}>  ${o.label}（既定: ${def || "なし"}）`;
+          return `    --rule-option=${r.id}.${o.key}=<${values}>  ${o.label}（既定: ${def || "なし"}）`;
         });
         return [head, ...opts].join("\n");
       })
@@ -92,7 +96,8 @@ export function run(argv: string[], io: RunIO, rules: readonly Rule[] = builtinR
     io.stdout(VERSION);
     return EXIT_OK;
   }
-  if (options.listRules) return listRules(io, rules);
+  const app = createLintApp(rules);
+  if (options.listRules) return listRules(io, app);
 
   if (options.files.length === 0) {
     io.stderr(`解析するファイルを指定してください\n\n${HELP_TEXT}`);
@@ -111,8 +116,10 @@ export function run(argv: string[], io: RunIO, rules: readonly Rule[] = builtinR
     }
     throw error;
   }
-  const linter = createLinter(rules);
-  const config = { enabled: resolveEnabledRules(options, allRuleIds), options: ruleOptions };
+  const settings = app.normalizeSettings({
+    enabled: resolveEnabledRules(options, allRuleIds),
+    options: ruleOptions,
+  });
 
   const results: FileResult[] = [];
   const scores: { file: string; score: Score }[] = [];
@@ -125,7 +132,7 @@ export function run(argv: string[], io: RunIO, rules: readonly Rule[] = builtinR
         scores.push({ file, score });
         continue;
       }
-      results.push({ file, issues: presentIssues(score, linter.lint(score, config).issues) });
+      results.push({ file, issues: app.lint(score, settings).issues });
     } catch (error) {
       failed = true;
       io.stderr(`${file}: ${describeError(error)}`);
