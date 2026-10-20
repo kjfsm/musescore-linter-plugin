@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { LintedFile } from "@/lib/lint";
 import { type ExportFormat, exportResults } from "@/lib/rows";
 
-/**
- * ブラウザの中で作った文字列を Blob の URL にしてダウンロードさせる。
- * サーバーには何も送らない（`connect-src 'none'` の下でも動く）。
- */
+/** サーバーには何も送らない（`connect-src 'none'` の下でも動く）。 */
 function download(results: LintedFile[], format: ExportFormat) {
   const { text, mimeType, extension } = exportResults(results, format);
   const url = URL.createObjectURL(new Blob([text], { type: `${mimeType};charset=utf-8` }));

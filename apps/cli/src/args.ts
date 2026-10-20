@@ -17,9 +17,7 @@ export interface CliOptions {
   files: string[];
   format: OutputFormat;
   dumpScore: boolean;
-  /** 明示的に無効化するルールの id */
   disabledRules: string[];
-  /** 指定があればこのルールだけを有効にする */
   onlyRules: string[];
   /** ルール個別のオプション指定（出現順。同じキーは後勝ち） */
   ruleOptions: RawRuleOption[];
@@ -158,7 +156,6 @@ export function parseArgs(argv: string[]): CliOptions {
   return options;
 }
 
-/** リンターに渡す、ルール id → 有効かを組み立てる。 */
 export function resolveEnabledRules(
   options: Pick<CliOptions, "disabledRules" | "onlyRules">,
   allRuleIds: string[],
@@ -173,8 +170,6 @@ export function resolveEnabledRules(
 }
 
 /**
- * リンターに渡す、ルール id → オプションの値を組み立てる。
- *
  * 人が打った指定を受ける境界なので、リンターのように黙って既定値へ落とさず、
  * 未知のルール・キー・値はここでエラーにする。同じキーの重複指定は後勝ち。
  */
@@ -213,7 +208,6 @@ export function resolveRuleOptions(
   return out;
 }
 
-/** 指定された id が実在するルールかを検証する。 */
 export function assertKnownRules(
   options: Pick<CliOptions, "disabledRules" | "onlyRules">,
   allRuleIds: string[],

@@ -25,13 +25,11 @@ MuseScore {
 
     // 既定値から変えた分だけを持つ設定。保存もこの形で行う（Bundle.serializeSettings）。
     property var settings: ({ enabled: {}, options: {} })
-    // 設定画面に出す値。settings から Bundle.settingsView で作る。
     property var enabledRules: ({})
     property var ruleOptions: ({})
     property var issuesList: []
     property var checkerList: []
     property var ruleGroupList: []
-    // 直近の Bundle.lintCurrentScore の結果。ジャンプ・スナップショット・パートの絞り込みに使う。
     property var lastRun: null
     property string snapshotText: ""
     property bool hasRun: false
@@ -162,7 +160,6 @@ MuseScore {
         try {
             // `plugin`（このルートオブジェクト）を渡すと、Bundle 側が実行中の MuseScore の enum
             // （NoteType・BarLineType など）に結び付けて読む。値を焼き込まないので版の差に強い。
-            // スナップショットの JSON はここでは作らず、タブを開いたときに初めて作る。
             var tLint = Date.now();
             var run = Bundle.lintCurrentScore(plugin, settings, persistedSettings.perfEnabled);
             var msLint = Date.now() - tLint;
@@ -279,7 +276,6 @@ MuseScore {
 
     function jumpToIssue(issue) {
         if (!curScore || !lastRun || !issue) return;
-        // 範囲は読み込んだときに覚えた小節の tick から作る（Bundle.selectionFor）
         var range = Bundle.selectionFor(lastRun, issue);
         if (!range) return;
 
@@ -296,7 +292,6 @@ MuseScore {
         clipboardHelper.deselect();
     }
 
-    // パートの絞り込みに出すパート名。スナップショットの JSON を読み直さず、結果から直接引く。
     function parts() {
         return lastRun ? lastRun.partNames : [];
     }

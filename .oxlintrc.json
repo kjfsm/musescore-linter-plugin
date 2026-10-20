@@ -31,8 +31,7 @@
   ],
   "overrides": [
     {
-      // score-model はどのソースにもホストにも依存しない。境界の本体は package.json の依存宣言で、
-      // ここは宣言を書き足されたときの保険。
+      // 境界の本体は package.json の依存宣言で、ここは宣言を書き足されたときの保険。
       "files": ["packages/score-model/**"],
       "rules": {
         "eslint/no-restricted-imports": [
@@ -49,7 +48,6 @@
       }
     },
     {
-      // reader-musicxml が読んでよいのは score-model だけ。linter やホストを知らない。
       "files": ["packages/reader-musicxml/**"],
       "rules": {
         "eslint/no-restricted-imports": [
@@ -66,7 +64,6 @@
       }
     },
     {
-      // reader-musescore は MuseScore の型とヘルパを使ってよいが、linter やホストは知らない
       "files": ["packages/reader-musescore/src/**"],
       "rules": {
         "eslint/no-restricted-imports": [
@@ -88,7 +85,6 @@
       }
     },
     {
-      // linter はルールが MuseScore・reader・ホストを知らないことを、依存関係で守る
       "files": ["packages/linter/**"],
       "rules": {
         "eslint/no-restricted-imports": [

@@ -66,8 +66,7 @@ function perfReport(readMs: number, timings: { ruleId: string; ms: number }[]): 
 }
 
 /**
- * 開いている楽譜を読み、lint して、表示の順に並べた結果を返す。`host` は QML の
- * `MuseScore { }` のルートオブジェクト。時刻は Date.now() — QML のエンジンには
+ * `host` は QML の `MuseScore { }` のルートオブジェクト。時刻は Date.now() — QML のエンジンには
  * performance.now() が無い。
  */
 export function lintCurrentScore(host: MuseScore, settings: Settings, measure: boolean): LintRun {

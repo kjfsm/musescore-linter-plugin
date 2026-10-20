@@ -10,7 +10,6 @@ export function runRule(rule: Rule, score: Score, options?: unknown): Issue[] {
   return createLinter([rule]).lint(score, { options: { [rule.id]: options } }).issues;
 }
 
-/** 組み込みのルールをすべて既定の設定で走らせる。 */
 export function runAll(score: Score, enabled: Record<string, boolean> = {}): Issue[] {
   return createLinter(builtinRules).lint(score, { enabled }).issues;
 }

@@ -24,8 +24,6 @@ export interface RulePanelProps {
 const ruleById = new Map(rules.map((r) => [r.id, r]));
 
 /**
- * ルールのオプションの宣言から入力欄を組み立てる。
- *
  * select に Radix の Select を使わないのは、インラインスタイルを注入するため
  * `style-src 'self'` の CSP に引っかかるから（ファイル冒頭のコメントと同じ理由）。
  * ネイティブの `<select>` なら CSP を通る。

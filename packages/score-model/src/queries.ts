@@ -193,12 +193,10 @@ function ticksOf(score: Score, staff: number, type: VoiceEvent["type"]): Set<num
   return ticks;
 }
 
-/** 譜表のどれかの声部に休符がある tick。 */
 export const restTicks = memoizeByKey((score: Score, staff: number) =>
   ticksOf(score, staff, "rest"),
 );
 
-/** 譜表のどれかの声部に和音がある tick。 */
 export const chordTicks = memoizeByKey((score: Score, staff: number) =>
   ticksOf(score, staff, "chord"),
 );

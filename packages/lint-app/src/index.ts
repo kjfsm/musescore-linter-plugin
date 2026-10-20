@@ -32,7 +32,6 @@ export {
   withRuleOption,
 } from "./settings.js";
 
-/** 設定に沿って lint し、表示の順に並べた指摘を返す。 */
 export function lintScore(linter: Linter, score: Score, settings: Settings): ReportedIssue[] {
   return presentIssues(score, linter.lint(score, toLinterConfig(settings)).issues);
 }
