@@ -1,5 +1,5 @@
 {
-  "name": "@musescore-linter/source-musescore",
+  "name": "@score-linter/source-musescore",
   "version": "1.1.0",
   "private": true,
   "main": "src/index.ts",
@@ -8,9 +8,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@musescore-linter/core": "workspace:*",
-    "@musescore-linter/musescore-api": "workspace:*",
-    "@musescore-linter/musescore-api-types": "workspace:*",
-    "@musescore-linter/musescore-plugin-helpers": "workspace:*"
+    "@score-linter/core": "workspace:*",
+    "@score-linter/musescore-api": "workspace:*",
+    "@score-linter/musescore-api-types": "workspace:*",
+    "@score-linter/musescore-plugin-helpers": "workspace:*"
   }
 }

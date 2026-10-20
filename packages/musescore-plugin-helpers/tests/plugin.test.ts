@@ -1,5 +1,5 @@
-import type { MuseScore } from "@musescore-linter/musescore-api-types";
-import { generatedFrom } from "@musescore-linter/musescore-api-types";
+import type { MuseScore } from "@score-linter/musescore-api-types";
+import { generatedFrom } from "@score-linter/musescore-api-types";
 import { describe, expect, it, vi } from "vitest";
 
 import { assertHostVersion, checkHostVersion, definePlugin, strictEnum } from "../src/plugin.js";

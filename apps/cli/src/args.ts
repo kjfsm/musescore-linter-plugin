@@ -1,5 +1,5 @@
-import type { Checker, CheckerOptionValue, Severity } from "@musescore-linter/core";
-import { findOptionSpec, parseCheckerOptionText } from "@musescore-linter/core";
+import type { Checker, CheckerOptionValue, Severity } from "@score-linter/core";
+import { findOptionSpec, parseCheckerOptionText } from "@score-linter/core";
 
 export type OutputFormat = "pretty" | "json" | "github";
 
@@ -225,10 +225,10 @@ export function assertKnownRules(
   }
 }
 
-export const HELP_TEXT = `musescore-lint — MusicXML の楽譜を静的解析する
+export const HELP_TEXT = `score-lint — MusicXML の楽譜を静的解析する
 
 使い方:
-  musescore-lint [オプション] <ファイル...>
+  score-lint [オプション] <ファイル...>
 
   ファイルは .musicxml / .xml（score-partwise）と、圧縮形式の .mxl を受け付ける。
 

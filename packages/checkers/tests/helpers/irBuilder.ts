@@ -1,7 +1,7 @@
-import type { EventSpec, IndexedIR, IRSpec } from "@musescore-linter/core";
-import { buildIR as buildLintIR, CANONICAL, withDerived } from "@musescore-linter/core";
+import type { EventSpec, IndexedIR, IRSpec } from "@score-linter/core";
+import { buildIR as buildLintIR, CANONICAL, withDerived } from "@score-linter/core";
 
-export type { EventSpec, IRSpec } from "@musescore-linter/core";
+export type { EventSpec, IRSpec } from "@score-linter/core";
 export { CANONICAL };
 
 /** checker の `run` に直接渡せるよう、`derived` まで作った IR を返す。 */

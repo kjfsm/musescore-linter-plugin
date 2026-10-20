@@ -1,4 +1,4 @@
-import type { Chord } from "@musescore-linter/musescore-api-types";
+import type { Chord } from "@score-linter/musescore-api-types";
 
 /**
  * MIDI pitch numbers (0-127) of all notes in a chord, in storage order.

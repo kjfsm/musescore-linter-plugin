@@ -1,4 +1,4 @@
-import type { EngravingItem, Score, Selection } from "@musescore-linter/musescore-api-types";
+import type { EngravingItem, Score, Selection } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
 import { getSelectedElements, getSelectionRange, hasRangeSelection } from "../src/selection.js";

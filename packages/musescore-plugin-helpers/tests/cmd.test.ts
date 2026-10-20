@@ -1,4 +1,4 @@
-import type { Score } from "@musescore-linter/musescore-api-types";
+import type { Score } from "@score-linter/musescore-api-types";
 import { describe, expect, it, vi } from "vitest";
 
 import { withCmd } from "../src/cmd.js";

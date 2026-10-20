@@ -23,8 +23,7 @@
     "react/rules-of-hooks": "error"
   },
   "ignorePatterns": [
-    "dist/**",
-    "dist-cli/**",
+    "**/dist/**",
     "coverage/**",
     "out/**",
     // tools/musescore-api-types-generator の生成物。手で直さず生成元を直す
@@ -44,9 +43,9 @@
             "patterns": [
               {
                 "group": [
-                  "@musescore-linter/musescore-api-types",
-                  "@musescore-linter/musescore-plugin-helpers",
-                  "@musescore-linter/musescore-api"
+                  "@score-linter/musescore-api-types",
+                  "@score-linter/musescore-plugin-helpers",
+                  "@score-linter/musescore-api"
                 ],
                 "message": "core / checkers は MuseScore に依存しない。入力ソース側（source-musescore）の責務。"
               }

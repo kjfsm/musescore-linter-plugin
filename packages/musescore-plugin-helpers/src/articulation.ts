@@ -1,4 +1,4 @@
-import type { Chord } from "@musescore-linter/musescore-api-types";
+import type { Chord } from "@score-linter/musescore-api-types";
 
 /**
  * Returns the names of the articulations attached to a chord (e.g. "Staccato", "Accent"),

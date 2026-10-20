@@ -2,7 +2,7 @@
 // 依存しない MusicXML 固有のロジックを持たないため core 側（pitchSpelling.ts）に置いている。
 // ラウンドトリップの保証も core 側のテストで行う。builder.ts の呼び出しを壊さないよう
 // ここから re-export する。
-export { toTpc } from "@musescore-linter/core";
+export { toTpc } from "@score-linter/core";
 
 /** 音名 → 半音（C からの距離）。 */
 const SEMITONE_BY_STEP: Record<string, number> = {

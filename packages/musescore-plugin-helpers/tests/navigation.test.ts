@@ -4,7 +4,7 @@ import type {
   Measure,
   Score,
   Segment,
-} from "@musescore-linter/musescore-api-types";
+} from "@score-linter/musescore-api-types";
 import { describe, expect, it, vi } from "vitest";
 
 import {

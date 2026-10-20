@@ -1,4 +1,4 @@
-import type { ScoreElement, Spanner } from "@musescore-linter/musescore-api-types";
+import type { ScoreElement, Spanner } from "@score-linter/musescore-api-types";
 
 export interface SpannerRange {
   startTick: number;

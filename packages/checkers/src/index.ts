@@ -1,5 +1,5 @@
-import type { Checker } from "@musescore-linter/core";
-import { register, reset } from "@musescore-linter/core";
+import type { Checker } from "@score-linter/core";
+import { register, reset } from "@score-linter/core";
 
 import { beatCrossingTieChecker } from "./beatCrossingTieChecker.js";
 import { codaSegnoChecker } from "./codaSegnoChecker.js";

@@ -1,4 +1,4 @@
-import type { Checker } from "@musescore-linter/core";
+import type { Checker } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import {

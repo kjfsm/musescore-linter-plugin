@@ -1,4 +1,4 @@
-import type { IndexedIR } from "@musescore-linter/core";
+import type { IndexedIR } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { slurTieArticulationConsistencyChecker } from "../src/slurTieArticulationConsistencyChecker.js";

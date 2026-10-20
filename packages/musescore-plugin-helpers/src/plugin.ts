@@ -1,5 +1,5 @@
-import type { MuseScore } from "@musescore-linter/musescore-api-types";
-import { generatedFrom } from "@musescore-linter/musescore-api-types";
+import type { MuseScore } from "@score-linter/musescore-api-types";
+import { generatedFrom } from "@score-linter/musescore-api-types";
 
 /** バージョン不一致時の挙動。 */
 export type VersionMismatchMode = "throw" | "warn" | "ignore";

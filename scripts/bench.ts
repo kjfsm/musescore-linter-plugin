@@ -8,14 +8,14 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { registerAll } from "@musescore-linter/checkers";
+import { registerAll } from "@score-linter/checkers";
 import {
   getCheckerPerfReport,
   type LintIR,
   runAllCheckers,
   setPerfEnabled,
-} from "@musescore-linter/core";
-import { buildIRFromBytes } from "@musescore-linter/source-musicxml";
+} from "@score-linter/core";
+import { buildIRFromBytes } from "@score-linter/source-musicxml";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");

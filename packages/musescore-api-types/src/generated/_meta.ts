@@ -1,4 +1,4 @@
-// @musescore-linter/musescore-api-types-generator が自動生成したファイル。手で編集しないこと。
+// @score-linter/musescore-api-types-generator が自動生成したファイル。手で編集しないこと。
 export const generatedFrom = {
   repository: "musescore/MuseScore",
   tag: "v4.7.3",

@@ -1,4 +1,4 @@
-import type { Issue, Severity } from "@musescore-linter/core";
+import type { Issue, Severity } from "@score-linter/core";
 
 import type { FailOn } from "./args.js";
 

@@ -19,9 +19,9 @@ MuseScore {
     // バージョンは build 時に package.json から注入される（単一情報源）
     readonly property string pluginVersion: "__PLUGIN_VERSION__"
     // アップデート確認用 GitHub リポジトリ
-    readonly property string repoSlug: "kjfsm/musescore-linter-plugin"
+    readonly property string repoSlug: "kjfsm/score-linter"
     readonly property string releasesPageUrl: "https://github.com/" + repoSlug + "/releases/latest"
-    readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/musescore-linter-plugin.zip"
+    readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/score-linter.zip"
 
     property var enabledRules: ({})
     // ruleId → { key: 値 }。checker の options 宣言から解決した値を持つ。
@@ -421,7 +421,7 @@ MuseScore {
             req.open("GET", url, true);
             req.setRequestHeader("Accept", "application/vnd.github+json");
             // GitHub API は User-Agent 必須
-            req.setRequestHeader("User-Agent", "musescore-linter-plugin");
+            req.setRequestHeader("User-Agent", "score-linter");
             req.onreadystatechange = function() {
                 if (req.readyState !== XMLHttpRequest.DONE) return;
                 try {

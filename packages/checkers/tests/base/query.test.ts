@@ -1,4 +1,4 @@
-import { CANONICAL, buildIR } from "@musescore-linter/core";
+import { CANONICAL, buildIR } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { measureAtTick } from "../../src/base/query.js";

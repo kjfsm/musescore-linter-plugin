@@ -1,5 +1,5 @@
 {
-  "name": "@musescore-linter/musescore-api-types-generator",
+  "name": "@score-linter/musescore-api-types-generator",
   "version": "0.0.1",
   "private": true,
   "license": "MIT",

@@ -2,7 +2,7 @@ import type {
   BarLineType,
   BarLineTypeEnum,
   BarLineTypeName,
-} from "@musescore-linter/musescore-api-types";
+} from "@score-linter/musescore-api-types";
 
 export type BarlineKind =
   | "final"

@@ -1,8 +1,9 @@
 ---
 description: MuseScore 4.6 プラグイン API の罠と、それを踏まないための書き方
 paths:
-  - "ScoreLinter.qml"
-  - "qml/**"
+  - "apps/plugin/ScoreLinter.qml"
+  - "apps/plugin/qml/**"
+  - "packages/musescore-plugin-helpers/**"
   - "packages/source-musescore/**"
 ---
 

@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintIR } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, Issue, LintIR } from "@score-linter/core";
+import { createIssue } from "@score-linter/core";
 
 import { buildPartNameMap, measureAtTick } from "./base/query.js";
 

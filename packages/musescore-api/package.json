@@ -1,5 +1,5 @@
 {
-  "name": "@musescore-linter/musescore-api",
+  "name": "@score-linter/musescore-api",
   "version": "1.0.1",
   "private": true,
   "type": "module",
@@ -10,6 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@musescore-linter/musescore-api-types": "workspace:*"
+    "@score-linter/musescore-api-types": "workspace:*"
   }
 }

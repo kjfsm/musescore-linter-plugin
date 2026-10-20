@@ -1,4 +1,4 @@
-import type { Chord, NoteTypeEnum } from "@musescore-linter/musescore-api-types";
+import type { Chord, NoteTypeEnum } from "@score-linter/musescore-api-types";
 
 // グレースノートを表す NoteType メンバ。値は実行時に渡される `NoteType` から取り出すため、
 // 焼き込んだ enum 値には依存しない（MuseScore のバージョン差で値が変わっても壊れない）。

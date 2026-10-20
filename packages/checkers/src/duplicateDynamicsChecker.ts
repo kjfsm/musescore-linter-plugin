@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue, TextEvent } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue, TextEvent } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOnStaff } from "@score-linter/core";
 
 // sf・rf はアクセント的に連続して使われることが多いため、重複検出の対象から除外する。
 const CONSECUTIVE_ALLOWED = new Set(["sf", "rf"]);

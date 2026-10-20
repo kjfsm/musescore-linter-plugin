@@ -1,4 +1,4 @@
-import type { Score } from "@musescore-linter/musescore-api-types";
+import type { Score } from "@score-linter/musescore-api-types";
 
 export function getMetaTag(score: Score, tag: string): string | undefined {
   const value = score.metaTag(tag);

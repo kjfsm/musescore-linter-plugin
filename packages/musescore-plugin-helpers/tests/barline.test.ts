@@ -1,4 +1,4 @@
-import type { BarLineType, BarLineTypeEnum } from "@musescore-linter/musescore-api-types";
+import type { BarLineType, BarLineTypeEnum } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
 import { classifyBarlineKind } from "../src/barline.js";

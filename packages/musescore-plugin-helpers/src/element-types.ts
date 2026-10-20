@@ -7,7 +7,7 @@ import type {
   Measure,
   ScoreElement,
   Segment,
-} from "@musescore-linter/musescore-api-types";
+} from "@score-linter/musescore-api-types";
 
 import { VOICES_PER_STAFF } from "./tracks.js";
 

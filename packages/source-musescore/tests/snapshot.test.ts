@@ -1,6 +1,6 @@
-import type { TextEvent } from "@musescore-linter/core";
-import { setPerfEnabled } from "@musescore-linter/core";
-import type { MuseScore, Score } from "@musescore-linter/musescore-api-types";
+import type { TextEvent } from "@score-linter/core";
+import { setPerfEnabled } from "@score-linter/core";
+import type { MuseScore, Score } from "@score-linter/musescore-api-types";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { buildSnapshot, getSnapshotPerfReport } from "../src/snapshot.js";

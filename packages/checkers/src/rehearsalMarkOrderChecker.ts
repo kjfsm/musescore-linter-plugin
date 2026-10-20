@@ -1,5 +1,5 @@
-import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { CANONICAL, createIssue, eventsOfKind } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@score-linter/core";
+import { CANONICAL, createIssue, eventsOfKind } from "@score-linter/core";
 
 // リハーサルマーク(A, B, C... または 1, 2, 3...)が昇順に並んでいるか、重複が無いかを検査する。
 // A→C と飛ぶ(B 欠番)や、C の後に A が出る(順序逆)、同じ記号の重複を検出。

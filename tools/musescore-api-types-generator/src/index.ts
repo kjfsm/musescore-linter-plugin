@@ -72,7 +72,7 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
 function renderMeta(repository: string, ref: string, sha: string): string {
   // 生成時刻はあえて記録しない — 出力は (repository, ref, headers) の純粋関数で
   // なければならない。これにより CI のドリフトチェックが安定する。
-  return `// @musescore-linter/musescore-api-types-generator が自動生成したファイル。手で編集しないこと。
+  return `// @score-linter/musescore-api-types-generator が自動生成したファイル。手で編集しないこと。
 export const generatedFrom = {
   repository: ${JSON.stringify(repository)},
   tag: ${JSON.stringify(ref)},

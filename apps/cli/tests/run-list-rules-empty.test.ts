@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 // 空のまま保つ。--list-rules は内部で毎回 registerCheckers()（reset + registerAll）
 // を呼ぶので、registry を外から空にしても効かない。0 件の checker という状況を
 // 本物の run() 経路で再現するにはこのモックが必要。
-vi.mock("@musescore-linter/checkers", () => ({ registerAll: vi.fn() }));
+vi.mock("@score-linter/checkers", () => ({ registerAll: vi.fn() }));
 
 const { EXIT_OK, run } = await import("../src/run.js");
 

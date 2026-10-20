@@ -6,6 +6,9 @@ import { zipSync } from "fflate";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
+const REPO_ROOT = path.join(ROOT, "../..");
+// MuseScore のプラグインフォルダに展開される名前。変えると、上書きで更新した利用者の環境に
+// 旧フォルダが残って同じプラグインが 2 つ並ぶので、リポジトリ名とは揃えない。
 const PLUGIN_DIR = "musescore-linter";
 
 function collectFiles(srcDir: string, zipPrefix: string, files: Record<string, Uint8Array>) {
@@ -25,7 +28,12 @@ function main() {
     version: string;
   };
   const version = pkg.version;
-  const zipNames = [`musescore-linter-plugin-${version}.zip`, "musescore-linter-plugin.zip"];
+  // musescore-linter-plugin.zip は 2.4.0 以前のプラグインが更新リンクに使う旧名。
+  const zipNames = [
+    `score-linter-${version}.zip`,
+    "score-linter.zip",
+    "musescore-linter-plugin.zip",
+  ];
 
   const distDir = path.join(ROOT, "dist");
   if (!fs.existsSync(distDir)) {
@@ -36,7 +44,7 @@ function main() {
   const files: Record<string, Uint8Array> = {};
 
   collectFiles(distDir, PLUGIN_DIR, files);
-  files[`${PLUGIN_DIR}/README.md`] = fs.readFileSync(path.join(ROOT, "README.md"));
+  files[`${PLUGIN_DIR}/README.md`] = fs.readFileSync(path.join(REPO_ROOT, "README.md"));
 
   const zipped = zipSync(files);
   for (const zipName of zipNames) {

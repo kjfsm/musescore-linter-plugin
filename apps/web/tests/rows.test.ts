@@ -1,4 +1,4 @@
-import type { Issue } from "@musescore-linter/core";
+import type { Issue } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { summarize, toRows } from "../src/lib/rows";

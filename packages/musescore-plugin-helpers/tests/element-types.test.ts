@@ -1,4 +1,4 @@
-import type { ScoreElement } from "@musescore-linter/musescore-api-types";
+import type { ScoreElement } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
 import {

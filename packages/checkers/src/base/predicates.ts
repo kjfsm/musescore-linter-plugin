@@ -1,5 +1,5 @@
-import type { LintIR, TextKind } from "@musescore-linter/core";
-import { CANONICAL, eventsOnStaff } from "@musescore-linter/core";
+import type { LintIR, TextKind } from "@score-linter/core";
+import { CANONICAL, eventsOnStaff } from "@score-linter/core";
 
 export function matchesAny(text: string, patterns: string[]): boolean {
   return patterns.includes(text);

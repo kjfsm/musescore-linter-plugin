@@ -1,13 +1,23 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { Issue, LintIR } from "@musescore-linter/core";
+import type { Issue, LintIR } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { formatGithub, formatPretty, meetsThreshold } from "../src/format.js";
 import { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, type RunIO, run } from "../src/run.js";
 
-const DUET = join(__dirname, "..", "..", "source-musicxml", "tests", "fixtures", "duet.musicxml");
+const DUET = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "packages",
+  "source-musicxml",
+  "tests",
+  "fixtures",
+  "duet.musicxml",
+);
 const duetBytes = readFileSync(DUET);
 
 interface Captured {
@@ -36,7 +46,7 @@ describe("run: 基本動作", () => {
   it("--help は使い方を出して 0 で終わる", () => {
     const r = invoke(["--help"]);
     expect(r.code).toBe(EXIT_OK);
-    expect(r.out).toContain("musescore-lint");
+    expect(r.out).toContain("score-lint");
     expect(r.out).toContain("--fail-on");
   });
 

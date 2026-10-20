@@ -1,4 +1,4 @@
-# musescore-linter-plugin
+# score-linter
 
 MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テスト・リリースは Turborepo + Changesets。
 コマンド・ディレクトリ構成は [README.md](./README.md)。検証ゲートの正は `.github/workflows/ci.yml`（`pnpm lint` → `pnpm knip` → `pnpm pipeline` → `pnpm test:coverage`）。
@@ -7,7 +7,7 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 
 **LintIR を作る側と使う側が分離している。** `core`（LintIR・linter・checker registry）と
 `checkers` は MuseScore に依存しない。MuseScore を触るのは `source-musescore`・`musescore-api`・`musescore-plugin-helpers`・`musescore-api-types` だけで、
-`source-musicxml` は MusicXML から同じ LintIR を作る。`cli` は `musescore-lint` コマンド。
+`source-musicxml` は MusicXML から同じ LintIR を作る。ホストは `apps/`（`plugin`・`cli`・`web`）。
 
 - LintIR の型定義（`packages/core/src/types.ts`）は、checker の都合で変えない。
 - `apps/web` はブラウザ完結の Web 版で、`main` を持たない assets-only Worker として配信する。

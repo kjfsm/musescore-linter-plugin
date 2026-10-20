@@ -1,5 +1,5 @@
 ---
-"musescore-linter-plugin": patch
+"@score-linter/plugin": patch
 ---
 
 同じ名前のパートが複数ある譜面（「Horn in F」が 2 つなど）で、pizz./arco や con sord./senza sord. などの指示の対応チェックがパートどうしで混ざり、片方のパートの指示がもう片方の解除として扱われていたのを直しました。パートは名前ではなくパートそのものの単位でまとめるようになり、ピアノのような複数譜表のパートは引き続き 1 つにまとまります。スナップショットタブと CLI の `--dump-ir` が出力する `meta.parts` には、各譜表が属するパートを表す `partId` が加わります。

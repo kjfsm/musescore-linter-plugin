@@ -1,4 +1,4 @@
-import type { Chord } from "@musescore-linter/musescore-api-types";
+import type { Chord } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
 import { getArticulationNames } from "../src/articulation.js";

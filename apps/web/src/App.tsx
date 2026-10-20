@@ -122,10 +122,7 @@ export function App() {
 
       <footer className="border-t pt-4 text-sm text-muted-foreground">
         <p>
-          <a
-            className="underline underline-offset-4"
-            href="https://github.com/kjfsm/musescore-linter-plugin"
-          >
+          <a className="underline underline-offset-4" href="https://github.com/kjfsm/score-linter">
             ソースコード（GitHub）
           </a>
         </p>

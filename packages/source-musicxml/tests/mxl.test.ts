@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { CANONICAL } from "@musescore-linter/core";
+import { CANONICAL } from "@score-linter/core";
 import { zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 

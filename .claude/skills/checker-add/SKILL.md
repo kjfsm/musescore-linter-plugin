@@ -21,8 +21,8 @@ Checker オブジェクトの必須フィールド・`options` の書き方・se
 実例: `packages/checkers/src/finalBarlineChecker.ts`
 
 ```ts
-import type { Checker, IndexedIR, Issue } from "@musescore-linter/core";
-import { createIssue, eventsOfKind } from "@musescore-linter/core";
+import type { Checker, IndexedIR, Issue } from "@score-linter/core";
+import { createIssue, eventsOfKind } from "@score-linter/core";
 
 import { buildPartNameMap } from "./base/query.js";
 

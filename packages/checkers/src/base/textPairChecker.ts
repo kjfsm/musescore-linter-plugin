@@ -1,5 +1,5 @@
-import type { Checker, Issue, LintIR, Severity } from "@musescore-linter/core";
-import { createIssue } from "@musescore-linter/core";
+import type { Checker, Issue, LintIR, Severity } from "@score-linter/core";
+import { createIssue } from "@score-linter/core";
 
 import { buildPartBuckets, matchesAny, type PartBucketEvent } from "./predicates.js";
 

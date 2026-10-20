@@ -6,7 +6,7 @@ import type {
   Score,
   Segment,
   Selection,
-} from "@musescore-linter/musescore-api-types";
+} from "@score-linter/musescore-api-types";
 
 import { isChord, isNote } from "./predicates.js";
 import { VOICES_PER_STAFF } from "./tracks.js";

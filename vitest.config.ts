@@ -34,7 +34,7 @@ export default defineConfig({
       // packages 側は除外しない。snapshot.ts は「MuseScore ランタイム無しでは
       // 実行不可」として除外されていたが、tests/snapshot.test.ts がモックで
       // 実行しており事実と違った（451 行が無計測のままだった）。
-      include: ["packages/*/src/**/*.ts", "apps/*/src/lib/**/*.ts"],
+      include: ["packages/*/src/**/*.ts", "apps/cli/src/**/*.ts", "apps/*/src/lib/**/*.ts"],
       thresholds: {
         lines: 85,
         functions: 85,

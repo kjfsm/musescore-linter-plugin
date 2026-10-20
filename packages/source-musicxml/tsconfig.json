@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": true,
     "paths": {
-      "@musescore-linter/core": ["../core/src/index.ts"]
+      "@score-linter/core": ["../core/src/index.ts"]
     }
   },
   "include": ["src/**/*", "tests/**/*"]

@@ -4,7 +4,7 @@ import type {
   Score,
   ScoreElement,
   Segment,
-} from "@musescore-linter/musescore-api-types";
+} from "@score-linter/musescore-api-types";
 
 import { iterateMeasures } from "./traversal.js";
 

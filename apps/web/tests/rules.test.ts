@@ -1,4 +1,4 @@
-import { getCheckerList } from "@musescore-linter/core";
+import { getCheckerList } from "@score-linter/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { allRuleIds } from "../src/lib/lint";

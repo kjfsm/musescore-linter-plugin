@@ -1,4 +1,4 @@
-import type { HairpinType, ScoreElement, Spanner } from "@musescore-linter/musescore-api-types";
+import type { HairpinType, ScoreElement, Spanner } from "@score-linter/musescore-api-types";
 
 import { getSpannerRange, type SpannerRange } from "./spanner.js";
 

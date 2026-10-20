@@ -6,7 +6,7 @@ import type {
   PartGroupInfo,
   PartGroupSymbol,
   TextKind,
-} from "@musescore-linter/core";
+} from "@score-linter/core";
 import {
   CANONICAL,
   createIRBuilder,
@@ -14,16 +14,16 @@ import {
   makeLogger,
   normalizePartGroups,
   toBarlineKind,
-} from "@musescore-linter/core";
-import type { PluginSegment, TextAnnotation } from "@musescore-linter/musescore-api";
+} from "@score-linter/core";
+import type { PluginSegment, TextAnnotation } from "@score-linter/musescore-api";
 import type {
   BracketTypeEnum,
   EngravingItem,
   Measure,
   MuseScore,
   Score,
-} from "@musescore-linter/musescore-api-types";
-import { generatedFrom } from "@musescore-linter/musescore-api-types";
+} from "@score-linter/musescore-api-types";
+import { generatedFrom } from "@score-linter/musescore-api-types";
 import {
   checkHostVersion,
   classifyBarlineKind,
@@ -57,7 +57,7 @@ import {
   strictEnum,
   trackToStaffIdx,
   VOICES_PER_STAFF,
-} from "@musescore-linter/musescore-plugin-helpers";
+} from "@score-linter/musescore-plugin-helpers";
 
 import type { HostEnums } from "./types.js";
 

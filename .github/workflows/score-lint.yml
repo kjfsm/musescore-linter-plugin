@@ -1,6 +1,6 @@
 name: 楽譜の Lint
 
-# .mscz を MuseScore の CLI で MusicXML に変換し、musescore-lint にかける。
+# .mscz を MuseScore の CLI で MusicXML に変換し、score-lint にかける。
 #
 # MuseScore 4 は CLI 実行でも Qt の xcb プラットフォームを要求し、
 # QT_QPA_PLATFORM=offscreen を指定しても起動に失敗する（本体の既知の挙動）。
@@ -13,7 +13,7 @@ on:
     branches: [main]
     paths:
       - "fixtures/scores/**"
-      - "packages/cli/**"
+      - "apps/cli/**"
       - "packages/source-musicxml/**"
       - "packages/checkers/**"
       - "packages/core/**"
@@ -21,7 +21,7 @@ on:
   pull_request:
     paths:
       - "fixtures/scores/**"
-      - "packages/cli/**"
+      - "apps/cli/**"
       - "packages/source-musicxml/**"
       - "packages/checkers/**"
       - "packages/core/**"
@@ -109,7 +109,7 @@ jobs:
             -o build/selfcheck/duet.musicxml \
             packages/source-musicxml/tests/fixtures/duet.mscz
           test -s build/selfcheck/duet.musicxml
-          ./dist-cli/musescore-lint.mjs --fail-on=none build/selfcheck/duet.musicxml
+          ./apps/cli/dist/score-lint.mjs --fail-on=none build/selfcheck/duet.musicxml
 
       - name: .mscz を MusicXML へ一括変換
         id: convert
@@ -137,7 +137,7 @@ jobs:
           # first-note-dynamics が 1 件出る）。ここはゲートではなく回帰の観測が目的
           # なので --fail-on=none にし、件数の変化を summary の diff で見る。
           # CLI がクラッシュしたりパースに失敗した場合は非ゼロで落ちる。
-          ./dist-cli/musescore-lint.mjs --format=github --fail-on=none "${FILES[@]}"
+          ./apps/cli/dist/score-lint.mjs --format=github --fail-on=none "${FILES[@]}"
 
       - name: 解析結果（人間向け）
         if: always()
@@ -150,7 +150,7 @@ jobs:
               echo '<details><summary>楽譜の解析結果</summary>'
               echo
               echo '```'
-              ./dist-cli/musescore-lint.mjs --no-color --fail-on=none "${FILES[@]}"
+              ./apps/cli/dist/score-lint.mjs --no-color --fail-on=none "${FILES[@]}"
               echo '```'
               echo
               echo '</details>'

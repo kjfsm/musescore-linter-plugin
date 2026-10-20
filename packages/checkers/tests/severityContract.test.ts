@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import type { Severity } from "@musescore-linter/core";
+import type { Severity } from "@score-linter/core";
 import { describe, expect, it } from "vitest";
 
 import { ALL_CHECKERS } from "../src/index.js";

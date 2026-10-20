@@ -1,4 +1,4 @@
-import type { ScoreElement, Tie } from "@musescore-linter/musescore-api-types";
+import type { ScoreElement, Tie } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
 import { getTiePitches, isTie } from "../src/tie.js";

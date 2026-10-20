@@ -1,4 +1,4 @@
-import type { Chord, ChordRest, Note, ScoreElement } from "@musescore-linter/musescore-api-types";
+import type { Chord, ChordRest, Note, ScoreElement } from "@score-linter/musescore-api-types";
 
 export function isChord(el: ScoreElement | null | undefined): el is Chord {
   return el?.name === "Chord";

@@ -1,6 +1,6 @@
-export * from "@musescore-linter/musescore-api-types";
+export * from "@score-linter/musescore-api-types";
 
-import type { EngravingItem, Segment } from "@musescore-linter/musescore-api-types";
+import type { EngravingItem, Segment } from "@score-linter/musescore-api-types";
 
 /**
  * MuseScore テキスト系要素（StaffText / TempoText / Dynamic 等）。

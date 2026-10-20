@@ -9,67 +9,37 @@
     "pnpm-lock.yaml"
   ],
   "tasks": {
+    "typecheck": {
+      "description": "TypeScript の型チェック。依存パッケージの typecheck が先に完了している必要がある。",
+      "dependsOn": ["^typecheck"]
+    },
+    "//#test": {
+      "description": "vitest で全パッケージのテストを 1 回で実行する（スクリプトはルートだけが持つ）。全体で 1 秒未満なので、パッケージ単位に分ける利点がない。",
+      "dependsOn": ["^typecheck"],
+      "inputs": [
+        "packages/*/src/**",
+        "packages/*/tests/**",
+        "apps/*/src/**",
+        "apps/*/tests/**",
+        "tools/*/src/**",
+        "tools/*/tests/**"
+      ],
+      "outputs": []
+    },
     "build": {
-      "description": "apps/* のフロントエンドを Vite でビルドする。ルートの build:plugin（QML バンドル）とは別物。",
-      "dependsOn": ["^typecheck", "musescore-linter-plugin#test"],
+      "description": "apps/* の成果物を作る。plugin は QML 向けバンドル、cli は単一ファイルの CLI、web は Vite。",
+      "dependsOn": ["^typecheck", "typecheck", "//#test"],
       "inputs": ["$TURBO_DEFAULT$", "!dist/**"],
       "outputs": ["dist/**"]
     },
-    "typecheck": {
-      "description": "TypeScript の型チェックを実行する。依存パッケージの typecheck が先に完了している必要がある。",
-      "dependsOn": ["^typecheck"]
-    },
-    "test": {
-      "description": "vitest で全パッケージのユニットテストを 1 回で実行する（スクリプトはルートだけが持つ）。パッケージ単位に分けていた頃は、alias だけが違う vitest.config.ts が 5 本並んでいた。全体で 1 秒未満なので分割する利点がない。",
-      "dependsOn": [
-        "@musescore-linter/core#typecheck",
-        "@musescore-linter/checkers#typecheck",
-        "@musescore-linter/cli#typecheck",
-        "@musescore-linter/source-musescore#typecheck",
-        "@musescore-linter/source-musicxml#typecheck",
-        "@musescore-linter/web#typecheck"
-      ],
-      "inputs": ["packages/*/src/**", "packages/*/tests/**", "apps/*/src/**", "apps/*/tests/**"],
-      "outputs": []
-    },
-    "build:plugin": {
-      "description": "esbuild でプラグインをバンドルし dist/ へ出力する。core・checkers パッケージのテスト通過後に実行される。",
-      "dependsOn": ["@musescore-linter/musescore-api#typecheck", "musescore-linter-plugin#test"],
-      "inputs": [
-        "src/**",
-        "scripts/build.ts",
-        "packages/core/src/**",
-        "packages/checkers/src/**",
-        "packages/source-musescore/src/**",
-        // scripts/build.ts が dist/ へコピー・テンプレート置換する対象。
-        // ここに無いと QML だけ編集したときキャッシュ誤ヒットで dist が古いままになる。
-        "ScoreLinter.qml",
-        "qml/**",
-        // __PLUGIN_VERSION__ の注入元
-        "package.json"
-      ],
-      "outputs": ["dist/**"]
-    },
-    "build:cli": {
-      "description": "esbuild で musescore-lint CLI を dist-cli/ へ単一ファイルにバンドルする。QML 向けの build:plugin とは独立。",
-      "dependsOn": ["musescore-linter-plugin#test"],
-      "inputs": [
-        "scripts/build-cli.ts",
-        "packages/cli/**",
-        "packages/core/src/**",
-        "packages/checkers/src/**",
-        "packages/source-musicxml/src/**"
-      ],
-      "outputs": ["dist-cli/**"]
-    },
     "package": {
-      "description": "dist/ の成果物を配布用 ZIP にパッケージングする。",
-      "dependsOn": ["build:plugin"],
-      "inputs": ["dist/**", "README.md", "package.json", "scripts/package.ts"],
-      // scripts/package.ts は版付きと版無しの 2 本を書き出す。版無し
-      // （musescore-linter-plugin.zip）は release.yml が参照するので、
+      "description": "apps/plugin の dist/ を配布用 ZIP にする。",
+      "dependsOn": ["build"],
+      // README はリポジトリのルートから同梱する
+      "inputs": ["dist/**", "package.json", "scripts/package.ts", "$TURBO_ROOT$/README.md"],
+      // 版無しの 2 本は release.yml と、2.4.0 以前のプラグインの更新リンクが参照する。
       // ここに無いとキャッシュヒット時に復元されず古いものが残る。
-      "outputs": ["musescore-linter-plugin-*.zip", "musescore-linter-plugin.zip"]
+      "outputs": ["score-linter-*.zip", "score-linter.zip", "musescore-linter-plugin.zip"]
     }
   }
 }

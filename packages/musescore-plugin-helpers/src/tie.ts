@@ -1,4 +1,4 @@
-import type { ScoreElement, Tie } from "@musescore-linter/musescore-api-types";
+import type { ScoreElement, Tie } from "@score-linter/musescore-api-types";
 
 /**
  * A MuseScore tie connects two noteheads of the **same pitch**. Narrow with `isTie`

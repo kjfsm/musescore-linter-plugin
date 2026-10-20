@@ -1,4 +1,4 @@
-import { registerAll } from "@musescore-linter/checkers";
+import { registerAll } from "@score-linter/checkers";
 import {
   compareVersions,
   getCategories,
@@ -9,8 +9,8 @@ import {
   resolveCheckerOptions,
   runAllCheckers,
   setPerfEnabled,
-} from "@musescore-linter/core";
-import { buildSnapshot, getSnapshotPerfReport } from "@musescore-linter/source-musescore";
+} from "@score-linter/core";
+import { buildSnapshot, getSnapshotPerfReport } from "@score-linter/source-musescore";
 
 // バンドルロード時に全チェッカーを登録
 registerAll();

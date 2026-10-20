@@ -1,7 +1,7 @@
-import { registerAll } from "@musescore-linter/checkers";
-import type { LintIR } from "@musescore-linter/core";
-import { getCheckerList, reset, runAllCheckers, setLevel } from "@musescore-linter/core";
-import { buildIRFromBytes } from "@musescore-linter/source-musicxml";
+import { registerAll } from "@score-linter/checkers";
+import type { LintIR } from "@score-linter/core";
+import { getCheckerList, reset, runAllCheckers, setLevel } from "@score-linter/core";
+import { buildIRFromBytes } from "@score-linter/source-musicxml";
 
 import {
   assertKnownRules,

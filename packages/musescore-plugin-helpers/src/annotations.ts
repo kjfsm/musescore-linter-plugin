@@ -1,4 +1,4 @@
-import type { EngravingItem } from "@musescore-linter/musescore-api-types";
+import type { EngravingItem } from "@score-linter/musescore-api-types";
 
 import { trackToStaffIdx } from "./tracks.js";
 

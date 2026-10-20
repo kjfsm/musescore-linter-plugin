@@ -2,7 +2,11 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["src/bundle-entry.ts", "scripts/*.ts"]
+      "entry": ["scripts/*.ts"]
+    },
+    "apps/plugin": {
+      "entry": ["src/bundle-entry.ts", "scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/musescore-api-types": {
       "project": ["src/**/*.ts"]
@@ -29,8 +33,9 @@
     "packages/source-musicxml": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/cli": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    "apps/cli": {
+      "entry": ["scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]
     },
     "apps/web": {
       "entry": ["tests/**/*.test.ts"],

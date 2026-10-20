@@ -1,7 +1,4 @@
-# ルートもメンバーに含める。changesets はワークスペースのメンバーからしか
-# パッケージを解決できず、プラグイン本体のバージョンはルートの package.json が持つため。
 packages:
-  - "."
   - "packages/*"
   - "apps/*"
   - "tools/*"
