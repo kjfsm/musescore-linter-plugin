@@ -22,7 +22,8 @@
         "apps/*/src/**",
         "apps/*/tests/**",
         "tools/*/src/**",
-        "tools/*/tests/**"
+        "tools/*/tests/**",
+        "fixtures/**"
       ],
       "outputs": []
     },
