@@ -17,10 +17,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.join(dir, "src"),
-      "@score-linter/core": pkg("core"),
-      "@score-linter/checkers": pkg("checkers"),
-      "@score-linter/source-musicxml": pkg("source-musicxml"),
-      "@score-linter/cli": path.join(dir, "..", "cli", "src", "index.ts"),
+      "@score-linter/score-model": pkg("score-model"),
+      "@score-linter/reader-musicxml": pkg("reader-musicxml"),
+      "@score-linter/linter": pkg("linter"),
+      "@score-linter/lint-app": pkg("lint-app"),
     },
   },
   build: {
