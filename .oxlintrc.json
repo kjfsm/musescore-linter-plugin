@@ -66,6 +66,39 @@
       }
     },
     {
+      // linter はルールが MuseScore・reader・ホストを知らないことを、依存関係で守る
+      "files": ["packages/linter/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*", "!@score-linter/score-model"],
+                "message": "linter は score-model だけに依存する。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/lint-app/**"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@score-linter/*", "!@score-linter/score-model", "!@score-linter/linter"],
+                "message": "lint-app は linter と score-model だけに依存する。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // core と checkers は MuseScore に依存しない、が AGENTS.md の最重要制約。
       // これまで package.json の記述と人の注意力だけで守られていたので、
       // import を機械的に塞いでおく。MuseScore を触ってよいのは

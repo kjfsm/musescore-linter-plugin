@@ -27,6 +27,12 @@
     "packages/reader-musicxml": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
+    "packages/linter": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/lint-app": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
     "packages/core": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },

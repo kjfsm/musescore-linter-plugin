@@ -173,6 +173,21 @@ importers:
 
   packages/core: {}
 
+  packages/lint-app:
+    dependencies:
+      '@score-linter/linter':
+        specifier: workspace:*
+        version: link:../linter
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../score-model
+
+  packages/linter:
+    dependencies:
+      '@score-linter/score-model':
+        specifier: workspace:*
+        version: link:../score-model
+
   packages/musescore-api:
     devDependencies:
       '@score-linter/musescore-api-types':

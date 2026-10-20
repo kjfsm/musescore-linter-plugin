@@ -11,6 +11,7 @@ import {
   rhythmSignature,
   slursOn,
   spanCovers,
+  tiesOn,
   voiceEventsIn,
 } from "../src/queries.js";
 import { buildScore } from "../src/spec.js";
@@ -102,5 +103,92 @@ describe("問い合わせ", () => {
     const copy = JSON.parse(JSON.stringify(score));
     expect(copy).toEqual(score);
     expect(rhythmSignature(copy, 0, 0, 1)).toBe(rhythmSignature(score, 0, 0, 1));
+  });
+});
+
+describe("measureAt（音符の無い tick）", () => {
+  const WHOLE = 1920;
+  const threeMeasures = () => buildScore({ measures: [{}, {}, {}], chords: [{ tick: 0 }] });
+
+  it("小節の先頭 tick でその小節を返す", () => {
+    const score = threeMeasures();
+    expect(measureAt(score, 0)?.serial).toBe(1);
+    expect(measureAt(score, WHOLE)?.serial).toBe(2);
+    expect(measureAt(score, WHOLE * 2)?.serial).toBe(3);
+  });
+
+  // ヘアピンの終端のように、音符が 1 つも無い tick を指す呼び出しがある
+  it("和音の無い tick でも含まれる小節を返す", () => {
+    const score = threeMeasures();
+    expect(measureAt(score, WHOLE + 1)?.serial).toBe(2);
+    expect(measureAt(score, WHOLE * 2 - 1)?.serial).toBe(2);
+    expect(measureAt(score, WHOLE * 3 - 1)?.serial).toBe(3);
+  });
+
+  it("小節が無い楽譜では null", () => {
+    expect(measureAt(buildScore({ chords: [{ tick: 480 }] }), 480)).toBeNull();
+  });
+});
+
+describe("spanCovers（全件走査との一致）", () => {
+  // 入れ子・重なり・隣接・別声部・長さ 0 を混ぜる。二分探索が startTick 昇順に頼るので、
+  // 宣言順は昇順にしない。
+  const spec = [
+    { voice: 0, startTick: 480, endTick: 960 },
+    { voice: 0, startTick: 0, endTick: 1920 },
+    { voice: 1, startTick: 240, endTick: 720 },
+    { voice: 0, startTick: 1920, endTick: 1920 },
+    { voice: 0, startTick: 2400, endTick: 2880 },
+  ];
+  const score = buildScore({
+    slurs: spec,
+    ties: spec.map((s) => ({ ...s, startPitch: null, endPitch: null })),
+  });
+
+  const linearCovers = (voice: number, tick: number): boolean =>
+    spec.some((s) => s.voice === voice && s.startTick <= tick && tick < s.endTick);
+
+  it("全 tick・全声部で全件走査と同じ答えを返す", () => {
+    for (let voice = 0; voice <= 2; voice++) {
+      for (let tick = -100; tick <= 3200; tick += 20) {
+        const expected = linearCovers(voice, tick);
+        expect(spanCovers(slursOn(score, 0), voice, tick), `slur voice=${voice} tick=${tick}`).toBe(
+          expected,
+        );
+        expect(spanCovers(tiesOn(score, 0), voice, tick), `tie voice=${voice} tick=${tick}`).toBe(
+          expected,
+        );
+      }
+    }
+  });
+
+  it("スパナーを持たない譜表では false", () => {
+    expect(spanCovers(slursOn(score, 9), 0, 480)).toBe(false);
+    expect(spanCovers(tiesOn(score, 9), 0, 480)).toBe(false);
+  });
+});
+
+describe("rhythmSignature（譜表間の比較）", () => {
+  it("同じリズムの譜表は同じ値で、音価が違う譜表は異なる値", () => {
+    const rhythm = (staff: number) => [
+      { staff, tick: 0, duration: q },
+      { staff, tick: 960, duration: q },
+    ];
+    const score = buildScore({
+      parts: [{ staffCount: 3 }],
+      measures: [{}],
+      chords: [
+        ...rhythm(0),
+        ...rhythm(1),
+        { staff: 2, tick: 0, duration: { numerator: 1, denominator: 2 } },
+      ],
+      rests: [
+        { staff: 0, tick: 480, duration: q },
+        { staff: 1, tick: 480, duration: q },
+      ],
+    });
+    const sig = (staff: number) => rhythmSignature(score, staff, 0, 1);
+    expect(sig(0)).toBe(sig(1));
+    expect(sig(2)).not.toBe(sig(0));
   });
 });

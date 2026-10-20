@@ -13,6 +13,8 @@
   "include": [
     "src/bundle-entry.ts",
     "src/qml-globals.d.ts",
-    "../../packages/score-model/src/**/*.ts"
+    "../../packages/score-model/src/**/*.ts",
+    "../../packages/linter/src/**/*.ts",
+    "../../packages/lint-app/src/**/*.ts"
   ]
 }
