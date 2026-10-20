@@ -142,6 +142,26 @@ function emptyScore(): Score {
 }
 
 describe("buildSnapshot", () => {
+  it("同名の別パートは別の partId、複数譜表のパートは同じ partId になる", () => {
+    const score = {
+      nstaves: 4,
+      ntracks: 16,
+      parts: [
+        { startTrack: 0, endTrack: 4, longName: "Horn in F" },
+        { startTrack: 4, endTrack: 8, longName: "Horn in F" },
+        { startTrack: 8, endTrack: 16, longName: "Piano" },
+      ],
+      firstMeasure: null,
+      staves: [],
+    } as unknown as Score;
+    expect(buildSnapshot(score, hostEnums()).meta.parts).toEqual([
+      { staffIdx: 0, partId: "part-0", partName: "Horn in F" },
+      { staffIdx: 1, partId: "part-1", partName: "Horn in F" },
+      { staffIdx: 2, partId: "part-2", partName: "Piano" },
+      { staffIdx: 3, partId: "part-2", partName: "Piano" },
+    ]);
+  });
+
   it("host を渡さないときは meta.hostVersion を設定しない", () => {
     const ir = buildSnapshot(emptyScore(), hostEnums());
     expect(ir.meta.hostVersion).toBeUndefined();

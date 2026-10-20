@@ -449,7 +449,7 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
     byStaffAndKind: { [staffIdx]: { [kind]: [eventId] } }
   },
   meta: {
-    parts: [{ staffIdx, partName }],
+    parts: [{ staffIdx, partId, partName }],
     firstMusicTickByStaff: [tick|null, ...],
     lastTick: number,
     hairpins: [{ staffIdx, startTick, endTick }]

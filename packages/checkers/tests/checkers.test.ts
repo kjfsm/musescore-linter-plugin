@@ -243,6 +243,36 @@ describe("pizz-arco checker", () => {
     ]);
     expect(pizzArcoChecker.run(ir)).toHaveLength(0);
   });
+
+  it("同名の別パートは on/off 状態を共有しない", () => {
+    const ir = buildIR({
+      parts: [
+        { partId: "P1", partName: "Horn in F" },
+        { partId: "P2", partName: "Horn in F" },
+      ],
+      events: [
+        { kind: K.STAFF_TEXT, staff: 0, tick: 0, measure: 1, textNorm: "pizz.", textRaw: "pizz." },
+        { kind: K.STAFF_TEXT, staff: 1, tick: 480, measure: 2, textNorm: "arco", textRaw: "arco" },
+      ],
+    });
+    const issues = pizzArcoChecker.run(ir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.staffIdx).toBe(0);
+  });
+
+  it("同じパートの複数譜表は 1 つの on/off 状態を共有する", () => {
+    const ir = buildIR({
+      parts: [
+        { partId: "P1", partName: "Harp" },
+        { partId: "P1", partName: "Harp" },
+      ],
+      events: [
+        { kind: K.STAFF_TEXT, staff: 0, tick: 0, measure: 1, textNorm: "pizz.", textRaw: "pizz." },
+        { kind: K.STAFF_TEXT, staff: 1, tick: 480, measure: 2, textNorm: "arco", textRaw: "arco" },
+      ],
+    });
+    expect(pizzArcoChecker.run(ir)).toHaveLength(0);
+  });
 });
 
 // ─── sordino ────────────────────────────────────────────────────────────────

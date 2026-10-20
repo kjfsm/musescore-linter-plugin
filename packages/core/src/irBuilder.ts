@@ -72,6 +72,8 @@ export type EventSpec =
 
 export interface PartSpec {
   staffIdx?: number;
+  /** 省略すると譜表ごとに別のパートになる */
+  partId?: string;
   partName?: string;
 }
 
@@ -203,10 +205,14 @@ export interface IRBuilder {
  * 一括で spec を渡せるなら {@link buildIR} のほうが短い。
  */
 export function createIRBuilder(init: IRBuilderInit = {}): IRBuilder {
-  const parts = (init.parts ?? []).map((p, i) => ({
-    staffIdx: p.staffIdx !== undefined ? p.staffIdx : i,
-    partName: p.partName ?? `Staff ${i + 1}`,
-  }));
+  const parts = (init.parts ?? []).map((p, i) => {
+    const staffIdx = p.staffIdx !== undefined ? p.staffIdx : i;
+    return {
+      staffIdx,
+      partId: p.partId ?? `staff-${staffIdx}`,
+      partName: p.partName ?? `Staff ${i + 1}`,
+    };
+  });
 
   const ir: LintIR = {
     events: [],
