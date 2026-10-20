@@ -4,9 +4,12 @@ import { beatCrossingTie } from "./beatCrossingTie.js";
 import {
   crescTextResolution,
   duplicateDynamics,
+  dynamicAfterRest,
+  dynamicAsText,
   firstNoteDynamics,
   hairpinOnRest,
   hairpinTargetDynamic,
+  overlappingHairpins,
   simultaneousDynamics,
   tieContinuationDynamic,
 } from "./dynamics.js";
@@ -15,6 +18,7 @@ import {
   courtesyAccidental,
   finalBarline,
   rehearsalMarkOrder,
+  rehearsalMarkPosition,
   repeatBarlineMatch,
   restAnnotation,
 } from "./notation.js";
@@ -38,7 +42,13 @@ import {
   sulTastoOrd,
   unaCorda,
 } from "./techniquePairs.js";
-import { openingTempo, tempoBarline, tempoChangeResolution, tempoWithoutBpm } from "./tempo.js";
+import {
+  duplicateTempo,
+  openingTempo,
+  tempoBarline,
+  tempoChangeResolution,
+  tempoWithoutBpm,
+} from "./tempo.js";
 
 /**
  * 組み込みのルール。並びがそのまま実行順で、設定画面の並びにもなる。
@@ -62,12 +72,17 @@ export const builtinRules: readonly Rule[] = [
   firstNoteDynamics,
   tempoWithoutBpm,
   tempoChangeResolution,
+  duplicateTempo,
   duplicateDynamics,
   simultaneousDynamics,
+  dynamicAsText,
+  dynamicAfterRest,
   hairpinTargetDynamic,
+  overlappingHairpins,
   finalBarline,
   codaSegno,
   rehearsalMarkOrder,
+  rehearsalMarkPosition,
   repeatBarlineMatch,
   tiePitchMismatch,
   slurSamePitch,

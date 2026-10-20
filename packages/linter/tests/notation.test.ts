@@ -7,6 +7,7 @@ import {
   courtesyAccidental,
   finalBarline,
   rehearsalMarkOrder,
+  rehearsalMarkPosition,
   repeatBarlineMatch,
   restAnnotation,
 } from "../src/rules/notation.js";
@@ -288,5 +289,34 @@ describe("courtesy-accidental", () => {
   it("前に臨時記号が無ければ提案しない", () => {
     const score = buildScore({ chords: [{ tick: 1920, measure: 2, notes: [fNatural] }] });
     expect(runRule(courtesyAccidental, score)).toEqual([]);
+  });
+});
+
+describe("rehearsal-mark-position", () => {
+  const markAt = (tick: number) =>
+    cleanScore({
+      measures: [{}, {}],
+      annotations: [{ tick, text: "A", kind: "rehearsal" }],
+    });
+
+  it("小節の頭に無いリハーサルマークを info で指摘する", () => {
+    const issues = runRule(rehearsalMarkPosition, markAt(1920 + 480));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "info", at: { measure: 2, tick: 2400 } });
+  });
+
+  it("小節の頭のリハーサルマークは指摘しない", () => {
+    expect(runRule(rehearsalMarkPosition, markAt(1920))).toEqual([]);
+  });
+
+  it("同じ位置で複数の譜表に付いたマークは 1 件にまとめる", () => {
+    const score = cleanScore({
+      measures: [{}, {}],
+      annotations: [
+        { staff: 0, tick: 2400, text: "A", kind: "rehearsal" },
+        { staff: 1, tick: 2400, text: "A", kind: "rehearsal" },
+      ],
+    });
+    expect(runRule(rehearsalMarkPosition, score)).toHaveLength(1);
   });
 });

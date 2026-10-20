@@ -147,6 +147,10 @@ export function interpretAnnotation(
   if (kind === "dynamic") {
     const dynamic = hints.dynamic ?? parseDynamic(norm);
     if (dynamic) directives.push({ type: "dynamic", ...dynamic });
+  } else if (kind === "text" && DYNAMIC_MARK_RE.test(norm)) {
+    // 種類はテキストのまま残す。強弱記号として数えると、再生に効かない記号を
+    // 冒頭の強弱記号などのチェックが「ある」とみなしてしまう。
+    directives.push({ type: "dynamic", mark: norm, modifier: "" });
   }
 
   const technique = TECHNIQUE_BY_TEXT[norm] ?? hints.technique;

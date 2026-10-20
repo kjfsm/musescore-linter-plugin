@@ -26,9 +26,15 @@ describe("interpretAnnotation", () => {
     ]);
   });
 
-  it("自由テキストの f は強弱記号として扱わない", () => {
-    expect(interpretAnnotation("f").kind).toBe("text");
-    expect(interpretAnnotation("f").directives).toEqual([]);
+  it("強弱記号だけの自由テキストは、種類をテキストのまま強弱記号の Directive を持つ", () => {
+    expect(interpretAnnotation("f")).toEqual({
+      kind: "text",
+      directives: [{ type: "dynamic", mark: "f", modifier: "" }],
+    });
+  });
+
+  it("修飾語の付いた自由テキストは強弱記号として読まない", () => {
+    expect(interpretAnnotation("più f").directives).toEqual([]);
   });
 
   it("ソースが構造として持つ強弱記号をテキストより優先する", () => {

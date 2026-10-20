@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   crescTextResolution,
+  dynamicAfterRest,
+  dynamicAsText,
   duplicateDynamics,
   firstNoteDynamics,
   hairpinOnRest,
   hairpinTargetDynamic,
+  overlappingHairpins,
   simultaneousDynamics,
   tieContinuationDynamic,
 } from "../src/rules/dynamics.js";
@@ -312,5 +315,108 @@ describe("tie-continuation-dynamic", () => {
       annotations: [dynamic("p", 480, 1)],
     });
     expect(runRule(tieContinuationDynamic, score)).toEqual([]);
+  });
+});
+
+describe("overlapping-hairpins", () => {
+  const withHairpins = (...spans: [number, number][]) =>
+    cleanScore({
+      chords: [
+        { staff: 0, tick: 480 },
+        { staff: 0, tick: 960 },
+        { staff: 0, tick: 1440 },
+      ],
+      hairpins: spans.map(([startTick, endTick]) => ({ staff: 0, startTick, endTick })),
+    });
+
+  it("前のヘアピンが終わる前に始まるヘアピンを warning で指摘する", () => {
+    const issues = runRule(overlappingHairpins, withHairpins([0, 960], [480, 1440]));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, tick: 480 } });
+  });
+
+  it("端と端が接するだけなら指摘しない", () => {
+    expect(runRule(overlappingHairpins, withHairpins([0, 960], [960, 1440]))).toEqual([]);
+  });
+
+  it("別の譜表のヘアピンとは比べない", () => {
+    const score = cleanScore({
+      hairpins: [
+        { staff: 0, startTick: 0, endTick: 960 },
+        { staff: 1, startTick: 480, endTick: 1440 },
+      ],
+    });
+    expect(runRule(overlappingHairpins, score)).toEqual([]);
+  });
+});
+
+describe("dynamic-after-rest", () => {
+  const measures = Array.from({ length: 12 }, () => ({}));
+  const tickOf = (measure: number) => (measure - 1) * 1920;
+  const reentry = (measure: number, annotations: ReturnType<typeof dynamic>[] = []) =>
+    cleanScore({
+      measures,
+      chords: [{ staff: 0, tick: tickOf(measure) }],
+      annotations,
+    });
+
+  it("既定では 4 小節以上休んだあとの入りに強弱記号が無ければ info で指摘する", () => {
+    const issues = runRule(dynamicAfterRest, reentry(6));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "info",
+      at: { staff: 0, measure: 6, tick: tickOf(6) },
+      detail: { restMeasures: 4, previousMeasure: 1 },
+    });
+  });
+
+  it("休みが閾値より短ければ指摘しない", () => {
+    expect(runRule(dynamicAfterRest, reentry(5))).toEqual([]);
+  });
+
+  it("入りの音か、その前の休みに強弱記号があれば指摘しない", () => {
+    expect(runRule(dynamicAfterRest, reentry(6, [dynamic("p", tickOf(6), 6)]))).toEqual([]);
+    expect(runRule(dynamicAfterRest, reentry(6, [dynamic("p", tickOf(5), 5)]))).toEqual([]);
+  });
+
+  it("前の音より前にある強弱記号は言い直しとみなさない", () => {
+    const score = cleanScore({
+      measures,
+      chords: [
+        { staff: 0, tick: tickOf(2) },
+        { staff: 0, tick: tickOf(7) },
+      ],
+      annotations: [dynamic("p", tickOf(2), 2)],
+    });
+    expect(runRule(dynamicAfterRest, score)).toHaveLength(1);
+  });
+
+  it("休みの長さをオプションで変えられる", () => {
+    expect(runRule(dynamicAfterRest, reentry(4), { restMeasures: "2" })).toHaveLength(1);
+    expect(runRule(dynamicAfterRest, reentry(6), { restMeasures: "8" })).toEqual([]);
+  });
+});
+
+describe("dynamic-as-text", () => {
+  it("普通のテキストで書いた強弱記号を warning で指摘する", () => {
+    const score = cleanScore({ annotations: [{ staff: 1, tick: 480, text: "mf" }] });
+    const issues = runRule(dynamicAsText, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 1, tick: 480 } });
+  });
+
+  it("強弱記号として入れたものと、修飾語の付いたテキストは指摘しない", () => {
+    const score = cleanScore({ annotations: [{ staff: 1, tick: 480, text: "più f" }] });
+    expect(runRule(dynamicAsText, score)).toEqual([]);
+  });
+
+  it("楽譜全体に付いたテキストは譜表を持たない指摘にする", () => {
+    const score = cleanScore({ annotations: [{ tick: 480, text: "p" }] });
+    expect(runRule(dynamicAsText, score)[0]).toMatchObject({ at: { staff: null, partId: null } });
+  });
+
+  it("パートに付いたテキストはパートの最初の譜表で指摘する", () => {
+    const score = cleanScore({ annotations: [{ partId: "P2", tick: 480, text: "p" }] });
+    expect(runRule(dynamicAsText, score)[0]).toMatchObject({ at: { staff: 1 } });
   });
 });

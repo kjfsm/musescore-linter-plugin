@@ -1,6 +1,7 @@
 import type { Annotation, Chord, RepeatMark, Technique } from "@score-linter/score-model";
 import {
   annotationsOn,
+  measureBySerial,
   restTicks,
   stableSortBy,
   tpcToAlter,
@@ -302,6 +303,32 @@ export const courtesyAccidental = defineRule({
           });
         }
       }
+    }
+  },
+});
+
+export const rehearsalMarkPosition = defineRule({
+  id: "rehearsal-mark-position",
+  meta: {
+    name: "リハーサルマークの位置",
+    description: "小節の頭に無いリハーサルマークを検出",
+    category: "notation",
+    severity: "info",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    const seen = new Set<number>();
+    for (const a of ofKind(score.annotations, "rehearsal")) {
+      if (seen.has(a.tick)) continue;
+      seen.add(a.tick);
+      const measure = measureBySerial(score, a.measure);
+      if (!measure || measure.startTick === a.tick) continue;
+      report({
+        at: { measure: a.measure, tick: a.tick },
+        message: `リハーサルマーク「${a.text.trim()}」が小節の頭にありません`,
+        detail: { measureStartTick: measure.startTick },
+      });
     }
   },
 });

@@ -2,17 +2,26 @@ import type { Annotation, Score } from "@score-linter/score-model";
 import {
   annotationsAffecting,
   annotationsOn,
+  chordsOnStaff,
   firstChord,
   hairpinsOn,
   lastTick,
   measureAt,
+  measureBySerial,
   normalizeText,
   stableSortBy,
   tiesOn,
 } from "@score-linter/score-model";
 
 import { defineRule } from "../engine.js";
-import { directiveOf, ofKind, restOnlyEndpoints, staffChords, tieEnds } from "./support.js";
+import {
+  directiveOf,
+  ofKind,
+  restOnlyEndpoints,
+  staffChords,
+  staffOfScope,
+  tieEnds,
+} from "./support.js";
 
 const dynamicsOn = (score: Score, staff: number) => ofKind(annotationsOn(score, staff), "dynamic");
 const dynamicsAffecting = (score: Score, staff: number) =>
@@ -231,6 +240,107 @@ export const tieContinuationDynamic = defineRule({
           message: `強弱記号 "${a.text}" がタイで続くだけの音に付いています`,
         });
       }
+    }
+  },
+});
+
+export const overlappingHairpins = defineRule({
+  id: "overlapping-hairpins",
+  meta: {
+    name: "重なったヘアピン",
+    description: "同じ譜表で前のヘアピンが終わる前に始まるヘアピンを検出",
+    category: "dynamics",
+    severity: "warning",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    for (const { index: staff } of score.staves) {
+      let previous: { startTick: number; endTick: number } | null = null;
+      for (const hp of hairpinsOn(score, staff)) {
+        if (previous && hp.startTick < previous.endTick) {
+          report({
+            at: { staff, measure: measureAt(score, hp.startTick)?.serial ?? 0, tick: hp.startTick },
+            message: "前のヘアピンが終わる前に次のヘアピンが始まっています",
+            detail: {
+              previousStartTick: previous.startTick,
+              previousEndTick: previous.endTick,
+              startTick: hp.startTick,
+              endTick: hp.endTick,
+            },
+          });
+        }
+        if (!previous || hp.endTick > previous.endTick) previous = hp;
+      }
+    }
+  },
+});
+
+export const dynamicAfterRest = defineRule({
+  id: "dynamic-after-rest",
+  meta: {
+    name: "休みのあとの強弱記号",
+    description: "長く休んだあとの入りで強弱記号を言い直していない箇所を検出",
+    category: "dynamics",
+    severity: "info",
+    defaultEnabled: true,
+  },
+  // オプションの型に数値が無いので、休みの長さは選択肢から選ばせる
+  options: {
+    restMeasures: {
+      type: "select",
+      label: "休みの長さ",
+      description: "この小節数以上、音の無い小節が続いたあとの入りを見る",
+      choices: [
+        { value: "2", label: "2 小節" },
+        { value: "4", label: "4 小節" },
+        { value: "8", label: "8 小節" },
+      ],
+      default: "4",
+    },
+  },
+  run({ score, options, report }) {
+    const threshold = Number(options.restMeasures);
+    for (const { index: staff } of score.staves) {
+      const chords = stableSortBy(chordsOnStaff(score, staff), (a, b) => a.tick - b.tick);
+      const dynamicTicks = dynamicsAffecting(score, staff)
+        .filter((a) => !isDynamicChange(a))
+        .map((a) => a.tick);
+      let previousMeasure: number | null = null;
+      for (const chord of chords) {
+        const prev = previousMeasure;
+        previousMeasure = chord.measure;
+        if (prev === null || chord.measure - prev - 1 < threshold) continue;
+        const restStart = measureBySerial(score, prev + 1)?.startTick ?? chord.tick;
+        if (dynamicTicks.some((t) => t >= restStart && t <= chord.tick)) continue;
+        report({
+          at: { staff, measure: chord.measure, tick: chord.tick },
+          message: `${chord.measure - prev - 1} 小節休んだあとの入りに強弱記号がありません`,
+          detail: { restMeasures: chord.measure - prev - 1, previousMeasure: prev },
+        });
+      }
+    }
+  },
+});
+
+export const dynamicAsText = defineRule({
+  id: "dynamic-as-text",
+  meta: {
+    name: "テキストで書いた強弱記号",
+    description: "強弱記号ではなく普通のテキストで書いた強弱記号を検出",
+    category: "dynamics",
+    severity: "warning",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    for (const a of ofKind(score.annotations, "text")) {
+      if (!directiveOf(a, "dynamic")) continue;
+      const staff = staffOfScope(score, a.scope);
+      report({
+        at: { ...(staff !== undefined ? { staff } : {}), measure: a.measure, tick: a.tick },
+        message: `"${a.text}" が普通のテキストで書かれています。強弱記号として入れないと再生に反映されません`,
+      });
     }
   },
 });
