@@ -490,13 +490,24 @@ describe("readMusicXml: 音符情報", () => {
 describe("readMusicXml: 小節線", () => {
   it("light-heavy を final として全譜表に積み、tick は小節末になる", () => {
     const score = readMusicXml(duet);
-    const bars = score.staves.flatMap((s) => s.barlines);
+    const bars = score.staves.flatMap((s) => s.barlines).filter((b) => b.kind !== "other");
     expect(bars).toHaveLength(2); // 2 パート × 1 本
     for (const bar of bars) {
       expect(bar.kind).toBe("final");
       expect(bar.tick).toBe(WHOLE * 3);
       expect(bar.measure).toBe(3);
     }
+  });
+
+  // MuseScore から読んだ Score はすべての小節の終わりに小節線を持つ。揃えないと、
+  // 「直前の小節線」を見るルールがソースによって違う線を見る。
+  it("書かれていない小節の終わりの線を other で補う", () => {
+    const bars = readMusicXml(duet).staves[0]?.barlines ?? [];
+    expect(bars.map((b) => [b.measure, b.tick, b.kind])).toEqual([
+      [1, WHOLE, "other"],
+      [2, WHOLE * 2, "other"],
+      [3, WHOLE * 3, "final"],
+    ]);
   });
 
   it("repeat の direction を repeat-start / repeat-end に振り分ける", () => {
@@ -516,6 +527,7 @@ describe("readMusicXml: 小節線", () => {
     const bars = score.staves[0]?.barlines ?? [];
     expect(bars.map((b) => [b.measure, b.tick, b.kind])).toEqual([
       [1, 0, "repeat-start"],
+      [1, QUARTER, "other"],
       [2, QUARTER * 2, "repeat-end"],
     ]);
   });

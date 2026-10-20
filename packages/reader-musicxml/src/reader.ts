@@ -698,6 +698,27 @@ function assemble(
     return p.atMeasureEnd ? start + (draft.measureLengths[p.measureIdx] ?? 0) : start + p.localTick;
   };
 
+  // MusicXML は普通の小節線を書かない（<barline> は特別な線のときだけ現れる）。MuseScore から
+  // 読んだ Score はすべての小節の終わりに小節線を持つので、書かれていない終わりの線を補って揃える。
+  const staffCount = parts.reduce((n, p) => n + p.staffCount, 0);
+  const endBarlines = new Set<string>();
+  for (const d of draft.drafts) {
+    if (d.type === "barline" && d.atMeasureEnd) endBarlines.add(`${d.measureIdx}:${d.staff}`);
+  }
+  for (let measureIdx = 0; measureIdx < draft.measureLengths.length; measureIdx++) {
+    for (let staff = 0; staff < staffCount; staff++) {
+      if (endBarlines.has(`${measureIdx}:${staff}`)) continue;
+      draft.drafts.push({
+        type: "barline",
+        measureIdx,
+        localTick: 0,
+        atMeasureEnd: true,
+        staff,
+        kind: "other",
+      });
+    }
+  }
+
   for (const d of draft.drafts) {
     const at = { tick: tickOf(d), measure: d.measureIdx + 1 };
     switch (d.type) {
