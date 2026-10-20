@@ -8,6 +8,7 @@ import {
   hairpinOnRest,
   hairpinTargetDynamic,
   simultaneousDynamics,
+  tieContinuationDynamic,
 } from "../src/rules/dynamics.js";
 import { cleanScore, runRule } from "./helpers.js";
 
@@ -267,5 +268,49 @@ describe("cresc-text-resolution", () => {
       annotations: [dynamic("cresc.", 0, 1), { tick: 480, text: "f", kind: "dynamic" }],
     });
     expect(runRule(crescTextResolution, score)).toEqual([]);
+  });
+});
+
+describe("tie-continuation-dynamic", () => {
+  const note = (pitch: number) => ({ pitch, tpc: 14, line: 0, accidentalShown: false });
+
+  it("タイで続くだけの音に付いた強弱記号を info で指摘する", () => {
+    const score = cleanScore({
+      chords: [{ staff: 0, tick: 480, notes: [note(60)] }],
+      ties: [{ staff: 0, startTick: 0, endTick: 480, startPitch: 60, endPitch: 60 }],
+      annotations: [dynamic("p", 480, 1)],
+    });
+    const issues = runRule(tieContinuationDynamic, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "info", at: { staff: 0, tick: 480 } });
+  });
+
+  it("和音の一部が新しく弾かれるなら指摘しない", () => {
+    const score = cleanScore({
+      chords: [{ staff: 0, tick: 480, notes: [note(60), note(64)] }],
+      ties: [{ staff: 0, startTick: 0, endTick: 480, startPitch: 60, endPitch: 60 }],
+      annotations: [dynamic("p", 480, 1)],
+    });
+    expect(runRule(tieContinuationDynamic, score)).toEqual([]);
+  });
+
+  it("別の声部が同じ位置で新しく弾くなら指摘しない", () => {
+    const score = cleanScore({
+      chords: [
+        { staff: 0, tick: 480, notes: [note(60)] },
+        { staff: 0, voice: 1, tick: 480, notes: [note(48)] },
+      ],
+      ties: [{ staff: 0, startTick: 0, endTick: 480, startPitch: 60, endPitch: 60 }],
+      annotations: [dynamic("p", 480, 1)],
+    });
+    expect(runRule(tieContinuationDynamic, score)).toEqual([]);
+  });
+
+  it("タイの無い音の強弱記号は指摘しない", () => {
+    const score = cleanScore({
+      chords: [{ staff: 0, tick: 480, notes: [note(60)] }],
+      annotations: [dynamic("p", 480, 1)],
+    });
+    expect(runRule(tieContinuationDynamic, score)).toEqual([]);
   });
 });

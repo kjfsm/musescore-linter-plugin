@@ -1,12 +1,13 @@
 import type {
   Annotation,
+  Chord,
   AnnotationKind,
   AnnotationScope,
   Directive,
   Score,
   Technique,
 } from "@score-linter/score-model";
-import { chordTicks, restTicks } from "@score-linter/score-model";
+import { chordTicks, restTicks, tiesOn } from "@score-linter/score-model";
 
 export function ofKind(annotations: readonly Annotation[], kind: AnnotationKind): Annotation[] {
   return annotations.filter((a) => a.kind === kind);
@@ -87,4 +88,57 @@ export function restOnlyEndpoints(
     }
   }
   return hits;
+}
+
+const voiceTick = (voice: number, tick: number) => `${voice}:${tick}`;
+
+export interface StaffChords {
+  /** `声部:tick` → 和音。 */
+  at(voice: number, tick: number): Chord | undefined;
+  /** 同じ声部で次に来る和音。 */
+  next(chord: Chord): Chord | undefined;
+}
+
+/** 譜表の和音を声部と tick で引けるようにする。譜表ごとに 1 回だけ全声部をなめる。 */
+export function staffChords(score: Score, staff: number): StaffChords {
+  const byTick = new Map<string, Chord>();
+  const order = new Map<Chord, { voice: Chord[]; index: number }>();
+  score.staves[staff]?.voices.forEach((v, voice) => {
+    const chords = v.events.filter((e): e is Chord => e.type === "chord");
+    chords.forEach((c, index) => {
+      byTick.set(voiceTick(voice, c.tick), c);
+      order.set(c, { voice: chords, index });
+    });
+  });
+  return {
+    at: (voice, tick) => byTick.get(voiceTick(voice, tick)),
+    next: (chord) => {
+      const o = order.get(chord);
+      return o ? o.voice[o.index + 1] : undefined;
+    },
+  };
+}
+
+export interface TieEnds {
+  /** その声部・tick の和音のすべての音が、前の音からタイで続いているか。 */
+  allContinued(voice: number, chord: Chord): boolean;
+  /** その声部・tick の和音のすべての音が、次の音へタイで続くか。 */
+  allContinuing(voice: number, chord: Chord): boolean;
+}
+
+export function tieEnds(score: Score, staff: number): TieEnds {
+  const starts = new Map<string, number>();
+  const ends = new Map<string, number>();
+  for (const t of tiesOn(score, staff)) {
+    const s = voiceTick(t.voice, t.startTick);
+    const e = voiceTick(t.voice, t.endTick);
+    starts.set(s, (starts.get(s) ?? 0) + 1);
+    ends.set(e, (ends.get(e) ?? 0) + 1);
+  }
+  const all = (counts: Map<string, number>, voice: number, chord: Chord) =>
+    chord.notes.length > 0 && (counts.get(voiceTick(voice, chord.tick)) ?? 0) >= chord.notes.length;
+  return {
+    allContinued: (voice, chord) => all(ends, voice, chord),
+    allContinuing: (voice, chord) => all(starts, voice, chord),
+  };
 }

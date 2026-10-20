@@ -8,10 +8,11 @@ import {
   measureAt,
   normalizeText,
   stableSortBy,
+  tiesOn,
 } from "@score-linter/score-model";
 
 import { defineRule } from "../engine.js";
-import { directiveOf, ofKind, restOnlyEndpoints } from "./support.js";
+import { directiveOf, ofKind, restOnlyEndpoints, staffChords, tieEnds } from "./support.js";
 
 const dynamicsOn = (score: Score, staff: number) => ofKind(annotationsOn(score, staff), "dynamic");
 const dynamicsAffecting = (score: Score, staff: number) =>
@@ -189,6 +190,45 @@ export const crescTextResolution = defineRule({
         report({
           at: { staff, measure: a.measure, tick: a.tick },
           message: `"${a.text}" の後に到達先の強弱記号がありません`,
+        });
+      }
+    }
+  },
+});
+
+export const tieContinuationDynamic = defineRule({
+  id: "tie-continuation-dynamic",
+  meta: {
+    name: "タイで続く音の強弱記号",
+    description: "タイで続くだけの音（新しく弾かない音）に付いた強弱記号を検出",
+    category: "dynamics",
+    // 持続中の強弱の変化として意図して書くこともある
+    severity: "info",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    for (const { index: staff } of score.staves) {
+      if (tiesOn(score, staff).length === 0) continue;
+      const chords = staffChords(score, staff);
+      const ties = tieEnds(score, staff);
+      const voiceCount = score.staves[staff]?.voices.length ?? 0;
+      const onlyContinued = (tick: number): boolean => {
+        let found = false;
+        for (let voice = 0; voice < voiceCount; voice++) {
+          const chord = chords.at(voice, tick);
+          if (!chord) continue;
+          if (!ties.allContinued(voice, chord)) return false;
+          found = true;
+        }
+        return found;
+      };
+      for (const a of dynamicsOn(score, staff)) {
+        // 持続音の上で cresc. や dim. を始めるのは正しい書き方
+        if (isDynamicChange(a) || !onlyContinued(a.tick)) continue;
+        report({
+          at: { staff, measure: a.measure, tick: a.tick },
+          message: `強弱記号 "${a.text}" がタイで続くだけの音に付いています`,
         });
       }
     }

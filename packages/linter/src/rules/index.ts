@@ -8,6 +8,7 @@ import {
   hairpinOnRest,
   hairpinTargetDynamic,
   simultaneousDynamics,
+  tieContinuationDynamic,
 } from "./dynamics.js";
 import {
   codaSegno,
@@ -17,7 +18,14 @@ import {
   repeatBarlineMatch,
   restAnnotation,
 } from "./notation.js";
-import { slurOnRest, slurSingleNote, tiePitchMismatch } from "./slurTie.js";
+import {
+  duplicateSlur,
+  slurOnRest,
+  slurSamePitch,
+  slurSingleNote,
+  slurTieEndpoint,
+  tiePitchMismatch,
+} from "./slurTie.js";
 import {
   conLegnoArco,
   divUnis,
@@ -62,10 +70,14 @@ export const builtinRules: readonly Rule[] = [
   rehearsalMarkOrder,
   repeatBarlineMatch,
   tiePitchMismatch,
+  slurSamePitch,
   courtesyAccidental,
   hairpinOnRest,
   slurOnRest,
   slurSingleNote,
+  slurTieEndpoint,
+  duplicateSlur,
+  tieContinuationDynamic,
   crescTextResolution,
   beatCrossingTie,
 ];
