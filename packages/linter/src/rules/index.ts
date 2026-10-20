@@ -30,6 +30,7 @@ import {
   slurTieEndpoint,
   tiePitchMismatch,
 } from "./slurTie.js";
+import { enharmonicSpelling, redundantAccidental } from "./spelling.js";
 import {
   conLegnoArco,
   divUnis,
@@ -87,6 +88,8 @@ export const builtinRules: readonly Rule[] = [
   tiePitchMismatch,
   slurSamePitch,
   courtesyAccidental,
+  redundantAccidental,
+  enharmonicSpelling,
   hairpinOnRest,
   slurOnRest,
   slurSingleNote,
