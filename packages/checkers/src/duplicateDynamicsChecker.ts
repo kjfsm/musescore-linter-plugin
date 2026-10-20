@@ -4,17 +4,11 @@ import { CANONICAL, createIssue, eventsOnStaff } from "@musescore-linter/core";
 // sf・rf はアクセント的に連続して使われることが多いため、重複検出の対象から除外する。
 const CONSECUTIVE_ALLOWED = new Set(["sf", "rf"]);
 
+// subtype では比べない。MuseScore はテキスト中で最初に見つかった強弱記号を subtype にするので
+// 「f」と「più f」が同じ F になり、強弱記号を含まない文字はすべて OTHER に揃う
+// （v4.7.3 editing/textedit.cpp の endEdit → Dynamic::parseDynamicText）。
 function sameDynamic(a: TextEvent, b: TextEvent): boolean {
-  if (
-    a.subtype !== null &&
-    a.subtype !== undefined &&
-    b.subtype !== null &&
-    b.subtype !== undefined
-  ) {
-    return a.subtype === b.subtype;
-  }
-  if (a.textNorm !== "" && a.textNorm === b.textNorm) return true;
-  return false;
+  return a.textNorm !== "" && a.textNorm === b.textNorm;
 }
 
 export const duplicateDynamicsChecker: Checker = {

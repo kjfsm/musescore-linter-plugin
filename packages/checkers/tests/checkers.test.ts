@@ -662,7 +662,28 @@ describe("duplicate-dynamics checker", () => {
     expect(issues[0]?.detail?.previousMeasure).toBe(1);
   });
 
-  it("subtype 同一で textNorm が異なっても重複扱い", () => {
+  // MuseScore はテキスト中で最初に見つかった強弱記号を subtype にするので、「più f」も F になる
+  it("subtype が同じでも修飾語付きの強弱記号は重複としない（f → più f）", () => {
+    const ir = buildIR({
+      parts: [{ partName: "Vn1" }],
+      events: [
+        { kind: K.DYNAMIC, staff: 0, tick: 0, measure: 1, subtype: 9, textNorm: "f", textRaw: "f" },
+        {
+          kind: K.DYNAMIC,
+          staff: 0,
+          tick: 480,
+          measure: 2,
+          subtype: 9,
+          textNorm: "più f",
+          textRaw: "più f",
+        },
+      ],
+    });
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
+  });
+
+  it("subtype が OTHER 同士でもテキストが違えば重複としない", () => {
+    const other = 0;
     const ir = buildIR({
       parts: [{ partName: "Vn1" }],
       events: [
@@ -671,22 +692,22 @@ describe("duplicate-dynamics checker", () => {
           staff: 0,
           tick: 0,
           measure: 1,
-          subtype: 7,
-          textNorm: "f",
-          textRaw: "f",
+          subtype: other,
+          textNorm: "poco a poco",
+          textRaw: "poco a poco",
         },
         {
           kind: K.DYNAMIC,
           staff: 0,
           tick: 480,
           measure: 2,
-          subtype: 7,
-          textNorm: "",
-          textRaw: "",
+          subtype: other,
+          textNorm: "molto",
+          textRaw: "molto",
         },
       ],
     });
-    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(1);
+    expect(duplicateDynamicsChecker.run(ir)).toHaveLength(0);
   });
 
   it("f → p のように変化 → 0件", () => {
