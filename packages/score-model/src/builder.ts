@@ -6,6 +6,7 @@ import type {
   Barline,
   Chord,
   Hairpin,
+  KeySignature,
   Measure,
   PartGroup,
   Rest,
@@ -39,6 +40,7 @@ export interface ScoreBuilder {
   addChord(staff: number, voice: number, chord: ChordInit): void;
   addRest(staff: number, voice: number, rest: RestInit): void;
   addBarline(staff: number, barline: Barline): void;
+  addKeySignature(staff: number, key: KeySignature): void;
   addAnnotation(annotation: AnnotationInit): void;
   addSlur(slur: Slur): void;
   addTie(tie: Tie): void;
@@ -68,7 +70,13 @@ export function createScoreBuilder(parts: readonly PartInit[]): ScoreBuilder {
     const staves: number[] = [];
     for (let i = 0; i < init.staffCount; i++) {
       staves.push(first + i);
-      score.staves.push({ index: first + i, partId: init.id, voices: [], barlines: [] });
+      score.staves.push({
+        index: first + i,
+        partId: init.id,
+        voices: [],
+        barlines: [],
+        keySignatures: [],
+      });
     }
     score.parts.push({ id: init.id, name: init.name, staves });
   }
@@ -99,6 +107,9 @@ export function createScoreBuilder(parts: readonly PartInit[]): ScoreBuilder {
     addBarline(staff, barline) {
       staffAt(staff).barlines.push(barline);
     },
+    addKeySignature(staff, key) {
+      staffAt(staff).keySignatures.push(key);
+    },
     addAnnotation({ tick, measure, scope, text, hints }) {
       score.annotations.push({ tick, measure, scope, text, ...interpretAnnotation(text, hints) });
     },
@@ -110,6 +121,7 @@ export function createScoreBuilder(parts: readonly PartInit[]): ScoreBuilder {
       for (const staff of score.staves) {
         for (const voice of staff.voices) voice.events = stableSortBy(voice.events, byTick);
         staff.barlines = stableSortBy(staff.barlines, byTick);
+        staff.keySignatures = stableSortBy(staff.keySignatures, byTick);
       }
       score.partGroups = normalizePartGroups(score.partGroups);
       return score;

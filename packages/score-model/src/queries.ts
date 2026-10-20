@@ -303,3 +303,9 @@ export function spanCovers(
   }
   return false;
 }
+
+/** 譜表で tick の位置に効いている調号のシャープの数（フラットは負）。調号が無ければ null。 */
+export function keyAt(score: Score, staff: number, tick: number): number | null {
+  const keys = score.staves[staff]?.keySignatures ?? [];
+  return keys[lastIndexStartingBy(keys, (k) => k.tick, tick)]?.fifths ?? null;
+}

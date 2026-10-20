@@ -13,6 +13,7 @@ export {
   isClef,
   isDynamic,
   isExpression,
+  isFermata,
   isKeySig,
   isPlayTechAnnotation,
   isRehearsalMark,

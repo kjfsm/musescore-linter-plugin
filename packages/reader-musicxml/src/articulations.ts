@@ -43,8 +43,6 @@ const ARTICULATION_NAMES: Record<string, string> = {
   tremolo: "Tremolo",
   schleifer: "Schleifer",
   "wavy-line": "Trill",
-  // <fermata> は <notations> 直下
-  fermata: "Fermata",
 };
 
 export function articulationNameOf(tag: string): string | undefined {

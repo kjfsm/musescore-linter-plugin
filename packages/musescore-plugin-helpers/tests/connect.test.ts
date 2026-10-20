@@ -20,6 +20,7 @@ const NoteType = {
 const BarLineType = { NORMAL: 200, DOUBLE: 204, END: 206 };
 const BracketType = { NORMAL: 300, BRACE: 301 };
 const PlayingTechniqueType = { Natural: 400, Pizzicato: 401 };
+const Key = { C_B: 500, F: 506, C: 507, G: 508, C_S: 514, DELTA_ENHARMONIC: 515 };
 
 function host(extra: Partial<Record<string, unknown>> = {}): MuseScore {
   return {
@@ -27,6 +28,7 @@ function host(extra: Partial<Record<string, unknown>> = {}): MuseScore {
     BarLineType,
     BracketType,
     PlayingTechniqueType,
+    Key,
     mscoreMajorVersion: 4,
     mscoreMinorVersion: 7,
     ...extra,
@@ -51,6 +53,16 @@ describe("connect", () => {
     expect(helpers.barLineTypeName(999 as unknown as BarLineType)).toBeNull();
     expect(helpers.bracketTypeName(301 as never)).toBe("BRACE");
     expect(helpers.playingTechniqueTypeName(401 as never)).toBe("Pizzicato");
+  });
+
+  it("調をホストの Key から引いてシャープの数にする", () => {
+    const helpers = connect(host());
+    expect(helpers.keyFifths(507 as never)).toBe(0);
+    expect(helpers.keyFifths(508 as never)).toBe(1);
+    expect(helpers.keyFifths(506 as never)).toBe(-1);
+    expect(helpers.keyFifths(500 as never)).toBe(-7);
+    expect(helpers.keyFifths(514 as never)).toBe(7);
+    expect(helpers.keyFifths(515 as never)).toBeNull();
   });
 
   it("ホストが enum を持たなければ名前は引けず null", () => {

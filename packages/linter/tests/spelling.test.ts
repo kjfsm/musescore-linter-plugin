@@ -1,7 +1,12 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { enharmonicSpelling, redundantAccidental } from "../src/rules/spelling.js";
+import {
+  enharmonicSpelling,
+  extremeSpelling,
+  keySignature,
+  redundantAccidental,
+} from "../src/rules/spelling.js";
 import { runRule } from "./helpers.js";
 
 const fSharp = (accidentalShown = true) => ({ pitch: 66, tpc: 20, line: 5, accidentalShown });
@@ -123,5 +128,64 @@ describe("redundant-accidental", () => {
       ties: [{ startTick: 1440, endTick: 1920, startPitch: 66, endPitch: 66 }],
     });
     expect(runRule(redundantAccidental, score)).toEqual([]);
+  });
+});
+
+describe("extreme-spelling", () => {
+  const withKey = (fifths: number, tpc: number) =>
+    buildScore({
+      keySignatures: [{ tick: 0, fifths }],
+      chords: [{ tick: 0, notes: [{ pitch: 60, tpc, line: 0, accidentalShown: true }] }],
+    });
+
+  it("ハ長調の Cb・E#・重嬰を info で指摘する", () => {
+    expect(runRule(extremeSpelling, withKey(0, 7))).toHaveLength(1); // Cb
+    expect(runRule(extremeSpelling, withKey(0, 25))).toHaveLength(1); // E#
+    expect(runRule(extremeSpelling, withKey(0, 27))[0]).toMatchObject({ severity: "info" }); // F##
+  });
+
+  it("調から近い綴りは指摘しない", () => {
+    expect(runRule(extremeSpelling, withKey(0, 22))).toEqual([]); // ハ長調の G#
+    expect(runRule(extremeSpelling, withKey(4, 26))).toEqual([]); // ホ長調の B#
+    expect(runRule(extremeSpelling, withKey(-5, 7))).toEqual([]); // 変ニ長調の Cb
+  });
+
+  it("調号の分からない譜表では判定しない", () => {
+    const score = buildScore({
+      chords: [{ tick: 0, notes: [{ pitch: 59, tpc: 7, line: 0, accidentalShown: true }] }],
+    });
+    expect(runRule(extremeSpelling, score)).toEqual([]);
+  });
+});
+
+describe("key-signature", () => {
+  it("7 つの調号を info で指摘する", () => {
+    const issues = runRule(keySignature, buildScore({ keySignatures: [{ tick: 0, fifths: -7 }] }));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "info", at: { staff: 0, tick: 0 } });
+  });
+
+  it("前と同じ調号への変更を指摘する", () => {
+    const score = buildScore({
+      measures: [{}, {}],
+      keySignatures: [
+        { tick: 0, fifths: 2 },
+        { tick: 1920, fifths: 2 },
+      ],
+    });
+    const issues = runRule(keySignature, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ at: { measure: 2, tick: 1920 } });
+  });
+
+  it("6 つまでの調号と、違う調号への変更は指摘しない", () => {
+    const score = buildScore({
+      measures: [{}, {}],
+      keySignatures: [
+        { tick: 0, fifths: 6 },
+        { tick: 1920, fifths: -6 },
+      ],
+    });
+    expect(runRule(keySignature, score)).toEqual([]);
   });
 });

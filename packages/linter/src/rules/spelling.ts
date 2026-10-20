@@ -1,5 +1,5 @@
 import type { Chord, Score } from "@score-linter/score-model";
-import { stableSortBy, tpcToAlter, tpcToName } from "@score-linter/score-model";
+import { keyAt, stableSortBy, tpcToAlter, tpcToName } from "@score-linter/score-model";
 
 import { defineRule } from "../engine.js";
 
@@ -127,6 +127,85 @@ export const redundantAccidental = defineRule({
           }
           inEffect.set(note.line, { alter, tick: chord.tick });
         }
+      }
+    }
+  },
+});
+
+/**
+ * 調号から五度圏でこれより離れた綴りは、異名同音で書いたほうが読みやすい。5 にすると、
+ * ホ長調の B#（導音）は範囲に入り、ハ長調の B#・Cb は外れる。
+ */
+const SPELLING_REACH = 5;
+
+const keyLabel = (fifths: number): string =>
+  fifths === 0 ? "調号なし" : fifths > 0 ? `シャープ ${fifths} つ` : `フラット ${-fifths} つ`;
+
+export const extremeSpelling = defineRule({
+  id: "extreme-spelling",
+  meta: {
+    name: "調から遠い綴り",
+    description: "調号から遠い綴り（ハ長調の B#・Cb・重嬰・重変など）を検出",
+    category: "notation",
+    severity: "info",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    for (const { index: staff } of score.staves) {
+      const seen = new Set<string>();
+      for (const { chord } of chordsInOrder(score, [staff])) {
+        const key = keyAt(score, staff, chord.tick);
+        if (key === null) continue;
+        // 調の幹音は tpc で 13+key（F の位置）から 19+key（B の位置）に並ぶ
+        const low = 13 + key - SPELLING_REACH;
+        const high = 19 + key + SPELLING_REACH;
+        for (const note of chord.notes) {
+          if (note.tpc >= low && note.tpc <= high) continue;
+          const dedupe = `${chord.measure}:${note.tpc}`;
+          if (seen.has(dedupe)) continue;
+          seen.add(dedupe);
+          report({
+            at: { staff, measure: chord.measure, tick: chord.tick },
+            message: `${tpcToName(note.tpc)} は調号（${keyLabel(key)}）から遠い綴りです。異名同音で書くと読みやすくなります`,
+            detail: { tpc: note.tpc, fifths: key },
+          });
+        }
+      }
+    }
+  },
+});
+
+export const keySignature = defineRule({
+  id: "key-signature",
+  meta: {
+    name: "調号の書き方",
+    description: "7 つの調号と、前と同じ調号への変更を検出",
+    category: "notation",
+    severity: "info",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    for (const { index: staff, keySignatures } of score.staves) {
+      let previous: number | null = null;
+      for (const key of keySignatures) {
+        const at = { staff, measure: key.measure, tick: key.tick };
+        if (Math.abs(key.fifths) >= 7) {
+          report({
+            at,
+            message: `調号が${keyLabel(key.fifths)}です。異名同音の調（${keyLabel(key.fifths > 0 ? key.fifths - 12 : key.fifths + 12)}）で書くと読みやすくなります`,
+            detail: { fifths: key.fifths },
+          });
+        }
+        if (previous === key.fifths) {
+          report({
+            at,
+            message: "前と同じ調号に変更しています",
+            detail: { fifths: key.fifths },
+          });
+        }
+        previous = key.fifths;
       }
     }
   },

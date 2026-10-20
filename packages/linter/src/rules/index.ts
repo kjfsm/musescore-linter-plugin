@@ -16,6 +16,7 @@ import {
 import {
   codaSegno,
   courtesyAccidental,
+  fermataConsistency,
   finalBarline,
   rehearsalMarkOrder,
   rehearsalMarkPosition,
@@ -31,7 +32,12 @@ import {
   slurTieEndpoint,
   tiePitchMismatch,
 } from "./slurTie.js";
-import { enharmonicSpelling, redundantAccidental } from "./spelling.js";
+import {
+  enharmonicSpelling,
+  extremeSpelling,
+  keySignature,
+  redundantAccidental,
+} from "./spelling.js";
 import {
   conLegnoArco,
   divUnis,
@@ -91,6 +97,9 @@ export const builtinRules: readonly Rule[] = [
   courtesyAccidental,
   redundantAccidental,
   enharmonicSpelling,
+  extremeSpelling,
+  keySignature,
+  fermataConsistency,
   hairpinOnRest,
   slurOnRest,
   slurSingleNote,

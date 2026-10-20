@@ -5,6 +5,7 @@ import {
   annotationsOn,
   chordsIn,
   firstChord,
+  keyAt,
   lastTick,
   measureAt,
   partOfStaff,
@@ -96,6 +97,19 @@ describe("問い合わせ", () => {
       annotations: [{ tick: 960, text: "fine" }],
     });
     expect(lastTick(score)).toBe(1920);
+  });
+
+  it("tick の位置に効いている調号を引く", () => {
+    const score = buildScore({
+      keySignatures: [
+        { tick: 0, fifths: 2 },
+        { tick: 1920, fifths: -3 },
+      ],
+    });
+    expect(keyAt(score, 0, 0)).toBe(2);
+    expect(keyAt(score, 0, 1919)).toBe(2);
+    expect(keyAt(score, 0, 1920)).toBe(-3);
+    expect(keyAt(buildScore({}), 0, 0)).toBeNull();
   });
 
   it("Score は JSON を往復しても同じ問い合わせ結果を返す", () => {

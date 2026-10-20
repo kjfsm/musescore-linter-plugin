@@ -96,6 +96,7 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
+        <notations><fermata type="upright"/></notations>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
@@ -142,6 +143,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>whole</type>
+        <notations><fermata type="upright"/></notations>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

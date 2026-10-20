@@ -4,6 +4,8 @@ import type {
   BracketType,
   BracketTypeName,
   Chord,
+  Key,
+  KeyName,
   MuseScore,
   PlayingTechniqueType,
   PlayingTechniqueTypeName,
@@ -24,11 +26,32 @@ export interface ConnectedHelpers {
   barLineTypeName(value: BarLineType): BarLineTypeName | null;
   bracketTypeName(value: BracketType): BracketTypeName | null;
   playingTechniqueTypeName(value: PlayingTechniqueType): PlayingTechniqueTypeName | null;
+  /** 調のシャープの数（フラットは負）。実行中の版に無い値は null。 */
+  keyFifths(value: Key): number | null;
   checkVersion(): HostVersionCheck;
 }
 
 const GRACE_BEFORE = ["ACCIACCATURA", "APPOGGIATURA", "GRACE4", "GRACE16", "GRACE32"] as const;
 const GRACE_AFTER = ["GRACE8_AFTER", "GRACE16_AFTER", "GRACE32_AFTER"] as const;
+
+// 添字 - 7 がシャープの数
+const KEYS_BY_FIFTHS: readonly KeyName[] = [
+  "C_B",
+  "G_B",
+  "D_B",
+  "A_B",
+  "E_B",
+  "B_B",
+  "F",
+  "C",
+  "G",
+  "D",
+  "A",
+  "E",
+  "B",
+  "F_S",
+  "C_S",
+];
 
 function memberName<N extends string>(
   enumObject: { readonly [K in N]: unknown } | undefined,
@@ -71,6 +94,11 @@ export function connect(host: MuseScore, options: ConnectOptions = {}): Connecte
     barLineTypeName: (value) => memberName(host.BarLineType, value),
     bracketTypeName: (value) => memberName(host.BracketType, value),
     playingTechniqueTypeName: (value) => memberName(host.PlayingTechniqueType, value),
+    keyFifths: (value) => {
+      const name = memberName(host.Key, value);
+      const index = name === null ? -1 : KEYS_BY_FIFTHS.indexOf(name);
+      return index === -1 ? null : index - 7;
+    },
     checkVersion: () => checkHostVersion(host),
   };
 }

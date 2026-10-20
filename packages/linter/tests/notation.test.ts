@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   codaSegno,
   courtesyAccidental,
+  fermataConsistency,
   finalBarline,
   rehearsalMarkOrder,
   rehearsalMarkPosition,
@@ -318,5 +319,46 @@ describe("rehearsal-mark-position", () => {
       ],
     });
     expect(runRule(rehearsalMarkPosition, score)).toHaveLength(1);
+  });
+});
+
+describe("fermata-consistency", () => {
+  it("他のパートにあるフェルマータが無い譜表を warning で指摘する", () => {
+    const score = cleanScore({
+      chords: [
+        { staff: 0, tick: 480, fermata: true },
+        { staff: 1, tick: 480 },
+      ],
+    });
+    const issues = runRule(fermataConsistency, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 1, tick: 480 } });
+  });
+
+  it("休符のフェルマータや、同じ小節の別の位置のフェルマータがあれば指摘しない", () => {
+    const score = cleanScore({
+      chords: [{ staff: 0, tick: 1440, fermata: true }],
+      rests: [{ staff: 1, tick: 0, fermata: true }],
+    });
+    expect(runRule(fermataConsistency, score)).toEqual([]);
+  });
+
+  it("同じパートの別の譜表にフェルマータがあれば指摘しない", () => {
+    const score = buildScore({
+      parts: [{ staffCount: 2 }],
+      chords: [
+        { staff: 0, tick: 0, fermata: true },
+        { staff: 1, tick: 0 },
+      ],
+    });
+    expect(runRule(fermataConsistency, score)).toEqual([]);
+  });
+
+  it("その小節に音符も休符も無い譜表は見ない", () => {
+    const score = cleanScore({
+      measures: [{}, {}],
+      chords: [{ staff: 0, tick: 1920, fermata: true }],
+    });
+    expect(runRule(fermataConsistency, score)).toEqual([]);
   });
 });
