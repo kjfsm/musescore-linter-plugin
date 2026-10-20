@@ -41,17 +41,17 @@ jobs:
         id: changesets
         uses: changesets/action@v2
         with:
-          title: "バージョンアップ"
-          commit: "chore: バージョンアップ"
+          pr-title: "バージョンアップ"
+          commit-message: "chore: バージョンアップ"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: パッケージング (ZIP 作成)
-        if: steps.changesets.outputs.hasChangesets == 'false'
+        if: steps.changesets.outputs.has-changesets == 'false'
         run: pnpm run package
 
       - name: GitHub Release の作成
-        if: steps.changesets.outputs.hasChangesets == 'false'
+        if: steps.changesets.outputs.has-changesets == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
