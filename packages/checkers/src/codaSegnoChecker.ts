@@ -8,7 +8,9 @@ function collectTextEvents(ir: IndexedIR): TextEvent[] {
   // 「Coda」「D.C.」を取りこぼしていた。テンポ表記は反復記号を載せないので除く。
   const kinds = [...TECHNIQUE_TEXT_KINDS, CANONICAL.elementKinds.REHEARSAL_MARK];
 
-  return kinds.flatMap((kind) => eventsOfKind(ir, kind));
+  const events: TextEvent[] = [];
+  for (const kind of kinds) events.push(...eventsOfKind(ir, kind));
+  return events;
 }
 
 const DS_RE = /\bd\.?\s*s\.?/;

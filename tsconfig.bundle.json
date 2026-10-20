@@ -1,0 +1,11 @@
+{
+  // QML 向けバンドル（scripts/build.ts、target es2017）に入るコードを ES2017 の標準ライブラリで
+  // 型検査する。esbuild は構文は下げるが API は polyfill しないので、flatMap（ES2019）のような
+  // 呼び出しは QML の V4 エンジンで落ちうる。
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2017"],
+    "types": []
+  },
+  "include": ["src/bundle-entry.ts", "src/qml-globals.d.ts"]
+}
