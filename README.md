@@ -152,7 +152,9 @@ MusicXML からも組み立てられるので、QML プラグイン・CLI・Web 
 | `packages/lint-app`                                         | 設定・並べ替え・件数・出力の整形・スナップショットの書き手（ホスト共通）            |
 | `packages/musescore-api-types` / `musescore-plugin-helpers` | MuseScore プラグイン API の型とヘルパ                                               |
 | `tools/musescore-api-types-generator`                       | MuseScore の C++ ヘッダから `musescore-api-types` を生成する                        |
-| `scripts/`                                                  | ベンチマークと CI 用の補助スクリプト                                                |
+| `tools/rule-docs`                                           | ルールの `meta` から README の「チェック項目」表を作る（`pnpm docs:rules`）         |
+| `tools/bench`                                               | CodSpeed で回すベンチマーク（`pnpm bench`）                                         |
+| `scripts/`                                                  | CI 用の補助スクリプト                                                               |
 
 ## 使い方
 
@@ -229,7 +231,7 @@ CSP の `style-src 'self'`（`'unsafe-inline'` なし）を維持するため、
 ### MusicXML 経路の既知の差分
 
 どちらの読み込み口でも同じ `Score` になることは、duet の MuseScore 版のモックと MusicXML 版の
-fixture を突き合わせるテスト（`packages/reader-musescore/tests/conformance.test.ts`）で確かめています。
+fixture を突き合わせるテスト（`apps/plugin/tests/conformance.test.ts`）で確かめています。
 実際の楽譜では次の差が出ます。
 
 - `tempo-without-bpm` は、MuseScore が書き出した MusicXML ではほぼ発火しません。書き出し時に
@@ -266,15 +268,17 @@ ON/OFF の既定値は、選んだプリセットとルールの段階から決�
 
 詳細は `/rule-add` skill と `.claude/rules/rule-contract.md` を参照。
 
-1. `packages/linter/src/rules/` の、主題の近いファイル（`tempo.ts`・`dynamics.ts`・`notation.ts` など）に
-   `defineRule({ id, meta, options, run })` で定義する。指摘は `run` の `report({ at, message, detail })` で返す。
-   新しい奏法の on/off ペアなら `techniquePairs.ts` の `techniquePair()` に設定を渡す
+1. `packages/linter/src/rules/<export 名>.ts` に 1 ルール 1 ファイルで、
+   `defineRule({ id, meta, options, messages, examples, run })` を定義する。指摘は `run` の
+   `report({ at, messageId, data, detail })` で返し、文面は `messages` に置く。`meta.docs` に README の「目的」欄を書き、
+   `examples` に指摘が出る楽譜（invalid）と出ない楽譜（valid）を 1 つ以上ずつ書く。
+   新しい奏法の on/off ペアなら `support/techniquePairs.ts` の `techniquePair()` に設定を渡す
    （奏法の表記は `packages/score-model/src/interpret.ts` が解釈する）
-2. `packages/linter/src/rules/index.ts` の `builtinRules` に足す。並びがそのまま実行順・設定画面の並びになるので、
-   関連するペアの隣に入れる
-3. `packages/linter/tests/` の対応するテストファイルに、`tests/helpers.ts` の `cleanScore()` と `runRule()` で
-   正例・負例を書く
-4. README の「チェック項目」表を更新
+2. `packages/linter/src/rules/index.ts` の `builtinRules` に足す。並びがそのまま実行順・設定画面の並び・README の表の並びに
+   なるので、関連するペアの隣に入れる
+3. 境界のケースを `packages/linter/tests/` の話題の近いテストファイルに、`tests/helpers.ts` の `cleanScore()` と
+   `runRule()` で書く（`examples` は `tests/examples.test.ts` が全ルールまとめて回す）
+4. `pnpm docs:rules` で README の「チェック項目」表を作り直す（CI が生成物との差分を見る）
 
 新しいルールは段階（`meta.tier`）を `nursery`（試験中）で入れ、実際の楽譜で誤検出の様子を見てから
 `recommended` か `pedantic` に上げます。上げるときは `tier` を書き換え、changeset に書きます。
@@ -284,7 +288,8 @@ ON/OFF の既定値は、選んだプリセットとルールの段階から決�
 ## テストの実行
 
 ```bash
-pnpm test   # 全パッケージで vitest を実行
+pnpm test     # 全パッケージで vitest を実行（カバレッジの閾値つき）
+pnpm verify   # 検証ゲート全体（CI と同じ）
 pnpm generate:types   # MuseScore の C++ ヘッダから packages/musescore-api-types を生成し直す（版は tools/musescore-api-types-generator/config.json の ref）
 ```
 
@@ -295,7 +300,7 @@ CLI の `apps/cli/tests/golden.test.ts` は、3 曲の検出結果を `fixtures/
 
 ### CI
 
-push または PR をオープンすると GitHub Actions が lint / フォーマット（oxlint + oxfmt）・unused 検出（knip）・typecheck・テスト・ビルドを自動実行します。
+push または PR をオープンすると GitHub Actions が `pnpm verify`（層の境界・lint / フォーマット・unused 検出・README の生成物・typecheck・テストとカバレッジ・ビルド・Web 版の E2E）を実行します。あわせて、出荷するプラグインのバンドルを MuseScore と同じ版の Qt の QJSEngine で動かし（`apps/plugin/qjs/`）、QML を qmllint で検査します。性能は CodSpeed（`.github/workflows/codspeed.yml`）が PR ごとに比べます。
 
 ### 楽譜の Lint（`.github/workflows/score-lint.yml`）
 
