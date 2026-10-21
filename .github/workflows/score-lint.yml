@@ -45,7 +45,7 @@ permissions:
 env:
   # 変換結果が版によって変わるため、MuseScore のバージョンは固定する
   MUSESCORE_VERSION: ${{ inputs.musescore_version || '4.7.4.260706075' }}
-  # 参照楽譜。同じ楽譜の .mscz / .musicxml / .mxl が対で入っており、
+  # 参照楽譜。同じ楽譜の .mscz / .mxl が対で入っており、
   # 入力ソース間で結果が食い違わないことの確認にも使う。
   SCORES_DIR: fixtures/scores
   CONVERTED_DIR: build/scores-musicxml

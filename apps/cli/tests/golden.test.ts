@@ -13,8 +13,8 @@ const REPO_ROOT = join(__dirname, "..", "..", "..");
 // 意図して結果を変えたときは `pnpm vitest run -u` で更新し、差分の理由をコミットに書く。
 const SCORES = [
   "packages/reader-musicxml/tests/fixtures/duet.musicxml",
-  "fixtures/scores/Beethoven_Op.67_1_cut/symphony-no-5.musicxml",
-  "fixtures/scores/Beethoven_Op.67_1_full/Beethoven_Op.67_1_full.musicxml",
+  "fixtures/scores/Beethoven_Op.67_1_cut/symphony-no-5.mxl",
+  "fixtures/scores/Beethoven_Op.67_1_full/Beethoven_Op.67_1_full.mxl",
 ];
 
 interface JsonIssue {
@@ -55,7 +55,7 @@ describe("検出結果の回帰基準", () => {
       const name = file
         .split("/")
         .pop()!
-        .replace(/\.musicxml$/, "");
+        .replace(/\.(musicxml|mxl)$/, "");
       await expect(toLines(lint(file))).toMatchFileSnapshot(
         join(REPO_ROOT, "fixtures", "golden", `${name}.jsonl`),
       );
