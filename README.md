@@ -153,7 +153,7 @@ MusicXML からも組み立てられるので、QML プラグイン・CLI・Web 
 | `packages/musescore-api-types` / `musescore-plugin-helpers` | MuseScore プラグイン API の型とヘルパ                                               |
 | `tools/musescore-api-types-generator`                       | MuseScore の C++ ヘッダから `musescore-api-types` を生成する                        |
 | `tools/rule-docs`                                           | ルールの `meta` から README の「チェック項目」表を作る（`pnpm docs:rules`）         |
-| `tools/bench`                                               | CodSpeed で回すベンチマーク（`pnpm bench`）                                         |
+| `tools/bench`                                               | 手元で回すベンチマーク（`pnpm bench`）                                              |
 | `scripts/`                                                  | CI 用の補助スクリプト                                                               |
 
 ## 使い方
@@ -300,7 +300,7 @@ CLI の `apps/cli/tests/golden.test.ts` は、3 曲の検出結果を `fixtures/
 
 ### CI
 
-push または PR をオープンすると GitHub Actions が `pnpm verify`（層の境界・lint / フォーマット・unused 検出・README の生成物・typecheck・テストとカバレッジ・ビルド・Web 版の E2E）を実行します。あわせて、出荷するプラグインのバンドルを MuseScore と同じ版の Qt の QJSEngine で動かし（`apps/plugin/qjs/`）、QML を qmllint で検査します。性能は CodSpeed（`.github/workflows/codspeed.yml`）が PR ごとに比べます。
+push または PR をオープンすると GitHub Actions が `pnpm verify`（層の境界・lint / フォーマット・unused 検出・README の生成物・typecheck・テストとカバレッジ・ビルド・Web 版の E2E）を実行します。あわせて、出荷するプラグインのバンドルを MuseScore と同じ版の Qt の QJSEngine で動かし（`apps/plugin/qjs/`）、QML を qmllint で検査します。
 
 ### 楽譜の Lint（`.github/workflows/score-lint.yml`）
 

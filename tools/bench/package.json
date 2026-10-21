@@ -12,7 +12,6 @@
     "@score-linter/reader-musicxml": "workspace:*"
   },
   "devDependencies": {
-    "@codspeed/vitest-plugin": "5.7.1",
     "vitest": "catalog:"
   }
 }
