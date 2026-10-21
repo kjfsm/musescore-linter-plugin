@@ -16,8 +16,9 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
   宣言していない import は解決できない。テストが使うものも、そのパッケージの devDependencies に宣言する。
 - `score-model` の型（`packages/score-model/src/types.ts`）は、ルールの都合で変えない。ルールが欲しい情報は
   Directive の解釈（`interpret.ts`）か問い合わせ関数で出し、型に特定のルール専用の項目を足さない。
-- プラグインのバンドルに入るコードは `apps/plugin/tsconfig.bundle.json` で ES2017 の標準ライブラリとして
-  型検査する（QML の JS エンジンに無い API を弾くため）。バンドルに入る新しいパッケージは `include` に足す。
+- プラグインのバンドルに入るパッケージは、自分の `tsconfig.json`（`src` だけを見る）を `lib: ["ES2017"]`・
+  `types: []` にして型検査する（QML の JS エンジンに無い API を弾くため）。テストは `tests/tsconfig.json` で
+  Node の型付きで見る。バンドルに入る新しいパッケージを作るときは、この 2 つの形をそのまま写す。
 - `apps/web` はブラウザ完結の Web 版で、`main` を持たない assets-only Worker として配信する。
   **サーバー処理（`wrangler.jsonc` の `main`・サーバー通信）を足さない** — 「ファイルを送信しない」という保証がこの構成に依存している。
 - `apps/web` の UI は CSP（`style-src 'self'`）の制約を受ける。`style` 属性・インライン `<script>` を書かない。詳細は README「Web 版」節。

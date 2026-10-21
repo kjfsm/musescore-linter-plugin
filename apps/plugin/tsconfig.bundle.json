@@ -1,22 +1,11 @@
 {
-  // QML 向けバンドル（scripts/build.ts、target es2017）に入るコードを ES2017 の標準ライブラリで
-  // 型検査する。esbuild は構文は下げるが API は polyfill しないので、flatMap（ES2019）のような
-  // 呼び出しは QML の V4 エンジンで落ちうる。target も ES2017 にして、ES2018 以降の正規表現の
-  // フラグ（s など）を弾く。\p{...} はこの検査をすり抜けるので書かない。
-  // バンドルに入る新しいパッケージは include に足す（bundle-entry から辿られる前から検査する）。
+  // QML 向けバンドル（scripts/build.ts、target es2017）に入るプラグイン自身のコードを ES2017 の標準ライブラリで
+  // 型検査する。バンドルに入るパッケージは、それぞれの tsconfig.json が同じ制約で検査する。
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["ES2017"],
     "types": []
   },
-  "include": [
-    "src/bundle-entry.ts",
-    "src/qml-globals.d.ts",
-    "../../packages/score-model/src/**/*.ts",
-    "../../packages/linter/src/**/*.ts",
-    "../../packages/lint-app/src/**/*.ts",
-    "../../packages/reader-musescore/src/**/*.ts",
-    "../../packages/musescore-plugin-helpers/src/**/*.ts"
-  ]
+  "include": ["src/bundle-entry.ts", "src/qml-globals.d.ts"]
 }

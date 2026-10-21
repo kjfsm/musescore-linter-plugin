@@ -1,7 +1,12 @@
 {
+  // プラグインのバンドルに入る。QML の JS エンジンに無い API を書けないよう、ES2017 の標準ライブラリだけで型検査する。
+  // esbuild は構文は下げるが API は polyfill しない。\p{...} はこの検査をすり抜けるので書かない。
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "target": "ES2017",
+    "lib": ["ES2017"],
+    "types": []
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*"]
 }
