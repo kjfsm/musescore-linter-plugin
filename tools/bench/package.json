@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "bench": "node src/bench.ts",
+    "bench": "vitest bench --run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@score-linter/linter": "workspace:*",
-    "@score-linter/reader-musicxml": "workspace:*",
-    "@score-linter/score-model": "workspace:*"
+    "@score-linter/reader-musicxml": "workspace:*"
+  },
+  "devDependencies": {
+    "@codspeed/vitest-plugin": "5.7.1",
+    "vitest": "catalog:"
   }
 }

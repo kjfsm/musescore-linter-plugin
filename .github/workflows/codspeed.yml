@@ -1,0 +1,41 @@
+name: ベンチマーク
+
+# CodSpeed は命令数を数えるシミュレーションで計るので、runner のブレに左右されず PR で回帰を検出できる。
+# 結果は CodSpeed のダッシュボードと PR のコメントに出る。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+  id-token: write # CodSpeed への OIDC 認証
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: 依存関係のインストール
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: ベンチマークの実行
+        uses: CodSpeedHQ/action@v5
+        with:
+          mode: simulation
+          run: pnpm bench
