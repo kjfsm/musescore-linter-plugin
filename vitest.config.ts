@@ -2,7 +2,6 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    globals: true,
     // パッケージごとに 1 プロジェクト。以前は packages/*/vitest.config.ts を 5 本置いて
     // いたが、中身は alias だけの差分だった。その alias 自体、各パッケージの
     // package.json が "main": "src/index.ts" を指しているので不要（外して
@@ -14,14 +13,12 @@ export default defineConfig({
       {
         test: {
           name: "packages",
-          globals: true,
           include: ["packages/*/tests/**/*.test.ts", "tools/*/tests/**/*.test.ts"],
         },
       },
       {
         test: {
           name: "apps",
-          globals: true,
           include: ["apps/*/tests/**/*.test.ts"],
         },
       },
