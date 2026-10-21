@@ -25,7 +25,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"],
+      reporter: ["text"],
       // apps 側は React 非依存のロジック層（lib/）だけを見る。components/ は
       // jsdom のテスト基盤が無く描画テストを書けないので対象外。
       // packages 側は除外しない。snapshot.ts は「MuseScore ランタイム無しでは

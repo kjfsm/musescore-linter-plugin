@@ -44,8 +44,7 @@ jobs:
       - name: パイプライン (typecheck / test / build / package)
         run: pnpm pipeline
 
-      # codecov へ送る lcov は 1 本にまとめたいので、ルートの vitest で
-      # 全パッケージを一度に計測する（turbo 側の test はパッケージ単位）。
+      # 閾値は vitest.config.ts の coverage.thresholds。下回ると落ちる。
       - name: カバレッジ計測
         run: pnpm test:coverage
 
@@ -69,11 +68,3 @@ jobs:
       # job summary に数値を出すだけにして、回帰は PR 前後の比較で判断する。
       - name: 性能ベースラインの計測
         run: pnpm bench
-
-      - name: Codecov へのカバレッジ送信
-        if: always()
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/lcov.info
-          fail_ci_if_error: false
