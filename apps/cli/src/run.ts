@@ -43,8 +43,8 @@ function listRules(io: RunIO, app: LintApp): number {
   io.stdout(
     app.ruleInfos
       .map((r) => {
-        const { severity, category, name, defaultEnabled } = r;
-        const head = `${r.id.padEnd(idWidth)}  ${severity.padEnd(7)}  ${category.padEnd(12)}  ${name}${defaultEnabled ? "" : "（既定で無効）"}`;
+        const { severity, tier, category, name } = r;
+        const head = `${r.id.padEnd(idWidth)}  ${severity.padEnd(7)}  ${tier.padEnd(11)}  ${category.padEnd(12)}  ${name}`;
         // オプションの行は id の幅の計算に混ぜず、ぶら下げて出す
         const opts = r.options.map((o) => {
           const values =
@@ -115,6 +115,7 @@ export function run(argv: string[], io: RunIO, rules: readonly Rule[] = builtinR
     throw error;
   }
   const settings = app.normalizeSettings({
+    preset: options.preset,
     enabled: resolveEnabledRules(options, allRuleIds),
     options: ruleOptions,
   });

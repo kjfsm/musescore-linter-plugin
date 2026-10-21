@@ -37,7 +37,7 @@ export const restAnnotation = defineRule({
     description: "休符位置の不適切な注記を検出",
     category: "notation",
     severity: "error",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -73,7 +73,7 @@ export const finalBarline = defineRule({
     description: "曲末の最終小節線が終止線でない箇所を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -96,7 +96,7 @@ export const codaSegno = defineRule({
     description: "D.S./D.C.とSegno/Coda/Fineの対応漏れを検出",
     category: "notation",
     severity: "error",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -162,7 +162,7 @@ export const rehearsalMarkOrder = defineRule({
     description: "リハーサルマークの順序の乱れ・重複を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -212,7 +212,7 @@ export const repeatBarlineMatch = defineRule({
     description: "リピート開始に対応する終了が無い箇所を検出",
     category: "notation",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -261,7 +261,7 @@ export const courtesyAccidental = defineRule({
     description: "親切臨時記号を付けた方がよい箇所を提案",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -315,7 +315,7 @@ export const rehearsalMarkPosition = defineRule({
     description: "小節の頭に無いリハーサルマークを検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -341,7 +341,7 @@ export const fermataConsistency = defineRule({
     description: "他のパートにあるフェルマータが無い譜表を検出",
     category: "notation",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   options: {},
   run({ score, report }) {

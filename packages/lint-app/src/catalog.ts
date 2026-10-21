@@ -1,4 +1,4 @@
-import type { OptionSpec, Rule, RuleCategory, Severity } from "@score-linter/linter";
+import type { OptionSpec, Rule, RuleCategory, RuleTier, Severity } from "@score-linter/linter";
 import { compareSeverity } from "@score-linter/linter";
 
 export type OptionInfo = OptionSpec & { key: string };
@@ -10,7 +10,7 @@ export interface RuleInfo {
   description: string;
   category: RuleCategory;
   severity: Severity;
-  defaultEnabled: boolean;
+  tier: RuleTier;
   options: OptionInfo[];
 }
 
@@ -30,26 +30,50 @@ const CATEGORIES: Record<RuleCategory, { label: string; rank: number }> = {
   notation: { label: "記譜", rank: 4 },
 };
 
+/**
+ * 話題の欄に並べ、グループの一括 ON/OFF の対象にするか。試験中のルールを外すのは、
+ * 一括で ON にしたときに不安定なルールまで動き出さないようにするため。
+ */
+export const belongsToTopicGroup = (tier: RuleTier): boolean => tier !== "nursery";
+
 export interface RuleGroup {
   category: RuleCategory;
   label: string;
   rules: RuleInfo[];
 }
 
+export interface RuleCatalog {
+  /** 話題ごとの欄。`recommended` と `pedantic` のルールだけが入る。 */
+  groups: RuleGroup[];
+  /** 話題を問わず、`nursery` のルールをまとめた「試験中」の欄。 */
+  nursery: RuleInfo[];
+}
+
+const byCategoryThenSeverity = (infos: readonly RuleInfo[]): RuleInfo[] =>
+  infos
+    .map((r, i) => ({ r, i }))
+    .sort(
+      (a, b) =>
+        CATEGORIES[a.r.category].rank - CATEGORIES[b.r.category].rank ||
+        compareSeverity(a.r.severity, b.r.severity) ||
+        a.i - b.i,
+    )
+    .map(({ r }) => r);
+
 /**
- * 設定画面に出すカテゴリごとのルール。
- * カテゴリの中は severity の重い順、同じ severity の中はルールの並び（関連するペアが隣り合う）。
+ * 設定画面に出すルールの並び。
+ * 欄の中は severity の重い順、同じ severity の中はルールの並び（関連するペアが隣り合う）。
+ * 推奨と細かい指摘で欄を分けないのは、同じ話題のルールを 1 か所にまとめておくため。
  */
-export function ruleGroups(infos: readonly RuleInfo[]): RuleGroup[] {
-  const categories = [...new Set(infos.map((r) => r.category))].sort(
-    (a, b) => CATEGORIES[a].rank - CATEGORIES[b].rank,
-  );
-  return categories.map((category) => {
-    const members = infos.filter((r) => r.category === category);
-    const ordered = members
-      .map((r, i) => ({ r, i }))
-      .sort((a, b) => compareSeverity(a.r.severity, b.r.severity) || a.i - b.i)
-      .map(({ r }) => r);
-    return { category, label: CATEGORIES[category].label, rules: ordered };
-  });
+export function ruleCatalog(infos: readonly RuleInfo[]): RuleCatalog {
+  const regular = byCategoryThenSeverity(infos.filter((r) => belongsToTopicGroup(r.tier)));
+  const categories = [...new Set(regular.map((r) => r.category))];
+  return {
+    groups: categories.map((category) => ({
+      category,
+      label: CATEGORIES[category].label,
+      rules: regular.filter((r) => r.category === category),
+    })),
+    nursery: byCategoryThenSeverity(infos.filter((r) => !belongsToTopicGroup(r.tier))),
+  };
 }

@@ -1,5 +1,5 @@
 ---
-description: ルールの契約（defineRule・report・severity・options）と、ルールが見てよいもの
+description: ルールの契約（defineRule・report・severity・tier・options）と、ルールが見てよいもの
 paths:
   - "packages/linter/src/**"
   - "packages/score-model/src/**"
@@ -25,7 +25,7 @@ export const xxx = defineRule({
     description: "〇〇を検出",
     category: "notation",
     severity: "warning", // このルールが出しうる最も重い severity
-    defaultEnabled: true,
+    tier: "nursery", // 新しいルールは試験中から始める
   },
   options: {}, // 設定項目の宣言。無ければ空
   run({ score, options, report }) {
@@ -37,6 +37,10 @@ export const xxx = defineRule({
 - **`meta.severity` は実行前に設定画面へ出るので、実際の指摘から導けない。** 条件によって軽い
   severity も出すルールは、重いほうを `meta` に書き、軽い指摘だけ `report` の `severity` で下げる。
   `meta.severity` より重い指摘を報告するとエンジンが内部エラーにする。
+- **`meta.tier` は既定で ON にするかだけを決め、severity とは独立させる。** `recommended` はほぼ確実な誤り、
+  `pedantic` は正しいが細かい・流派で分かれる指摘、`nursery` は誤検出の様子を見ているもの。
+  新しいルールは `nursery` で入れ、実際の楽譜で様子を見てから上げる。上げたら changeset に書く。
+  プリセットとの対応は `isEnabledByDefault`（`engine.ts`）が持ち、ホストに書かない。
 - ルールが見てよいのは `score` と `options` だけ。`@score-linter/score-model` 以外を import しない
   （`.oxlintrc.json` の `no-restricted-imports` が弾く）。MuseScore の語彙（要素の種類・subtype）は持ち込まない。
 - 奏法・強弱・テンポ・反復記号の表記揺れは `score-model` の `interpretAnnotation` が解釈済みの

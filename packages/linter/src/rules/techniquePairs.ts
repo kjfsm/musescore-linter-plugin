@@ -70,7 +70,7 @@ function techniquePair(config: TechniquePairConfig): Rule {
       description: config.description,
       category: "articulation",
       severity: "warning",
-      defaultEnabled: true,
+      tier: "recommended",
     },
     options: {},
     run({ score, report }) {

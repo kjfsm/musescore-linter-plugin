@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { builtinRules } from "@score-linter/linter";
 import { describe, expect, it } from "vitest";
 
 import { type RunIO, run } from "../src/run.js";
@@ -33,7 +34,9 @@ function lint(file: string): JsonIssue[] {
     stdout: (t) => out.push(t),
     stderr: () => {},
   };
-  run(["--format=json", "--fail-on=none", file], io);
+  // 段階を問わずすべてのルールの検出結果を基準にする
+  const every = builtinRules.map((r) => `--rule=${r.id}`);
+  run(["--format=json", "--fail-on=none", ...every, file], io);
   const parsed = JSON.parse(out.join("\n")) as { results: { issues: JsonIssue[] }[] };
   return parsed.results.flatMap((r) => r.issues);
 }

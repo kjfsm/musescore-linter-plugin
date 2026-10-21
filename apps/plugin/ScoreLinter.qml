@@ -24,12 +24,13 @@ MuseScore {
     readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/score-linter.zip"
 
     // 既定値から変えた分だけを持つ設定。保存もこの形で行う（Bundle.serializeSettings）。
-    property var settings: ({ enabled: {}, options: {} })
+    property var settings: ({ preset: "recommended", enabled: {}, options: {} })
     property var enabledRules: ({})
     property var ruleOptions: ({})
     property var issuesList: []
     property var checkerList: []
     property var ruleGroupList: []
+    property var nurseryList: []
     property var lastRun: null
     property string snapshotText: ""
     property bool hasRun: false
@@ -74,9 +75,10 @@ MuseScore {
 
     QtObject {
         id: persistedSettings
-        // 中身は Bundle.serializeSettings が作る、既定値から変えた分だけの JSON
+        // 中身は Bundle.serializeSettings が作る。ON/OFF とオプションは既定値から変えた分だけの JSON
         property string rulesJson: "{}"
         property string ruleOptionsJson: "{}"
+        property string preset: "recommended"
         property bool perfEnabled: false
     }
 
@@ -86,16 +88,20 @@ MuseScore {
 
     function initialize() {
         try {
-            ruleGroupList = Bundle.ruleCatalog();
+            var catalog = Bundle.ruleCatalog();
+            ruleGroupList = catalog.groups;
+            nurseryList = catalog.nursery;
             var all = [];
             for (var i = 0; i < ruleGroupList.length; i++) all = all.concat(ruleGroupList[i].rules);
-            checkerList = all;
+            checkerList = all.concat(nurseryList);
             // 壊れた保存値・未知のルールは Bundle 側が捨てて既定値に戻す
-            applySettings(Bundle.loadSettings(persistedSettings.rulesJson, persistedSettings.ruleOptionsJson), false);
+            applySettings(Bundle.loadSettings(persistedSettings.rulesJson, persistedSettings.ruleOptionsJson,
+                                              persistedSettings.preset), false);
         } catch (e) {
             console.error("[ScoreLinter] ルールの取得に失敗: " + e);
             checkerList = [];
             ruleGroupList = [];
+            nurseryList = [];
         }
     }
 
@@ -108,6 +114,15 @@ MuseScore {
         var saved = Bundle.serializeSettings(next);
         persistedSettings.rulesJson = saved.enabled;
         persistedSettings.ruleOptionsJson = saved.options;
+        persistedSettings.preset = saved.preset;
+    }
+
+    function setPreset(preset) {
+        applySettings(Bundle.setPreset(settings, preset), true);
+    }
+
+    function setGroupEnabled(category, enabled) {
+        applySettings(Bundle.setGroupEnabled(settings, category, enabled), true);
     }
 
     function setRuleEnabled(ruleId, checked) {
@@ -573,11 +588,14 @@ MuseScore {
                     SettingsPanel {
                         anchors.fill: parent
                         anchors.margins: 10
-                        checkers: plugin.checkerList
                         groups: plugin.ruleGroupList
+                        nursery: plugin.nurseryList
+                        preset: plugin.settings.preset
                         enabledRules: plugin.enabledRules
                         ruleOptions: plugin.ruleOptions
                         perfEnabled: persistedSettings.perfEnabled
+                        onPresetSelected: function (preset) { plugin.setPreset(preset); }
+                        onGroupToggled: function (category, enabled) { plugin.setGroupEnabled(category, enabled); }
                         onRuleToggled: plugin.setRuleEnabled(ruleId, checked)
                         onRuleOptionChanged: plugin.setRuleOption(ruleId, key, value)
                         onPerfToggled: plugin.setPerfLogging(checked)

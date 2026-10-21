@@ -37,7 +37,7 @@ export const xxxCheck = defineRule({
     description: "〇〇が〇〇になっていることを確認する",
     category: "notation", // articulation / dynamics / tempo / notation / slur-tie
     severity: "warning", // 出しうる最も重いもの
-    defaultEnabled: true,
+    tier: "nursery", // 新しいルールは試験中から。様子を見て recommended / pedantic に上げる
   },
   options: {},
   run({ score, report }) {

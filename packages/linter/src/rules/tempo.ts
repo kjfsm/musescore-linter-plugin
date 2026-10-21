@@ -22,7 +22,7 @@ export const tempoBarline = defineRule({
     description: "テンポ変更前に複縦線が無い箇所を検出",
     category: "tempo",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -75,7 +75,7 @@ export const openingTempo = defineRule({
     description: "曲頭のテンポ表記の欠落を検出",
     category: "tempo",
     severity: "error",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -97,7 +97,7 @@ export const tempoWithoutBpm = defineRule({
     description: "BPM値のないテンポ表記を検出",
     category: "tempo",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -119,7 +119,7 @@ export const tempoChangeResolution = defineRule({
     description: "rit./accel.等が解除されないまま終わる箇所を検出",
     category: "tempo",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -170,7 +170,7 @@ export const duplicateTempo = defineRule({
     description: "同じ位置の矛盾するテンポ、変化を挟まないテンポや rit. 等の書き直しを検出",
     category: "tempo",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {

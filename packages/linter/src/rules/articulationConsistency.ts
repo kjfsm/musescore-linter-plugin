@@ -66,7 +66,7 @@ export const slurTieArticulationConsistency = defineRule({
     description: "同リズムのパート間でスラー・タイ・アーティキュレーションの食い違いを検出",
     category: "articulation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {
     scope: {

@@ -33,7 +33,7 @@ export const enharmonicSpelling = defineRule({
     description: "同じ音高を同時に・続けて違う綴りで書いている箇所を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   options: {},
   run({ score, report }) {
@@ -99,7 +99,7 @@ export const redundantAccidental = defineRule({
     description: "同じ小節で既に有効な臨時記号をもう一度付けている箇所を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -148,7 +148,7 @@ export const extremeSpelling = defineRule({
     description: "調号から遠い綴り（ハ長調の B#・Cb・重嬰・重変など）を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   options: {},
   run({ score, report }) {
@@ -183,7 +183,7 @@ export const keySignature = defineRule({
     description: "7 つの調号と、前と同じ調号への変更を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {

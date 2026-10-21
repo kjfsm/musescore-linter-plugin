@@ -2,7 +2,7 @@ import type { Issue, Rule, RuleTiming, Severity } from "@score-linter/linter";
 import { createLinter } from "@score-linter/linter";
 import type { Score } from "@score-linter/score-model";
 
-import { describeRule, type RuleGroup, ruleGroups, type RuleInfo } from "./catalog.js";
+import { describeRule, type RuleCatalog, ruleCatalog, type RuleInfo } from "./catalog.js";
 import { countBySeverity, presentIssues, type ReportedIssue } from "./report.js";
 import { type Settings, type SettingsOps, settingsOps } from "./settings.js";
 
@@ -35,7 +35,7 @@ export interface LintApp extends SettingsOps {
   readonly rules: readonly Rule[];
   /** ルールの並びのまま。 */
   readonly ruleInfos: RuleInfo[];
-  readonly catalog: RuleGroup[];
+  readonly catalog: RuleCatalog;
   lint(score: Score, settings: Settings, request?: LintRequest): LintOutcome;
 }
 
@@ -58,7 +58,7 @@ export function createLintApp(rules: readonly Rule[]): LintApp {
     ...settingsOps(rules),
     rules,
     ruleInfos,
-    catalog: ruleGroups(ruleInfos),
+    catalog: ruleCatalog(ruleInfos),
     lint(score, settings, request = {}) {
       const { now, diagnostics = [] } = request;
       // 時計は createLinter の引数でしか渡せず、呼ぶたびに渡される時計が違いうるので、その都度作る

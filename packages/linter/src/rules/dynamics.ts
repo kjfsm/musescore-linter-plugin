@@ -35,7 +35,7 @@ export const firstNoteDynamics = defineRule({
     description: "各パート1音目のダイナミクス欠落を検出",
     category: "dynamics",
     severity: "error",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -61,7 +61,7 @@ export const duplicateDynamics = defineRule({
     description: "同じ強弱記号が変化なく連続する箇所を検出",
     category: "dynamics",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -94,7 +94,7 @@ export const simultaneousDynamics = defineRule({
     description: "同じ位置で強弱記号が矛盾する箇所を検出",
     category: "dynamics",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -133,7 +133,7 @@ export const hairpinTargetDynamic = defineRule({
     description: "ヘアピンの到達先にダイナミクスが無い箇所を検出",
     category: "dynamics",
     severity: "info",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -164,7 +164,7 @@ export const hairpinOnRest = defineRule({
     // slur-on-rest（warning）とわざと非対称。休符に掛かるスラーは明確な誤りだが、
     // ヘアピンの端点が休符上に来るのは実務では珍しくない。
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -185,7 +185,7 @@ export const crescTextResolution = defineRule({
     description: "テキスト式cresc./dim.の到達先ダイナミクス欠落を検出",
     category: "dynamics",
     severity: "info",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -213,7 +213,7 @@ export const tieContinuationDynamic = defineRule({
     category: "dynamics",
     // 持続中の強弱の変化として意図して書くこともある
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -251,7 +251,7 @@ export const overlappingHairpins = defineRule({
     description: "同じ譜表で前のヘアピンが終わる前に始まるヘアピンを検出",
     category: "dynamics",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -283,7 +283,7 @@ export const dynamicAfterRest = defineRule({
     description: "長く休んだあとの入りで強弱記号を言い直していない箇所を検出",
     category: "dynamics",
     severity: "info",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   // オプションの型に数値が無いので、休みの長さは選択肢から選ばせる
   options: {
@@ -330,7 +330,7 @@ export const dynamicAsText = defineRule({
     description: "強弱記号ではなく普通のテキストで書いた強弱記号を検出",
     category: "dynamics",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {

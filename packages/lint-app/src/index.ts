@@ -1,6 +1,6 @@
 export type { HostDiagnostic, LintApp, LintOutcome, LintRequest } from "./app.js";
 export { createLintApp } from "./app.js";
-export type { OptionInfo, RuleGroup, RuleInfo } from "./catalog.js";
+export type { OptionInfo, RuleCatalog, RuleGroup, RuleInfo } from "./catalog.js";
 export type { FileResult, OutputFormat } from "./format.js";
 export {
   formatCsv,

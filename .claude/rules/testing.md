@@ -24,7 +24,7 @@ paths:
 
 - `runRule(rule, score, options?)` — そのルールだけを有効にした `createLinter([rule])` で lint する。
   `options` は生の値で渡す（エンジンが正規化する）。
-- `runAll(score, enabled?)` — `builtinRules` を既定の設定で走らせる。
+- `runAll(score, enabled?)` — 段階を問わず `builtinRules` をすべて有効にして走らせる。
 - `cleanScore(extra?, partNames?)` / `quintetScore(extra?)` — どの組み込みルールにも引っかからない最小の楽譜
   （冒頭にテンポ表記、各パートの 1 音目に強弱記号）に、`extra` の要素を足したもの。違反を 1 つだけ足して検証する。
 

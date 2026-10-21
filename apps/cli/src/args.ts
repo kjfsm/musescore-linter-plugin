@@ -1,4 +1,4 @@
-import type { OptionValue, Rule, Severity } from "@score-linter/linter";
+import type { OptionValue, Preset, Rule, Severity } from "@score-linter/linter";
 import { parseOptionText } from "@score-linter/linter";
 
 export type OutputFormat = "pretty" | "json" | "github" | "markdown" | "csv";
@@ -22,6 +22,7 @@ export interface CliOptions {
   /** ルール個別のオプション指定（出現順。同じキーは後勝ち） */
   ruleOptions: RawRuleOption[];
   failOn: FailOn;
+  preset: Preset;
   color: boolean;
   help: boolean;
   version: boolean;
@@ -32,6 +33,7 @@ export class UsageError extends Error {}
 
 const FORMATS: OutputFormat[] = ["pretty", "json", "github", "markdown", "csv"];
 const FAIL_ON: FailOn[] = ["error", "warning", "info", "none"];
+const PRESETS: Preset[] = ["recommended", "all"];
 
 const DEFAULTS: CliOptions = {
   files: [],
@@ -41,6 +43,7 @@ const DEFAULTS: CliOptions = {
   onlyRules: [],
   ruleOptions: [],
   failOn: "error",
+  preset: "recommended",
   color: true,
   help: false,
   version: false,
@@ -135,6 +138,9 @@ export function parseArgs(argv: string[]): CliOptions {
         break;
       case "--fail-on":
         options.failOn = oneOf(flag, requireValue(flag, value), FAIL_ON);
+        break;
+      case "--preset":
+        options.preset = oneOf(flag, requireValue(flag, value), PRESETS);
         break;
       case "--no-rule":
         options.disabledRules.push(requireValue(flag, value));
@@ -235,7 +241,11 @@ export const HELP_TEXT = `score-lint — MusicXML の楽譜を静的解析する
   --dump-score                   指摘ではなく、読み込んだ楽譜のモデルを JSON 出力する
                                  （ファイル 1 つならモデルそのもの、複数なら
                                    [{ file, score }, ...] の配列になる。--dump-ir は別名）
+  --preset=<recommended|all>     既定で有効にするルールの段階（既定: recommended）
+                                 recommended はほぼ確実な誤りだけ、all は細かい指摘も含める。
+                                 試験中（nursery）のルールはどちらにも入らない
   --rule=<id>                    指定したルールだけを有効にする（複数指定可）
+                                 試験中のルールも有効にできる
   --no-rule=<id>                 指定したルールを無効にする（複数指定可）
   --rule-option=<id>.<key>=<値>  ルール個別の設定（複数指定可、同じキーは後勝ち）
                                  複数選択の値はカンマ区切り
@@ -244,7 +254,7 @@ export const HELP_TEXT = `score-lint — MusicXML の楽譜を静的解析する
                                  この severity 以上の指摘があれば終了コード 1
                                  （既定: error。none はつねに 0）
   --no-color                     色付けをやめる
-  --list-rules                   ルールの一覧を表示して終了
+  --list-rules                   ルールの一覧（段階を含む）を表示して終了
   -h, --help                     このヘルプ
   -v, --version                  バージョン
 

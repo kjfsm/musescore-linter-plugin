@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { ReportedIssue } from "@score-linter/lint-app";
+import { defineRule, type Rule, type RuleTier } from "@score-linter/linter";
 import type { Score } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
@@ -26,7 +27,11 @@ interface Captured {
   err: string;
 }
 
-function invoke(argv: string[], files: Record<string, Uint8Array> = {}): Captured {
+function invoke(
+  argv: string[],
+  files: Record<string, Uint8Array> = {},
+  rules?: readonly Rule[],
+): Captured {
   const out: string[] = [];
   const err: string[] = [];
   const io: RunIO = {
@@ -39,7 +44,26 @@ function invoke(argv: string[], files: Record<string, Uint8Array> = {}): Capture
     stdout: (t) => out.push(t),
     stderr: (t) => err.push(t),
   };
-  return { code: run(argv, io), out: out.join("\n"), err: err.join("\n") };
+  return { code: run(argv, io, rules), out: out.join("\n"), err: err.join("\n") };
+}
+
+function always(id: string, tier: RuleTier): Rule {
+  return defineRule({
+    id,
+    meta: { name: id, description: "", category: "notation", severity: "info", tier },
+    options: {},
+    run({ report }) {
+      report({ at: { measure: 0, tick: 0 }, message: id });
+    },
+  });
+}
+
+const TIERED = [always("rec", "recommended"), always("ped", "pedantic"), always("nur", "nursery")];
+
+function ranRules(argv: string[]): string[] {
+  const r = invoke(["--json", ...argv, "duet.musicxml"], {}, TIERED);
+  const parsed = JSON.parse(r.out) as { results: { issues: ReportedIssue[] }[] };
+  return parsed.results[0]!.issues.map((i) => i.ruleId).sort();
 }
 
 describe("run: 基本動作", () => {
@@ -64,6 +88,15 @@ describe("run: 基本動作", () => {
     expect(r.out.split("\n").length).toBeGreaterThan(20);
   });
 
+  it("--list-rules は各ルールの段階を出す", () => {
+    const lines = invoke(["--list-rules"], {}, TIERED).out.split("\n");
+    expect(lines.map((l) => l.split(/\s+/).slice(0, 3))).toEqual([
+      ["rec", "info", "recommended"],
+      ["ped", "info", "pedantic"],
+      ["nur", "info", "nursery"],
+    ]);
+  });
+
   it("読めないファイルは終了コード 2 と理由を返す", () => {
     const r = invoke(["missing.musicxml"]);
     expect(r.code).toBe(EXIT_ERROR);
@@ -81,7 +114,7 @@ describe("run: 基本動作", () => {
 
 describe("run: 解析結果", () => {
   it("fixture を解析して仕込んだ記譜ミスを検出する", () => {
-    const r = invoke(["duet.musicxml"]);
+    const r = invoke(["--preset=all", "duet.musicxml"]);
     expect(r.out).toContain("duet.musicxml");
     // Violin II の G3→A3 の異音程タイ
     expect(r.out).toContain("tie-pitch-mismatch");
@@ -121,6 +154,22 @@ describe("run: 解析結果", () => {
     expect(invoke(["--format=csv", "duet.musicxml"]).out.split("\r\n")[0]).toBe(
       '"重大度","パート","小節","メッセージ","ルール"',
     );
+  });
+
+  it("既定は推奨のみ、--preset=all で細かい指摘も走り、どちらでも試験中は走らない", () => {
+    expect(ranRules([])).toEqual(["rec"]);
+    expect(ranRules(["--preset=all"])).toEqual(["ped", "rec"]);
+  });
+
+  it("--rule で試験中のルールを有効にでき、--no-rule でプリセットのルールを外せる", () => {
+    expect(ranRules(["--rule=nur"])).toEqual(["nur"]);
+    expect(ranRules(["--preset=all", "--no-rule=ped"])).toEqual(["rec"]);
+  });
+
+  it("不正な --preset は指定できる値を示して終了コード 2", () => {
+    const r = invoke(["--preset=nursery", "duet.musicxml"]);
+    expect(r.code).toBe(EXIT_ERROR);
+    expect(r.err).toContain("recommended / all");
   });
 
   it("--rule で 1 つのルールだけに絞れる", () => {

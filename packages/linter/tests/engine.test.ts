@@ -22,7 +22,7 @@ function reporting(id: string, count = 1, overrides: Partial<Rule["meta"]> = {})
       description: "",
       category: "notation",
       severity: "warning",
-      defaultEnabled: true,
+      tier: "recommended",
       ...overrides,
     },
     options: {},
@@ -64,7 +64,7 @@ describe("createLinter", () => {
         description: "",
         category: "notation",
         severity: "warning",
-        defaultEnabled: true,
+        tier: "recommended",
       },
       options: {},
       run({ report }) {
@@ -88,16 +88,17 @@ describe("createLinter", () => {
 
 describe("ルールの有効・無効", () => {
   const on = reporting("on");
-  const off = reporting("off", 1, { defaultEnabled: false });
+  const off = reporting("off", 1, { tier: "nursery" });
   const linter = createLinter([on, off]);
 
-  it("指定が無ければ defaultEnabled に従う", () => {
+  it("指定が無ければ段階とプリセットに従う", () => {
     expect(isRuleEnabled(on)).toBe(true);
     expect(isRuleEnabled(off)).toBe(false);
+    expect(isRuleEnabled(off, { preset: "all" })).toBe(false);
     expect(isRuleEnabled(on, { enabled: {} })).toBe(true);
   });
 
-  it("明示指定は defaultEnabled より優先される", () => {
+  it("明示指定は段階より優先される", () => {
     expect(isRuleEnabled(on, { enabled: { on: false } })).toBe(false);
     expect(isRuleEnabled(off, { enabled: { off: true } })).toBe(true);
   });
@@ -122,7 +123,7 @@ describe("ルールの例外", () => {
       description: "",
       category: "notation",
       severity: "warning",
-      defaultEnabled: true,
+      tier: "recommended",
     },
     options: {},
     run({ report }) {
@@ -155,7 +156,7 @@ describe("severity の契約", () => {
         description: "",
         category: "notation",
         severity: meta,
-        defaultEnabled: true,
+        tier: "recommended",
       },
       options: {},
       run({ report }) {
@@ -198,7 +199,7 @@ describe("オプションの受け渡し", () => {
         description: "",
         category: "notation",
         severity: "info",
-        defaultEnabled: true,
+        tier: "recommended",
       },
       options: {
         scope: {
@@ -242,7 +243,7 @@ describe("実行時間の計測", () => {
 
   it("時計を渡すと、実行したルールごとの所要時間が実行順に入る", () => {
     const linter = createLinter(
-      [reporting("a"), reporting("skipped", 1, { defaultEnabled: false }), reporting("b")],
+      [reporting("a"), reporting("skipped", 1, { tier: "nursery" }), reporting("b")],
       {
         now: fakeClock(10, 15, 20, 50),
       },
@@ -261,7 +262,7 @@ describe("実行時間の計測", () => {
         description: "",
         category: "notation",
         severity: "info",
-        defaultEnabled: true,
+        tier: "recommended",
       },
       options: {},
       run() {

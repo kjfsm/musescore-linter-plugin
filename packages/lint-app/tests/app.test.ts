@@ -3,6 +3,7 @@ import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
 import { createLintApp } from "../src/app.js";
+import type { Settings } from "../src/settings.js";
 
 const score = buildScore({
   parts: [{ id: "p1", name: "Horn" }],
@@ -38,7 +39,7 @@ function rule(id: string, meta: Partial<RuleMeta> = {}, measure = 1): Rule {
       description: "",
       category: "notation",
       severity: "info",
-      defaultEnabled: true,
+      tier: "recommended",
       ...meta,
     },
     options: OPTIONS,
@@ -51,13 +52,36 @@ function rule(id: string, meta: Partial<RuleMeta> = {}, measure = 1): Rule {
   });
 }
 
-const rules = [rule("on", { severity: "warning" }, 2), rule("off", { defaultEnabled: false })];
-const NO_SETTINGS = { enabled: {}, options: {} };
+const rules = [rule("on", { severity: "warning" }, 2), rule("off", { tier: "nursery" })];
+const NO_SETTINGS: Settings = { preset: "recommended", enabled: {}, options: {} };
+
+const tiered = [
+  rule("rec", { category: "dynamics" }),
+  rule("ped", { category: "dynamics", tier: "pedantic" }),
+  rule("nur", { category: "dynamics", tier: "nursery" }),
+  rule("other", { category: "tempo", tier: "pedantic" }),
+];
+const ran = (app: ReturnType<typeof createLintApp>, settings: Settings) =>
+  app
+    .lint(score, settings)
+    .issues.map((i) => i.ruleId)
+    .sort();
 
 describe("createLintApp の lint", () => {
   it("既定で有効なルールだけを走らせ、オプションの既定値を渡す", () => {
     const { issues } = createLintApp(rules).lint(score, NO_SETTINGS);
     expect(issues.map((i) => [i.ruleId, i.message])).toEqual([["on", "all:a"]]);
+  });
+
+  it("推奨のみでは recommended だけ、すべてでは pedantic も走り、どちらでも nursery は走らない", () => {
+    const app = createLintApp(tiered);
+    expect(ran(app, NO_SETTINGS)).toEqual(["rec"]);
+    expect(ran(app, app.withPreset(NO_SETTINGS, "all"))).toEqual(["other", "ped", "rec"]);
+  });
+
+  it("試験中のルールは個別に ON にすると走る", () => {
+    const app = createLintApp(tiered);
+    expect(ran(app, app.withRuleEnabled(NO_SETTINGS, "nur", true))).toEqual(["nur", "rec"]);
   });
 
   it("設定の ON/OFF とオプションの値がルールに届く", () => {
@@ -116,8 +140,57 @@ describe("createLintApp の設定", () => {
     settings = app.withRuleOption(settings, "on", "scope", "group");
     settings = app.withRuleOption(settings, "on", "symbols", ["a"]);
     const saved = app.serializeSettings(settings);
-    expect(saved).toEqual({ enabled: '{"on":false}', options: '{"on":{"scope":"group"}}' });
-    expect(app.parseSettings(saved.enabled, saved.options)).toEqual(settings);
+    expect(saved).toEqual({
+      enabled: '{"on":false}',
+      options: '{"on":{"scope":"group"}}',
+      preset: "recommended",
+    });
+    expect(app.parseSettings(saved.enabled, saved.options, saved.preset)).toEqual(settings);
+  });
+
+  it("プリセットも保存値として往復する", () => {
+    const app = createLintApp(tiered);
+    const settings = app.withRuleEnabled(app.withPreset(NO_SETTINGS, "all"), "ped", false);
+    const saved = app.serializeSettings(settings);
+    expect(saved).toEqual({ enabled: '{"ped":false}', options: "{}", preset: "all" });
+    expect(app.parseSettings(saved.enabled, saved.options, saved.preset)).toEqual(settings);
+  });
+
+  it("プリセットが無い・不正な保存値は推奨のみとして読む", () => {
+    const app = createLintApp(tiered);
+    expect(app.parseSettings('{"ped":true}', "{}")).toEqual({
+      ...NO_SETTINGS,
+      enabled: { ped: true },
+    });
+    expect(app.parseSettings("{}", "{}", "nursery")).toEqual(NO_SETTINGS);
+    expect(app.parseSettings("{}", "{}", null)).toEqual(NO_SETTINGS);
+  });
+
+  it("プリセットを切り替えると、切り替え後の既定値と同じになった個別の設定は消える", () => {
+    const app = createLintApp(tiered);
+    let settings = app.withRuleEnabled(NO_SETTINGS, "ped", true);
+    settings = app.withRuleEnabled(settings, "rec", false);
+    expect(settings.enabled).toEqual({ ped: true, rec: false });
+    settings = app.withPreset(settings, "all");
+    expect(settings).toEqual({ preset: "all", enabled: { rec: false }, options: {} });
+    settings = app.withPreset(app.withRuleEnabled(settings, "other", false), "recommended");
+    expect(settings.enabled).toEqual({ rec: false });
+  });
+
+  it("グループの一括切り替えは、既定値との差分だけを残し、nursery に触れない", () => {
+    const app = createLintApp(tiered);
+    const on = app.withGroupEnabled(NO_SETTINGS, "dynamics", true);
+    expect(on.enabled).toEqual({ ped: true });
+    expect(app.settingsView(on).enabled).toEqual({
+      rec: true,
+      ped: true,
+      nur: false,
+      other: false,
+    });
+
+    const withNursery = app.withRuleEnabled(NO_SETTINGS, "nur", true);
+    const off = app.withGroupEnabled(withNursery, "dynamics", false);
+    expect(off.enabled).toEqual({ rec: false, nur: true });
   });
 
   it("変えた値を元に戻すと保存から消える", () => {
@@ -131,7 +204,11 @@ describe("createLintApp の設定", () => {
       '{"on":true,"off":true}',
       '{"on":{"scope":"all","symbols":["b","a"]}}',
     );
-    expect(settings).toEqual({ enabled: { off: true }, options: { on: { symbols: ["a", "b"] } } });
+    expect(settings).toEqual({
+      preset: "recommended",
+      enabled: { off: true },
+      options: { on: { symbols: ["a", "b"] } },
+    });
   });
 
   it("未知のルール・キー・型の合わない値・壊れた JSON は捨てる", () => {
@@ -147,11 +224,18 @@ describe("createLintApp の設定", () => {
       enabled: { on: true, off: true },
       options: { on: { scope: "all", symbols: ["b", "a"] } },
     });
-    expect(settings).toEqual({ enabled: { off: true }, options: { on: { symbols: ["a", "b"] } } });
+    expect(settings).toEqual({
+      preset: "recommended",
+      enabled: { off: true },
+      options: { on: { symbols: ["a", "b"] } },
+    });
   });
 
   it("保存したあとで既定値が変わったら、変えていないルールには新しい既定値が効く", () => {
-    const saved = createLintApp(rules).serializeSettings({ enabled: { on: false }, options: {} });
+    const saved = createLintApp(rules).serializeSettings({
+      ...NO_SETTINGS,
+      enabled: { on: false },
+    });
     const changed = createLintApp([rule("on"), rule("off")]);
     const view = changed.settingsView(changed.parseSettings(saved.enabled, saved.options));
     expect(view.enabled).toEqual({ on: false, off: true });
@@ -161,6 +245,7 @@ describe("createLintApp の設定", () => {
     const app = createLintApp(rules);
     const view = app.settingsView(app.withRuleOption(NO_SETTINGS, "on", "scope", "group"));
     expect(view).toEqual({
+      preset: "recommended",
       enabled: { on: true, off: false },
       options: { on: { scope: "group", symbols: ["a"] }, off: { scope: "all", symbols: ["a"] } },
     });
@@ -182,7 +267,7 @@ describe("createLintApp のカタログ", () => {
       rule("t", { category: "tempo" }),
       rule("s", { category: "slur-tie" }),
     ]);
-    expect(catalog.map((g) => [g.category, g.label])).toEqual([
+    expect(catalog.groups.map((g) => [g.category, g.label])).toEqual([
       ["tempo", "テンポ"],
       ["slur-tie", "スラー・タイ"],
       ["notation", "記譜"],
@@ -190,12 +275,30 @@ describe("createLintApp のカタログ", () => {
   });
 
   it("カテゴリの中は重い順、同じ重さならルールの並びのまま", () => {
-    const [group] = createLintApp([
-      rule("i1"),
-      rule("e", { severity: "error" }),
-      rule("i2"),
-    ]).catalog;
+    const [group] = createLintApp([rule("i1"), rule("e", { severity: "error" }), rule("i2")])
+      .catalog.groups;
     expect(group!.rules.map((r) => r.id)).toEqual(["e", "i1", "i2"]);
     expect(group!.rules[0]!.options.map((o) => o.key)).toEqual(["scope", "symbols"]);
+  });
+
+  it("試験中のルールは話題の欄に入れず、1 つの欄にまとめ、各ルールが段階を持つ", () => {
+    const { catalog } = createLintApp([
+      ...tiered,
+      rule("nur-tempo", { category: "tempo", tier: "nursery" }),
+    ]);
+    expect(catalog.groups.map((g) => [g.category, g.rules.map((r) => [r.id, r.tier])])).toEqual([
+      ["tempo", [["other", "pedantic"]]],
+      [
+        "dynamics",
+        [
+          ["rec", "recommended"],
+          ["ped", "pedantic"],
+        ],
+      ],
+    ]);
+    expect(catalog.nursery.map((r) => [r.id, r.tier])).toEqual([
+      ["nur-tempo", "nursery"],
+      ["nur", "nursery"],
+    ]);
   });
 });
