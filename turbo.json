@@ -30,8 +30,8 @@
     "//#knip": { "cache": false },
     "//#docs:check": { "cache": false },
     "test:e2e": {
-      "description": "apps/web を wrangler dev で _headers の CSP ごと配り、外への通信と CSP 違反が無いことを確かめる。ビルドは webServer が行う。",
-      "dependsOn": ["^typecheck"],
+      "description": "apps/web を wrangler dev で _headers の CSP ごと配り、外への通信と CSP 違反が無いことを確かめる。webServer も単独実行のためにビルドするが、build と並行すると dist の書き換えが競合するので build の後に回す。",
+      "dependsOn": ["^typecheck", "build"],
       "cache": false
     },
     "//#test": {
