@@ -14,7 +14,7 @@ const DUET = join(
   "duet.musicxml",
 );
 
-test("楽譜を読み込んで lint しても、外へのリクエストも CSP 違反も 0 件", async ({
+test("楽譜を読み込んで lint し、プレビューを描いても、外へのリクエストも CSP 違反も 0 件", async ({
   page,
   baseURL,
 }) => {
@@ -36,6 +36,15 @@ test("楽譜を読み込んで lint しても、外へのリクエストも CSP 
 
   await page.locator('input[type="file"]').setInputFiles(DUET);
   await expect(page.getByText("tie-pitch-mismatch").first()).toBeVisible();
+
+  // OSMD の vendor チャンクはプレビューを開いたときだけ読まれる
+  await page.getByText("楽譜プレビュー").first().click();
+  await expect(
+    page
+      .getByLabel(/の楽譜プレビュー$/)
+      .locator("svg")
+      .first(),
+  ).toBeVisible();
 
   const violations = await page.evaluate(
     () => (window as unknown as { __violations: string[] }).__violations,
