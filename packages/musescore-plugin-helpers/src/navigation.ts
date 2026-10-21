@@ -6,7 +6,7 @@ import type {
   Segment,
 } from "@score-linter/musescore-api-types";
 
-import { iterateMeasures } from "./traversal.js";
+import { iterateMeasures } from "./traversal.ts";
 
 /**
  * Returns the first measure whose `Measure.no` matches `index`.

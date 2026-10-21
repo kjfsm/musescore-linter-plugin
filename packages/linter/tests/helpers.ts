@@ -1,9 +1,9 @@
 import type { AnnotationSpec, ChordSpec, Score, ScoreSpec } from "@score-linter/score-model";
 import { buildScore } from "@score-linter/score-model";
 
-import { createLinter } from "../src/engine.js";
-import { builtinRules } from "../src/rules/index.js";
-import type { Issue, Rule } from "../src/types.js";
+import { createLinter } from "../src/engine.ts";
+import { builtinRules } from "../src/rules/index.ts";
+import type { Issue, Rule } from "../src/types.ts";
 
 /** ルールを 1 つだけ有効にしたリンターで lint する。オプションは生の値で渡す。 */
 export function runRule(rule: Rule, score: Score, options?: unknown): Issue[] {

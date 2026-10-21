@@ -1,0 +1,17 @@
+{
+  "name": "@score-linter/bench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "vitest bench --run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@score-linter/linter": "workspace:*",
+    "@score-linter/reader-musicxml": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

@@ -4,7 +4,7 @@ import * as path from "node:path";
 /**
  * MuseScore の一括変換ジョブ（`mscore -j job.json`）用の JSON を作る。
  *
- *   tsx scripts/make-conversion-job.ts <入力ディレクトリ> <出力ディレクトリ> [出力先 job.json]
+ *   node scripts/make-conversion-job.ts <入力ディレクトリ> <出力ディレクトリ> [出力先 job.json]
  *
  * 入力ディレクトリ配下の .mscz / .mscx を再帰的に探し、すべて MusicXML へ変換する
  * ジョブを書き出す。出力ファイル名はディレクトリ区切りを `__` に潰して衝突を避ける。
@@ -44,7 +44,7 @@ function main(): void {
   const [inputDir, outputDir, jobPath = "conversion-job.json"] = process.argv.slice(2);
   if (!inputDir || !outputDir) {
     console.error(
-      "使い方: tsx scripts/make-conversion-job.ts <入力ディレクトリ> <出力ディレクトリ> [job.json]",
+      "使い方: node scripts/make-conversion-job.ts <入力ディレクトリ> <出力ディレクトリ> [job.json]",
     );
     process.exit(2);
   }

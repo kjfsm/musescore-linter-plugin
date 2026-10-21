@@ -46,7 +46,7 @@
   MusicXML 経由の名前（`Accent` など）と一致しない。名前で種類を判定するルールは今は書けない。
 
 `Score` に足すときは、`score-model` の型を変えたうえで `reader-musicxml` と `reader-musescore` の両方で
-埋め、`packages/reader-musescore/tests/conformance.test.ts` で同じ値になることを確かめる。
+埋め、`apps/plugin/tests/conformance.test.ts` で同じ値になることを確かめる。
 
 ---
 
@@ -76,7 +76,7 @@
 
 ## C. 奏法テキスト on/off ペア（弦 + 非弦）
 
-すべて `techniquePair()`（`packages/linter/src/rules/techniquePairs.ts`）で安価に追加できる。奏法の表記は `score-model` の `interpret.ts` に足す。
+すべて `techniquePair()`（`packages/linter/src/rules/support/techniquePairs.ts`）で安価に追加できる。奏法の表記は `score-model` の `interpret.ts` に足す。
 
 | #     | ペア                                                                                              | 楽器      | タグ | severity | 優先 | 状態                                  |
 | ----- | ------------------------------------------------------------------------------------------------- | --------- | ---- | -------- | ---- | ------------------------------------- |

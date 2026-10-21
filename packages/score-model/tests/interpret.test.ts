@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { interpretAnnotation } from "../src/interpret.js";
+import { interpretAnnotation } from "../src/interpret.ts";
 
 describe("interpretAnnotation", () => {
   it("奏法の表記揺れを 1 つの Directive に寄せる", () => {

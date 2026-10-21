@@ -1,4 +1,4 @@
-export type { CliOptions, FailOn, OutputFormat } from "./args.js";
-export { HELP_TEXT, parseArgs, resolveEnabledRules, UsageError } from "./args.js";
-export type { RunIO } from "./run.js";
-export { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, meetsThreshold, run } from "./run.js";
+export type { CliOptions, FailOn, OutputFormat } from "./args.ts";
+export { HELP_TEXT, parseArgs, resolveEnabledRules, UsageError } from "./args.ts";
+export type { RunIO } from "./run.ts";
+export { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, meetsThreshold, run } from "./run.ts";

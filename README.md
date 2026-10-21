@@ -36,55 +36,59 @@ MuseScore 4 用の **楽譜チェック（Lint）プラグイン**です。
 「試験中」は誤検出の様子を見ているチェックで、どのプリセットにも入らず、1 つずつ ON にしたときだけ動きます。
 プリセットを選んだうえで、ルールごと・話題のグループごとに ON/OFF できます。
 
-| ルール                                         | severity     | 段階       | 目的                                                                                                                                                |
-| ---------------------------------------------- | ------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pizz / Arco                                    | warning      | 推奨       | `pizz.` 開始 → `arco` 解除の対応漏れ・重複                                                                                                          |
-| Con sord. / Senza sord.                        | warning      | 推奨       | 弱音器の対応漏れ・重複                                                                                                                              |
-| Solo / Tutti                                   | warning      | 推奨       | `solo`/`soli` → `tutti` の対応漏れ・重複（`tutti` を挟まない二連ソロは info）                                                                       |
-| Div. / Unis.                                   | warning      | 推奨       | `div.` → `unis.` の対応漏れ・重複                                                                                                                   |
-| Sul tasto / Ord.                               | warning      | 推奨       | `sul tasto`（駒から離れた奏法）→ `ord.` 復帰の対応漏れ・重複                                                                                        |
-| Sul pont. / Ord.                               | warning      | 推奨       | `sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複                                                                                              |
-| Con legno / Arco                               | warning      | 推奨       | `con legno`（弓の木部奏法）→ `arco` 復帰の対応漏れ・重複                                                                                            |
-| Mute / Open                                    | warning      | 推奨       | 金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複                                                                                      |
-| Una corda / Tre corde                          | warning      | 推奨       | ピアノ左ペダル `una corda` → `tre corde` の対応漏れ・重複                                                                                           |
-| Près de la table / Ord.                        | warning      | 推奨       | ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複                                                                         |
-| 同リズム間のスラー/タイ/アーティキュレーション | info         | 細かい指摘 | 同じ小節で同じリズムのパート間でスラー・タイの有無やアーティキュレーションが食い違う（比較範囲を設定可、後述）                                      |
-| 休符アノテーション                             | error        | 推奨       | 休符の位置に演奏技法テキストが付与されていないか（ダイナミクスは info）                                                                             |
-| テンポ変更と複縦線                             | info         | 細かい指摘 | テンポ変更前の小節に複縦線があるか                                                                                                                  |
-| 冒頭テンポ表記                                 | error        | 推奨       | 曲頭にテンポ表記があるか                                                                                                                            |
-| 各パート冒頭ダイナミクス                       | error        | 推奨       | 各パートの 1 音目にダイナミクスがあるか                                                                                                             |
-| BPM 値なしテンポ                               | warning      | 細かい指摘 | テンポ表記に BPM 値が未設定（再生テンポに反映されない）                                                                                             |
-| テンポ変化の解除漏れ                           | warning      | 推奨       | `rit.`/`accel.` 等が `a tempo`/新テンポで解除されないまま終わる                                                                                     |
-| 重複・矛盾するテンポ表記                       | warning      | 推奨       | 同じ位置で BPM の違うテンポ表記（warning）、同じ位置の重ね書き、変化を挟まない同じ BPM の言い直しや、解除されないまま重ねて書いた `rit.` 等（info） |
-| 重複ダイナミクス                               | info         | 細かい指摘 | 同パートで同じ強弱記号が変化なく連続している箇所（`sf`/`rf` の連続は許可）                                                                          |
-| 同時ダイナミクスの衝突                         | warning      | 推奨       | 同じ位置に異なる強弱記号が同時に付いている                                                                                                          |
-| テキストで書いた強弱記号                       | warning      | 推奨       | 「f」「mp」などを強弱記号ではなく普通のテキストで書いている（再生に反映されない）                                                                   |
-| 休みのあとの強弱記号                           | info         | 試験中     | 長く休んだあとの入りで強弱記号を言い直していない（休みの長さを設定可、後述）                                                                        |
-| ヘアピンの到達先ダイナミクス                   | info         | 推奨       | crescendo/diminuendo の終端に到達先のダイナミクスが無い（曲尾のヘアピンは除外）                                                                     |
-| 重なったヘアピン                               | warning      | 推奨       | 同じ譜表で前のヘアピンが終わる前に次のヘアピンが始まっている                                                                                        |
-| 終止線の確認                                   | info         | 推奨       | 曲末の最終 barline が終止線になっているか                                                                                                           |
-| コーダ/セーニョ整合性                          | error        | 推奨       | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落）                                                                                 |
-| リハーサルマークの順序                         | info         | 推奨       | リハーサルマークの順序逆転・重複                                                                                                                    |
-| リハーサルマークの位置                         | info         | 細かい指摘 | リハーサルマークが小節の頭に無い                                                                                                                    |
-| リピート小節線の対応                           | warning      | 推奨       | リピート開始(‖:)に対応する終了(:‖)が無い（終了のみは曲頭反復として許容）                                                                            |
-| 異音程のタイ                                   | warning      | 推奨       | 異なる音高をタイで結んでいる（スラーの書き間違いの可能性）                                                                                          |
-| 同音のスラー                                   | warning      | 推奨       | 同じ音高の 2 音だけをスラーで結んでいる（タイの書き間違いの可能性。アーティキュレーションがあればポルタートとして許容）                             |
-| 親切臨時記号の提案                             | info         | 細かい指摘 | 前小節で臨時記号が付いた音が次小節で記号なしで再び現れる箇所に親切記号を提案                                                                        |
-| 不要な臨時記号                                 | info         | 細かい指摘 | 同じ小節で既に有効な臨時記号をもう一度付けている（調号による不要は見ない）                                                                          |
-| 異名同音の不統一                               | info         | 試験中     | 同じパートの同じ位置、または同じ声部の同じ小節で続く同じ音高を違う綴りで書いている                                                                  |
-| 調から遠い綴り                                 | info         | 試験中     | 調号から遠い綴り（ハ長調の B♯・C♭・重嬰・重変など）。異名同音で書くと読みやすい                                                                     |
-| 調号の書き方                                   | info         | 細かい指摘 | 7 つの調号、前と同じ調号への変更                                                                                                                    |
-| フェルマータの食い違い                         | warning      | 試験中     | 他のパートでフェルマータのある小節に、フェルマータが無いパート                                                                                      |
-| 休符上のヘアピン端点                           | info         | 細かい指摘 | ヘアピン(cresc./dim.)の端点が休符上にある（同 tick に音符があれば許容）                                                                             |
-| 休符上のスラー端点                             | warning      | 推奨       | スラーの端点が休符上にある（同 tick に音符があれば許容）                                                                                            |
-| 単一音スラー                                   | info         | 細かい指摘 | スラーが単一音（開始 tick == 終了 tick）に掛かっている                                                                                              |
-| タイの途中のスラー端点                         | info         | 試験中     | スラーがタイで続く音から始まる、またはタイの途中で終わる                                                                                            |
-| 重複したスラー                                 | info         | 推奨       | 同じ声部の同じ範囲にスラーが 2 本掛かっている                                                                                                       |
-| タイで続く音の強弱記号                         | info         | 細かい指摘 | タイで続くだけの音（新しく弾かない音）に強弱記号が付いている                                                                                        |
-| cresc./dim. の到達先                           | info         | 推奨       | テキスト式 cresc./dim. の後に到達先の強弱記号が現れない                                                                                             |
-| 拍をまたぐ音符の分割                           | info/warning | 細かい指摘 | 拍境界をまたぐ音符（小節の中央またぎは小節頭始まりのみ許容し warning）。分割案を提示                                                                |
-| まとめられるタイ                               | info         | 試験中     | 1 つの音符で書けるタイ（まとめても拍をまたがず、後ろの音に記号が無いときだけ）                                                                      |
-| 休符のまとめ方                                 | info         | 試験中     | 拍の頭を隠す休符と、拍・小節の半分・小節全体を 1 つにまとめられる休符                                                                               |
+<!-- rules:start -->
+
+| ルール                                             | severity（最も重いもの） | 段階       | 目的                                                                                                                                                |
+| -------------------------------------------------- | ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pizz / Arco                                        | warning                  | 推奨       | `pizz.` 開始 → `arco` 解除の対応漏れ・重複                                                                                                          |
+| Con sord. / Senza sord.                            | warning                  | 推奨       | 弱音器の対応漏れ・重複                                                                                                                              |
+| Solo / Tutti                                       | warning                  | 推奨       | `solo`/`soli` → `tutti` の対応漏れ・重複（`tutti` を挟まない二連ソロは info）                                                                       |
+| Div. / Unis.                                       | warning                  | 推奨       | `div.` → `unis.` の対応漏れ・重複                                                                                                                   |
+| Sul tasto / Ord.                                   | warning                  | 推奨       | `sul tasto`（駒から離れた奏法）→ `ord.` 復帰の対応漏れ・重複                                                                                        |
+| Sul pont. / Ord.                                   | warning                  | 推奨       | `sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複                                                                                              |
+| Con legno / Arco                                   | warning                  | 推奨       | `con legno`（弓の木部奏法）→ `arco` 復帰の対応漏れ・重複                                                                                            |
+| Mute / Open                                        | warning                  | 推奨       | 金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複                                                                                      |
+| Una corda / Tre corde                              | warning                  | 推奨       | ピアノ左ペダル `una corda` → `tre corde` の対応漏れ・重複                                                                                           |
+| Près de la table / Ord.                            | warning                  | 推奨       | ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複                                                                         |
+| 同リズム間のスラー/タイ/アーティキュレーション整合 | info                     | 細かい指摘 | 同じ小節で同じリズムのパート間でスラー・タイの有無やアーティキュレーションが食い違う（比較範囲を設定可、後述）                                      |
+| 休符アノテーション                                 | error                    | 推奨       | 休符の位置に演奏技法テキストが付与されていないか（ダイナミクスは info）                                                                             |
+| テンポ変更と複縦線                                 | info                     | 細かい指摘 | テンポ変更前の小節に複縦線があるか                                                                                                                  |
+| 冒頭テンポ表記                                     | error                    | 推奨       | 曲頭にテンポ表記があるか                                                                                                                            |
+| 各パート冒頭ダイナミクス                           | error                    | 推奨       | 各パートの 1 音目にダイナミクスがあるか                                                                                                             |
+| BPM 値なしテンポ                                   | warning                  | 細かい指摘 | テンポ表記に BPM 値が未設定（再生テンポに反映されない）                                                                                             |
+| テンポ変化の解除漏れ                               | warning                  | 推奨       | `rit.`/`accel.` 等が `a tempo`/新テンポで解除されないまま終わる                                                                                     |
+| 重複・矛盾するテンポ表記                           | warning                  | 推奨       | 同じ位置で BPM の違うテンポ表記（warning）、同じ位置の重ね書き、変化を挟まない同じ BPM の言い直しや、解除されないまま重ねて書いた `rit.` 等（info） |
+| 重複ダイナミクス                                   | info                     | 細かい指摘 | 同パートで同じ強弱記号が変化なく連続している箇所（`sf`/`rf` の連続は許可）                                                                          |
+| 同時ダイナミクスの衝突                             | warning                  | 推奨       | 同じ位置に異なる強弱記号が同時に付いている                                                                                                          |
+| テキストで書いた強弱記号                           | warning                  | 推奨       | 「f」「mp」などを強弱記号ではなく普通のテキストで書いている（再生に反映されない）                                                                   |
+| 休みのあとの強弱記号                               | info                     | 試験中     | 長く休んだあとの入りで強弱記号を言い直していない（休みの長さを設定可、後述）                                                                        |
+| ヘアピンの到達先ダイナミクス                       | info                     | 推奨       | crescendo/diminuendo の終端に到達先のダイナミクスが無い（曲尾のヘアピンは除外）                                                                     |
+| 重なったヘアピン                                   | warning                  | 推奨       | 同じ譜表で前のヘアピンが終わる前に次のヘアピンが始まっている                                                                                        |
+| 終止線の確認                                       | info                     | 推奨       | 曲末の最終 barline が終止線になっているか                                                                                                           |
+| コーダ/セーニョ整合性                              | error                    | 推奨       | `D.S.`/`D.C.` と `Segno`/`Coda`/`Fine` の対応（参照先マークの欠落）                                                                                 |
+| リハーサルマークの順序                             | info                     | 推奨       | リハーサルマークの順序逆転・重複                                                                                                                    |
+| リハーサルマークの位置                             | info                     | 細かい指摘 | リハーサルマークが小節の頭に無い                                                                                                                    |
+| リピート小節線の対応                               | warning                  | 推奨       | リピート開始(‖:)に対応する終了(:‖)が無い（終了のみは曲頭反復として許容）                                                                            |
+| 異音程のタイ                                       | warning                  | 推奨       | 異なる音高をタイで結んでいる（スラーの書き間違いの可能性）                                                                                          |
+| 同音のスラー                                       | warning                  | 推奨       | 同じ音高の 2 音だけをスラーで結んでいる（タイの書き間違いの可能性。アーティキュレーションがあればポルタートとして許容）                             |
+| 親切臨時記号の提案                                 | info                     | 細かい指摘 | 前小節で臨時記号が付いた音が次小節で記号なしで再び現れる箇所に親切記号を提案                                                                        |
+| 不要な臨時記号                                     | info                     | 細かい指摘 | 同じ小節で既に有効な臨時記号をもう一度付けている（調号による不要は見ない）                                                                          |
+| 異名同音の不統一                                   | info                     | 試験中     | 同じパートの同じ位置、または同じ声部の同じ小節で続く同じ音高を違う綴りで書いている                                                                  |
+| 調から遠い綴り                                     | info                     | 試験中     | 調号から遠い綴り（ハ長調の B♯・C♭・重嬰・重変など）。異名同音で書くと読みやすい                                                                     |
+| 調号の書き方                                       | info                     | 細かい指摘 | 7 つの調号、前と同じ調号への変更                                                                                                                    |
+| フェルマータの食い違い                             | warning                  | 試験中     | 他のパートでフェルマータのある小節に、フェルマータが無いパート                                                                                      |
+| 休符上のヘアピン端点                               | info                     | 細かい指摘 | ヘアピン(cresc./dim.)の端点が休符上にある（同 tick に音符があれば許容）                                                                             |
+| 休符上のスラー端点                                 | warning                  | 推奨       | スラーの端点が休符上にある（同 tick に音符があれば許容）                                                                                            |
+| 単一音スラー                                       | info                     | 細かい指摘 | スラーが単一音（開始 tick == 終了 tick）に掛かっている                                                                                              |
+| タイの途中のスラー端点                             | info                     | 試験中     | スラーがタイで続く音から始まる、またはタイの途中で終わる                                                                                            |
+| 重複したスラー                                     | info                     | 推奨       | 同じ声部の同じ範囲にスラーが 2 本掛かっている                                                                                                       |
+| タイで続く音の強弱記号                             | info                     | 細かい指摘 | タイで続くだけの音（新しく弾かない音）に強弱記号が付いている                                                                                        |
+| cresc./dim. の到達先                               | info                     | 推奨       | テキスト式 cresc./dim. の後に到達先の強弱記号が現れない                                                                                             |
+| 拍をまたぐ音符の分割                               | warning                  | 細かい指摘 | 拍境界をまたぐ音符（小節の中央またぎは小節頭始まりのみ許容し warning）。分割案を提示                                                                |
+| まとめられるタイ                                   | info                     | 試験中     | 1 つの音符で書けるタイ（まとめても拍をまたがず、後ろの音に記号が無いときだけ）                                                                      |
+| 休符のまとめ方                                     | info                     | 試験中     | 拍の頭を隠す休符と、拍・小節の半分・小節全体を 1 つにまとめられる休符                                                                               |
+
+<!-- rules:end -->
 
 検出結果は「問題」タブにリスト表示され、クリックで該当小節・拍へジャンプします。
 
@@ -148,7 +152,9 @@ MusicXML からも組み立てられるので、QML プラグイン・CLI・Web 
 | `packages/lint-app`                                         | 設定・並べ替え・件数・出力の整形・スナップショットの書き手（ホスト共通）            |
 | `packages/musescore-api-types` / `musescore-plugin-helpers` | MuseScore プラグイン API の型とヘルパ                                               |
 | `tools/musescore-api-types-generator`                       | MuseScore の C++ ヘッダから `musescore-api-types` を生成する                        |
-| `scripts/`                                                  | ベンチマークと CI 用の補助スクリプト                                                |
+| `tools/rule-docs`                                           | ルールの `meta` から README の「チェック項目」表を作る（`pnpm docs:rules`）         |
+| `tools/bench`                                               | 手元で回すベンチマーク（`pnpm bench`）                                              |
+| `scripts/`                                                  | CI 用の補助スクリプト                                                               |
 
 ## 使い方
 
@@ -162,7 +168,7 @@ MuseScore を起動せずに、MusicXML から同じルールをかけられま�
 pnpm build:cli                             # apps/cli/dist/score-lint.mjs を作る
 ./apps/cli/dist/score-lint.mjs score.musicxml
 
-pnpm lint:score score.musicxml             # ビルドせずに直接実行（tsx）
+pnpm lint:score score.musicxml             # ビルドせずに直接実行（Node の型除去）
 ```
 
 ```
@@ -198,13 +204,12 @@ static assets だけで構成されており、`wrangler.jsonc` に `main` を�
 「送信されない」ことの根拠です。
 
 加えて配信時のセキュリティヘッダで `connect-src 'none'` を指定しているため、ページからの
-fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。自前で書いたコード
-（エントリチャンク）にネットワーク API が含まれていないことは CI でも検査しています
-（`.github/workflows/ci.yml`）。OSMD のような動的 import で分離された vendor チャンクは、
-中身を完全には制御できない第三者コードのためこの検査の対象外にしており、実行時の歯止めは
-上記の `connect-src 'none'` に委ねています（OSMD 自体は URL 文字列を渡したときのみ内部で
-通信ヘルパーを使うコード経路を持ちますが、Web 版では常に読み込み済みの MusicXML 文字列を
-直接渡すため、そのコード経路は実行されません）。
+fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。CI では Playwright で
+`wrangler dev`（`_headers` の CSP ごと配信）を開き、楽譜を読み込んで lint させたうえで、
+外への通信と CSP 違反が 0 件であることを確かめています（`apps/web/e2e/privacy.spec.ts`、`pnpm --filter @score-linter/web test:e2e`）。
+OSMD のような第三者のコードも含めて、実際にブラウザで動いたときの通信を見ます（OSMD 自体は URL 文字列を
+渡したときのみ内部で通信ヘルパーを使うコード経路を持ちますが、Web 版では常に読み込み済みの MusicXML
+文字列を直接渡すため、そのコード経路は実行されません）。
 
 ```bash
 pnpm dev:web        # Vite の開発サーバー（_headers は再現されない）
@@ -226,7 +231,7 @@ CSP の `style-src 'self'`（`'unsafe-inline'` なし）を維持するため、
 ### MusicXML 経路の既知の差分
 
 どちらの読み込み口でも同じ `Score` になることは、duet の MuseScore 版のモックと MusicXML 版の
-fixture を突き合わせるテスト（`packages/reader-musescore/tests/conformance.test.ts`）で確かめています。
+fixture を突き合わせるテスト（`apps/plugin/tests/conformance.test.ts`）で確かめています。
 実際の楽譜では次の差が出ます。
 
 - `tempo-without-bpm` は、MuseScore が書き出した MusicXML ではほぼ発火しません。書き出し時に
@@ -263,15 +268,17 @@ ON/OFF の既定値は、選んだプリセットとルールの段階から決�
 
 詳細は `/rule-add` skill と `.claude/rules/rule-contract.md` を参照。
 
-1. `packages/linter/src/rules/` の、主題の近いファイル（`tempo.ts`・`dynamics.ts`・`notation.ts` など）に
-   `defineRule({ id, meta, options, run })` で定義する。指摘は `run` の `report({ at, message, detail })` で返す。
-   新しい奏法の on/off ペアなら `techniquePairs.ts` の `techniquePair()` に設定を渡す
+1. `packages/linter/src/rules/<export 名>.ts` に 1 ルール 1 ファイルで、
+   `defineRule({ id, meta, options, messages, examples, run })` を定義する。指摘は `run` の
+   `report({ at, messageId, data, detail })` で返し、文面は `messages` に置く。`meta.docs` に README の「目的」欄を書き、
+   `examples` に指摘が出る楽譜（invalid）と出ない楽譜（valid）を 1 つ以上ずつ書く。
+   新しい奏法の on/off ペアなら `support/techniquePairs.ts` の `techniquePair()` に設定を渡す
    （奏法の表記は `packages/score-model/src/interpret.ts` が解釈する）
-2. `packages/linter/src/rules/index.ts` の `builtinRules` に足す。並びがそのまま実行順・設定画面の並びになるので、
-   関連するペアの隣に入れる
-3. `packages/linter/tests/` の対応するテストファイルに、`tests/helpers.ts` の `cleanScore()` と `runRule()` で
-   正例・負例を書く
-4. README の「チェック項目」表を更新
+2. `packages/linter/src/rules/index.ts` の `builtinRules` に足す。並びがそのまま実行順・設定画面の並び・README の表の並びに
+   なるので、関連するペアの隣に入れる
+3. 境界のケースを `packages/linter/tests/` の話題の近いテストファイルに、`tests/helpers.ts` の `cleanScore()` と
+   `runRule()` で書く（`examples` は `tests/examples.test.ts` が全ルールまとめて回す）
+4. `pnpm docs:rules` で README の「チェック項目」表を作り直す（CI が生成物との差分を見る）
 
 新しいルールは段階（`meta.tier`）を `nursery`（試験中）で入れ、実際の楽譜で誤検出の様子を見てから
 `recommended` か `pedantic` に上げます。上げるときは `tier` を書き換え、changeset に書きます。
@@ -281,7 +288,8 @@ ON/OFF の既定値は、選んだプリセットとルールの段階から決�
 ## テストの実行
 
 ```bash
-pnpm test   # 全パッケージで vitest を実行
+pnpm test     # 全パッケージで vitest を実行（カバレッジの閾値つき）
+pnpm verify   # 検証ゲート全体（CI と同じ）
 pnpm generate:types   # MuseScore の C++ ヘッダから packages/musescore-api-types を生成し直す（版は tools/musescore-api-types-generator/config.json の ref）
 ```
 
@@ -292,7 +300,7 @@ CLI の `apps/cli/tests/golden.test.ts` は、3 曲の検出結果を `fixtures/
 
 ### CI
 
-push または PR をオープンすると GitHub Actions が lint / フォーマット（oxlint + oxfmt）・unused 検出（knip）・typecheck・テスト・ビルドを自動実行します。
+push または PR をオープンすると GitHub Actions が `pnpm verify`（層の境界・lint / フォーマット・unused 検出・README の生成物・typecheck・テストとカバレッジ・ビルド・Web 版の E2E）を実行します。あわせて、出荷するプラグインのバンドルを MuseScore と同じ版の Qt の QJSEngine で動かし（`apps/plugin/qjs/`）、QML を qmllint で検査します。
 
 ### 楽譜の Lint（`.github/workflows/score-lint.yml`）
 
@@ -318,6 +326,8 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 ### リリース手順
 
 本プロジェクトは [Changesets](https://github.com/changesets/changesets) でバージョン管理をしています。
+プラグイン・CLI・Web 版は同じルールを動かす 1 つの製品として、同じ版で上がります（`.changeset/config.json` の `fixed`）。
+`packages/*` と `tools/*` は公開しないので版を持ちません。
 
 1. **変更内容を記録する**（機能追加・バグ修正の PR に含める）
 
@@ -331,7 +341,8 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
    - GitHub Actions がバージョン変更用の **「バージョンアップ」PR** を自動作成します。
 
 3. **「バージョンアップ」PR をマージする**
-   - `package.json` のバージョンが自動で更新され、GitHub Release（zip 添付）が作成されます。
+   - `package.json` のバージョンが自動で更新され、検証ゲート（`pnpm verify`）を通したビルドから
+     GitHub Release（zip 添付）が作成されます。zip にはビルド来歴の証明（`gh attestation verify <zip> -R kjfsm/score-linter`）が付きます。
 
 ## パフォーマンスガイド
 

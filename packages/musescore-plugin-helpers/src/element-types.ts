@@ -9,7 +9,7 @@ import type {
   Segment,
 } from "@score-linter/musescore-api-types";
 
-import { VOICES_PER_STAFF } from "./tracks.js";
+import { VOICES_PER_STAFF } from "./tracks.ts";
 
 /** Returns the written time signature for the measure, e.g. "4/4". Empty string if unavailable. */
 export function getMeasureTimeSig(measure: Measure): string {

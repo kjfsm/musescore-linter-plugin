@@ -8,13 +8,34 @@
     "vitest.config.ts",
     "pnpm-lock.yaml"
   ],
+  // どの層がどの層に依存してよいかはここだけに書く。許可は推移的に効くので、下の層が依存するものも並べる。
+  "boundaries": {
+    "tags": {
+      "model": { "dependencies": { "allow": [] } },
+      "reader-musicxml": { "dependencies": { "allow": ["model"] } },
+      "musescore-api": { "dependencies": { "allow": ["musescore-api"] } },
+      "reader-musescore": { "dependencies": { "allow": ["model", "musescore-api"] } },
+      "rules": { "dependencies": { "allow": ["model"] } },
+      "lint-app": { "dependencies": { "allow": ["model", "rules"] } }
+    }
+  },
   "tasks": {
     "typecheck": {
       "description": "TypeScript の型チェック。依存パッケージの typecheck が先に完了している必要がある。",
       "dependsOn": ["^typecheck"]
     },
+    // ルートのタスクの既定の入力はルート直下のファイルだけで、パッケージの変更を見落とす。
+    // リポジトリ全体を見る検査はキャッシュしない。
+    "//#lint": { "cache": false },
+    "//#knip": { "cache": false },
+    "//#docs:check": { "cache": false },
+    "test:e2e": {
+      "description": "apps/web を wrangler dev で _headers の CSP ごと配り、外への通信と CSP 違反が無いことを確かめる。webServer も単独実行のためにビルドするが、build と並行すると dist の書き換えが競合するので build の後に回す。",
+      "dependsOn": ["^typecheck", "build"],
+      "cache": false
+    },
     "//#test": {
-      "description": "vitest で全パッケージのテストを 1 回で実行する（スクリプトはルートだけが持つ）。全体で 1 秒未満なので、パッケージ単位に分ける利点がない。",
+      "description": "vitest で全パッケージのテストを 1 回で実行し、カバレッジの閾値も見る（スクリプトはルートだけが持つ）。全体で 1 秒未満なので、パッケージ単位に分ける利点がない。",
       "dependsOn": ["^typecheck"],
       "inputs": [
         "packages/*/src/**",

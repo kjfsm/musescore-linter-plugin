@@ -7,6 +7,11 @@
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
+    // スクリプトと CLI は tsx を通さず Node の型除去で直接動かす。Node は .js から .ts を探さず、
+    // 型だけの import も消さないので、この 3 つで Node が実行できる書き方に限る。
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
     "types": ["node"]
   },
   "include": ["scripts/**/*"]

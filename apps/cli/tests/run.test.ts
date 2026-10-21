@@ -6,7 +6,7 @@ import { defineRule, type Rule, type RuleTier } from "@score-linter/linter";
 import type { Score } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, meetsThreshold, type RunIO, run } from "../src/run.js";
+import { EXIT_ERROR, EXIT_ISSUES, EXIT_OK, meetsThreshold, type RunIO, run } from "../src/run.ts";
 
 const DUET = join(
   __dirname,
@@ -52,8 +52,9 @@ function always(id: string, tier: RuleTier): Rule {
     id,
     meta: { name: id, description: "", category: "notation", severity: "info", tier },
     options: {},
+    messages: { id },
     run({ report }) {
-      report({ at: { measure: 0, tick: 0 }, message: id });
+      report({ at: { measure: 0, tick: 0 }, messageId: "id" });
     },
   });
 }

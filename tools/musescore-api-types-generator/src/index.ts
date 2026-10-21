@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import { emit } from "./emit.js";
-import { fetchHeaders, resolveCommitSha } from "./fetch.js";
-import { parseHeader } from "./parse.js";
+import { emit } from "./emit.ts";
+import { fetchHeaders, resolveCommitSha } from "./fetch.ts";
+import { parseHeader } from "./parse.ts";
 
 export interface GenerateOptions {
   repository: string;

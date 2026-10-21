@@ -1,6 +1,6 @@
 import type { HairpinType, ScoreElement, Spanner } from "@score-linter/musescore-api-types";
 
-import { getSpannerRange, type SpannerRange } from "./spanner.js";
+import { getSpannerRange, type SpannerRange } from "./spanner.ts";
 
 /**
  * A MuseScore hairpin (crescendo/diminuendo). Extends Spanner so that spannerTick and

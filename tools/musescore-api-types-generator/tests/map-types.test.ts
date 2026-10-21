@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapType } from "../src/map-types.js";
+import { mapType } from "../src/map-types.ts";
 
 describe("mapType", () => {
   const known = new Set(["Note", "Score"]);

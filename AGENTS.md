@@ -1,7 +1,7 @@
 # score-linter
 
 MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テスト・リリースは Turborepo + Changesets。
-コマンド・ディレクトリ構成は [README.md](./README.md)。検証ゲートの正は `.github/workflows/ci.yml`（`pnpm lint` → `pnpm knip` → `pnpm pipeline` → `pnpm test:coverage`）。
+コマンド・ディレクトリ構成は [README.md](./README.md)。検証ゲートは `pnpm verify` 1 本（境界・lint・knip・README の生成物・型・テストとカバレッジ・ビルド・Web の E2E）。CI も同じコマンドを叩く。CI とリリースはこれに加えて、プラグインのバンドルを QJSEngine で動かし QML を qmllint で見る（Python が要るので verify の外。`apps/plugin/qjs/`）。
 
 ## 構成の要点
 
@@ -11,12 +11,14 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 `musescore-plugin-helpers`・`musescore-api-types` だけ。`lint-app` は設定・並べ替え・件数・出力の整形を持ち、
 ホスト（`apps/plugin`・`cli`・`web`）は `createLintApp` の返す入口を呼ぶだけにする（`createLinter` を直接組み立てない）。
 
-- 層の境界は各 package.json の依存と `.oxlintrc.json` の `no-restricted-imports` で守る。
-  依存を足すときは両方を見直す。
+- 層の境界は、依存の宣言を各 package.json、どの層がどの層に依存してよいかをルートの `turbo.json` の
+  `boundaries` に書き、`pnpm boundaries`（`turbo boundaries`）で検査する。pnpm は isolated linker なので、
+  宣言していない import は解決できない。テストが使うものも、そのパッケージの devDependencies に宣言する。
 - `score-model` の型（`packages/score-model/src/types.ts`）は、ルールの都合で変えない。ルールが欲しい情報は
   Directive の解釈（`interpret.ts`）か問い合わせ関数で出し、型に特定のルール専用の項目を足さない。
-- プラグインのバンドルに入るコードは `apps/plugin/tsconfig.bundle.json` で ES2017 の標準ライブラリとして
-  型検査する（QML の JS エンジンに無い API を弾くため）。バンドルに入る新しいパッケージは `include` に足す。
+- プラグインのバンドルに入るパッケージは、自分の `tsconfig.json`（`src` だけを見る）を `lib: ["ES2017"]`・
+  `types: []` にして型検査する（QML の JS エンジンに無い API を弾くため）。テストは `tests/tsconfig.json` で
+  Node の型付きで見る。バンドルに入る新しいパッケージを作るときは、この 2 つの形をそのまま写す。
 - `apps/web` はブラウザ完結の Web 版で、`main` を持たない assets-only Worker として配信する。
   **サーバー処理（`wrangler.jsonc` の `main`・サーバー通信）を足さない** — 「ファイルを送信しない」という保証がこの構成に依存している。
 - `apps/web` の UI は CSP（`style-src 'self'`）の制約を受ける。`style` 属性・インライン `<script>` を書かない。詳細は README「Web 版」節。

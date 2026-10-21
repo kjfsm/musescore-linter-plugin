@@ -1,5 +1,5 @@
-import { mapType } from "./map-types.js";
-import type { ClassDecl, EnumDecl, ParseResult } from "./parse.js";
+import { mapType } from "./map-types.ts";
+import type { ClassDecl, EnumDecl, ParseResult } from "./parse.ts";
 
 export interface EmitInput {
   perFile: { path: string; result: ParseResult }[];
@@ -77,7 +77,7 @@ export function emit(input: EmitInput): EmitOutput {
   pluginApiLines.push("");
   if (dedupedEnums.length > 0) {
     pluginApiLines.push(
-      `import type { ${[...knownEnumNames].sort().join(", ")} } from "./enums.js";`,
+      `import type { ${[...knownEnumNames].sort().join(", ")} } from "./enums.ts";`,
     );
     pluginApiLines.push("");
   }
@@ -125,7 +125,7 @@ export function emit(input: EmitInput): EmitOutput {
           continue;
         }
         pluginApiLines.push(
-          `  readonly ${prop.name}: RuntimeEnum<import("./enums.js").${enumName}Name, import("./enums.js").${enumName}>;`,
+          `  readonly ${prop.name}: RuntimeEnum<import("./enums.ts").${enumName}Name, import("./enums.ts").${enumName}>;`,
         );
         continue;
       }

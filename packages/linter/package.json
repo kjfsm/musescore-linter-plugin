@@ -2,12 +2,17 @@
   "name": "@score-linter/linter",
   "version": "0.0.0",
   "private": true,
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tests"
   },
   "dependencies": {
     "@score-linter/score-model": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

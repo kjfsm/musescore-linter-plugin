@@ -1,15 +1,30 @@
 import type { Score } from "@score-linter/score-model";
 import { partOfStaff } from "@score-linter/score-model";
 
-import { resolveOptions } from "./options.js";
-import { compareSeverity } from "./severity.js";
-import type { Issue, OptionSpecs, Preset, Report, Rule, RuleTier } from "./types.js";
+import { resolveOptions } from "./options.ts";
+import { compareSeverity } from "./severity.ts";
+import type { Issue, OptionSpecs, Preset, Report, Rule, RuleTier } from "./types.ts";
 
-/** オプションの宣言を `S` に保ったまま Rule を作る。型引数を書かずに済ませるための入口。 */
-export function defineRule<const S extends OptionSpecs = Record<never, never>>(
-  rule: Rule<S>,
-): Rule<S> {
+/** オプションの宣言と文面のキーを `S`・`M` に保ったまま Rule を作る。型引数を書かずに済ませるための入口。 */
+export function defineRule<
+  const S extends OptionSpecs = Record<never, never>,
+  const M extends string = never,
+>(rule: Rule<S, M>): Rule<S, M> {
   return rule;
+}
+
+function formatMessage(rule: Rule, report: Report): string {
+  const template = rule.messages[report.messageId];
+  if (template === undefined) {
+    throw new Error(`messages に '${report.messageId}' がありません`);
+  }
+  const data = report.data ?? {};
+  // {{measure:key}} のような lint-app のプレースホルダは \w+ に当たらないので、ここでは触れない
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => {
+    if (!(key in data))
+      throw new Error(`'${report.messageId}' の {${key}} に渡す data がありません`);
+    return String(data[key]);
+  });
 }
 
 export interface LinterConfig {
@@ -65,7 +80,7 @@ function issueFrom(score: Score, rule: Rule, report: Report): Issue {
     ruleId: rule.id,
     severity,
     category: rule.meta.category,
-    message: report.message,
+    message: formatMessage(rule, report),
     at: {
       partId: staff === undefined ? null : (partOfStaff(score, staff)?.id ?? null),
       staff: staff ?? null,

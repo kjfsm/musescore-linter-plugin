@@ -1,7 +1,7 @@
 import type { ScoreElement, Spanner } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getSpannerRange, isSlur } from "../src/spanner.js";
+import { getSpannerRange, isSlur } from "../src/spanner.ts";
 
 const fake = (name: string) => ({ name }) as unknown as ScoreElement;
 

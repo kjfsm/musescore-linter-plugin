@@ -10,10 +10,10 @@ import type {
 } from "@score-linter/score-model";
 import { createScoreBuilder, TICKS_PER_QUARTER, toTpc } from "@score-linter/score-model";
 
-import { articulationNameOf } from "./articulations.js";
-import { durationFromDivisions, durationFromType } from "./duration.js";
-import { readPartGroupDrafts, resolvePartGroups, type StaffRange } from "./partGroups.js";
-import { type ClefState, clefFrom, DEFAULT_CLEF, toMidiPitch, toStaffLine } from "./pitch.js";
+import { articulationNameOf } from "./articulations.ts";
+import { durationFromDivisions, durationFromType } from "./duration.ts";
+import { readPartGroupDrafts, resolvePartGroups, type StaffRange } from "./partGroups.ts";
+import { type ClefState, clefFrom, DEFAULT_CLEF, toMidiPitch, toStaffLine } from "./pitch.ts";
 import {
   attr,
   child,
@@ -27,7 +27,7 @@ import {
   tagOf,
   textOf,
   type XNode,
-} from "./xml.js";
+} from "./xml.ts";
 
 /**
  * 小節内の相対位置。小節の長さは全パートを見終わるまで決まらないので、絶対 tick へは
@@ -257,10 +257,13 @@ class PartWalker {
   private readonly openSlurs = new Map<string, SpanDraft>();
   private readonly openWedges = new Map<string, SpanDraft>();
 
-  constructor(
-    private readonly ctx: PartContext,
-    private readonly draft: ScoreDraft,
-  ) {}
+  private readonly ctx: PartContext;
+  private readonly draft: ScoreDraft;
+
+  constructor(ctx: PartContext, draft: ScoreDraft) {
+    this.ctx = ctx;
+    this.draft = draft;
+  }
 
   private toTicks(divisionUnits: number): number {
     return Math.round((divisionUnits * TICKS_PER_QUARTER) / this.divisions);

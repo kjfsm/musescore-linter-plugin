@@ -1,6 +1,6 @@
 import type { EngravingItem, Score } from "@score-linter/musescore-api-types";
 
-import { VOICES_PER_STAFF } from "./tracks.js";
+import { VOICES_PER_STAFF } from "./tracks.ts";
 
 export interface SelectionRange {
   startTick: number;

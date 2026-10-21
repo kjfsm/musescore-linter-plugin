@@ -2,39 +2,36 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    globals: true,
-    // パッケージごとに 1 プロジェクト。以前は packages/*/vitest.config.ts を 5 本置いて
-    // いたが、中身は alias だけの差分だった。その alias 自体、各パッケージの
-    // package.json が "main": "src/index.ts" を指しているので不要（外して
-    // 全テストが通ること・バンドルが byte 単位で同一になることを確認済み）。
-    //
-    // turbo 側も //#test（ルートタスク 1 本）でこの設定を使う。パッケージ単位の
-    // test タスクは持たない。
+    // パッケージごとの vitest.config.ts は置かない。各パッケージの exports が src を指すので alias が要らず、
+    // turbo 側も //#test（ルートタスク 1 本）でこの設定を使う。
     projects: [
       {
         test: {
           name: "packages",
-          globals: true,
           include: ["packages/*/tests/**/*.test.ts", "tools/*/tests/**/*.test.ts"],
         },
       },
       {
         test: {
           name: "apps",
-          globals: true,
           include: ["apps/*/tests/**/*.test.ts"],
         },
       },
     ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"],
+      reporter: ["text"],
       // apps 側は React 非依存のロジック層（lib/）だけを見る。components/ は
       // jsdom のテスト基盤が無く描画テストを書けないので対象外。
       // packages 側は除外しない。snapshot.ts は「MuseScore ランタイム無しでは
       // 実行不可」として除外されていたが、tests/snapshot.test.ts がモックで
       // 実行しており事実と違った（451 行が無計測のままだった）。
-      include: ["packages/*/src/**/*.ts", "apps/cli/src/**/*.ts", "apps/*/src/lib/**/*.ts"],
+      include: [
+        "packages/*/src/**/*.ts",
+        "apps/cli/src/**/*.ts",
+        "apps/*/src/lib/**/*.ts",
+        "apps/plugin/src/session.ts",
+      ],
       thresholds: {
         lines: 85,
         functions: 85,

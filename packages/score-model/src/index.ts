@@ -1,9 +1,9 @@
-export type { AnnotationInit, ChordInit, PartInit, RestInit, ScoreBuilder } from "./builder.js";
-export { createScoreBuilder } from "./builder.js";
-export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.js";
-export type { AnnotationHints } from "./interpret.js";
-export { interpretAnnotation, normalizeText } from "./interpret.js";
-export { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "./pitch.js";
+export type { AnnotationInit, ChordInit, PartInit, RestInit, ScoreBuilder } from "./builder.ts";
+export { createScoreBuilder } from "./builder.ts";
+export { TICKS_PER_QUARTER, TICKS_PER_WHOLE } from "./constants.ts";
+export type { AnnotationHints } from "./interpret.ts";
+export { interpretAnnotation, normalizeText } from "./interpret.ts";
+export { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "./pitch.ts";
 export {
   annotationsAffecting,
   annotationsOn,
@@ -25,8 +25,8 @@ export {
   spanCovers,
   tiesOn,
   voiceEventsIn,
-} from "./queries.js";
-export { stableSortBy } from "./sort.js";
+} from "./queries.ts";
+export { stableSortBy } from "./sort.ts";
 export type {
   AnnotationSpec,
   BarlineSpec,
@@ -36,6 +36,6 @@ export type {
   PartSpec,
   ScoreSpec,
   VoiceEventSpec,
-} from "./spec.js";
-export { buildScore } from "./spec.js";
-export type * from "./types.js";
+} from "./spec.ts";
+export { buildScore } from "./spec.ts";
+export type * from "./types.ts";

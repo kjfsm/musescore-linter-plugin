@@ -1,32 +1,23 @@
-import { createSnapshotWriter } from "@score-linter/lint-app";
+import { app, formatForCopy, selectionFor } from "./lint.ts";
+import { createSnapshotSession, readLatestRelease, releasesApiUrl, runLint } from "./session.ts";
 
-import { app, formatForCopy, lintCurrentScore, selectionFor } from "./lint.js";
-import { isNewerVersion } from "./version.js";
+export const loadSettings = app.parseSettings;
+export const serializeSettings = app.serializeSettings;
+export const setPreset = app.withPreset;
+export const setRuleEnabled = app.withRuleEnabled;
+export const setGroupEnabled = app.withGroupEnabled;
+export const setRuleOption = app.withRuleOption;
+export const settingsView = app.settingsView;
 
-const loadSettings = app.parseSettings;
-const serializeSettings = app.serializeSettings;
-const setPreset = app.withPreset;
-const setRuleEnabled = app.withRuleEnabled;
-const setGroupEnabled = app.withGroupEnabled;
-const setRuleOption = app.withRuleOption;
-const settingsView = app.settingsView;
-
-function ruleCatalog() {
+export function ruleCatalog() {
   return app.catalog;
 }
 
 export {
-  createSnapshotWriter,
+  createSnapshotSession,
   formatForCopy,
-  isNewerVersion,
-  lintCurrentScore,
-  loadSettings,
-  ruleCatalog,
+  readLatestRelease,
+  releasesApiUrl,
+  runLint,
   selectionFor,
-  serializeSettings,
-  setGroupEnabled,
-  setPreset,
-  setRuleEnabled,
-  setRuleOption,
-  settingsView,
 };

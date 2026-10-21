@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { emit } from "../src/emit.js";
-import type { ClassDecl, ParseResult } from "../src/parse.js";
+import { emit } from "../src/emit.ts";
+import type { ClassDecl, ParseResult } from "../src/parse.ts";
 
 function cls(partial: Partial<ClassDecl> & { name: string }): ClassDecl {
   return {
@@ -127,7 +127,7 @@ describe("emit", () => {
       "type RuntimeEnum<Name extends string, Value> = { readonly [K in Name]: Value };",
     );
     expect(out.pluginApi).toContain(
-      'readonly Element: RuntimeEnum<import("./enums.js").ElementTypeName, import("./enums.js").ElementType>;',
+      'readonly Element: RuntimeEnum<import("./enums.ts").ElementTypeName, import("./enums.ts").ElementType>;',
     );
     // 未生成 enum のプロパティは出力されず警告される。
     expect(out.pluginApi).not.toContain("Nope");

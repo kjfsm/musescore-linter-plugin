@@ -1,5 +1,5 @@
-import { leadingTempoWord } from "./tempoWords.js";
-import type { AnnotationKind, Directive, RepeatMark, Technique } from "./types.js";
+import { leadingTempoWord } from "./tempoWords.ts";
+import type { AnnotationKind, Directive, RepeatMark, Technique } from "./types.ts";
 
 export function normalizeText(text: string): string {
   return text.toLowerCase().trim().replace(/\s+/g, " ");

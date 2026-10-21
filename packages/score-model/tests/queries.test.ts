@@ -14,8 +14,8 @@ import {
   spanCovers,
   tiesOn,
   voiceEventsIn,
-} from "../src/queries.js";
-import { buildScore } from "../src/spec.js";
+} from "../src/queries.ts";
+import { buildScore } from "../src/spec.ts";
 
 const q = { numerator: 1, denominator: 4 };
 

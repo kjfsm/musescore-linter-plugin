@@ -1,19 +1,17 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import {
-  conLegnoArco,
-  divUnis,
-  harpTable,
-  muteOpen,
-  pizzArco,
-  sordino,
-  soloTutti,
-  sulPontOrd,
-  sulTastoOrd,
-  unaCorda,
-} from "../src/rules/techniquePairs.js";
-import { cleanScore, runRule } from "./helpers.js";
+import { conLegnoArco } from "../src/rules/conLegnoArco.ts";
+import { divUnis } from "../src/rules/divUnis.ts";
+import { harpTable } from "../src/rules/harpTable.ts";
+import { muteOpen } from "../src/rules/muteOpen.ts";
+import { pizzArco } from "../src/rules/pizzArco.ts";
+import { soloTutti } from "../src/rules/soloTutti.ts";
+import { sordino } from "../src/rules/sordino.ts";
+import { sulPontOrd } from "../src/rules/sulPontOrd.ts";
+import { sulTastoOrd } from "../src/rules/sulTastoOrd.ts";
+import { unaCorda } from "../src/rules/unaCorda.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 /** 1 小節 480 tick として、小節 n（1 始まり）の頭に置く。 */
 const staffText = (measure: number, text: string, staff = 0) => ({

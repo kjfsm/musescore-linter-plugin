@@ -1,7 +1,7 @@
 import type { Score } from "@score-linter/score-model";
 
-import { decodeXml, extractMxl, isZip } from "./mxl.js";
-import { readMusicXml } from "./reader.js";
+import { decodeXml, extractMxl, isZip } from "./mxl.ts";
+import { readMusicXml } from "./reader.ts";
 
 export { readMusicXml };
 

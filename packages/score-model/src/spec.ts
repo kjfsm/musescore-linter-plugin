@@ -1,6 +1,6 @@
-import { createScoreBuilder } from "./builder.js";
-import { TICKS_PER_WHOLE } from "./constants.js";
-import type { AnnotationHints } from "./interpret.js";
+import { createScoreBuilder } from "./builder.ts";
+import { TICKS_PER_WHOLE } from "./constants.ts";
+import type { AnnotationHints } from "./interpret.ts";
 import type {
   AnnotationScope,
   BarlineKind,
@@ -12,7 +12,7 @@ import type {
   Score,
   Slur,
   Tie,
-} from "./types.js";
+} from "./types.ts";
 
 export interface PartSpec {
   id?: string;

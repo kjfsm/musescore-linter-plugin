@@ -1,7 +1,7 @@
 import type { Chord } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getNotePitches } from "../src/pitch.js";
+import { getNotePitches } from "../src/pitch.ts";
 
 const chordWith = (pitches: Array<number | undefined>): Chord =>
   ({ notes: pitches.map((pitch) => ({ pitch })) }) as unknown as Chord;

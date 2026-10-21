@@ -3,6 +3,7 @@ package-lock.json
 *.zip
 .DS_Store
 .turbo/
+tools/musescore-api-types-generator/.cache/
 out/
 coverage/
 packages/*/dist/
@@ -12,3 +13,10 @@ dist
 
 # wrangler dev のローカル状態（miniflare のキャッシュ・SQLite）
 .wrangler/
+
+# Playwright の成果物
+apps/web/test-results/
+apps/web/playwright-report/
+
+# QJSEngine のスモークテスト用のモック（apps/plugin/qjs/build-mock.ts）
+apps/plugin/dist-qjs/

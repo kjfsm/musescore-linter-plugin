@@ -5,7 +5,7 @@ import type { Annotation, Chord, Rest, Score } from "@score-linter/score-model";
 import { TICKS_PER_QUARTER, tpcToAlter, tpcToName } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { readMusicXml } from "../src/reader.js";
+import { readMusicXml } from "../src/reader.ts";
 
 const QUARTER = TICKS_PER_QUARTER;
 const WHOLE = QUARTER * 4;

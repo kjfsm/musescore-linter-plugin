@@ -1,5 +1,5 @@
-import { stableSortBy } from "./sort.js";
-import type { PartGroup } from "./types.js";
+import { stableSortBy } from "./sort.ts";
+import type { PartGroup } from "./types.ts";
 
 /**
  * 括弧の並びの約束。どの reader から来た Score でも `partGroups` の意味が揃うよう、

@@ -8,8 +8,8 @@ import type {
   Selection,
 } from "@score-linter/musescore-api-types";
 
-import { isChord, isNote } from "./predicates.js";
-import { VOICES_PER_STAFF } from "./tracks.js";
+import { isChord, isNote } from "./predicates.ts";
+import { VOICES_PER_STAFF } from "./tracks.ts";
 
 export function* iterateMeasureSegments(
   measure: Measure,

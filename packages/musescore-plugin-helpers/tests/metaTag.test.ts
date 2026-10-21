@@ -1,7 +1,7 @@
 import type { Score } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getMetaTag } from "../src/metaTag.js";
+import { getMetaTag } from "../src/metaTag.ts";
 
 function scoreWith(tags: Record<string, string>): Score {
   return { metaTag: (tag: string) => tags[tag] ?? "" } as unknown as Score;

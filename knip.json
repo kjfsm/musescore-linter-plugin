@@ -5,8 +5,8 @@
       "entry": ["scripts/*.ts"]
     },
     "apps/plugin": {
-      "entry": ["src/bundle-entry.ts", "scripts/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]
+      "entry": ["src/bundle-entry.ts", "scripts/*.ts", "qjs/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts", "qjs/**/*.ts"]
     },
     "packages/musescore-api-types": {
       "project": ["src/**/*.ts"]

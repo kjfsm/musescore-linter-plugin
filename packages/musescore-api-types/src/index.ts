@@ -1,7 +1,7 @@
-export { generatedFrom } from "./generated/_meta.js";
-export * from "./generated/enums.js";
-export * from "./generated/plugin-api.js";
-export type { PluginManifest } from "./manifest.js";
+export { generatedFrom } from "./generated/_meta.ts";
+export * from "./generated/enums.ts";
+export * from "./generated/plugin-api.ts";
+export type { PluginManifest } from "./manifest.ts";
 export type {
   BarLineTypeEnum,
   BarLineTypeName,
@@ -12,4 +12,4 @@ export type {
   NoteTypeEnum,
   NoteTypeName,
   RuntimeEnum,
-} from "./runtime-enums.js";
+} from "./runtime-enums.ts";

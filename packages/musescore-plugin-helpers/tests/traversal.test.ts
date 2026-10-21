@@ -17,7 +17,7 @@ import {
   iterateNotes,
   iterateSegments,
   iterateStaves,
-} from "../src/traversal.js";
+} from "../src/traversal.ts";
 
 interface SegSpec {
   tick: number;

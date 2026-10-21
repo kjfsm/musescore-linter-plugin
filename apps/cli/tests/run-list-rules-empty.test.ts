@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EXIT_OK, run } from "../src/run.js";
+import { EXIT_OK, run } from "../src/run.ts";
 
 describe("run --list-rules: ルールが 0 件のとき", () => {
   it("例外を投げず空の一覧を返す", () => {

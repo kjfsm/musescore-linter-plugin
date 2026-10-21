@@ -2,8 +2,9 @@ import type { ChordSpec, Fraction, MeasureSpec, VoiceEventSpec } from "@score-li
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { mergeableTie, restGrouping } from "../src/rules/rhythm.js";
-import { runRule } from "./helpers.js";
+import { mergeableTie } from "../src/rules/mergeableTie.ts";
+import { restGrouping } from "../src/rules/restGrouping.ts";
+import { runRule } from "./helpers.ts";
 
 const WHOLE = { numerator: 1, denominator: 1 };
 const HALF = { numerator: 1, denominator: 2 };

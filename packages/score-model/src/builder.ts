@@ -1,6 +1,6 @@
-import { type AnnotationHints, interpretAnnotation } from "./interpret.js";
-import { normalizePartGroups } from "./partGroups.js";
-import { stableSortBy } from "./sort.js";
+import { type AnnotationHints, interpretAnnotation } from "./interpret.ts";
+import { normalizePartGroups } from "./partGroups.ts";
+import { stableSortBy } from "./sort.ts";
 import type {
   AnnotationScope,
   Barline,
@@ -14,7 +14,7 @@ import type {
   Slur,
   Staff,
   Tie,
-} from "./types.js";
+} from "./types.ts";
 
 const byTick = (a: { tick: number }, b: { tick: number }): number => a.tick - b.tick;
 

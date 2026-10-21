@@ -40,7 +40,7 @@ const chords = chordsOnStaff(score, staff);
 
 - 問い合わせ関数（`annotationsOn` / `annotationsAffecting` / `chordsOnStaff` / `slursOn` …）を使っているか
 - `Score` を書き換えていないか（結果は `WeakMap` で覚えられる）
-- 同じ処理が `rules/support.ts` や `score-model` に既にないか
+- 同じ処理が `rules/support/` や `score-model` に既にないか
 
 ### 4. 例外処理
 
@@ -55,7 +55,7 @@ run({ score, report }) {
 
 ### 5. report
 
-- `message` にパート名・小節番号が入っていないか（他の位置は `{{measure:key}}` / `{{part:key}}` と `detail`）
+- `messages` の文面にパート名・小節番号が入っていないか（他の位置は `{{measure:key}}` / `{{part:key}}` と `detail`）
 - `at.measure` が通し番号（`serial`）か。楽譜全体への指摘は `at.staff` を省いているか
 - `detail` が JSON に直せる純データか
 
@@ -66,9 +66,10 @@ run({ score, report }) {
 - on/off ペア型の場合: on だけで終わるケース・off が先に来るケースをカバーしているか
 - `tests/clean.test.ts`（`cleanScore` がどのルールにも引っかからない）が通るか
 
-### 7. README の更新
+### 7. docs と examples
 
-- 「チェック項目」表に追記されているか
+- `meta.docs` と、`examples` の invalid・valid がそれぞれ 1 つ以上あるか（`tests/examples.test.ts` が回す）
+- `pnpm docs:rules` で README の「チェック項目」表を作り直したか
 
 ## 出力フォーマット
 

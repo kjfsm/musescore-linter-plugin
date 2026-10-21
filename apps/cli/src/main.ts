@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
 
-import { EXIT_ERROR, run } from "./run.js";
+import { EXIT_ERROR, run } from "./run.ts";
 
 function main(): void {
   const code = run(process.argv.slice(2), {

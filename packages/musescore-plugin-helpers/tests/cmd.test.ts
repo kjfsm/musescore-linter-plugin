@@ -1,7 +1,7 @@
 import type { Score } from "@score-linter/musescore-api-types";
 import { describe, expect, it, vi } from "vitest";
 
-import { withCmd } from "../src/cmd.js";
+import { withCmd } from "../src/cmd.ts";
 
 function makeScore() {
   const startCmd = vi.fn();

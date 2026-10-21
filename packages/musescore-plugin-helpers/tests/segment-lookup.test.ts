@@ -1,7 +1,7 @@
 import type { Segment } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getClefTypeAt, getKeySigAt } from "../src/element-types.js";
+import { getClefTypeAt, getKeySigAt } from "../src/element-types.ts";
 
 function segmentWith(elements: Record<number, Record<string, unknown>>): Segment {
   return { elementAt: (track: number) => elements[track] ?? null } as unknown as Segment;

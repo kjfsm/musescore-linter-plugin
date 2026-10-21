@@ -1,11 +1,14 @@
 {
   "name": "@score-linter/musescore-api-types-generator",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "generate": "tsx scripts/generate.ts",
+    "generate": "node scripts/generate.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

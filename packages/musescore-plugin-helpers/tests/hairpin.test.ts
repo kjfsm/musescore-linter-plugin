@@ -1,8 +1,8 @@
 import type { ScoreElement } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import type { Hairpin } from "../src/hairpin.js";
-import { getHairpinRange, isHairpin } from "../src/hairpin.js";
+import type { Hairpin } from "../src/hairpin.ts";
+import { getHairpinRange, isHairpin } from "../src/hairpin.ts";
 
 const fake = (name: string) => ({ name }) as unknown as ScoreElement;
 

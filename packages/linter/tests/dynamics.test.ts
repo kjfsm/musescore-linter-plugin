@@ -1,19 +1,17 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import {
-  crescTextResolution,
-  dynamicAfterRest,
-  dynamicAsText,
-  duplicateDynamics,
-  firstNoteDynamics,
-  hairpinOnRest,
-  hairpinTargetDynamic,
-  overlappingHairpins,
-  simultaneousDynamics,
-  tieContinuationDynamic,
-} from "../src/rules/dynamics.js";
-import { cleanScore, runRule } from "./helpers.js";
+import { crescTextResolution } from "../src/rules/crescTextResolution.ts";
+import { duplicateDynamics } from "../src/rules/duplicateDynamics.ts";
+import { dynamicAfterRest } from "../src/rules/dynamicAfterRest.ts";
+import { dynamicAsText } from "../src/rules/dynamicAsText.ts";
+import { firstNoteDynamics } from "../src/rules/firstNoteDynamics.ts";
+import { hairpinOnRest } from "../src/rules/hairpinOnRest.ts";
+import { hairpinTargetDynamic } from "../src/rules/hairpinTargetDynamic.ts";
+import { overlappingHairpins } from "../src/rules/overlappingHairpins.ts";
+import { simultaneousDynamics } from "../src/rules/simultaneousDynamics.ts";
+import { tieContinuationDynamic } from "../src/rules/tieContinuationDynamic.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 const dynamic = (text: string, tick: number, measure: number, staff = 0) => ({
   staff,

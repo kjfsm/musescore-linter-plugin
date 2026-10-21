@@ -2,17 +2,15 @@ import type { BarlineKind } from "@score-linter/score-model";
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import {
-  codaSegno,
-  courtesyAccidental,
-  fermataConsistency,
-  finalBarline,
-  rehearsalMarkOrder,
-  rehearsalMarkPosition,
-  repeatBarlineMatch,
-  restAnnotation,
-} from "../src/rules/notation.js";
-import { cleanScore, runRule } from "./helpers.js";
+import { codaSegno } from "../src/rules/codaSegno.ts";
+import { courtesyAccidental } from "../src/rules/courtesyAccidental.ts";
+import { fermataConsistency } from "../src/rules/fermataConsistency.ts";
+import { finalBarline } from "../src/rules/finalBarline.ts";
+import { rehearsalMarkOrder } from "../src/rules/rehearsalMarkOrder.ts";
+import { rehearsalMarkPosition } from "../src/rules/rehearsalMarkPosition.ts";
+import { repeatBarlineMatch } from "../src/rules/repeatBarlineMatch.ts";
+import { restAnnotation } from "../src/rules/restAnnotation.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 const barline = (tick: number, measure: number, kind: BarlineKind) => ({ tick, measure, kind });
 

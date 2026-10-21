@@ -1,7 +1,7 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { createSnapshotWriter } from "../src/snapshot.js";
+import { createSnapshotWriter } from "../src/snapshot.ts";
 
 const score = buildScore({
   parts: [{ name: "Vn", staffCount: 2 }, { name: "Va" }],

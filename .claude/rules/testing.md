@@ -18,7 +18,8 @@ paths:
 
 **対象**: 組み込みの各ルール。`buildScore(spec)`（`@score-linter/score-model`）で必要な要素だけを書いた
 `Score` を作り、ルールを 1 つだけ有効にして走らせ、返った `Issue` を検証する。
-テストファイルは `src/rules/` のファイルと対にする（`tempo.ts` ↔ `tempo.test.ts`）。
+テストファイルは話題ごと（`tempo.test.ts` が `tempoBarline.ts`・`openingTempo.ts` … を見る）。
+各ルールの `examples` は `examples.test.ts` が全ルールまとめて回すので、テストファイルには境界のケースを書く。
 
 `packages/linter/tests/helpers.ts`:
 
@@ -35,7 +36,7 @@ expect(issues).toHaveLength(1);
 expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 2 } });
 ```
 
-指摘の `message` に位置は入らない（プレースホルダのまま）。位置は `at`、他の位置は `detail` で検証する。
+指摘の `message`（`messages` を `data` で埋めたもの）に位置は入らない（プレースホルダのまま）。位置は `at`、他の位置は `detail` で検証する。
 
 ### 他の層
 
@@ -43,10 +44,10 @@ expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 
 | ------------------------------------- | --------------------------------------------------------------------------------- |
 | `packages/score-model/tests/`         | 問い合わせ関数・テキストの解釈（`interpretAnnotation`）                           |
 | `packages/reader-musicxml/tests/`     | MusicXML / .mxl から作った Score                                                  |
-| `packages/reader-musescore/tests/`    | MuseScore のモックから作った Score。`conformance.test.ts` は MusicXML 版と一致を見る |
+| `packages/reader-musescore/tests/`    | MuseScore のモックから作った Score                                                |
 | `packages/lint-app/tests/`            | 設定・並べ替え・件数・整形・スナップショット                                      |
 | `apps/cli/tests/`                     | 引数・出力。`golden.test.ts` は 3 曲の検出結果を `fixtures/golden/` と比べる       |
-| `apps/plugin/tests/`                  | バンドルが呼ぶ `lint.ts`（MuseScore のモックを使う）                              |
+| `apps/plugin/tests/`                  | バンドルが呼ぶ `lint.ts`（MuseScore のモックを使う）。`conformance.test.ts` は MuseScore 版と MusicXML 版の Score の一致を見る |
 
 ## カバレッジ方針
 
@@ -58,11 +59,10 @@ expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 
 ## 実行コマンド
 
 ```bash
-pnpm test              # vitest run（全パッケージ横断）
-pnpm test:coverage     # vitest run --coverage
+pnpm test              # vitest run --coverage（全パッケージ横断、閾値を下回ると落ちる）
 pnpm dev               # vitest（watch モード）
-pnpm pipeline          # turbo run typecheck test build package
+pnpm verify            # 検証ゲート全体（CI と同じ）
 ```
 
 `pnpm typecheck` はルート自身の `tsc --noEmit` だけを見る。各パッケージの型検査（プラグインの
-`tsconfig.bundle.json` を含む）は `pnpm pipeline` が回す。
+`tsconfig.bundle.json` を含む）は `pnpm verify` が回す。

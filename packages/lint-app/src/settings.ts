@@ -1,7 +1,7 @@
 import type { OptionValue, Preset, Rule, RuleCategory } from "@score-linter/linter";
 import { isEnabledByDefault, isRuleEnabled, resolveOptions } from "@score-linter/linter";
 
-import { belongsToTopicGroup } from "./catalog.js";
+import { belongsToTopicGroup } from "./catalog.ts";
 
 /**
  * 利用者が既定値から変えた分だけを持つ設定。保存するのもこの形で、読むときに今の既定値と

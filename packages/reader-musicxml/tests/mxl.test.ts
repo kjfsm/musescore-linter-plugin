@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
-import { readMusicXmlBytes } from "../src/index.js";
-import { isZip } from "../src/mxl.js";
+import { readMusicXmlBytes } from "../src/index.ts";
+import { isZip } from "../src/mxl.ts";
 
 const xml = readFileSync(join(__dirname, "fixtures", "duet.musicxml"));
 const encoder = new TextEncoder();
