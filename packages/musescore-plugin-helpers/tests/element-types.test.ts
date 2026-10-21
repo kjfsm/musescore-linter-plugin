@@ -6,6 +6,7 @@ import {
   isClef,
   isDynamic,
   isExpression,
+  isFermata,
   isKeySig,
   isPlayTechAnnotation,
   isRehearsalMark,
@@ -30,6 +31,7 @@ describe("element-type predicates", () => {
     [isKeySig, "KeySig", ["TimeSig"]],
     [isTimeSig, "TimeSig", ["KeySig"]],
     [isClef, "Clef", ["KeySig"]],
+    [isFermata, "Fermata", ["Articulation"]],
   ];
 
   for (const [predicate, matchName, nonMatchNames] of cases) {

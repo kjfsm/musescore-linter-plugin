@@ -39,6 +39,7 @@ export interface VoiceEventSpec extends PlacedSpec {
   voice?: number;
   duration?: Fraction | null;
   tuplet?: boolean;
+  fermata?: boolean;
 }
 
 export interface ChordSpec extends VoiceEventSpec {
@@ -58,6 +59,11 @@ export interface BarlineSpec extends PlacedSpec {
   kind: BarlineKind;
 }
 
+export interface KeySignatureSpec extends PlacedSpec {
+  staff?: number;
+  fifths: number;
+}
+
 export interface ScoreSpec {
   /** 省略すると 1 譜表のパートが 1 つ。 */
   parts?: PartSpec[];
@@ -66,6 +72,7 @@ export interface ScoreSpec {
   rests?: VoiceEventSpec[];
   annotations?: AnnotationSpec[];
   barlines?: BarlineSpec[];
+  keySignatures?: KeySignatureSpec[];
   slurs?: (Partial<Omit<Slur, "startTick" | "endTick">> & Pick<Slur, "startTick" | "endTick">)[];
   ties?: (Partial<Omit<Tie, "startTick" | "endTick">> & Pick<Tie, "startTick" | "endTick">)[];
   hairpins?: (Partial<Omit<Hairpin, "startTick" | "endTick">> &
@@ -109,6 +116,7 @@ export function buildScore(spec: ScoreSpec = {}): Score {
     ...place(e),
     duration: e.duration ?? null,
     tuplet: e.tuplet ?? false,
+    fermata: e.fermata ?? false,
   });
 
   for (const c of spec.chords ?? []) {
@@ -121,6 +129,9 @@ export function buildScore(spec: ScoreSpec = {}): Score {
   for (const r of spec.rests ?? []) builder.addRest(r.staff ?? 0, r.voice ?? 0, common(r));
   for (const b of spec.barlines ?? []) {
     builder.addBarline(b.staff ?? 0, { ...place(b), kind: b.kind });
+  }
+  for (const k of spec.keySignatures ?? []) {
+    builder.addKeySignature(k.staff ?? 0, { ...place(k), fifths: k.fifths });
   }
   for (const a of spec.annotations ?? []) {
     const { staff, partId, text, tick: _tick, measure: _measure, ...hints } = a;

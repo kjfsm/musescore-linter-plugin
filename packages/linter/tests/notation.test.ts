@@ -5,8 +5,10 @@ import { describe, expect, it } from "vitest";
 import {
   codaSegno,
   courtesyAccidental,
+  fermataConsistency,
   finalBarline,
   rehearsalMarkOrder,
+  rehearsalMarkPosition,
   repeatBarlineMatch,
   restAnnotation,
 } from "../src/rules/notation.js";
@@ -288,5 +290,75 @@ describe("courtesy-accidental", () => {
   it("前に臨時記号が無ければ提案しない", () => {
     const score = buildScore({ chords: [{ tick: 1920, measure: 2, notes: [fNatural] }] });
     expect(runRule(courtesyAccidental, score)).toEqual([]);
+  });
+});
+
+describe("rehearsal-mark-position", () => {
+  const markAt = (tick: number) =>
+    cleanScore({
+      measures: [{}, {}],
+      annotations: [{ tick, text: "A", kind: "rehearsal" }],
+    });
+
+  it("小節の頭に無いリハーサルマークを info で指摘する", () => {
+    const issues = runRule(rehearsalMarkPosition, markAt(1920 + 480));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "info", at: { measure: 2, tick: 2400 } });
+  });
+
+  it("小節の頭のリハーサルマークは指摘しない", () => {
+    expect(runRule(rehearsalMarkPosition, markAt(1920))).toEqual([]);
+  });
+
+  it("同じ位置で複数の譜表に付いたマークは 1 件にまとめる", () => {
+    const score = cleanScore({
+      measures: [{}, {}],
+      annotations: [
+        { staff: 0, tick: 2400, text: "A", kind: "rehearsal" },
+        { staff: 1, tick: 2400, text: "A", kind: "rehearsal" },
+      ],
+    });
+    expect(runRule(rehearsalMarkPosition, score)).toHaveLength(1);
+  });
+});
+
+describe("fermata-consistency", () => {
+  it("他のパートにあるフェルマータが無い譜表を warning で指摘する", () => {
+    const score = cleanScore({
+      chords: [
+        { staff: 0, tick: 480, fermata: true },
+        { staff: 1, tick: 480 },
+      ],
+    });
+    const issues = runRule(fermataConsistency, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 1, tick: 480 } });
+  });
+
+  it("休符のフェルマータや、同じ小節の別の位置のフェルマータがあれば指摘しない", () => {
+    const score = cleanScore({
+      chords: [{ staff: 0, tick: 1440, fermata: true }],
+      rests: [{ staff: 1, tick: 0, fermata: true }],
+    });
+    expect(runRule(fermataConsistency, score)).toEqual([]);
+  });
+
+  it("同じパートの別の譜表にフェルマータがあれば指摘しない", () => {
+    const score = buildScore({
+      parts: [{ staffCount: 2 }],
+      chords: [
+        { staff: 0, tick: 0, fermata: true },
+        { staff: 1, tick: 0 },
+      ],
+    });
+    expect(runRule(fermataConsistency, score)).toEqual([]);
+  });
+
+  it("その小節に音符も休符も無い譜表は見ない", () => {
+    const score = cleanScore({
+      measures: [{}, {}],
+      chords: [{ staff: 0, tick: 1920, fermata: true }],
+    });
+    expect(runRule(fermataConsistency, score)).toEqual([]);
   });
 });

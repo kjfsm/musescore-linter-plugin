@@ -6,12 +6,16 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":16,"tick":14400,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":17,"tick":15360,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Contrabass","staffIdx":17,"measure":19,"tick":17280,"detail":{"previousMeasure":19}}
+{"ruleId":"fermata-consistency","severity":"warning","partName":"Bassoon 2","staffIdx":7,"measure":21,"tick":19200,"detail":{"stavesWithFermata":[0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17]}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":28,"tick":25920,"detail":{"comparedToStaffIdx":13,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Viola","staffIdx":15,"measure":31,"tick":29040,"detail":{"previousMeasure":27}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":32,"tick":29760,"detail":{"comparedToStaffIdx":13,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Violoncello","staffIdx":16,"measure":32,"tick":30000,"detail":{"previousMeasure":28}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Contrabass","staffIdx":17,"measure":32,"tick":30000,"detail":{"previousMeasure":28}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":34,"tick":31680,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":36,"tick":33600,"detail":{"restMeasures":11,"previousMeasure":24}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":36,"tick":33600,"detail":{"restMeasures":11,"previousMeasure":24}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":36,"tick":33600,"detail":{"restMeasures":11,"previousMeasure":24}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":36,"tick":33600,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":38,"tick":35520,"detail":{"comparedToStaffIdx":13,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":38,"tick":35520,"detail":{"comparedToStaffIdx":13,"scope":"all"}}
@@ -51,6 +55,9 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":55,"tick":51840,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":59,"tick":55920,"detail":{"previousMeasure":52}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":59,"tick":55920,"detail":{"previousMeasure":52}}
+{"ruleId":"tie-continuation-dynamic","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":63,"tick":59520,"detail":null}
+{"ruleId":"tie-continuation-dynamic","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":63,"tick":59520,"detail":null}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 1","staffIdx":13,"measure":63,"tick":59520,"detail":{"restMeasures":4,"previousMeasure":58}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":63,"tick":59520,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":63,"tick":59520,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":64,"tick":60480,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
@@ -59,21 +66,37 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":65,"tick":61440,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":66,"tick":62400,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":66,"tick":62400,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":67,"tick":63360,"detail":{"startTick":63360,"endTick":64320}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":67,"tick":63360,"detail":{"startTick":63360,"endTick":64320}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":67,"tick":63360,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":67,"tick":63360,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":68,"tick":64320,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":68,"tick":64320,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":69,"tick":65280,"detail":{"startTick":65280,"endTick":66240}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":69,"tick":65280,"detail":{"startTick":65280,"endTick":66240}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":69,"tick":65280,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":69,"tick":65280,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":70,"tick":66240,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":70,"tick":66240,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":71,"tick":67200,"detail":{"startTick":67200,"endTick":68160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":71,"tick":67200,"detail":{"startTick":67200,"endTick":68160}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":71,"tick":67200,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":71,"tick":67200,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":72,"tick":68160,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":72,"tick":68160,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":73,"tick":69120,"detail":{"startTick":69120,"endTick":70080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":73,"tick":69120,"detail":{"startTick":69120,"endTick":70080}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":73,"tick":69120,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":73,"tick":69120,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":75,"tick":71040,"detail":{"startTick":71040,"endTick":72000}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":75,"tick":71040,"detail":{"startTick":71040,"endTick":72000}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":75,"tick":71040,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":77,"tick":72960,"detail":{"startTick":72960,"endTick":73920}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":77,"tick":72960,"detail":{"startTick":72960,"endTick":73920}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":79,"tick":74880,"detail":{"startTick":74880,"endTick":75840}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":79,"tick":74880,"detail":{"startTick":74880,"endTick":75840}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":81,"tick":76800,"detail":{"startTick":76800,"endTick":77760}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":81,"tick":76800,"detail":{"startTick":76800,"endTick":77760}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":83,"tick":78720,"detail":{"previousMeasure":67}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":83,"tick":78720,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":83,"tick":78720,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
@@ -85,6 +108,7 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":87,"tick":82560,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":89,"tick":84480,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":89,"tick":84480,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 1","staffIdx":0,"measure":91,"tick":86400,"detail":{"restMeasures":16,"previousMeasure":74}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":92,"tick":87360,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":92,"tick":87360,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":92,"tick":87360,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
@@ -124,6 +148,7 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":103,"tick":97920,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":103,"tick":97920,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":103,"tick":97920,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":104,"tick":99360,"detail":{"restMeasures":4,"previousMeasure":99}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":104,"tick":98880,"detail":{"comparedToStaffIdx":13,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":105,"tick":99840,"detail":{"comparedToStaffIdx":13,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":125,"tick":119280,"detail":{"previousMeasure":102}}
@@ -144,7 +169,9 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":137,"tick":130560,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":138,"tick":131520,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":138,"tick":131520,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":138,"tick":131520,"detail":{"startTick":131520,"endTick":135360}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":138,"tick":131520,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":138,"tick":131520,"detail":{"startTick":131520,"endTick":135360}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":138,"tick":131520,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":139,"tick":132480,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":139,"tick":132480,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
@@ -156,6 +183,10 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":141,"tick":134400,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":141,"tick":134400,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":141,"tick":134400,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Viola","staffIdx":15,"measure":142,"tick":135360,"detail":{"startTick":135360,"endTick":137760,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Violoncello","staffIdx":16,"measure":142,"tick":135360,"detail":{"startTick":135360,"endTick":137760,"endpoint":"start"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":143,"tick":136800,"detail":{"restMeasures":14,"previousMeasure":128}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":143,"tick":136800,"detail":{"restMeasures":14,"previousMeasure":128}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":144,"tick":137280,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":144,"tick":137280,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"courtesy-accidental","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":145,"tick":138240,"detail":{"line":1,"previousMeasure":144,"previousAlter":-1,"currentAlter":0}}
@@ -163,9 +194,13 @@
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Viola","staffIdx":15,"measure":145,"tick":138240,"detail":{"previousMeasure":130}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Violoncello","staffIdx":16,"measure":145,"tick":138240,"detail":{"previousMeasure":130}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":146,"tick":139200,"detail":{"previousMeasure":130}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":146,"tick":139200,"detail":{"startTick":139200,"endTick":143040}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":146,"tick":139200,"detail":{"previousMeasure":130}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":146,"tick":139200,"detail":{"startTick":139200,"endTick":143040}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":146,"tick":139200,"detail":{"previousMeasure":130}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":146,"tick":139200,"detail":{"startTick":139200,"endTick":143040}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":146,"tick":139200,"detail":{"previousMeasure":130}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":146,"tick":139200,"detail":{"startTick":139200,"endTick":143040}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":146,"tick":139200,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":146,"tick":139200,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Violin 2","staffIdx":14,"measure":146,"tick":139440,"detail":{"previousMeasure":129}}
@@ -183,6 +218,8 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":149,"tick":142080,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":149,"tick":142080,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":149,"tick":142080,"detail":{"comparedToStaffIdx":4,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Violin 1","staffIdx":13,"measure":150,"tick":143040,"detail":{"startTick":143040,"endTick":145440,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Violin 2","staffIdx":14,"measure":150,"tick":143040,"detail":{"startTick":143040,"endTick":145440,"endpoint":"start"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":153,"tick":146160,"detail":{"previousMeasure":146}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":153,"tick":146160,"detail":{"previousMeasure":146}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":153,"tick":145920,"detail":{"previousMeasure":146}}
@@ -196,6 +233,7 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":157,"tick":149760,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":158,"tick":150960,"detail":{"previousMeasure":145}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":158,"tick":150960,"detail":{"previousMeasure":145}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":160,"tick":152640,"detail":{"restMeasures":37,"previousMeasure":122}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":160,"tick":152880,"detail":{"previousMeasure":158}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":160,"tick":152880,"detail":{"previousMeasure":158}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":166,"tick":158400,"detail":{"comparedToStaffIdx":7,"scope":"all"}}
@@ -219,6 +257,25 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":173,"tick":165120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":173,"tick":165120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":173,"tick":165120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":184,"tick":176160,"detail":{"restMeasures":4,"previousMeasure":179}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":184,"tick":176160,"detail":{"restMeasures":4,"previousMeasure":179}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":185,"tick":177120,"detail":{"restMeasures":5,"previousMeasure":179}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":185,"tick":177120,"detail":{"restMeasures":5,"previousMeasure":179}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 1","staffIdx":0,"measure":186,"tick":178080,"detail":{"restMeasures":6,"previousMeasure":179}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 2","staffIdx":1,"measure":186,"tick":178080,"detail":{"restMeasures":6,"previousMeasure":179}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":187,"tick":178560,"detail":{"restMeasures":8,"previousMeasure":178}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":191,"tick":182880,"detail":{"restMeasures":14,"previousMeasure":176}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":191,"tick":182880,"detail":{"restMeasures":14,"previousMeasure":176}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":192,"tick":183840,"detail":{"restMeasures":4,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":192,"tick":183840,"detail":{"restMeasures":4,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":193,"tick":184800,"detail":{"restMeasures":5,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":193,"tick":184800,"detail":{"restMeasures":5,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 1","staffIdx":0,"measure":194,"tick":185760,"detail":{"restMeasures":6,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 2","staffIdx":1,"measure":194,"tick":185760,"detail":{"restMeasures":6,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":194,"tick":185760,"detail":{"restMeasures":6,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":194,"tick":185760,"detail":{"restMeasures":6,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":194,"tick":185760,"detail":{"restMeasures":6,"previousMeasure":187}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":217,"tick":207360,"detail":{"restMeasures":7,"previousMeasure":209}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Flute 2","staffIdx":1,"measure":228,"tick":218160,"detail":{"previousMeasure":195}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":228,"tick":218160,"detail":{"previousMeasure":195}}
 {"ruleId":"rest-annotation","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":240,"tick":229440,"detail":null}
@@ -229,6 +286,10 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":249,"tick":238080,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":251,"tick":240000,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":252,"tick":240960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":256,"tick":245280,"detail":{"startTick":245280,"endTick":246240}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":256,"tick":245280,"detail":{"startTick":245280,"endTick":246240}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":260,"tick":249120,"detail":{"startTick":249120,"endTick":250080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":260,"tick":249120,"detail":{"startTick":249120,"endTick":250080}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":262,"tick":250560,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":262,"tick":250560,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":262,"tick":250560,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
@@ -240,9 +301,14 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":264,"tick":252480,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":266,"tick":254400,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":266,"tick":254400,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 1","staffIdx":0,"measure":267,"tick":255360,"detail":{"restMeasures":4,"previousMeasure":262}}
 {"ruleId":"tempo-barline","severity":"info","partName":"Flute 1","staffIdx":0,"measure":267,"tick":256320,"detail":null}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 2","staffIdx":1,"measure":267,"tick":255360,"detail":{"restMeasures":4,"previousMeasure":262}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":267,"tick":255360,"detail":{"restMeasures":4,"previousMeasure":262}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":267,"tick":255360,"detail":{"restMeasures":4,"previousMeasure":262}}
 {"ruleId":"tempo-barline","severity":"info","partName":"Flute 1","staffIdx":0,"measure":268,"tick":261120,"detail":null}
 {"ruleId":"hairpin-target-dynamic","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":268,"tick":257760,"detail":{"startTick":256320,"endTick":257760}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":275,"tick":266880,"detail":{"restMeasures":6,"previousMeasure":268}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":276,"tick":267840,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":277,"tick":268800,"detail":{"previousMeasure":268}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":278,"tick":269760,"detail":{"previousMeasure":268}}
@@ -295,6 +361,11 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":298,"tick":288960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":299,"tick":289920,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":303,"tick":294000,"detail":{"previousMeasure":296}}
+{"ruleId":"tie-continuation-dynamic","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":307,"tick":297600,"detail":null}
+{"ruleId":"tie-continuation-dynamic","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":307,"tick":297600,"detail":null}
+{"ruleId":"tie-continuation-dynamic","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":307,"tick":297600,"detail":null}
+{"ruleId":"tie-continuation-dynamic","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":307,"tick":297600,"detail":null}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 1","staffIdx":13,"measure":307,"tick":297600,"detail":{"restMeasures":4,"previousMeasure":302}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":307,"tick":297600,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":307,"tick":297600,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":308,"tick":298560,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
@@ -303,31 +374,81 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":309,"tick":299520,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":310,"tick":300480,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":310,"tick":300480,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":311,"tick":301440,"detail":{"startTick":301440,"endTick":302400}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":311,"tick":301440,"detail":{"startTick":301440,"endTick":302400}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":311,"tick":301440,"detail":{"startTick":301440,"endTick":302400}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":311,"tick":301440,"detail":{"startTick":301440,"endTick":302400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":311,"tick":301440,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":311,"tick":301440,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":312,"tick":302400,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":312,"tick":302400,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":313,"tick":303360,"detail":{"startTick":303360,"endTick":304320}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":313,"tick":303360,"detail":{"startTick":303360,"endTick":304320}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":313,"tick":303360,"detail":{"startTick":303360,"endTick":304320}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":313,"tick":303360,"detail":{"startTick":303360,"endTick":304320}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":313,"tick":303360,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":313,"tick":303360,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":314,"tick":304320,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":314,"tick":304320,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":315,"tick":305280,"detail":{"startTick":305280,"endTick":306240}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":315,"tick":305280,"detail":{"startTick":305280,"endTick":306240}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":315,"tick":305280,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":315,"tick":305280,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 1","staffIdx":13,"measure":315,"tick":305280,"detail":{"restMeasures":4,"previousMeasure":310}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 2","staffIdx":14,"measure":315,"tick":305280,"detail":{"restMeasures":4,"previousMeasure":310}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Viola","staffIdx":15,"measure":315,"tick":305280,"detail":{"restMeasures":4,"previousMeasure":310}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":316,"tick":306240,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":316,"tick":306240,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":317,"tick":307200,"detail":{"startTick":307200,"endTick":308160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":317,"tick":307200,"detail":{"startTick":307200,"endTick":308160}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":317,"tick":307200,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":317,"tick":307200,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violoncello","staffIdx":16,"measure":317,"tick":307440,"detail":{"restMeasures":6,"previousMeasure":310}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Contrabass","staffIdx":17,"measure":317,"tick":307440,"detail":{"restMeasures":6,"previousMeasure":310}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":318,"tick":308160,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":318,"tick":308160,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 1","staffIdx":0,"measure":319,"tick":309120,"detail":{"restMeasures":4,"previousMeasure":314}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":319,"tick":309120,"detail":{"previousMeasure":311}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":319,"tick":309120,"detail":{"startTick":309120,"endTick":310080}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":319,"tick":309120,"detail":{"previousMeasure":311}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":319,"tick":309120,"detail":{"startTick":309120,"endTick":310080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":319,"tick":309120,"detail":{"startTick":309120,"endTick":310080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":319,"tick":309120,"detail":{"startTick":309120,"endTick":310080}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":319,"tick":309120,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":319,"tick":309120,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":320,"tick":310080,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":320,"tick":310080,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":321,"tick":311040,"detail":{"startTick":311040,"endTick":312000}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":321,"tick":311040,"detail":{"startTick":311040,"endTick":312000}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":321,"tick":311040,"detail":{"startTick":311040,"endTick":312000}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":321,"tick":311040,"detail":{"startTick":311040,"endTick":312000}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":321,"tick":311040,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":321,"tick":311040,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":321,"tick":311280,"detail":{"restMeasures":6,"previousMeasure":314}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":323,"tick":312960,"detail":{"startTick":312960,"endTick":313920}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":323,"tick":312960,"detail":{"startTick":312960,"endTick":313920}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 1","staffIdx":13,"measure":323,"tick":312960,"detail":{"restMeasures":4,"previousMeasure":318}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 2","staffIdx":14,"measure":323,"tick":312960,"detail":{"restMeasures":4,"previousMeasure":318}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Viola","staffIdx":15,"measure":323,"tick":312960,"detail":{"restMeasures":4,"previousMeasure":318}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":325,"tick":314880,"detail":{"restMeasures":22,"previousMeasure":302}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violoncello","staffIdx":16,"measure":325,"tick":315120,"detail":{"restMeasures":6,"previousMeasure":318}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Contrabass","staffIdx":17,"measure":325,"tick":315120,"detail":{"restMeasures":6,"previousMeasure":318}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":327,"tick":316800,"detail":{"startTick":316800,"endTick":317760}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":327,"tick":316800,"detail":{"startTick":316800,"endTick":317760}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":327,"tick":316800,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":336,"tick":325440,"detail":{"restMeasures":5,"previousMeasure":330}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":336,"tick":325440,"detail":{"startTick":325440,"endTick":326880}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":336,"tick":325440,"detail":{"restMeasures":33,"previousMeasure":302}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":336,"tick":325440,"detail":{"startTick":325440,"endTick":326880}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 1","staffIdx":0,"measure":338,"tick":327360,"detail":{"restMeasures":7,"previousMeasure":330}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":338,"tick":327360,"detail":{"startTick":327360,"endTick":328800}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":338,"tick":327360,"detail":{"startTick":327360,"endTick":328800}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":340,"tick":329280,"detail":{"startTick":329280,"endTick":330720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":340,"tick":329280,"detail":{"startTick":329280,"endTick":330720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":342,"tick":331200,"detail":{"startTick":331200,"endTick":334560}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":342,"tick":331200,"detail":{"startTick":331200,"endTick":334560}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":342,"tick":331680,"detail":{"restMeasures":20,"previousMeasure":321}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":342,"tick":331680,"detail":{"restMeasures":20,"previousMeasure":321}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Flute 2","staffIdx":1,"measure":346,"tick":335040,"detail":{"previousMeasure":296}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":346,"tick":335040,"detail":{"previousMeasure":296}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":346,"tick":335040,"detail":{"previousMeasure":296}}
@@ -390,6 +511,7 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":381,"tick":368640,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":381,"tick":368640,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":381,"tick":368640,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":382,"tick":370080,"detail":{"startTick":369600,"endTick":370080,"endpoint":"end"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":382,"tick":369600,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":382,"tick":369600,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":383,"tick":370560,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
@@ -443,12 +565,23 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":394,"tick":381120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":394,"tick":381120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"courtesy-accidental","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":396,"tick":383280,"detail":{"line":2,"previousMeasure":395,"previousAlter":1,"currentAlter":0}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 1","staffIdx":13,"measure":400,"tick":386880,"detail":{"restMeasures":4,"previousMeasure":395}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violin 2","staffIdx":14,"measure":400,"tick":386880,"detail":{"restMeasures":4,"previousMeasure":395}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":401,"tick":387840,"detail":{"previousMeasure":398}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":401,"tick":387840,"detail":{"previousMeasure":398}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":402,"tick":388800,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":402,"tick":388800,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":406,"tick":392640,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":406,"tick":392640,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":411,"tick":397440,"detail":{"restMeasures":4,"previousMeasure":406}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":411,"tick":397440,"detail":{"restMeasures":4,"previousMeasure":406}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Contrabass","staffIdx":17,"measure":411,"tick":397440,"detail":{"restMeasures":7,"previousMeasure":403}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":413,"tick":399360,"detail":{"restMeasures":6,"previousMeasure":406}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":413,"tick":399360,"detail":{"restMeasures":6,"previousMeasure":406}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Flute 2","staffIdx":1,"measure":415,"tick":401280,"detail":{"restMeasures":8,"previousMeasure":406}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":415,"tick":401760,"detail":{"restMeasures":11,"previousMeasure":403}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":415,"tick":401760,"detail":{"restMeasures":11,"previousMeasure":403}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":415,"tick":401760,"detail":{"restMeasures":11,"previousMeasure":403}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":423,"tick":408960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":423,"tick":408960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":425,"tick":410880,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
@@ -481,15 +614,23 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":444,"tick":429120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":444,"tick":429120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":444,"tick":429120,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":445,"tick":430080,"detail":{"startTick":430080,"endTick":430560}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":445,"tick":430080,"detail":{"startTick":430080,"endTick":430560}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":446,"tick":431040,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":446,"tick":431040,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":446,"tick":431040,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":446,"tick":431040,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":446,"tick":431040,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":448,"tick":432960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":448,"tick":432960,"detail":{"restMeasures":9,"previousMeasure":438}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":448,"tick":432960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":448,"tick":432960,"detail":{"restMeasures":9,"previousMeasure":438}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":448,"tick":432960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":448,"tick":432960,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 1","staffIdx":0,"measure":449,"tick":433920,"detail":{"startTick":433920,"endTick":434400}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 2","staffIdx":1,"measure":449,"tick":433920,"detail":{"startTick":433920,"endTick":434400}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":449,"tick":433920,"detail":{"startTick":433920,"endTick":434400}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":449,"tick":433920,"detail":{"startTick":433920,"endTick":434400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":450,"tick":434880,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":450,"tick":434880,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":450,"tick":434880,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
@@ -499,40 +640,105 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":452,"tick":436800,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":452,"tick":436800,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":452,"tick":436800,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 1","staffIdx":0,"measure":453,"tick":437760,"detail":{"startTick":437760,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 2","staffIdx":1,"measure":453,"tick":437760,"detail":{"startTick":437760,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":453,"tick":437760,"detail":{"startTick":437760,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":453,"tick":437760,"detail":{"startTick":437760,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":453,"tick":437760,"detail":{"startTick":437760,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":453,"tick":437760,"detail":{"startTick":437760,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":454,"tick":438720,"detail":{"startTick":438720,"endTick":440160}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":454,"tick":438720,"detail":{"startTick":438720,"endTick":440160}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":454,"tick":438720,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":454,"tick":438720,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":455,"tick":439680,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":455,"tick":439680,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":456,"tick":440640,"detail":{"restMeasures":4,"previousMeasure":451}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":456,"tick":440640,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":456,"tick":440640,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":456,"tick":440640,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Viola","staffIdx":15,"measure":456,"tick":440640,"detail":{"startTick":440640,"endTick":441120}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":456,"tick":440640,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Contrabass","staffIdx":17,"measure":456,"tick":440640,"detail":{"comparedToStaffIdx":10,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 1","staffIdx":0,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 2","staffIdx":1,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":457,"tick":441600,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":457,"tick":441600,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":457,"tick":441600,"detail":{"startTick":441600,"endTick":442080}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 1","staffIdx":0,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 2","staffIdx":1,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"slur-same-pitch","severity":"warning","partName":"Oboe 1","staffIdx":2,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":458,"tick":442560,"detail":{"startTick":442560,"endTick":443040}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":458,"tick":442560,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":458,"tick":442560,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":458,"tick":442560,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":463,"tick":447360,"detail":{"startTick":447360,"endTick":447840}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":463,"tick":447360,"detail":{"startTick":447360,"endTick":447840}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":463,"tick":447360,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":463,"tick":447360,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":463,"tick":447360,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":464,"tick":448320,"detail":{"startTick":448320,"endTick":448800}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":464,"tick":448320,"detail":{"startTick":448320,"endTick":448800}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":464,"tick":448320,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":464,"tick":448320,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":464,"tick":448320,"detail":{"startTick":448320,"endTick":448800}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":464,"tick":448320,"detail":{"startTick":448320,"endTick":448800}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":464,"tick":448320,"detail":{"startTick":448320,"endTick":448800}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":464,"tick":448320,"detail":{"startTick":448320,"endTick":448800}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":464,"tick":448320,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":464,"tick":448320,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":464,"tick":448320,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":465,"tick":449280,"detail":{"startTick":449280,"endTick":449760}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":465,"tick":449280,"detail":{"startTick":449280,"endTick":449760}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":465,"tick":449280,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":465,"tick":449280,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":465,"tick":449280,"detail":{"comparedToStaffIdx":8,"scope":"all"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Viola","staffIdx":15,"measure":465,"tick":449280,"detail":{"startTick":449280,"endTick":449760}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 1","staffIdx":0,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Flute 2","staffIdx":1,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"slur-same-pitch","severity":"warning","partName":"Oboe 1","staffIdx":2,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 1","staffIdx":8,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":466,"tick":450240,"detail":{"startTick":450240,"endTick":450720}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":466,"tick":450240,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":466,"tick":450240,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":466,"tick":450240,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":472,"tick":456000,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":472,"tick":456000,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":472,"tick":456000,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":472,"tick":456000,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":472,"tick":456000,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":472,"tick":456000,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400,"endpoint":"start"}}
+{"ruleId":"duplicate-slur","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":472,"tick":456000,"detail":{"startTick":456000,"endTick":458400}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":473,"tick":456960,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":473,"tick":456960,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":473,"tick":456960,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
@@ -545,15 +751,25 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":474,"tick":457920,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":474,"tick":457920,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Bassoon 2","staffIdx":7,"measure":474,"tick":457920,"detail":{"comparedToStaffIdx":1,"scope":"all"}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C Trumpet 1","staffIdx":10,"measure":474,"tick":458160,"detail":{"restMeasures":4,"previousMeasure":469}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C Trumpet 2","staffIdx":11,"measure":474,"tick":458160,"detail":{"restMeasures":4,"previousMeasure":469}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":474,"tick":458160,"detail":{"restMeasures":4,"previousMeasure":469}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Violoncello","staffIdx":16,"measure":474,"tick":458160,"detail":{"restMeasures":4,"previousMeasure":469}}
+{"ruleId":"dynamic-after-rest","severity":"info","partName":"Contrabass","staffIdx":17,"measure":474,"tick":458160,"detail":{"restMeasures":4,"previousMeasure":469}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":479,"tick":462720,"detail":{"previousMeasure":439}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Bb Clarinet 2","staffIdx":5,"measure":479,"tick":462720,"detail":{"previousMeasure":439}}
-{"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":479,"tick":462720,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"fermata-consistency","severity":"warning","partName":"Eb Horn 2","staffIdx":9,"measure":479,"tick":462720,"detail":{"stavesWithFermata":[0,1,2,3,4,5,6,7,8,10,11,13,14,15,16,17]}}
+{"ruleId":"fermata-consistency","severity":"warning","partName":"C, G Timpani","staffIdx":12,"measure":479,"tick":462720,"detail":{"stavesWithFermata":[0,1,2,3,4,5,6,7,8,10,11,13,14,15,16,17]}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":479,"tick":462720,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":481,"tick":464640,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
-{"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Eb Horn 2","staffIdx":9,"measure":482,"tick":465600,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"fermata-consistency","severity":"warning","partName":"Eb Horn 2","staffIdx":9,"measure":482,"tick":465600,"detail":{"stavesWithFermata":[0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17]}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"C, G Timpani","staffIdx":12,"measure":482,"tick":465600,"detail":{"comparedToStaffIdx":0,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":484,"tick":467520,"detail":{"startTick":467040,"endTick":467520,"endpoint":"end"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":486,"tick":469440,"detail":{"startTick":468000,"endTick":469440,"endpoint":"end"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violoncello","staffIdx":16,"measure":487,"tick":470400,"detail":{"comparedToStaffIdx":2,"scope":"all"}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bassoon 1","staffIdx":6,"measure":488,"tick":471360,"detail":{"startTick":470880,"endTick":471360,"endpoint":"end"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Oboe 1","staffIdx":2,"measure":490,"tick":473760,"detail":{"previousMeasure":486}}
+{"ruleId":"slur-tie-endpoint","severity":"info","partName":"Bb Clarinet","staffIdx":4,"measure":490,"tick":473280,"detail":{"startTick":471840,"endTick":473280,"endpoint":"end"}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Flute 1","staffIdx":0,"measure":491,"tick":474480,"detail":{"previousMeasure":479}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Flute 2","staffIdx":1,"measure":491,"tick":474480,"detail":{"previousMeasure":479}}
 {"ruleId":"duplicate-dynamics","severity":"info","partName":"Oboe 2","staffIdx":3,"measure":491,"tick":474480,"detail":{"previousMeasure":479}}

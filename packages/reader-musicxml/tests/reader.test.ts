@@ -663,3 +663,39 @@ describe("readMusicXml: <sound> の反復記号と小節の表示番号", () => 
     expect(score.measures.map((m) => m.label)).toEqual(["1a", "2"]);
   });
 });
+
+describe("readMusicXml: 調号とフェルマータ", () => {
+  it("調号を譜表ごとに読み、number の無い調号はパートのすべての譜表に付ける", () => {
+    const score = readMusicXml(
+      scoreXml(
+        `<measure number="1">
+        <attributes><divisions>1</divisions><key><fifths>-3</fifths></key><staves>2</staves></attributes>
+        ${quarterNote("C", 5, "<staff>1</staff>")}
+      </measure>
+      <measure number="2">
+        <attributes><key number="2"><fifths>2</fifths></key></attributes>
+        ${quarterNote("C", 5, "<staff>1</staff>")}
+      </measure>`,
+        "Piano",
+      ),
+    );
+    expect(score.staves[0]?.keySignatures).toEqual([{ tick: 0, measure: 1, fifths: -3 }]);
+    expect(score.staves[1]?.keySignatures).toEqual([
+      { tick: 0, measure: 1, fifths: -3 },
+      { tick: QUARTER, measure: 2, fifths: 2 },
+    ]);
+  });
+
+  it("音符と休符のフェルマータを読み、アーティキュレーションには入れない", () => {
+    const fermata = "<notations><fermata/></notations>";
+    const score = readMusicXml(
+      scoreXml(
+        measure(
+          `${quarterNote("C", 5, fermata)}<note><rest/><duration>1</duration><voice>1</voice><type>quarter</type>${fermata}</note>`,
+        ),
+      ),
+    );
+    expect(chordsOf(score)[0]).toMatchObject({ fermata: true, articulations: [] });
+    expect(restsOf(score)[0]).toMatchObject({ fermata: true });
+  });
+});

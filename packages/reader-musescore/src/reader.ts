@@ -18,7 +18,9 @@ import {
   isChord,
   isDynamic,
   isExpression,
+  isFermata,
   isHairpin,
+  isKeySig,
   isPlayTechAnnotation,
   isRehearsalMark,
   isRest,
@@ -177,6 +179,7 @@ function readStaff(
   seg: Segment,
   measure: number,
   staff: number,
+  fermataTracks: ReadonlySet<number>,
   helpers: ConnectedHelpers,
   builder: ScoreBuilder,
 ): void {
@@ -197,6 +200,7 @@ function readStaff(
         ? { numerator: el.duration.numerator, denominator: el.duration.denominator }
         : null,
       tuplet: !!el.tuplet,
+      fermata: fermataTracks.has(staffVoiceToTrack(staff, voice)),
     };
     if (!isChord(el)) {
       builder.addRest(staff, voice, common);
@@ -218,6 +222,11 @@ function readStaff(
       }
     }
   }
+
+  // システムの頭と予告の調号は MuseScore がレイアウトで生成したもので、書かれた調号ではない
+  const key = trackElements[0];
+  const fifths = isKeySig(key) && !key.generated ? helpers.keyFifths(key.actualKey) : null;
+  if (fifths !== null) builder.addKeySignature(staff, { tick: seg.tick, measure, fifths });
 
   for (let voice = 0; voice < VOICES_PER_STAFF; voice++) {
     const el = trackElements[voice];
@@ -264,8 +273,10 @@ export function readMuseScore(helpers: ConnectedHelpers, msScore: MsScore): Muse
     try {
       for (let seg: Segment | null = m.firstSegment; seg; seg = seg.nextInMeasure) {
         readAnnotations(seg, serial, helpers, builder);
+        const fermataTracks = new Set<number>();
+        for (const ann of seg.annotations ?? []) if (isFermata(ann)) fermataTracks.add(ann.track);
         for (let staff = 0; staff < msScore.nstaves; staff++) {
-          readStaff(seg, serial, staff, helpers, builder);
+          readStaff(seg, serial, staff, fermataTracks, helpers, builder);
         }
       }
     } catch {

@@ -45,6 +45,7 @@ interface ChordDraft extends Placed {
   voice: number;
   duration: Fraction | null;
   tuplet: boolean;
+  fermata: boolean;
   notes: Note[];
   articulations: Set<string>;
 }
@@ -55,6 +56,13 @@ interface RestDraft extends Placed {
   voice: number;
   duration: Fraction | null;
   tuplet: boolean;
+  fermata: boolean;
+}
+
+interface KeyDraft extends Placed {
+  type: "key";
+  staff: number;
+  fifths: number;
 }
 
 interface BarlineDraft extends Placed {
@@ -70,7 +78,7 @@ interface AnnotationDraft extends Placed {
   hints: AnnotationHints;
 }
 
-type Draft = ChordDraft | RestDraft | BarlineDraft | AnnotationDraft;
+type Draft = ChordDraft | RestDraft | KeyDraft | BarlineDraft | AnnotationDraft;
 
 interface SpanDraft {
   staff: number;
@@ -327,6 +335,24 @@ class PartWalker {
 
     for (const time of childrenNamed(node, "time")) this.timeSignature = readTimeSignature(time);
 
+    for (const key of childrenNamed(node, "key")) {
+      const fifths = childNumber(key, "fifths");
+      if (fifths === undefined) continue;
+      const staffNumber = attr(key, "number");
+      const staves =
+        staffNumber === undefined
+          ? Array.from({ length: Math.max(this.ctx.staffCount, 1) }, (_, i) => i + 1)
+          : [Number(staffNumber)];
+      for (const n of staves) {
+        this.draft.drafts.push({
+          type: "key",
+          ...this.here(this.cursor),
+          staff: this.staffOf(n),
+          fifths,
+        });
+      }
+    }
+
     for (const clef of childrenNamed(node, "clef")) {
       const staffNumber = Number(attr(clef, "number") ?? "1");
       this.clefs.set(
@@ -364,6 +390,7 @@ class PartWalker {
       null;
     // 音価の分母だけでは 4:3 のような 2 の冪になる連符を見分けられない
     const tuplet = hasChild(node, "time-modification");
+    const fermata = childrenNamed(node, "notations").some((n) => hasChild(n, "fermata"));
 
     if (hasChild(node, "rest")) {
       this.currentChord = null;
@@ -374,6 +401,7 @@ class PartWalker {
         voice,
         duration,
         tuplet,
+        fermata,
       });
       return;
     }
@@ -387,6 +415,7 @@ class PartWalker {
         voice,
         duration,
         tuplet,
+        fermata: false,
         notes: [],
         articulations: new Set(),
       };
@@ -395,6 +424,7 @@ class PartWalker {
     }
     const note = this.readNote(node, staffNumber);
     if (note) chord.notes.push(note);
+    if (fermata) chord.fermata = true;
 
     this.collectArticulations(node, chord);
     this.collectSlurs(node, staff, voice, startTick);
@@ -419,10 +449,6 @@ class PartWalker {
     for (const notations of childrenNamed(node, "notations")) {
       for (const group of childrenOf(notations)) {
         const groupTag = tagOf(group);
-        if (groupTag === "fermata") {
-          chord.articulations.add("Fermata");
-          continue;
-        }
         if (groupTag !== "articulations" && groupTag !== "technical" && groupTag !== "ornaments") {
           continue;
         }
@@ -754,12 +780,21 @@ function assemble(
           ...at,
           duration: d.duration,
           tuplet: d.tuplet,
+          fermata: d.fermata,
           notes: d.notes,
           articulations: [...d.articulations].sort(),
         });
         break;
       case "rest":
-        builder.addRest(d.staff, d.voice, { ...at, duration: d.duration, tuplet: d.tuplet });
+        builder.addRest(d.staff, d.voice, {
+          ...at,
+          duration: d.duration,
+          tuplet: d.tuplet,
+          fermata: d.fermata,
+        });
+        break;
+      case "key":
+        builder.addKeySignature(d.staff, { ...at, fifths: d.fifths });
         break;
       case "barline":
         builder.addBarline(d.staff, { ...at, kind: d.kind });

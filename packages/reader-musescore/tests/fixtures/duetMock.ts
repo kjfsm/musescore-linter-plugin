@@ -16,10 +16,12 @@ const NoteType = {
   INVALID: 255,
 };
 const BarLineType = { NORMAL: 200, END: 206 };
+const Key = { F: 306, C: 307, G: 308 };
 
 export const host = {
   NoteType,
   BarLineType,
+  Key,
   BracketType: {},
   PlayingTechniqueType: {},
   mscoreMajorVersion: 4,
@@ -141,7 +143,17 @@ export function duetScore(): MsScore {
   });
   const q = QUARTER;
 
+  // システムの頭の調号は生成されたもので、読まない
+  const keySig = (tick: number, generated: boolean): SegmentSpec => ({
+    tick,
+    slots: [
+      { track: 0, element: { name: "KeySig", actualKey: Key.C, generated } },
+      { track: 4, element: { name: "KeySig", actualKey: Key.C, generated } },
+    ],
+  });
+
   const m1 = measureOf(0, [
+    keySig(0, false),
     {
       tick: 0,
       annotations: [
@@ -184,6 +196,7 @@ export function duetScore(): MsScore {
   ]);
 
   const m2 = measureOf(1, [
+    keySig(4 * q, true),
     {
       tick: 4 * q,
       slots: [
@@ -229,13 +242,20 @@ export function duetScore(): MsScore {
   const m3 = measureOf(2, [
     {
       tick: 8 * q,
-      annotations: [{ name: "StaffText", plainText: "arco", track: 0 }],
+      annotations: [
+        { name: "StaffText", plainText: "arco", track: 0 },
+        { name: "Fermata", track: 4 },
+      ],
       slots: [
         { track: 0, element: chord(2 * q, { pitch: 67, tpc: 15, line: 6 }, 8 * q) },
         { track: 4, element: chord(4 * q, { pitch: 60, tpc: 14, line: 10 }, 8 * q) },
       ],
     },
-    { tick: 10 * q, slots: [{ track: 0, element: rest(2 * q) }] },
+    {
+      tick: 10 * q,
+      annotations: [{ name: "Fermata", track: 0 }],
+      slots: [{ track: 0, element: rest(2 * q) }],
+    },
     barline(12 * q, BarLineType.END),
   ]);
 

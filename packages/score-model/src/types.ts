@@ -43,6 +43,7 @@ interface VoiceEventBase {
   measure: number;
   duration: Fraction | null;
   tuplet: boolean;
+  fermata: boolean;
 }
 
 export interface Chord extends VoiceEventBase {
@@ -76,6 +77,14 @@ export interface Barline {
   kind: BarlineKind;
 }
 
+/** 譜表に書かれた調号。移調楽器では記譜の調で、`Note.tpc` と同じ側の綴りになる。 */
+export interface KeySignature {
+  tick: number;
+  measure: number;
+  /** シャープの数が正、フラットの数が負。 */
+  fifths: number;
+}
+
 export interface Staff {
   index: number;
   partId: string;
@@ -83,6 +92,8 @@ export interface Staff {
   voices: Voice[];
   /** tick 昇順。 */
   barlines: Barline[];
+  /** 書かれている調号。システムの頭で繰り返し表示される分は含まない。tick 昇順。 */
+  keySignatures: KeySignature[];
 }
 
 export interface Slur {

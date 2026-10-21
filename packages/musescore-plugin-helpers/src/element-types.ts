@@ -91,6 +91,7 @@ const ELEMENT_TYPE_NAMES = {
   KEYSIG: "KeySig",
   TIMESIG: "TimeSig",
   CLEF: "Clef",
+  FERMATA: "Fermata",
 } satisfies Partial<Record<ElementTypeName, string | readonly string[]>>;
 
 // Generates a type-guard predicate from a name or name list.
@@ -111,6 +112,7 @@ export const isBarLine = makeIs(ELEMENT_TYPE_NAMES.BAR_LINE);
 export const isKeySig = makeIs(ELEMENT_TYPE_NAMES.KEYSIG);
 export const isTimeSig = makeIs(ELEMENT_TYPE_NAMES.TIMESIG);
 export const isClef = makeIs(ELEMENT_TYPE_NAMES.CLEF);
+export const isFermata = makeIs(ELEMENT_TYPE_NAMES.FERMATA);
 
 /** Converts TempoText.tempo (beats per second) to BPM. */
 export function getTempoBpm(el: EngravingItem): number {

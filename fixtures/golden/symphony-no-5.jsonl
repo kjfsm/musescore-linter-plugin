@@ -6,3 +6,4 @@
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 2","staffIdx":14,"measure":16,"tick":14400,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Viola","staffIdx":15,"measure":16,"tick":14400,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
 {"ruleId":"slur-tie-articulation-consistency","severity":"info","partName":"Violin 1","staffIdx":13,"measure":17,"tick":15360,"detail":{"comparedToStaffIdx":6,"scope":"all"}}
+{"ruleId":"fermata-consistency","severity":"warning","partName":"Bassoon 2","staffIdx":7,"measure":21,"tick":19200,"detail":{"stavesWithFermata":[0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17]}}

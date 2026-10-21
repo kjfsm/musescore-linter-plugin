@@ -1,3 +1,5 @@
 {"ruleId":"courtesy-accidental","severity":"info","partName":"Violin I","staffIdx":0,"measure":2,"tick":1920,"detail":{"line":8,"previousMeasure":1,"previousAlter":-1,"currentAlter":0}}
+{"ruleId":"mergeable-tie","severity":"info","partName":"Violin I","staffIdx":0,"measure":2,"tick":1920,"detail":{"firstTicks":960,"secondTicks":960,"mergedTicks":1920,"timeSig":"4/4"}}
 {"ruleId":"tie-pitch-mismatch","severity":"warning","partName":"Violin II","staffIdx":1,"measure":2,"tick":1920,"detail":{"startPitch":55,"endPitch":57}}
+{"ruleId":"mergeable-tie","severity":"info","partName":"Violin II","staffIdx":1,"measure":2,"tick":1920,"detail":{"firstTicks":960,"secondTicks":960,"mergedTicks":1920,"timeSig":"4/4"}}
 {"ruleId":"hairpin-target-dynamic","severity":"info","partName":"Violin I","staffIdx":0,"measure":3,"tick":3840,"detail":{"startTick":1920,"endTick":3840}}

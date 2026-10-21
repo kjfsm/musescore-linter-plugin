@@ -2,6 +2,7 @@ import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
 import {
+  duplicateTempo,
   openingTempo,
   tempoBarline,
   tempoChangeResolution,
@@ -200,5 +201,82 @@ describe("パートと楽譜全体に付いたテンポの注記", () => {
       chords: [later],
     });
     expect(runRule(tempoChangeResolution, resolvedByScore)).toEqual([]);
+  });
+});
+
+describe("duplicate-tempo", () => {
+  const text = (measure: number, t: string, staff = 0) => ({
+    staff,
+    measure,
+    tick: (measure - 1) * 480,
+    text: t,
+  });
+
+  it("同じ位置に同じテンポ表記を重ねていれば info で指摘する", () => {
+    const score = cleanScore({ annotations: [tempoAt(1, "Allegro", 120)] });
+    expect(runRule(duplicateTempo, score)).toMatchObject([{ severity: "info", at: { tick: 0 } }]);
+  });
+
+  it("同じ位置で BPM の違うテンポ表記を warning で指摘する", () => {
+    const score = cleanScore({ annotations: [tempoAt(1, "Fast", 140)] });
+    const issues = runRule(duplicateTempo, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "warning", at: { measure: 1, tick: 0 } });
+  });
+
+  it("テンポの変化を挟まずに同じ BPM を言い直すと info で指摘する", () => {
+    const score = cleanScore({ annotations: [tempoAt(5, "♩ = 120", 120)] });
+    const issues = runRule(duplicateTempo, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      severity: "info",
+      at: { measure: 5 },
+      detail: { previousMeasure: 1 },
+    });
+  });
+
+  it("rit. のあとの同じ BPM は a tempo として指摘しない", () => {
+    const score = cleanScore({ annotations: [text(3, "rit."), tempoAt(5, "♩ = 120", 120)] });
+    expect(runRule(duplicateTempo, score)).toEqual([]);
+  });
+
+  it("速度語が変われば同じ BPM でも指摘しない", () => {
+    const score = cleanScore({ annotations: [tempoAt(5, "Maestoso", 120)] });
+    expect(runRule(duplicateTempo, score)).toEqual([]);
+  });
+
+  it("解除されないまま同じ譜表に重ねて書いた rit. を info で指摘する", () => {
+    const score = cleanScore({
+      annotations: [text(3, "rit."), text(4, "rit."), tempoAt(6, "a tempo", 120)],
+    });
+    const issues = runRule(duplicateTempo, score);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ severity: "info", at: { staff: 0, measure: 4 } });
+  });
+
+  it("楽譜全体やパートに付いた rit. の重ね書きも、付いた先ごとに比べる", () => {
+    const at = (measure: number, extra: { partId?: string }) => ({
+      ...extra,
+      measure,
+      tick: (measure - 1) * 480,
+      text: "rit.",
+    });
+    const score = cleanScore({
+      annotations: [at(3, {}), at(4, {}), at(3, { partId: "P2" }), at(4, { partId: "P2" })],
+    });
+    const issues = runRule(duplicateTempo, score);
+    expect(issues.map((i) => i.at.staff)).toEqual([null, 1]);
+  });
+
+  it("別の譜表に書いた rit. や、段階を書き分けたテンポ変化は指摘しない", () => {
+    const score = cleanScore({
+      annotations: [
+        text(3, "rit."),
+        text(4, "rit.", 1),
+        text(5, "molto rit."),
+        tempoAt(6, "a tempo", 120),
+      ],
+    });
+    expect(runRule(duplicateTempo, score)).toEqual([]);
   });
 });

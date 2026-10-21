@@ -41,7 +41,7 @@ function stavesPieces(score: Score): Piece[] {
   score.staves.forEach((staff, i) => {
     pieces.push(
       () =>
-        `\n${pad}{ "index": ${staff.index}, "partId": ${inline(staff.partId)}, "barlines": ${inline(staff.barlines)}, "voices": [`,
+        `\n${pad}{ "index": ${staff.index}, "partId": ${inline(staff.partId)}, "barlines": ${inline(staff.barlines)}, "keySignatures": ${inline(staff.keySignatures)}, "voices": [`,
     );
     staff.voices.forEach((voice, v) => {
       pieces.push(() => `\n${pad}${INDENT}{ "events": `);

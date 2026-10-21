@@ -1,10 +1,12 @@
 import type { Annotation, Chord, RepeatMark, Technique } from "@score-linter/score-model";
 import {
   annotationsOn,
+  measureBySerial,
   restTicks,
   stableSortBy,
   tpcToAlter,
   tpcToName,
+  voiceEventsIn,
 } from "@score-linter/score-model";
 
 import { defineRule } from "../engine.js";
@@ -301,6 +303,76 @@ export const courtesyAccidental = defineRule({
             },
           });
         }
+      }
+    }
+  },
+});
+
+export const rehearsalMarkPosition = defineRule({
+  id: "rehearsal-mark-position",
+  meta: {
+    name: "リハーサルマークの位置",
+    description: "小節の頭に無いリハーサルマークを検出",
+    category: "notation",
+    severity: "info",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    const seen = new Set<number>();
+    for (const a of ofKind(score.annotations, "rehearsal")) {
+      if (seen.has(a.tick)) continue;
+      seen.add(a.tick);
+      const measure = measureBySerial(score, a.measure);
+      if (!measure || measure.startTick === a.tick) continue;
+      report({
+        at: { measure: a.measure, tick: a.tick },
+        message: `リハーサルマーク「${a.text.trim()}」が小節の頭にありません`,
+        detail: { measureStartTick: measure.startTick },
+      });
+    }
+  },
+});
+
+export const fermataConsistency = defineRule({
+  id: "fermata-consistency",
+  meta: {
+    name: "フェルマータの食い違い",
+    description: "他のパートにあるフェルマータが無い譜表を検出",
+    category: "notation",
+    severity: "warning",
+    defaultEnabled: true,
+  },
+  options: {},
+  run({ score, report }) {
+    const withFermata = new Map<number, { staves: Set<number>; tick: number }>();
+    for (const staff of score.staves) {
+      for (const voice of staff.voices) {
+        for (const e of voice.events) {
+          if (!e.fermata) continue;
+          const entry = withFermata.get(e.measure);
+          if (!entry) withFermata.set(e.measure, { staves: new Set([staff.index]), tick: e.tick });
+          else {
+            entry.staves.add(staff.index);
+            entry.tick = Math.min(entry.tick, e.tick);
+          }
+        }
+      }
+    }
+    // 位置は比べない。全休符の上のフェルマータは小節の頭に付き、旋律の音符のフェルマータと位置がずれる。
+    // 譜表ではなくパートで比べる。ピアノは片手の譜表にだけフェルマータを書くことがある
+    for (const [measure, { staves, tick }] of [...withFermata].sort((a, b) => a[0] - b[0])) {
+      for (const part of score.parts) {
+        if (part.staves.some((s) => staves.has(s))) continue;
+        const played = part.staves.find((s) =>
+          score.staves[s]?.voices.some((_, v) => voiceEventsIn(score, s, v, measure).length > 0),
+        );
+        if (played === undefined) continue;
+        report({
+          at: { staff: played, measure, tick },
+          message: "他のパートにあるフェルマータがこのパートにありません",
+          detail: { stavesWithFermata: [...staves].sort((a, b) => a - b) },
+        });
       }
     }
   },
