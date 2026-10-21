@@ -9,7 +9,7 @@ ColumnLayout {
     Layout.bottomMargin: 6
     spacing: 2
 
-    // RuleInfo（Bundle.ruleCatalog の要素）
+    // RuleInfo（Bundle.api.ruleCatalog の要素）
     property var rule: ({})
     property bool ruleEnabled: true
     // { key: 値 }。既定値で埋めた値が入る。

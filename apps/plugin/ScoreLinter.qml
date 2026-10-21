@@ -23,7 +23,7 @@ MuseScore {
     readonly property string releasesPageUrl: "https://github.com/" + repoSlug + "/releases/latest"
     readonly property string latestZipUrl: "https://github.com/" + repoSlug + "/releases/latest/download/score-linter.zip"
 
-    // 既定値から変えた分だけを持つ設定。保存もこの形で行う（Bundle.serializeSettings）。
+    // 既定値から変えた分だけを持つ設定。保存もこの形で行う（Bundle.api.serializeSettings）。
     property var settings: ({ preset: "recommended", enabled: {}, options: {} })
     property var enabledRules: ({})
     property var ruleOptions: ({})
@@ -32,27 +32,20 @@ MuseScore {
     property var ruleGroupList: []
     property var nurseryList: []
     property var lastRun: null
-    property string snapshotText: ""
     property bool hasRun: false
 
-    // ─── 実行時間の計測 ───
-    // 全体の所要時間は常に記録してヘッダに表示する（Date.now() 2 回分でコストは無視できる）。
-    // 内訳は perfEnabled が true のときだけ集計し、スナップショットタブに出す。
+    // 全体の所要時間は常にヘッダに表示する。内訳は perfEnabled のときだけ集計し、スナップショットタブに出す。
     property int elapsedMs: 0
     property string perfText: ""
 
-    // ─── スナップショット JSON の遅延生成 ───
-    // JSON.stringify は QJSEngine だと実測で 5 秒超かかる（V8 の約 100 倍）。実行のたびに
-    // 走らせると全体の 6 割を占めるので、スナップショットタブを開いたときだけ生成する。
-    // Bundle.createSnapshotWriter が要素ごとに分けて書くので、Timer で少しずつ進め、
-    // タブを離れたら途中で止める。
+    // スナップショットは Bundle.api.createSnapshotSession が少しずつ作る。Timer で進め、タブを離れたら止める。
     readonly property int snapshotChunkSize: 1000
+    property var snapshot: Bundle.api.createSnapshotSession()
+    property string snapshotText: ""
     property bool snapshotBuilding: false
     property int snapshotDone: 0
     property int snapshotTotal: 0
     property int snapshotBuildMs: 0
-    property var snapshotWriter: null
-    property double snapshotStartedAt: 0
 
     // タブの出入りで生成の開始・中断を切り替える（2 = スナップショットタブ）
     property int currentTab: tabBar.currentIndex
@@ -61,7 +54,6 @@ MuseScore {
         else cancelSnapshotBuild();
     }
 
-    // ─── アップデート確認の状態 ───
     // idle / checking / upToDate / available / error
     property string updateState: "idle"
     property string latestVersion: ""
@@ -75,7 +67,7 @@ MuseScore {
 
     QtObject {
         id: persistedSettings
-        // 中身は Bundle.serializeSettings が作る。ON/OFF とオプションは既定値から変えた分だけの JSON
+        // 中身は Bundle.api.serializeSettings が作る。ON/OFF とオプションは既定値から変えた分だけの JSON
         property string rulesJson: "{}"
         property string ruleOptionsJson: "{}"
         property string preset: "recommended"
@@ -88,15 +80,15 @@ MuseScore {
 
     function initialize() {
         try {
-            var catalog = Bundle.ruleCatalog();
+            var catalog = Bundle.api.ruleCatalog();
             ruleGroupList = catalog.groups;
             nurseryList = catalog.nursery;
             var all = [];
             for (var i = 0; i < ruleGroupList.length; i++) all = all.concat(ruleGroupList[i].rules);
             checkerList = all.concat(nurseryList);
             // 壊れた保存値・未知のルールは Bundle 側が捨てて既定値に戻す
-            applySettings(Bundle.loadSettings(persistedSettings.rulesJson, persistedSettings.ruleOptionsJson,
-                                              persistedSettings.preset), false);
+            applySettings(Bundle.api.loadSettings(persistedSettings.rulesJson, persistedSettings.ruleOptionsJson,
+                                                  persistedSettings.preset), false);
         } catch (e) {
             console.error("[ScoreLinter] ルールの取得に失敗: " + e);
             checkerList = [];
@@ -107,102 +99,68 @@ MuseScore {
 
     function applySettings(next, persist) {
         settings = next;
-        var view = Bundle.settingsView(next);
+        var view = Bundle.api.settingsView(next);
         enabledRules = view.enabled;
         ruleOptions = view.options;
         if (!persist) return;
-        var saved = Bundle.serializeSettings(next);
+        var saved = Bundle.api.serializeSettings(next);
         persistedSettings.rulesJson = saved.enabled;
         persistedSettings.ruleOptionsJson = saved.options;
         persistedSettings.preset = saved.preset;
     }
 
     function setPreset(preset) {
-        applySettings(Bundle.setPreset(settings, preset), true);
+        applySettings(Bundle.api.setPreset(settings, preset), true);
     }
 
     function setGroupEnabled(category, enabled) {
-        applySettings(Bundle.setGroupEnabled(settings, category, enabled), true);
+        applySettings(Bundle.api.setGroupEnabled(settings, category, enabled), true);
     }
 
     function setRuleEnabled(ruleId, checked) {
-        applySettings(Bundle.setRuleEnabled(settings, ruleId, checked), true);
+        applySettings(Bundle.api.setRuleEnabled(settings, ruleId, checked), true);
     }
 
     function setRuleOption(ruleId, key, value) {
-        applySettings(Bundle.setRuleOption(settings, ruleId, key, value), true);
+        applySettings(Bundle.api.setRuleOption(settings, ruleId, key, value), true);
     }
 
     function runLinter() {
-        var tStart = Date.now();
+        var startedAt = Date.now();
 
         // 前回の結果と JSON を先に手放してから走査する。QJSEngine は巨大なオブジェクト
         // グラフが 2 つ生きているとチェッカー実行中に GC が繰り返し走り、実測で 2 回目以降が
         // 7 倍遅くなった（701 ms → 5143 ms）。参照を切るだけでは回収の時機を選べないので、
         // 使えるなら明示的に走らせる。
-        cancelSnapshotBuild();
-        snapshotText = "";
+        snapshotTimer.stop();
+        snapshot.reset();
+        showSnapshot();
         lastRun = null;
-        snapshotBuildMs = 0;
         perfText = "";
 
-        var msGc = 0;
+        var gcMs = 0;
         if (typeof gc === "function") {
-            var tGc = Date.now();
+            var gcStarted = Date.now();
             gc();
-            msGc = Date.now() - tGc;
+            gcMs = Date.now() - gcStarted;
         }
 
-        if (!curScore) {
-            issuesList = [internalIssue("スコアが開かれていません")];
-            issueCounts = { error: 1, warning: 0, info: 0 };
-            hasRun = true;
-            elapsedMs = Date.now() - tStart;
-            tabBar.currentIndex = 0;
-            return;
-        }
-
-        try {
-            // `plugin`（このルートオブジェクト）を渡すと、Bundle 側が実行中の MuseScore の enum
-            // （NoteType・BarLineType など）に結び付けて読む。値を焼き込まないので版の差に強い。
-            var tLint = Date.now();
-            var run = Bundle.lintCurrentScore(plugin, settings, persistedSettings.perfEnabled);
-            var msLint = Date.now() - tLint;
-            lastRun = run;
-
-            issuesList = run.issues;
-            issueCounts = run.counts;
-
-            hasRun = true;
-            elapsedMs = Date.now() - tStart;
-
-            if (persistedSettings.perfEnabled) {
-                perfText = buildPerfText(msGc, msLint, run.perfText);
-                console.log(perfText);
-            }
-            tabBar.currentIndex = 0;
-        } catch (e) {
-            console.error("[ScoreLinter] runLinter 失敗: " + e);
-            issuesList = [internalIssue("実行中にエラーが発生しました: " + e)];
-            issueCounts = { error: 1, warning: 0, info: 0 };
-            hasRun = true;
-            elapsedMs = Date.now() - tStart;
-        }
-    }
-
-    function buildPerfText(msGc, msLint, detail) {
-        // ラベルは桁を揃えるため ASCII のみ（monospace 表示なので全角が混ざるとずれる）
-        var lines = [
-            "[ScoreLinter:runLinter]",
-            "  total             " + elapsedMs + " ms",
-            "  gc                " + msGc      + " ms",
-            "  lintCurrentScore  " + msLint    + " ms"
-        ];
-        if (detail && detail.length > 0) {
-            lines.push("");
-            lines.push(detail);
-        }
-        return lines.join("\n");
+        // `plugin`（このルートオブジェクト）を渡すと、Bundle 側が実行中の MuseScore の enum
+        // （NoteType・BarLineType など）に結び付けて読む。値を焼き込まないので版の差に強い。
+        var view = Bundle.api.runLint(plugin, {
+            settings: settings,
+            measure: persistedSettings.perfEnabled,
+            gcMs: gcMs,
+            startedAt: startedAt
+        });
+        lastRun = view.run;
+        issuesList = view.issues;
+        issueCounts = view.counts;
+        perfText = view.perfText;
+        if (perfText.length > 0) console.log(perfText);
+        hasRun = true;
+        elapsedMs = Date.now() - startedAt;
+        tabBar.currentIndex = 0;
     }
 
     // ─── スナップショット JSON の分割生成 ───
@@ -211,53 +169,34 @@ MuseScore {
         id: snapshotTimer
         interval: 1
         repeat: true
-        onTriggered: buildSnapshotChunk()
+        onTriggered: {
+            var finished = snapshot.step(snapshotChunkSize);
+            showSnapshot();
+            if (!finished) return;
+            stop();
+            if (snapshotBuildMs > 0) console.log("[ScoreLinter] スナップショット生成: " + snapshotBuildMs + " ms");
+        }
+    }
+
+    function showSnapshot() {
+        var p = snapshot.progress();
+        snapshotText = p.text;
+        snapshotBuilding = p.building;
+        snapshotDone = p.done;
+        snapshotTotal = p.total;
+        snapshotBuildMs = p.buildMs;
     }
 
     function startSnapshotBuild() {
-        // 生成済み・生成中・未実行のいずれでもないときだけ着手する
-        if (snapshotBuilding || snapshotText.length > 0 || !lastRun) return;
-
-        snapshotWriter = Bundle.createSnapshotWriter(lastRun.score);
-        snapshotDone = 0;
-        snapshotTotal = snapshotWriter.total;
-        snapshotStartedAt = Date.now();
-        snapshotBuilding = true;
+        if (!snapshot.start(lastRun)) return;
+        showSnapshot();
         snapshotTimer.start();
     }
 
     function cancelSnapshotBuild() {
-        if (!snapshotBuilding) return;
         snapshotTimer.stop();
-        snapshotBuilding = false;
-        snapshotWriter = null;
-        snapshotDone = 0;
-        snapshotTotal = 0;
-    }
-
-    function buildSnapshotChunk() {
-        if (!snapshotWriter) {
-            cancelSnapshotBuild();
-            return;
-        }
-        try {
-            var finished = snapshotWriter.step(snapshotChunkSize);
-            snapshotDone = snapshotWriter.done;
-            if (finished) finishSnapshotBuild();
-        } catch (e) {
-            console.error("[ScoreLinter] スナップショット生成に失敗: " + e);
-            cancelSnapshotBuild();
-            snapshotText = "スナップショットの生成に失敗しました: " + e;
-        }
-    }
-
-    function finishSnapshotBuild() {
-        snapshotTimer.stop();
-        snapshotText = snapshotWriter.text();
-        snapshotWriter = null;
-        snapshotBuilding = false;
-        snapshotBuildMs = Date.now() - snapshotStartedAt;
-        console.log("[ScoreLinter] スナップショット生成: " + snapshotBuildMs + " ms");
+        snapshot.cancel();
+        showSnapshot();
     }
 
     function setPerfLogging(checked) {
@@ -265,16 +204,9 @@ MuseScore {
         if (!checked) perfText = "";
     }
 
-    function internalIssue(msg) {
-        return {
-            ruleId: "internal", severity: "error", category: "internal", message: msg,
-            partId: null, partName: "", staffIdx: -1, measure: 0, measureLabel: "", tick: 0, detail: null
-        };
-    }
-
     function jumpToIssue(issue) {
         if (!curScore || !lastRun || !issue) return;
-        var range = Bundle.selectionFor(lastRun, issue);
+        var range = Bundle.api.selectionFor(lastRun, issue);
         if (!range) return;
 
         curScore.startCmd();
@@ -295,52 +227,31 @@ MuseScore {
     }
 
     // ─── アップデート確認 ───────────────────────────────────────────────────
-    // GitHub Releases API から最新版を取得し、現在版と比較する。
-    // 比較ロジックは bundle 側（Bundle.isNewerVersion）に集約してテスト可能にしている。
-    // UI 層なのでネットワーク/parse 失敗は握りつぶしてエラー表示に倒す（catch してはいけないのはルールの run の中だけ）。
+    // 通信は QML の XMLHttpRequest、応答の解釈は Bundle.api.readLatestRelease（テストできる側）が持つ。
+    function showUpdate(view) {
+        plugin.updateState = view.state;
+        plugin.latestVersion = view.latestVersion;
+        plugin.updateMessage = view.message;
+    }
+
     function checkForUpdate() {
-        updateState = "checking";
-        updateMessage = "";
-        latestVersion = "";
+        showUpdate({ state: "checking", latestVersion: "", message: "" });
 
         var req = new XMLHttpRequest();
-        var url = "https://api.github.com/repos/" + repoSlug + "/releases/latest";
         try {
-            req.open("GET", url, true);
+            req.open("GET", Bundle.api.releasesApiUrl(repoSlug), true);
             req.setRequestHeader("Accept", "application/vnd.github+json");
             // GitHub API は User-Agent 必須
             req.setRequestHeader("User-Agent", "score-linter");
             req.onreadystatechange = function() {
                 if (req.readyState !== XMLHttpRequest.DONE) return;
-                try {
-                    if (req.status !== 200) {
-                        plugin.updateState = "error";
-                        plugin.updateMessage = "更新を確認できませんでした (HTTP " + req.status + ")。時間をおいて再度お試しください。";
-                        return;
-                    }
-                    var data = JSON.parse(req.responseText);
-                    var tag = (data && data.tag_name) ? String(data.tag_name) : "";
-                    if (tag.length === 0) {
-                        plugin.updateState = "error";
-                        plugin.updateMessage = "最新バージョン情報を取得できませんでした。";
-                        return;
-                    }
-                    plugin.latestVersion = tag;
-                    if (Bundle.isNewerVersion(plugin.pluginVersion, tag)) {
-                        plugin.updateState = "available";
-                    } else {
-                        plugin.updateState = "upToDate";
-                    }
-                } catch (e) {
-                    plugin.updateState = "error";
-                    plugin.updateMessage = "応答の解析に失敗しました。";
-                    console.warn("[ScoreLinter] update parse 失敗: " + e);
-                }
+                showUpdate(Bundle.api.readLatestRelease(req.status, req.responseText, plugin.pluginVersion));
             };
             req.send();
         } catch (e) {
-            updateState = "error";
-            updateMessage = "更新を確認できませんでした。ネットワーク接続を確認してください。";
+            // UI 層なのでネットワークの失敗はエラー表示に倒す（catch してはいけないのはルールの run の中だけ）
+            showUpdate({ state: "error", latestVersion: "",
+                         message: "更新を確認できませんでした。ネットワーク接続を確認してください。" });
             console.warn("[ScoreLinter] checkForUpdate 失敗: " + e);
         }
     }
@@ -577,7 +488,7 @@ MuseScore {
                             parts: plugin.parts()
                             counts: plugin.issueCounts
                             checkers: plugin.checkerList
-                            onCopyRequested: plugin.copyToClipboard(Bundle.formatForCopy(issues, format))
+                            onCopyRequested: plugin.copyToClipboard(Bundle.api.formatForCopy(issues, format))
                             onJumpRequested: plugin.jumpToIssue(issue)
                         }
                     }
