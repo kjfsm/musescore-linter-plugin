@@ -34,11 +34,9 @@ MuseScore {
     property var lastRun: null
     property bool hasRun: false
 
-    // 全体の所要時間は常にヘッダに表示する。内訳は perfEnabled のときだけ集計し、スナップショットタブに出す。
     property int elapsedMs: 0
     property string perfText: ""
 
-    // スナップショットは Bundle.api.createSnapshotSession が少しずつ作る。Timer で進め、タブを離れたら止める。
     readonly property int snapshotChunkSize: 1000
     property var snapshot: Bundle.api.createSnapshotSession()
     property string snapshotText: ""

@@ -1,2 +1,2 @@
-# MuseScore 4.6.1〜4.6.5 が使う Qt と同じ版（.claude/skills/musescore-qt-versions）
+# MuseScore 4.6.1〜4.6.5 が使う Qt と同じ版
 PySide6-Essentials==6.9.2

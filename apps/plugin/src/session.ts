@@ -168,7 +168,7 @@ export function releasesApiUrl(repoSlug: string): string {
   return `https://api.github.com/repos/${repoSlug}/releases/latest`;
 }
 
-/** GitHub Releases API の応答を、更新確認の表示に直す。通信そのものは QML の XMLHttpRequest が行う。 */
+/** 通信そのものは QML の XMLHttpRequest が行う。 */
 export function readLatestRelease(
   status: number,
   body: string,
