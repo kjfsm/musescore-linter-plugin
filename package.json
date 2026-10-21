@@ -12,8 +12,8 @@
     "deploy:web": "pnpm --filter @score-linter/web deploy",
     "dev": "vitest",
     "dev:web": "pnpm --filter @score-linter/web dev",
-    "docs:check": "pnpm docs:rules && git diff --exit-code -- README.md",
-    "docs:rules": "pnpm --filter @score-linter/rule-docs generate && oxfmt README.md",
+    "docs:check": "pnpm --filter @score-linter/rule-docs check",
+    "docs:rules": "pnpm --filter @score-linter/rule-docs generate",
     "generate:types": "pnpm --filter @score-linter/musescore-api-types-generator generate",
     "knip": "knip",
     "lint": "oxlint && oxfmt --check",
@@ -24,7 +24,7 @@
     "preview:web": "pnpm --filter @score-linter/web preview",
     "test": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "verify": "turbo boundaries && turbo run lint knip docs:check typecheck test build package check:bundle",
+    "verify": "turbo boundaries && turbo run lint knip docs:check typecheck test build package test:e2e",
     "version": "changeset version"
   },
   "devDependencies": {
@@ -38,8 +38,7 @@
     "simple-git-hooks": "^2.14.0",
     "turbo": "^2.11.9",
     "typescript": "^6.0.3",
-    "vitest": "catalog:",
-    "wrangler": "^4.151.1"
+    "vitest": "catalog:"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint"

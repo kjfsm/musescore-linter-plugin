@@ -1,10 +1,12 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { builtinRules, type Rule, type RuleTier } from "@score-linter/linter";
 
-const README = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "README.md");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+const README = join(ROOT, "README.md");
 const START = "<!-- rules:start -->";
 const END = "<!-- rules:end -->";
 
@@ -27,11 +29,30 @@ function rulesTable(rules: readonly Rule[]): string {
   ].join("\n");
 }
 
+// 表の桁揃えは oxfmt に任せる。全角の幅の数え方を自前で再現すると、lint の整形と食い違う
+function format(markdown: string): string {
+  const result = spawnSync("oxfmt", ["--stdin-filepath=README.md"], {
+    cwd: ROOT,
+    input: markdown,
+    encoding: "utf8",
+  });
+  if (result.status !== 0) throw new Error(`oxfmt が失敗しました: ${result.stderr}`);
+  return result.stdout;
+}
+
 const readme = readFileSync(README, "utf8");
 const start = readme.indexOf(START);
 const end = readme.indexOf(END);
 if (start < 0 || end < start) throw new Error(`README.md に ${START} と ${END} がありません`);
-writeFileSync(
-  README,
+const expected = format(
   `${readme.slice(0, start + START.length)}\n\n${rulesTable(builtinRules)}\n\n${readme.slice(end)}`,
 );
+
+if (process.argv.includes("--check")) {
+  if (expected !== readme) {
+    console.error("README.md のルール一覧が古くなっています。pnpm docs:rules で作り直してください");
+    process.exit(1);
+  }
+} else {
+  writeFileSync(README, expected);
+}

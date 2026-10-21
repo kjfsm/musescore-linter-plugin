@@ -29,6 +29,11 @@ jobs:
       - name: 依存関係のインストール
         run: pnpm install --frozen-lockfile --prefer-offline
 
+      # 版は lockfile の @playwright/test が決める。test:e2e も同じ install を呼ぶが、
+      # 共有ライブラリの apt-get（--with-deps）は root で回る CI でだけ行う。
+      - name: Playwright のブラウザ
+        run: pnpm --filter @score-linter/web exec playwright install --with-deps chromium
+
       # ゲートの正は package.json の verify（turbo のタスクグラフ）。手元でも同じコマンドを叩く。
       - name: 検証ゲート
         run: pnpm verify

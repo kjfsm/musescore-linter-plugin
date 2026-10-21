@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "generate": "node src/main.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "node src/main.ts --check"
   },
   "dependencies": {
     "@score-linter/linter": "workspace:*"
+  },
+  "devDependencies": {
+    "oxfmt": "0.73.0"
   }
 }

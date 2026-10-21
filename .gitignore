@@ -13,3 +13,7 @@ dist
 
 # wrangler dev のローカル状態（miniflare のキャッシュ・SQLite）
 .wrangler/
+
+# Playwright の成果物
+apps/web/test-results/
+apps/web/playwright-report/

@@ -202,13 +202,12 @@ static assets だけで構成されており、`wrangler.jsonc` に `main` を�
 「送信されない」ことの根拠です。
 
 加えて配信時のセキュリティヘッダで `connect-src 'none'` を指定しているため、ページからの
-fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。自前で書いたコード
-（エントリチャンク）にネットワーク API が含まれていないことは CI でも検査しています
-（`.github/workflows/ci.yml`）。OSMD のような動的 import で分離された vendor チャンクは、
-中身を完全には制御できない第三者コードのためこの検査の対象外にしており、実行時の歯止めは
-上記の `connect-src 'none'` に委ねています（OSMD 自体は URL 文字列を渡したときのみ内部で
-通信ヘルパーを使うコード経路を持ちますが、Web 版では常に読み込み済みの MusicXML 文字列を
-直接渡すため、そのコード経路は実行されません）。
+fetch / XHR / WebSocket / sendBeacon がブラウザレベルで禁止されています。CI では Playwright で
+`wrangler dev`（`_headers` の CSP ごと配信）を開き、楽譜を読み込んで lint させたうえで、
+外への通信と CSP 違反が 0 件であることを確かめています（`apps/web/e2e/privacy.spec.ts`、`pnpm --filter @score-linter/web test:e2e`）。
+OSMD のような第三者のコードも含めて、実際にブラウザで動いたときの通信を見ます（OSMD 自体は URL 文字列を
+渡したときのみ内部で通信ヘルパーを使うコード経路を持ちますが、Web 版では常に読み込み済みの MusicXML
+文字列を直接渡すため、そのコード経路は実行されません）。
 
 ```bash
 pnpm dev:web        # Vite の開発サーバー（_headers は再現されない）

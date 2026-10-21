@@ -29,11 +29,10 @@
     "//#lint": { "cache": false },
     "//#knip": { "cache": false },
     "//#docs:check": { "cache": false },
-    "check:bundle": {
-      "description": "apps/web の dist に通信コードとインライン script が無いか。",
-      "dependsOn": ["build"],
-      "inputs": ["dist/**", "scripts/check-bundle.ts"],
-      "outputs": []
+    "test:e2e": {
+      "description": "apps/web を wrangler dev で _headers の CSP ごと配り、外への通信と CSP 違反が無いことを確かめる。ビルドは webServer が行う。",
+      "dependsOn": ["^typecheck"],
+      "cache": false
     },
     "//#test": {
       "description": "vitest で全パッケージのテストを 1 回で実行し、カバレッジの閾値も見る（スクリプトはルートだけが持つ）。全体で 1 秒未満なので、パッケージ単位に分ける利点がない。",
@@ -47,7 +46,7 @@
         "tools/*/tests/**",
         "fixtures/**"
       ],
-      "outputs": ["coverage/**"]
+      "outputs": []
     },
     "build": {
       "description": "apps/* の成果物を作る。plugin は QML 向けバンドル、cli は単一ファイルの CLI、web は Vite。",
