@@ -8,13 +8,8 @@ export const muteOpen = techniquePair({
   docs: "金管の `mute`/`straight mute` 等 → `open` 復帰の対応漏れ・重複",
   on: ["mute"],
   off: ["open", "ord", "natural"],
-  messages: {
-    onDuplicate:
-      "mute が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    offDuplicate:
-      "open が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    unclosed: "mute のまま曲が終了しています（open が必要かもしれません）",
-  },
+  onLabel: "mute",
+  offLabel: "open",
   examples: {
     invalid: [{ score: { annotations: [{ staff: 0, measure: 2, tick: 480, text: "mute" }] } }],
     valid: [

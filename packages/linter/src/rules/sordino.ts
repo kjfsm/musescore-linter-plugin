@@ -7,13 +7,8 @@ export const sordino = techniquePair({
   docs: "弱音器の対応漏れ・重複",
   on: ["con-sord"],
   off: ["senza-sord"],
-  messages: {
-    onDuplicate:
-      "con sord. が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    offDuplicate:
-      "senza sord. が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    unclosed: "con sord. のまま曲が終了しています（senza sord. が必要かもしれません）",
-  },
+  onLabel: "con sord.",
+  offLabel: "senza sord.",
   examples: {
     invalid: [{ score: { annotations: [{ staff: 0, measure: 2, tick: 480, text: "con sord." }] } }],
     valid: [

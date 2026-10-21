@@ -9,13 +9,8 @@ export const soloTutti = techniquePair({
   on: ["solo"],
   off: ["tutti"],
   onDuplicateSeverity: "info",
-  messages: {
-    onDuplicate:
-      "solo が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    offDuplicate:
-      "tutti が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    unclosed: "solo のまま曲が終了しています（tutti が必要かもしれません）",
-  },
+  onLabel: "solo",
+  offLabel: "tutti",
   examples: {
     invalid: [{ score: { annotations: [{ staff: 0, measure: 2, tick: 480, text: "solo" }] } }],
     valid: [

@@ -5,7 +5,15 @@ import { defineRule } from "../../engine.ts";
 import type { Rule, RuleExamples, Severity } from "../../types.ts";
 import { techniqueOf } from "./common.ts";
 
-export type TechniquePairMessageId = "onDuplicate" | "offDuplicate" | "unclosed";
+const MESSAGES = {
+  onDuplicate:
+    "{on} が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
+  offDuplicate:
+    "{off} が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
+  unclosed: "{on} のまま曲が終了しています（{off} が必要かもしれません）",
+};
+
+type TechniquePairMessageId = keyof typeof MESSAGES;
 
 interface TechniquePairConfig {
   id: string;
@@ -14,7 +22,9 @@ interface TechniquePairConfig {
   docs: string;
   on: readonly Technique[];
   off: readonly Technique[];
-  messages: Readonly<Record<TechniquePairMessageId, string>>;
+  /** 文面に出す表記。on・off が複数の奏法を含んでも、代表の 1 つを書く。 */
+  onLabel: string;
+  offLabel: string;
   examples: RuleExamples;
   /** on のままさらに on が来たときの severity。省略すると warning。 */
   onDuplicateSeverity?: Severity;
@@ -79,7 +89,7 @@ export function techniquePair(
       docs: config.docs,
     },
     options: {},
-    messages: config.messages,
+    messages: MESSAGES,
     examples: config.examples,
     run({ score, report }) {
       for (const part of score.parts) {
@@ -89,28 +99,30 @@ export function techniquePair(
         let hasBeenOn = false;
         let last: Switch | null = null;
 
+        const labels = { on: config.onLabel, off: config.offLabel };
         const reportDuplicate = (
           s: Switch,
+          previous: Switch,
           messageId: "onDuplicate" | "offDuplicate",
           severity?: Severity,
         ) => {
-          const previousMeasure = last?.measure ?? null;
           report({
             at: { staff, measure: s.measure, tick: s.tick },
             messageId,
-            detail: { previousMeasure },
+            data: labels,
+            detail: { previousMeasure: previous.measure },
             ...(severity ? { severity } : {}),
           });
         };
 
         for (const s of switchesOf(score, part.staves)) {
           if (config.on.includes(s.technique)) {
-            if (isOn) reportDuplicate(s, "onDuplicate", config.onDuplicateSeverity);
+            if (isOn && last) reportDuplicate(s, last, "onDuplicate", config.onDuplicateSeverity);
             isOn = true;
             hasBeenOn = true;
             last = s;
           } else if (config.off.includes(s.technique)) {
-            if (!isOn && hasBeenOn) reportDuplicate(s, "offDuplicate");
+            if (!isOn && hasBeenOn && last) reportDuplicate(s, last, "offDuplicate");
             isOn = false;
             last = s;
           }
@@ -120,6 +132,7 @@ export function techniquePair(
           report({
             at: { staff, measure: last.measure, tick: last.tick },
             messageId: "unclosed",
+            data: labels,
           });
         }
       }

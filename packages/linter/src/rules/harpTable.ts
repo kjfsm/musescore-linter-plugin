@@ -7,13 +7,8 @@ export const harpTable = techniquePair({
   docs: "ハープ `près de la table`（響板寄り奏法）→ `ordinario` 復帰の対応漏れ・重複",
   on: ["pres-de-la-table"],
   off: ["ord", "natural"],
-  messages: {
-    onDuplicate:
-      "près de la table が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    offDuplicate:
-      "ordinario が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    unclosed: "près de la table のまま曲が終了しています（ordinario が必要かもしれません）",
-  },
+  onLabel: "près de la table",
+  offLabel: "ordinario",
   examples: {
     invalid: [
       { score: { annotations: [{ staff: 0, measure: 2, tick: 480, text: "près de la table" }] } },

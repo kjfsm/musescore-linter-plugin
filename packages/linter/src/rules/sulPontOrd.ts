@@ -7,13 +7,8 @@ export const sulPontOrd = techniquePair({
   docs: "`sul pont.`（駒寄り奏法）→ `ord.` 復帰の対応漏れ・重複",
   on: ["sul-pont"],
   off: ["ord", "arco"],
-  messages: {
-    onDuplicate:
-      "sul pont. が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    offDuplicate:
-      "ord. が既に指示済みの状態で再度指示されています（前回: {{measure:previousMeasure}}）",
-    unclosed: "sul pont. のまま曲が終了しています（ord. が必要かもしれません）",
-  },
+  onLabel: "sul pont.",
+  offLabel: "ord.",
   examples: {
     invalid: [{ score: { annotations: [{ staff: 0, measure: 2, tick: 480, text: "sul pont." }] } }],
     valid: [
