@@ -43,6 +43,20 @@ jobs:
       - name: 検証ゲート
         run: pnpm verify
 
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: apps/plugin/qjs/requirements.txt
+
+      # QJSEngine の検査は Python が要るので verify の外にある。配る ZIP の中身も同じ検査を通す
+      - name: QJSEngine でバンドルを動かす
+        run: |
+          pip install -r apps/plugin/qjs/requirements.txt
+          node apps/plugin/qjs/build-mock.ts
+          python apps/plugin/qjs/smoke.py apps/plugin/dist/bundle.js apps/plugin/dist-qjs/mock.js
+          pyside6-qmllint apps/plugin/ScoreLinter.qml apps/plugin/qml/*.qml
+
       - name: Changeset アクションの実行
         id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
