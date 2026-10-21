@@ -49,9 +49,12 @@ function toLines(issues: JsonIssue[]): string {
     .join("\n")}\n`;
 }
 
+// full 版は 5 MB の楽譜で、CI ではカバレッジの計測と turbo の並列タスクに挟まれて既定の 5 秒を超える
+const TIMEOUT_MS = 30_000;
+
 describe("検出結果の回帰基準", () => {
   for (const file of SCORES) {
-    it(file, async () => {
+    it(file, { timeout: TIMEOUT_MS }, async () => {
       const name = file
         .split("/")
         .pop()!
