@@ -142,14 +142,16 @@ export const codaSegno = defineRule({
   },
 });
 
-/** A=1..Z=26 と、AA=27・BB=28 の繰り返し表記、AB のような 26 進表記、数字。読めなければ null。 */
+/**
+ * Z の後を AA, BB, CC… と続ける譜面も、この順位なら昇順になる。繰り返し表記に別の番号を振ると、
+ * AB と BB のように 2 つの数え方で番号が衝突する（#147）。
+ */
 function rehearsalRank(label: string): number | null {
   const t = label.trim();
   if (t.length === 0) return null;
   if (/^\d+$/.test(t)) return Number(t);
   const up = t.toUpperCase();
   if (!/^[A-Z]+$/.test(up)) return null;
-  if (up.split("").every((c) => c === up[0])) return (up.length - 1) * 26 + (up.charCodeAt(0) - 64);
   let n = 0;
   for (const c of up) n = n * 26 + (c.charCodeAt(0) - 64);
   return n;
