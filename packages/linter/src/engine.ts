@@ -19,9 +19,12 @@ function formatMessage(rule: Rule, report: Report): string {
     throw new Error(`messages に '${report.messageId}' がありません`);
   }
   const data = report.data ?? {};
-  return template.replace(/\{(\w+)\}/g, (placeholder, key: string) =>
-    key in data ? String(data[key]) : placeholder,
-  );
+  // {{measure:key}} のような lint-app のプレースホルダは \w+ に当たらないので、ここでは触れない
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => {
+    if (!(key in data))
+      throw new Error(`'${report.messageId}' の {${key}} に渡す data がありません`);
+    return String(data[key]);
+  });
 }
 
 export interface LinterConfig {

@@ -107,9 +107,15 @@ describe("文面", () => {
     });
   }
 
-  it("{name} を data の値で埋め、data に無いプレースホルダはそのまま残す", () => {
+  it("{name} を data の値で埋め、lint-app の {{measure:key}} は残す", () => {
     const { issues } = createLinter([reportingWith({ name: "{count}", count: 2 })]).lint(score);
     expect(issues[0]!.message).toBe("{count} は 2 回（前回: {{measure:previousMeasure}}）");
+  });
+
+  it("文面の {name} に渡す data が無ければ内部エラーになる", () => {
+    const { issues } = createLinter([reportingWith({ name: "x" })]).lint(score);
+    expect(issues).toMatchObject([{ ruleId: "internal", severity: "error" }]);
+    expect(issues[0]!.message).toContain("{count}");
   });
 
   it("messages に無い messageId を報告すると内部エラーになる", () => {
