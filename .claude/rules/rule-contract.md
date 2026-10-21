@@ -1,5 +1,5 @@
 ---
-description: ルールの契約（defineRule・report・severity・tier・options）と、ルールが見てよいもの
+description: ルールの契約（defineRule・report・messages・examples・severity・tier・options）と、ルールが見てよいもの
 paths:
   - "packages/linter/src/**"
   - "packages/score-model/src/**"
@@ -12,7 +12,7 @@ paths:
 
 ## 定義の形
 
-`defineRule({ id, meta, options, run })`。`id` は kebab-case で、組み込みのルールの中で重複させない
+`defineRule({ id, meta, options, messages, examples, run })`。1 ファイルに 1 ルール（`src/rules/<export 名>.ts`）。`id` は kebab-case で、組み込みのルールの中で重複させない
 （`createLinter` が throw する）。`meta.category` は `RuleCategory` 型の値
 （`tempo` / `dynamics` / `articulation` / `slur-tie` / `notation`）。カテゴリを足すと、設定画面の並びとラベルの表
 （`packages/lint-app/src/catalog.ts`）の書き忘れを型検査が知らせる。
@@ -26,8 +26,14 @@ export const xxx = defineRule({
     category: "notation",
     severity: "warning", // このルールが出しうる最も重い severity
     tier: "nursery", // 新しいルールは試験中から始める
+    docs: "〇〇が無い（`pnpm docs:rules` が README の表に書き出す）",
   },
   options: {}, // 設定項目の宣言。無ければ空
+  messages: { missing: "〇〇（{text}）がありません" },
+  examples: {
+    invalid: [{ score: { annotations: [/* … */] } }], // 指摘が出る ScoreSpec
+    valid: [{ score: {} }], // 指摘が出ない ScoreSpec
+  },
   run({ score, options, report }) {
     // ...
   },
@@ -50,11 +56,13 @@ export const xxx = defineRule({
 ## report
 
 ```ts
-report({ at: { staff, measure, tick }, message, detail, severity });
+report({ at: { staff, measure, tick }, messageId, data, detail, severity });
 ```
 
 - `at.measure` は小節の通し番号（`Measure.serial`）。`at.staff` を省くと楽譜全体への指摘。
-- **`message` にパート名と小節番号を入れない。** 他の位置を指したいときは `{{measure:key}}`・`{{part:key}}`
+- 文面は `messages` に置き、`report` は `messageId` で選ぶ。`{name}` は `data[name]` で埋まる。
+  文面をコードに直書きしないのは、文面を 1 か所に集めて差し替え（翻訳など）できるようにするため。
+- **文面にパート名と小節番号を入れない。** 他の位置を指したいときは `{{measure:key}}`・`{{part:key}}`
   と書き、`detail[key]` に通し番号・譜表番号を入れる。表示は `lint-app` が行う。
 - `detail` は JSON に直せる純データにする（CLI の JSON 出力と golden テストにそのまま出る）。
 - `severity` を省くと `meta.severity`。
@@ -78,8 +86,14 @@ report({ at: { staff, measure, tick }, message, detail, severity });
 - `score-model` の問い合わせ関数（`annotationsOn`・`annotationsAffecting`・`chordsOnStaff`・`slursOn` …）を使う。
   結果は `Score` ごとに `WeakMap` で覚えられる。`Score` は組み立てたあと書き換えない。
 - 全譜表の全声部を毎回走査せず、必要な譜表・小節・種類で引く。
-- ルール間で共有したい処理は `packages/linter/src/rules/support.ts` に置く。
+- ルール間で共有したい処理は `packages/linter/src/rules/support/` に置く（汎用は `common.ts`、話題ごとは `<話題>.ts`）。
   楽譜の解釈そのもの（ソースに依らないもの）なら `score-model` に置く。
+
+## examples
+
+`examples.invalid` はそのルールだけを有効にすると 1 件以上の指摘が出る楽譜、`examples.valid` は 0 件の楽譜。
+組み込みのルールはどちらも 1 つ以上持ち、`packages/linter/tests/examples.test.ts` が全ルールについて確かめる。
+細かい境界のケースは examples ではなくテストファイルに書く。
 
 ## 追加の手順
 

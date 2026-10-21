@@ -1,12 +1,10 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import {
-  enharmonicSpelling,
-  extremeSpelling,
-  keySignature,
-  redundantAccidental,
-} from "../src/rules/spelling.ts";
+import { enharmonicSpelling } from "../src/rules/enharmonicSpelling.ts";
+import { extremeSpelling } from "../src/rules/extremeSpelling.ts";
+import { keySignature } from "../src/rules/keySignature.ts";
+import { redundantAccidental } from "../src/rules/redundantAccidental.ts";
 import { runRule } from "./helpers.ts";
 
 const fSharp = (accidentalShown = true) => ({ pitch: 66, tpc: 20, line: 5, accidentalShown });

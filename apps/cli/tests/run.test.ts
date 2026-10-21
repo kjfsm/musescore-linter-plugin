@@ -52,8 +52,9 @@ function always(id: string, tier: RuleTier): Rule {
     id,
     meta: { name: id, description: "", category: "notation", severity: "info", tier },
     options: {},
+    messages: { id },
     run({ report }) {
-      report({ at: { measure: 0, tick: 0 }, message: id });
+      report({ at: { measure: 0, tick: 0 }, messageId: "id" });
     },
   });
 }

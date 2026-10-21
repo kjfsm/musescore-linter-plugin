@@ -43,10 +43,12 @@ function rule(id: string, meta: Partial<RuleMeta> = {}, measure = 1): Rule {
       ...meta,
     },
     options: OPTIONS,
+    messages: { seen: "{scope}:{symbols}" },
     run({ options, report }) {
       report({
         at: { staff: 0, measure, tick: 0 },
-        message: `${options.scope}:${options.symbols.join(",")}`,
+        messageId: "seen",
+        data: { scope: options.scope, symbols: options.symbols.join(",") },
       });
     },
   });

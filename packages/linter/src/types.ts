@@ -1,4 +1,4 @@
-import type { Position, Score } from "@score-linter/score-model";
+import type { Position, Score, ScoreSpec } from "@score-linter/score-model";
 
 export type Severity = "error" | "warning" | "info";
 
@@ -69,29 +69,49 @@ export interface RuleMeta {
    */
   severity: Severity;
   tier: RuleTier;
+  /** README のルール一覧の「目的」欄（Markdown）。`pnpm docs:rules` が README に書き出す。 */
+  docs?: string;
 }
 
-export interface Report {
+/** `{name}` を {@link Report.data} の値で埋める。 */
+export type MessageData = Readonly<Record<string, string | number>>;
+
+export interface Report<M extends string = string> {
   at: Position;
-  /** パート名と小節番号は入れない。lint-app が位置から表示する。 */
-  message: string;
+  /** {@link Rule.messages} のキー。パート名と小節番号は文面に入れない。lint-app が位置から表示する。 */
+  messageId: M;
+  data?: MessageData;
   detail?: Record<string, unknown> | null;
   /** 省略すると {@link RuleMeta.severity}。 */
   severity?: Severity;
 }
 
-export interface RuleContext<S extends OptionSpecs> {
+export interface RuleContext<S extends OptionSpecs, M extends string = string> {
   score: Score;
   options: OptionValues<S>;
-  report(report: Report): void;
+  report(report: Report<M>): void;
 }
 
-export interface Rule<S extends OptionSpecs = OptionSpecs> {
+export interface RuleExample {
+  score: ScoreSpec;
+  /** ルールのオプションの生の値。 */
+  options?: Readonly<Record<string, unknown>>;
+}
+
+/** invalid は 1 件以上の指摘、valid は指摘なしになる楽譜。組み込みルールはどちらも 1 つ以上持つ。 */
+export interface RuleExamples {
+  invalid: readonly RuleExample[];
+  valid: readonly RuleExample[];
+}
+
+export interface Rule<S extends OptionSpecs = OptionSpecs, M extends string = string> {
   id: string;
   meta: RuleMeta;
   options: S;
+  messages: Readonly<Record<M, string>>;
+  examples?: RuleExamples;
   // メソッド記法にしておくと、オプションの型が違うルールを 1 つの配列に並べられる
-  run(context: RuleContext<S>): void;
+  run(context: RuleContext<S, M>): void;
 }
 
 export interface IssueLocation {

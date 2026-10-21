@@ -1,14 +1,12 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import {
-  duplicateSlur,
-  slurOnRest,
-  slurSamePitch,
-  slurSingleNote,
-  slurTieEndpoint,
-  tiePitchMismatch,
-} from "../src/rules/slurTie.ts";
+import { duplicateSlur } from "../src/rules/duplicateSlur.ts";
+import { slurOnRest } from "../src/rules/slurOnRest.ts";
+import { slurSamePitch } from "../src/rules/slurSamePitch.ts";
+import { slurSingleNote } from "../src/rules/slurSingleNote.ts";
+import { slurTieEndpoint } from "../src/rules/slurTieEndpoint.ts";
+import { tiePitchMismatch } from "../src/rules/tiePitchMismatch.ts";
 import { runRule } from "./helpers.ts";
 
 describe("tie-pitch-mismatch", () => {

@@ -24,7 +24,8 @@
     "version": "changeset version",
     "prepare": "simple-git-hooks",
     "generate:types": "pnpm --filter @score-linter/musescore-api-types-generator generate",
-    "boundaries": "turbo boundaries"
+    "boundaries": "turbo boundaries",
+    "docs:rules": "pnpm --filter @score-linter/rule-docs generate && oxfmt README.md"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",

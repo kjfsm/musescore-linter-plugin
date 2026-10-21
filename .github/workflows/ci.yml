@@ -38,6 +38,11 @@ jobs:
       - name: 層の境界の検査
         run: pnpm boundaries
 
+      - name: README のルール一覧が生成物と一致するか
+        run: |
+          pnpm docs:rules
+          git diff --exit-code -- README.md
+
       # turbo のタスクグラフ自体を検証する。未定義タスク名や依存の破綻は
       # ここで落ちる（個別に pnpm run を叩いていた頃はすり抜けていた）。
       - name: turbo タスクグラフの検証

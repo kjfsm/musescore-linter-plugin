@@ -2,8 +2,8 @@ import type { ChordSpec, PartGroup } from "@score-linter/score-model";
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { slurTieArticulationConsistency } from "../src/rules/articulationConsistency.ts";
-import { bracketGroupKeyOf } from "../src/rules/support.ts";
+import { slurTieArticulationConsistency } from "../src/rules/slurTieArticulationConsistency.ts";
+import { bracketGroupKeyOf } from "../src/rules/support/common.ts";
 import { runRule } from "./helpers.ts";
 
 const q = { numerator: 1, denominator: 4 };

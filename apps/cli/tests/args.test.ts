@@ -22,6 +22,7 @@ const meta = {
 const optionRule = defineRule({
   id: "scoped",
   meta,
+  messages: {},
   options: {
     scope: {
       label: "範囲",
@@ -45,7 +46,7 @@ const optionRule = defineRule({
   run() {},
 });
 
-const plainRule = defineRule({ id: "plain", meta, options: {}, run() {} });
+const plainRule = defineRule({ id: "plain", meta, options: {}, messages: {}, run() {} });
 const RULE_LIST = [optionRule, plainRule];
 
 describe("parseArgs", () => {

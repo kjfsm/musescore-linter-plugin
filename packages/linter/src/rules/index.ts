@@ -1,62 +1,51 @@
 import type { Rule } from "../types.ts";
-import { slurTieArticulationConsistency } from "./articulationConsistency.ts";
 import { beatCrossingTie } from "./beatCrossingTie.ts";
-import {
-  crescTextResolution,
-  duplicateDynamics,
-  dynamicAfterRest,
-  dynamicAsText,
-  firstNoteDynamics,
-  hairpinOnRest,
-  hairpinTargetDynamic,
-  overlappingHairpins,
-  simultaneousDynamics,
-  tieContinuationDynamic,
-} from "./dynamics.ts";
-import {
-  codaSegno,
-  courtesyAccidental,
-  fermataConsistency,
-  finalBarline,
-  rehearsalMarkOrder,
-  rehearsalMarkPosition,
-  repeatBarlineMatch,
-  restAnnotation,
-} from "./notation.ts";
-import { mergeableTie, restGrouping } from "./rhythm.ts";
-import {
-  duplicateSlur,
-  slurOnRest,
-  slurSamePitch,
-  slurSingleNote,
-  slurTieEndpoint,
-  tiePitchMismatch,
-} from "./slurTie.ts";
-import {
-  enharmonicSpelling,
-  extremeSpelling,
-  keySignature,
-  redundantAccidental,
-} from "./spelling.ts";
-import {
-  conLegnoArco,
-  divUnis,
-  harpTable,
-  muteOpen,
-  pizzArco,
-  sordino,
-  soloTutti,
-  sulPontOrd,
-  sulTastoOrd,
-  unaCorda,
-} from "./techniquePairs.ts";
-import {
-  duplicateTempo,
-  openingTempo,
-  tempoBarline,
-  tempoChangeResolution,
-  tempoWithoutBpm,
-} from "./tempo.ts";
+import { codaSegno } from "./codaSegno.ts";
+import { conLegnoArco } from "./conLegnoArco.ts";
+import { courtesyAccidental } from "./courtesyAccidental.ts";
+import { crescTextResolution } from "./crescTextResolution.ts";
+import { divUnis } from "./divUnis.ts";
+import { duplicateDynamics } from "./duplicateDynamics.ts";
+import { duplicateSlur } from "./duplicateSlur.ts";
+import { duplicateTempo } from "./duplicateTempo.ts";
+import { dynamicAfterRest } from "./dynamicAfterRest.ts";
+import { dynamicAsText } from "./dynamicAsText.ts";
+import { enharmonicSpelling } from "./enharmonicSpelling.ts";
+import { extremeSpelling } from "./extremeSpelling.ts";
+import { fermataConsistency } from "./fermataConsistency.ts";
+import { finalBarline } from "./finalBarline.ts";
+import { firstNoteDynamics } from "./firstNoteDynamics.ts";
+import { hairpinOnRest } from "./hairpinOnRest.ts";
+import { hairpinTargetDynamic } from "./hairpinTargetDynamic.ts";
+import { harpTable } from "./harpTable.ts";
+import { keySignature } from "./keySignature.ts";
+import { mergeableTie } from "./mergeableTie.ts";
+import { muteOpen } from "./muteOpen.ts";
+import { openingTempo } from "./openingTempo.ts";
+import { overlappingHairpins } from "./overlappingHairpins.ts";
+import { pizzArco } from "./pizzArco.ts";
+import { redundantAccidental } from "./redundantAccidental.ts";
+import { rehearsalMarkOrder } from "./rehearsalMarkOrder.ts";
+import { rehearsalMarkPosition } from "./rehearsalMarkPosition.ts";
+import { repeatBarlineMatch } from "./repeatBarlineMatch.ts";
+import { restAnnotation } from "./restAnnotation.ts";
+import { restGrouping } from "./restGrouping.ts";
+import { simultaneousDynamics } from "./simultaneousDynamics.ts";
+import { slurOnRest } from "./slurOnRest.ts";
+import { slurSamePitch } from "./slurSamePitch.ts";
+import { slurSingleNote } from "./slurSingleNote.ts";
+import { slurTieArticulationConsistency } from "./slurTieArticulationConsistency.ts";
+import { slurTieEndpoint } from "./slurTieEndpoint.ts";
+import { soloTutti } from "./soloTutti.ts";
+import { sordino } from "./sordino.ts";
+import { sulPontOrd } from "./sulPontOrd.ts";
+import { sulTastoOrd } from "./sulTastoOrd.ts";
+import { tempoBarline } from "./tempoBarline.ts";
+import { tempoChangeResolution } from "./tempoChangeResolution.ts";
+import { tempoWithoutBpm } from "./tempoWithoutBpm.ts";
+import { tieContinuationDynamic } from "./tieContinuationDynamic.ts";
+import { tiePitchMismatch } from "./tiePitchMismatch.ts";
+import { unaCorda } from "./unaCorda.ts";
 
 /**
  * 組み込みのルール。並びがそのまま実行順で、設定画面の並びにもなる。

@@ -9,7 +9,7 @@ import {
   metersBySerial,
   noteValueTicks,
   splitSegments,
-} from "./meter.ts";
+} from "./support/meter.ts";
 
 // 拍の骨格を隠す音符（イマジナリーバーライン違反）を検出し、タイでの分割案を出す。
 
@@ -22,8 +22,37 @@ export const beatCrossingTie = defineRule({
     // 小節線や主要拍をまたぐときは warning を出す
     severity: "warning",
     tier: "pedantic",
+    docs: "拍境界をまたぐ音符（小節の中央またぎは小節頭始まりのみ許容し warning）。分割案を提示",
   },
   options: {},
+  messages: {
+    crossing: "{position} から始まる{noteName}が{crossed}をまたいでいます。{suggestion}",
+  },
+  examples: {
+    invalid: [
+      {
+        score: {
+          measures: [{ timeSignature: [4, 4] }],
+          chords: [
+            { tick: 0, duration: { numerator: 3, denominator: 16 } },
+            { tick: 360, duration: { numerator: 3, denominator: 16 } },
+            { tick: 720, duration: { numerator: 1, denominator: 8 } },
+          ],
+        },
+      },
+    ],
+    valid: [
+      {
+        score: {
+          measures: [{ timeSignature: [4, 4] }],
+          chords: [
+            { tick: 0, duration: { numerator: 1, denominator: 2 } },
+            { tick: 960, duration: { numerator: 1, denominator: 2 } },
+          ],
+        },
+      },
+    ],
+  },
   run({ score, report }) {
     const meters = metersBySerial(score);
 
@@ -66,7 +95,8 @@ export const beatCrossingTie = defineRule({
           report({
             at: { staff: staff.index, measure: ev.measure, tick: ev.tick },
             severity,
-            message: `${position} から始まる${noteName}が${crossed}をまたいでいます。${suggestion}`,
+            messageId: "crossing",
+            data: { position, noteName, crossed, suggestion },
             detail: {
               position,
               crossedBeats: crossed,

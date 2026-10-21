@@ -18,7 +18,8 @@ paths:
 
 **対象**: 組み込みの各ルール。`buildScore(spec)`（`@score-linter/score-model`）で必要な要素だけを書いた
 `Score` を作り、ルールを 1 つだけ有効にして走らせ、返った `Issue` を検証する。
-テストファイルは `src/rules/` のファイルと対にする（`tempo.ts` ↔ `tempo.test.ts`）。
+テストファイルは話題ごと（`tempo.test.ts` が `tempoBarline.ts`・`openingTempo.ts` … を見る）。
+各ルールの `examples` は `examples.test.ts` が全ルールまとめて回すので、テストファイルには境界のケースを書く。
 
 `packages/linter/tests/helpers.ts`:
 
@@ -35,7 +36,7 @@ expect(issues).toHaveLength(1);
 expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 2 } });
 ```
 
-指摘の `message` に位置は入らない（プレースホルダのまま）。位置は `at`、他の位置は `detail` で検証する。
+指摘の `message`（`messages` を `data` で埋めたもの）に位置は入らない（プレースホルダのまま）。位置は `at`、他の位置は `detail` で検証する。
 
 ### 他の層
 

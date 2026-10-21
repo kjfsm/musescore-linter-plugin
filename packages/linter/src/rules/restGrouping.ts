@@ -1,22 +1,15 @@
-import type { Chord, Rest, VoiceEvent } from "@score-linter/score-model";
-import {
-  annotationsOn,
-  hairpinsOn,
-  measureAt,
-  tiesOn,
-  voiceEventsIn,
-} from "@score-linter/score-model";
+import type { Rest, VoiceEvent } from "@score-linter/score-model";
+import { voiceEventsIn } from "@score-linter/score-model";
 
 import { defineRule } from "../engine.ts";
 import type { Report } from "../types.ts";
-import type { Meter } from "./meter.ts";
+import type { Meter } from "./support/meter.ts";
 import {
   DURATION_NAMES,
-  beatCrossing,
   beatPositionLabel,
   metersBySerial,
   noteValueTicks,
-} from "./meter.ts";
+} from "./support/meter.ts";
 
 const restName = (ticks: number) => DURATION_NAMES[ticks]?.replace("音符", "休符") ?? null;
 
@@ -69,7 +62,7 @@ function checkRests(
   events: readonly VoiceEvent[],
   meter: Meter,
   staff: number,
-  report: (report: Report) => void,
+  report: (report: Report<"hidesBeat" | "hidesBeatSplit" | "mergeable">) => void,
 ): void {
   const timed: Timed[] = events.map((event) => ({
     event,
@@ -83,7 +76,12 @@ function checkRests(
     const splitLabel = split.every((n) => n !== null) ? split.join("+") : null;
     report({
       at: { staff, measure: event.measure, tick: event.tick },
-      message: `${beatPositionLabel(onset, meter)} からの${restName(ticks) ?? "休符"}が拍の頭を隠しています${splitLabel ? `。${splitLabel}に分けることを推奨します` : ""}`,
+      messageId: splitLabel ? "hidesBeatSplit" : "hidesBeat",
+      data: {
+        position: beatPositionLabel(onset, meter),
+        name: restName(ticks) ?? "休符",
+        split: splitLabel ?? "",
+      },
       detail: { onsetTicks: onset, durationTicks: ticks, timeSig: meter.timeSig },
     });
   }
@@ -101,7 +99,8 @@ function checkRests(
     const name = to - from === meter.ticks ? "小節全体の休符" : (restName(to - from) ?? "休符");
     report({
       at: { staff, measure: first.event.measure, tick: first.event.tick },
-      message: `${inside.length} 個の休符を 1 つの${name}にまとめられます`,
+      messageId: "mergeable",
+      data: { count: inside.length, name },
       detail: { mergedTicks: to - from, restCount: inside.length, timeSig: meter.timeSig },
     });
   }
@@ -115,8 +114,50 @@ export const restGrouping = defineRule({
     category: "notation",
     severity: "info",
     tier: "nursery",
+    docs: "拍の頭を隠す休符と、拍・小節の半分・小節全体を 1 つにまとめられる休符",
   },
   options: {},
+  messages: {
+    hidesBeat: "{position} からの{name}が拍の頭を隠しています",
+    hidesBeatSplit:
+      "{position} からの{name}が拍の頭を隠しています。{split}に分けることを推奨します",
+    mergeable: "{count} 個の休符を 1 つの{name}にまとめられます",
+  },
+  examples: {
+    invalid: [
+      {
+        score: {
+          measures: [{ timeSignature: [4, 4] }],
+          chords: [
+            { tick: 0, duration: { numerator: 1, denominator: 4 } },
+            { tick: 1440, duration: { numerator: 1, denominator: 4 } },
+          ],
+          rests: [{ tick: 480, duration: { numerator: 1, denominator: 2 } }],
+        },
+      },
+      {
+        score: {
+          measures: [{ timeSignature: [4, 4] }],
+          chords: [
+            { tick: 0, duration: { numerator: 1, denominator: 4 } },
+            { tick: 960, duration: { numerator: 1, denominator: 2 } },
+          ],
+          rests: [
+            { tick: 480, duration: { numerator: 1, denominator: 8 } },
+            { tick: 720, duration: { numerator: 1, denominator: 8 } },
+          ],
+        },
+      },
+    ],
+    valid: [
+      {
+        score: {
+          measures: [{ timeSignature: [4, 4] }],
+          rests: [{ tick: 0, duration: { numerator: 1, denominator: 1 } }],
+        },
+      },
+    ],
+  },
   run({ score, report }) {
     const meters = metersBySerial(score);
     for (const staff of score.staves) {
@@ -132,62 +173,6 @@ export const restGrouping = defineRule({
           );
         }
       });
-    }
-  },
-});
-
-export const mergeableTie = defineRule({
-  id: "mergeable-tie",
-  meta: {
-    name: "まとめられるタイ",
-    description: "1 つの音符で書けるタイを検出",
-    category: "slur-tie",
-    severity: "info",
-    tier: "nursery",
-  },
-  options: {},
-  run({ score, report }) {
-    const meters = metersBySerial(score);
-    for (const { index: staff } of score.staves) {
-      const ties = tiesOn(score, staff);
-      // 後ろの音に注記やヘアピンの端があれば、タイで分けている理由があるとみなす
-      const markedTicks = new Set(annotationsOn(score, staff).map((a) => a.tick));
-      for (const h of hairpinsOn(score, staff)) markedTicks.add(h.startTick).add(h.endTick);
-      const seen = new Set<string>();
-      for (const tie of ties) {
-        const key = `${tie.voice}:${tie.startTick}:${tie.endTick}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-
-        const measure = measureAt(score, tie.startTick);
-        const meter = measure ? meters[measure.serial] : null;
-        if (!measure || !meter || markedTicks.has(tie.endTick)) continue;
-        const events = voiceEventsIn(score, staff, tie.voice, measure.serial);
-        const at = (tick: number) =>
-          events.find((e): e is Chord => e.type === "chord" && e.tick === tick);
-        const first = at(tie.startTick);
-        const second = at(tie.endTick);
-        if (!first || !second || second.articulations.length > 0) continue;
-
-        const firstTicks = noteValueTicks(first.duration, first.tuplet);
-        const secondTicks = noteValueTicks(second.duration, second.tuplet);
-        if (firstTicks === null || secondTicks === null) continue;
-        if (first.tick + firstTicks !== second.tick) continue;
-        const tiedNotes = ties.filter(
-          (t) => t.voice === tie.voice && t.startTick === first.tick && t.endTick === second.tick,
-        ).length;
-        if (tiedNotes < first.notes.length || first.notes.length !== second.notes.length) continue;
-
-        const mergedTicks = firstTicks + secondTicks;
-        const mergedName = DURATION_NAMES[mergedTicks];
-        const onset = first.tick - meter.startTick;
-        if (!mergedName || beatCrossing(onset, mergedTicks, meter)) continue;
-        report({
-          at: { staff, measure: first.measure, tick: first.tick },
-          message: `${DURATION_NAMES[firstTicks]}と${DURATION_NAMES[secondTicks]}のタイは 1 つの${mergedName}で書けます`,
-          detail: { firstTicks, secondTicks, mergedTicks, timeSig: meter.timeSig },
-        });
-      }
     }
   },
 });

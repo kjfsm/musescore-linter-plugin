@@ -2,7 +2,7 @@ import type { Score } from "@score-linter/score-model";
 import { chordsIn, rhythmSignature, slursOn, spanCovers, tiesOn } from "@score-linter/score-model";
 
 import { defineRule } from "../engine.ts";
-import { bracketGroupKeyOf } from "./support.ts";
+import { bracketGroupKeyOf } from "./support/common.ts";
 
 // 主声部だけを比べる
 const VOICE = 0;
@@ -67,6 +67,50 @@ export const slurTieArticulationConsistency = defineRule({
     category: "articulation",
     severity: "info",
     tier: "pedantic",
+    docs: "同じ小節で同じリズムのパート間でスラー・タイの有無やアーティキュレーションが食い違う（比較範囲を設定可、後述）",
+  },
+  messages: {
+    differs:
+      "{{part:comparedToStaffIdx}} と同じリズムですが、スラー/タイ/アーティキュレーションが異なります",
+  },
+  examples: {
+    invalid: [
+      {
+        score: {
+          parts: [{ name: "Vn1" }, { name: "Vn2" }],
+          chords: [
+            {
+              staff: 0,
+              tick: 0,
+              duration: { numerator: 1, denominator: 4 },
+              articulations: ["Staccato"],
+            },
+            { staff: 1, tick: 0, duration: { numerator: 1, denominator: 4 } },
+          ],
+        },
+      },
+    ],
+    valid: [
+      {
+        score: {
+          parts: [{ name: "Vn1" }, { name: "Vn2" }],
+          chords: [
+            {
+              staff: 0,
+              tick: 0,
+              duration: { numerator: 1, denominator: 4 },
+              articulations: ["Staccato"],
+            },
+            {
+              staff: 1,
+              tick: 0,
+              duration: { numerator: 1, denominator: 4 },
+              articulations: ["Staccato"],
+            },
+          ],
+        },
+      },
+    ],
   },
   options: {
     scope: {
@@ -114,8 +158,7 @@ export const slurTieArticulationConsistency = defineRule({
           if (profileOf(score, staff, measure) === expected) continue;
           report({
             at: { staff, measure, tick: chordsIn(score, staff, VOICE, measure)[0]?.tick ?? 0 },
-            message:
-              "{{part:comparedToStaffIdx}} と同じリズムですが、スラー/タイ/アーティキュレーションが異なります",
+            messageId: "differs",
             detail: {
               comparedToStaffIdx: reference,
               // ユーザーが選んだ値ではなく実際に使った範囲。group を選んでも括弧が無ければ all。

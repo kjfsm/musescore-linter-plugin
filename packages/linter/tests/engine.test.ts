@@ -26,9 +26,10 @@ function reporting(id: string, count = 1, overrides: Partial<Rule["meta"]> = {})
       ...overrides,
     },
     options: {},
+    messages: { issue: "issue {i}" },
     run({ report }) {
       for (let i = 0; i < count; i++) {
-        report({ at: { staff: 0, measure: 1, tick: 0 }, message: `issue ${i}` });
+        report({ at: { staff: 0, measure: 1, tick: 0 }, messageId: "issue", data: { i } });
       }
     },
   });
@@ -67,9 +68,10 @@ describe("createLinter", () => {
         tier: "recommended",
       },
       options: {},
+      messages: { m: "m", whole: "whole" },
       run({ report }) {
-        report({ at: { staff: 1, measure: 3, tick: 960 }, message: "m", detail: { k: 1 } });
-        report({ at: { measure: 1, tick: 0 }, message: "whole" });
+        report({ at: { staff: 1, measure: 3, tick: 960 }, messageId: "m", detail: { k: 1 } });
+        report({ at: { measure: 1, tick: 0 }, messageId: "whole" });
       },
     });
     const { issues } = createLinter([rule]).lint(score);
@@ -83,6 +85,37 @@ describe("createLinter", () => {
     });
     expect(issues[1]!.at).toEqual({ partId: null, staff: null, measure: 1, tick: 0 });
     expect(issues[1]!.detail).toBeNull();
+  });
+});
+
+describe("文面", () => {
+  function reportingWith(data: Record<string, string | number>, messageId = "m"): Rule {
+    return defineRule({
+      id: "r",
+      meta: {
+        name: "r",
+        description: "",
+        category: "notation",
+        severity: "info",
+        tier: "recommended",
+      },
+      options: {},
+      messages: { m: "{name} は {count} 回（前回: {{measure:previousMeasure}}）" },
+      run({ report }) {
+        report({ at: { measure: 1, tick: 0 }, messageId: messageId as "m", data });
+      },
+    });
+  }
+
+  it("{name} を data の値で埋め、data に無いプレースホルダはそのまま残す", () => {
+    const { issues } = createLinter([reportingWith({ name: "{count}", count: 2 })]).lint(score);
+    expect(issues[0]!.message).toBe("{count} は 2 回（前回: {{measure:previousMeasure}}）");
+  });
+
+  it("messages に無い messageId を報告すると内部エラーになる", () => {
+    const { issues } = createLinter([reportingWith({}, "missing")]).lint(score);
+    expect(issues).toMatchObject([{ ruleId: "internal", severity: "error" }]);
+    expect(issues[0]!.message).toContain("missing");
   });
 });
 
@@ -126,8 +159,9 @@ describe("ルールの例外", () => {
       tier: "recommended",
     },
     options: {},
+    messages: { partial: "途中まで" },
     run({ report }) {
-      report({ at: { staff: 0, measure: 1, tick: 0 }, message: "途中まで" });
+      report({ at: { staff: 0, measure: 1, tick: 0 }, messageId: "partial" });
       throw new Error("boom");
     },
   });
@@ -159,10 +193,11 @@ describe("severity の契約", () => {
         tier: "recommended",
       },
       options: {},
+      messages: { m: "m" },
       run({ report }) {
         report({
           at: { staff: 0, measure: 1, tick: 0 },
-          message: "m",
+          messageId: "m",
           ...(reported ? { severity: reported } : {}),
         });
       },
@@ -213,6 +248,7 @@ describe("オプションの受け渡し", () => {
         },
         strict: { label: "厳格", type: "boolean", default: false },
       },
+      messages: {},
       run({ options }) {
         seen[id] = options;
       },
@@ -265,6 +301,7 @@ describe("実行時間の計測", () => {
         tier: "recommended",
       },
       options: {},
+      messages: {},
       run() {
         throw new Error("boom");
       },

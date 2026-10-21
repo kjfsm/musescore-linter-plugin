@@ -1,13 +1,11 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import {
-  duplicateTempo,
-  openingTempo,
-  tempoBarline,
-  tempoChangeResolution,
-  tempoWithoutBpm,
-} from "../src/rules/tempo.ts";
+import { duplicateTempo } from "../src/rules/duplicateTempo.ts";
+import { openingTempo } from "../src/rules/openingTempo.ts";
+import { tempoBarline } from "../src/rules/tempoBarline.ts";
+import { tempoChangeResolution } from "../src/rules/tempoChangeResolution.ts";
+import { tempoWithoutBpm } from "../src/rules/tempoWithoutBpm.ts";
 import { cleanScore, runRule } from "./helpers.ts";
 
 /** 1 小節 480 tick として、小節 n（1 始まり）の頭に置く。 */
