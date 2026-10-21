@@ -24,8 +24,19 @@
       "description": "TypeScript の型チェック。依存パッケージの typecheck が先に完了している必要がある。",
       "dependsOn": ["^typecheck"]
     },
+    // ルートのタスクの既定の入力はルート直下のファイルだけで、パッケージの変更を見落とす。
+    // リポジトリ全体を見る検査はキャッシュしない。
+    "//#lint": { "cache": false },
+    "//#knip": { "cache": false },
+    "//#docs:check": { "cache": false },
+    "check:bundle": {
+      "description": "apps/web の dist に通信コードとインライン script が無いか。",
+      "dependsOn": ["build"],
+      "inputs": ["dist/**", "scripts/check-bundle.ts"],
+      "outputs": []
+    },
     "//#test": {
-      "description": "vitest で全パッケージのテストを 1 回で実行する（スクリプトはルートだけが持つ）。全体で 1 秒未満なので、パッケージ単位に分ける利点がない。",
+      "description": "vitest で全パッケージのテストを 1 回で実行し、カバレッジの閾値も見る（スクリプトはルートだけが持つ）。全体で 1 秒未満なので、パッケージ単位に分ける利点がない。",
       "dependsOn": ["^typecheck"],
       "inputs": [
         "packages/*/src/**",
@@ -36,7 +47,7 @@
         "tools/*/tests/**",
         "fixtures/**"
       ],
-      "outputs": []
+      "outputs": ["coverage/**"]
     },
     "build": {
       "description": "apps/* の成果物を作る。plugin は QML 向けバンドル、cli は単一ファイルの CLI、web は Vite。",

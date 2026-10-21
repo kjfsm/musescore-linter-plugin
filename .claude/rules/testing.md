@@ -59,11 +59,10 @@ expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 
 ## 実行コマンド
 
 ```bash
-pnpm test              # vitest run（全パッケージ横断）
-pnpm test:coverage     # vitest run --coverage
+pnpm test              # vitest run --coverage（全パッケージ横断、閾値を下回ると落ちる）
 pnpm dev               # vitest（watch モード）
-pnpm pipeline          # turbo run typecheck test build package
+pnpm verify            # 検証ゲート全体（CI と同じ）
 ```
 
 `pnpm typecheck` はルート自身の `tsc --noEmit` だけを見る。各パッケージの型検査（プラグインの
-`tsconfig.bundle.json` を含む）は `pnpm pipeline` が回す。
+`tsconfig.bundle.json` を含む）は `pnpm verify` が回す。

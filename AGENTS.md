@@ -1,7 +1,7 @@
 # score-linter
 
 MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テスト・リリースは Turborepo + Changesets。
-コマンド・ディレクトリ構成は [README.md](./README.md)。検証ゲートの正は `.github/workflows/ci.yml`（`pnpm lint` → `pnpm knip` → `pnpm pipeline` → `pnpm test:coverage`）。
+コマンド・ディレクトリ構成は [README.md](./README.md)。検証ゲートは `pnpm verify` 1 本（境界・lint・knip・README の生成物・型・テストとカバレッジ・ビルド・Web の検査）。CI も同じコマンドを叩く。
 
 ## 構成の要点
 

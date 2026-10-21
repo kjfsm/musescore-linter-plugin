@@ -29,45 +29,6 @@ jobs:
       - name: 依存関係のインストール
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Lint / フォーマットチェック
-        run: pnpm lint
-
-      - name: 未使用コード検出
-        run: pnpm knip
-
-      - name: 層の境界の検査
-        run: pnpm boundaries
-
-      - name: README のルール一覧が生成物と一致するか
-        run: |
-          pnpm docs:rules
-          git diff --exit-code -- README.md
-
-      # turbo のタスクグラフ自体を検証する。未定義タスク名や依存の破綻は
-      # ここで落ちる（個別に pnpm run を叩いていた頃はすり抜けていた）。
-      - name: turbo タスクグラフの検証
-        run: pnpm pipeline --dry=json > /dev/null
-
-      # 型チェック・テスト・QML/CLI/Web のビルド・ZIP 化までを turbo 経由で通す。
-      - name: パイプライン (typecheck / test / build / package)
-        run: pnpm pipeline
-
-      # 閾値は vitest.config.ts の coverage.thresholds。下回ると落ちる。
-      - name: カバレッジ計測
-        run: pnpm test:coverage
-
-      # 「アップロードしたファイルは送信されない」の実質的な検証。
-      # 自前で書いたコード（エントリチャンク）にネットワーク API が現れた時点で主張が崩れるので CI で止める。
-      # 動的 import で分離された vendor チャンク（例: opensheetmusicdisplay）は対象外にしている。
-      # 中身を完全には制御できない第三者ライブラリのコードで、実行時の実質的な歯止めは
-      # _headers の `connect-src 'none'`（fetch/XHR/WebSocket 等をブラウザレベルで禁止）に委ねる。
-      - name: Web が通信コードを含まないことの確認
-        run: |
-          if grep -lE "fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource" apps/web/dist/assets/index-*.js; then
-            echo "::error::apps/web のバンドルにネットワーク API が含まれています"
-            exit 1
-          fi
-          if grep -qE "<script[^>]*>[^<]" apps/web/dist/index.html; then
-            echo "::error::apps/web/dist/index.html にインライン script があります（CSP script-src 'self' に違反）"
-            exit 1
-          fi
+      # ゲートの正は package.json の verify（turbo のタスクグラフ）。手元でも同じコマンドを叩く。
+      - name: 検証ゲート
+        run: pnpm verify
