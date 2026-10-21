@@ -8,6 +8,17 @@
     "vitest.config.ts",
     "pnpm-lock.yaml"
   ],
+  // どの層がどの層に依存してよいかはここだけに書く。許可は推移的に効くので、下の層が依存するものも並べる。
+  "boundaries": {
+    "tags": {
+      "model": { "dependencies": { "allow": [] } },
+      "reader-musicxml": { "dependencies": { "allow": ["model"] } },
+      "musescore-api": { "dependencies": { "allow": ["musescore-api"] } },
+      "reader-musescore": { "dependencies": { "allow": ["model", "musescore-api"] } },
+      "rules": { "dependencies": { "allow": ["model"] } },
+      "lint-app": { "dependencies": { "allow": ["model", "rules"] } }
+    }
+  },
   "tasks": {
     "typecheck": {
       "description": "TypeScript の型チェック。依存パッケージの typecheck が先に完了している必要がある。",

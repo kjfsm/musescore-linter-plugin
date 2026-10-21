@@ -42,7 +42,7 @@ export const xxx = defineRule({
   新しいルールは `nursery` で入れ、実際の楽譜で様子を見てから上げる。上げたら changeset に書く。
   プリセットとの対応は `isEnabledByDefault`（`engine.ts`）が持ち、ホストに書かない。
 - ルールが見てよいのは `score` と `options` だけ。`@score-linter/score-model` 以外を import しない
-  （`.oxlintrc.json` の `no-restricted-imports` が弾く）。MuseScore の語彙（要素の種類・subtype）は持ち込まない。
+  （`turbo.json` の `boundaries` が弾く）。MuseScore の語彙（要素の種類・subtype）は持ち込まない。
 - 奏法・強弱・テンポ・反復記号の表記揺れは `score-model` の `interpretAnnotation` が解釈済みの
   `Directive` にする。ルールは `annotation.directives` を見て、テキストの完全一致を書かない。
   足りない解釈はルールで補わず `interpret.ts` に足す。

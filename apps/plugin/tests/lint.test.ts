@@ -3,10 +3,10 @@ import { join } from "node:path";
 
 import type { Settings } from "@score-linter/lint-app";
 import type { MuseScore } from "@score-linter/musescore-api-types";
+import { duetScore, host } from "@score-linter/reader-musescore/testing";
 import { readMusicXml } from "@score-linter/reader-musicxml";
 import { describe, expect, it } from "vitest";
 
-import { duetScore, host } from "../../../packages/reader-musescore/tests/fixtures/duetMock.js";
 import { app, formatForCopy, lintCurrentScore, selectionFor } from "../src/lint.js";
 
 const NO_SETTINGS: Settings = { preset: "recommended", enabled: {}, options: {} };

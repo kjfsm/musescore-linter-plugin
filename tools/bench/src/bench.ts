@@ -13,7 +13,7 @@ import { readMusicXmlBytes } from "@score-linter/reader-musicxml";
 import type { Score } from "@score-linter/score-model";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..");
+const ROOT = path.join(__dirname, "..", "..", "..");
 const SCORES_DIR = path.join(ROOT, "fixtures", "scores");
 
 /** 計測回数。1 回目は JIT のウォームアップとして捨てる。 */

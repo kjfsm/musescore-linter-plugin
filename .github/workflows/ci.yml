@@ -35,6 +35,9 @@ jobs:
       - name: 未使用コード検出
         run: pnpm knip
 
+      - name: 層の境界の検査
+        run: pnpm boundaries
+
       # turbo のタスクグラフ自体を検証する。未定義タスク名や依存の破綻は
       # ここで落ちる（個別に pnpm run を叩いていた頃はすり抜けていた）。
       - name: turbo タスクグラフの検証

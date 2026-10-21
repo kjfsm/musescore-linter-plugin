@@ -10,5 +10,8 @@
   "dependencies": {
     "@score-linter/linter": "workspace:*",
     "@score-linter/score-model": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

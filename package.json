@@ -5,7 +5,7 @@
     "build:plugin": "pnpm --filter @score-linter/plugin build",
     "build:cli": "pnpm --filter @score-linter/cli build",
     "build:web": "pnpm --filter @score-linter/web build",
-    "bench": "tsx scripts/bench.ts",
+    "bench": "pnpm --filter @score-linter/bench bench",
     "dev:web": "pnpm --filter @score-linter/web dev",
     "preview:web": "pnpm --filter @score-linter/web preview",
     "deploy:web": "pnpm --filter @score-linter/web deploy",
@@ -22,16 +22,14 @@
     "changeset": "changeset",
     "version": "changeset version",
     "prepare": "simple-git-hooks",
-    "generate:types": "pnpm --filter @score-linter/musescore-api-types-generator generate"
+    "generate:types": "pnpm --filter @score-linter/musescore-api-types-generator generate",
+    "boundaries": "turbo boundaries"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
-    "@score-linter/linter": "workspace:*",
-    "@score-linter/reader-musicxml": "workspace:*",
-    "@score-linter/score-model": "workspace:*",
     "@types/node": "^25.8.0",
-    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/coverage-v8": "catalog:",
     "knip": "^6.41.0",
     "oxfmt": "0.73.0",
     "oxlint": "^1.88.0",
@@ -39,7 +37,7 @@
     "tsx": "^4.23.15",
     "turbo": "^2.11.9",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6",
+    "vitest": "catalog:",
     "wrangler": "^4.151.1"
   },
   "simple-git-hooks": {

@@ -2,16 +2,15 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { connect } from "@score-linter/musescore-plugin-helpers";
+import { readMuseScore } from "@score-linter/reader-musescore";
+import { duetScore, host } from "@score-linter/reader-musescore/testing";
 import { readMusicXml } from "@score-linter/reader-musicxml";
 import type { Score } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { readMuseScore } from "../src/reader.js";
-import { duetScore, host } from "./fixtures/duetMock.js";
-
 // 実際の MuseScore のどの版とも違う値。ホストの enum 経由で解決されることを確かめる。
 const duetXml = readFileSync(
-  join(__dirname, "../../reader-musicxml/tests/fixtures/duet.musicxml"),
+  join(__dirname, "../../../packages/reader-musicxml/tests/fixtures/duet.musicxml"),
   "utf8",
 );
 

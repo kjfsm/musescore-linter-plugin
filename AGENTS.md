@@ -11,8 +11,9 @@ MuseScore 4 向け静的解析プラグイン。pnpm monorepo。ビルド・テ�
 `musescore-plugin-helpers`・`musescore-api-types` だけ。`lint-app` は設定・並べ替え・件数・出力の整形を持ち、
 ホスト（`apps/plugin`・`cli`・`web`）は `createLintApp` の返す入口を呼ぶだけにする（`createLinter` を直接組み立てない）。
 
-- 層の境界は各 package.json の依存と `.oxlintrc.json` の `no-restricted-imports` で守る。
-  依存を足すときは両方を見直す。
+- 層の境界は、依存の宣言を各 package.json、どの層がどの層に依存してよいかをルートの `turbo.json` の
+  `boundaries` に書き、`pnpm boundaries`（`turbo boundaries`）で検査する。pnpm は isolated linker なので、
+  宣言していない import は解決できない。テストが使うものも、そのパッケージの devDependencies に宣言する。
 - `score-model` の型（`packages/score-model/src/types.ts`）は、ルールの都合で変えない。ルールが欲しい情報は
   Directive の解釈（`interpret.ts`）か問い合わせ関数で出し、型に特定のルール専用の項目を足さない。
 - プラグインのバンドルに入るコードは `apps/plugin/tsconfig.bundle.json` で ES2017 の標準ライブラリとして

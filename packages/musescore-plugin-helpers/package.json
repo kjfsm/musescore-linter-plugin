@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@score-linter/musescore-api-types": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

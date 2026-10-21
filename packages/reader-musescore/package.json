@@ -2,8 +2,11 @@
   "name": "@score-linter/reader-musescore",
   "version": "0.0.0",
   "private": true,
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./tests/fixtures/duetMock.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
@@ -13,6 +16,6 @@
     "@score-linter/score-model": "workspace:*"
   },
   "devDependencies": {
-    "@score-linter/reader-musicxml": "workspace:*"
+    "vitest": "catalog:"
   }
 }

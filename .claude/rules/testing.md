@@ -43,10 +43,10 @@ expect(issues[0]).toMatchObject({ severity: "warning", at: { staff: 0, measure: 
 | ------------------------------------- | --------------------------------------------------------------------------------- |
 | `packages/score-model/tests/`         | 問い合わせ関数・テキストの解釈（`interpretAnnotation`）                           |
 | `packages/reader-musicxml/tests/`     | MusicXML / .mxl から作った Score                                                  |
-| `packages/reader-musescore/tests/`    | MuseScore のモックから作った Score。`conformance.test.ts` は MusicXML 版と一致を見る |
+| `packages/reader-musescore/tests/`    | MuseScore のモックから作った Score                                                |
 | `packages/lint-app/tests/`            | 設定・並べ替え・件数・整形・スナップショット                                      |
 | `apps/cli/tests/`                     | 引数・出力。`golden.test.ts` は 3 曲の検出結果を `fixtures/golden/` と比べる       |
-| `apps/plugin/tests/`                  | バンドルが呼ぶ `lint.ts`（MuseScore のモックを使う）                              |
+| `apps/plugin/tests/`                  | バンドルが呼ぶ `lint.ts`（MuseScore のモックを使う）。`conformance.test.ts` は MuseScore 版と MusicXML 版の Score の一致を見る |
 
 ## カバレッジ方針
 
