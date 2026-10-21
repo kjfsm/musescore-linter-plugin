@@ -7,12 +7,23 @@
     }
   ],
   "commit": false,
-  "fixed": [],
+  "fixed": [["@score-linter/plugin", "@score-linter/cli", "@score-linter/web"]],
   "linked": [],
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [],
+  "ignore": [
+    "@score-linter/bench",
+    "@score-linter/lint-app",
+    "@score-linter/linter",
+    "@score-linter/musescore-api-types",
+    "@score-linter/musescore-api-types-generator",
+    "@score-linter/musescore-plugin-helpers",
+    "@score-linter/reader-musescore",
+    "@score-linter/reader-musicxml",
+    "@score-linter/rule-docs",
+    "@score-linter/score-model"
+  ],
   "privatePackages": {
     "version": true,
     "tag": false

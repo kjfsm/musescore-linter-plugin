@@ -11,6 +11,8 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write # attest-build-provenance
+  attestations: write
 
 jobs:
   release:
@@ -34,8 +36,12 @@ jobs:
       - name: 依存関係のインストール
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: ビルド
-        run: pnpm run build:plugin
+      - name: Playwright のブラウザ
+        run: pnpm --filter @score-linter/web exec playwright install --with-deps chromium
+
+      # 配る ZIP は、CI と同じゲートを通したこのビルドから作る（verify が build と package まで行う）
+      - name: 検証ゲート
+        run: pnpm verify
 
       - name: Changeset アクションの実行
         id: changesets
@@ -46,9 +52,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: パッケージング (ZIP 作成)
+      - name: ZIP のビルド来歴の証明
         if: steps.changesets.outputs.has-changesets == 'false'
-        run: pnpm run package
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            apps/plugin/score-linter*.zip
+            apps/plugin/musescore-linter-plugin.zip
 
       - name: GitHub Release の作成
         if: steps.changesets.outputs.has-changesets == 'false'

@@ -321,6 +321,8 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
 ### リリース手順
 
 本プロジェクトは [Changesets](https://github.com/changesets/changesets) でバージョン管理をしています。
+プラグイン・CLI・Web 版は同じルールを動かす 1 つの製品として、同じ版で上がります（`.changeset/config.json` の `fixed`）。
+`packages/*` と `tools/*` は公開しないので版を持ちません。
 
 1. **変更内容を記録する**（機能追加・バグ修正の PR に含める）
 
@@ -334,7 +336,8 @@ xvfb-run -a /path/to/squashfs-root/AppRun -o out.musicxml score.mscz
    - GitHub Actions がバージョン変更用の **「バージョンアップ」PR** を自動作成します。
 
 3. **「バージョンアップ」PR をマージする**
-   - `package.json` のバージョンが自動で更新され、GitHub Release（zip 添付）が作成されます。
+   - `package.json` のバージョンが自動で更新され、検証ゲート（`pnpm verify`）を通したビルドから
+     GitHub Release（zip 添付）が作成されます。zip にはビルド来歴の証明（`gh attestation verify <zip> -R kjfsm/score-linter`）が付きます。
 
 ## パフォーマンスガイド
 
