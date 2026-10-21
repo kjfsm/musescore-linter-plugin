@@ -7,3 +7,9 @@ packages:
 catalog:
   "@vitest/coverage-v8": ^5.0.5
   vitest: ^5.0.5
+
+allowBuilds:
+  esbuild: true
+  simple-git-hooks: true
+  gl: false
+  workerd: false
