@@ -2,13 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    // パッケージごとに 1 プロジェクト。以前は packages/*/vitest.config.ts を 5 本置いて
-    // いたが、中身は alias だけの差分だった。その alias 自体、各パッケージの
-    // package.json が "main": "src/index.ts" を指しているので不要（外して
-    // 全テストが通ること・バンドルが byte 単位で同一になることを確認済み）。
-    //
-    // turbo 側も //#test（ルートタスク 1 本）でこの設定を使う。パッケージ単位の
-    // test タスクは持たない。
+    // パッケージごとの vitest.config.ts は置かない。各パッケージの exports が src を指すので alias が要らず、
+    // turbo 側も //#test（ルートタスク 1 本）でこの設定を使う。
     projects: [
       {
         test: {
