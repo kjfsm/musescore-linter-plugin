@@ -12,6 +12,6 @@
     "@score-linter/linter": "workspace:*"
   },
   "devDependencies": {
-    "oxfmt": "0.73.0"
+    "oxfmt": "0.74.0"
   }
 }
