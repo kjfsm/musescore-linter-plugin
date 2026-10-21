@@ -5,5 +5,5 @@ packages:
 
 # テストを持つパッケージがそれぞれ vitest を宣言する（turbo boundaries が未宣言の import を弾く）。版はここで揃える。
 catalog:
-  "@vitest/coverage-v8": ^4.1.6
-  vitest: ^4.1.6
+  "@vitest/coverage-v8": ^5.0.5
+  vitest: ^5.0.5
