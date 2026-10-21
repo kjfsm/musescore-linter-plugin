@@ -9,8 +9,8 @@ import {
   voiceEventsIn,
 } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
-import { directiveOf, ofKind, techniqueOf } from "./support.js";
+import { defineRule } from "../engine.ts";
+import { directiveOf, ofKind, techniqueOf } from "./support.ts";
 
 const TOP_STAFF = 0;
 

@@ -12,8 +12,8 @@ import {
   overlappingHairpins,
   simultaneousDynamics,
   tieContinuationDynamic,
-} from "../src/rules/dynamics.js";
-import { cleanScore, runRule } from "./helpers.js";
+} from "../src/rules/dynamics.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 const dynamic = (text: string, tick: number, measure: number, staff = 0) => ({
   staff,

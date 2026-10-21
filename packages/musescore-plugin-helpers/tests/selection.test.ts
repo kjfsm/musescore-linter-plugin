@@ -1,7 +1,7 @@
 import type { EngravingItem, Score, Selection } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getSelectedElements, getSelectionRange, hasRangeSelection } from "../src/selection.js";
+import { getSelectedElements, getSelectionRange, hasRangeSelection } from "../src/selection.ts";
 
 function scoreWith(selection: Selection | null): Score {
   return { selection } as unknown as Score;

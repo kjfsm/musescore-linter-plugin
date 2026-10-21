@@ -41,9 +41,6 @@ importers:
       simple-git-hooks:
         specifier: ^2.14.0
         version: 2.14.0
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
       turbo:
         specifier: ^2.11.9
         version: 2.11.9
@@ -75,9 +72,6 @@ importers:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
       vitest:
         specifier: 'catalog:'
         version: 4.1.6(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(vite@8.3.4(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -112,9 +106,6 @@ importers:
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
       vitest:
         specifier: 'catalog:'
         version: 4.1.6(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(vite@8.3.4(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -8171,6 +8162,7 @@ snapshots:
       esbuild: 0.28.2
     optionalDependencies:
       fsevents: 2.3.3
+    optional: true
 
   tunnel-agent@0.6.0:
     dependencies:

@@ -1,7 +1,7 @@
 import { createSnapshotWriter } from "@score-linter/lint-app";
 
-import { app, formatForCopy, lintCurrentScore, selectionFor } from "./lint.js";
-import { isNewerVersion } from "./version.js";
+import { app, formatForCopy, lintCurrentScore, selectionFor } from "./lint.ts";
+import { isNewerVersion } from "./version.ts";
 
 const loadSettings = app.parseSettings;
 const serializeSettings = app.serializeSettings;

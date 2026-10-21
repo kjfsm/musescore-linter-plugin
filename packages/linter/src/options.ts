@@ -1,4 +1,4 @@
-import type { OptionSpec, OptionSpecs, OptionValue, OptionValues } from "./types.js";
+import type { OptionSpec, OptionSpecs, OptionValue, OptionValues } from "./types.ts";
 
 /** multiselect の値を、宣言の choices の順・重複なしにそろえる。保存のたびに差分が揺れないように。 */
 function normalizeMultiselect(

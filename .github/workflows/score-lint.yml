@@ -117,7 +117,7 @@ jobs:
         id: convert
         run: |
           set -euo pipefail
-          COUNT=$(pnpm exec tsx scripts/make-conversion-job.ts \
+          COUNT=$(node scripts/make-conversion-job.ts \
             "$SCORES_DIR" "$CONVERTED_DIR" build/conversion-job.json)
           echo "count=${COUNT}" >> "$GITHUB_OUTPUT"
           if [ "$COUNT" -gt 0 ]; then

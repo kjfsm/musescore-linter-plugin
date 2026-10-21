@@ -1,9 +1,9 @@
 import type { Score, Technique } from "@score-linter/score-model";
 import { annotationsOn, normalizeText, stableSortBy } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
-import type { Rule, Severity } from "../types.js";
-import { techniqueOf } from "./support.js";
+import { defineRule } from "../engine.ts";
+import type { Rule, Severity } from "../types.ts";
+import { techniqueOf } from "./support.ts";
 
 interface TechniquePairConfig {
   id: string;

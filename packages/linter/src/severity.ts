@@ -1,4 +1,4 @@
-import type { Severity } from "./types.js";
+import type { Severity } from "./types.ts";
 
 const RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
 

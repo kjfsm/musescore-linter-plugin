@@ -2,8 +2,8 @@ import type { ChordSpec, Fraction, MeasureSpec } from "@score-linter/score-model
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { beatCrossingTie } from "../src/rules/beatCrossingTie.js";
-import { runRule } from "./helpers.js";
+import { beatCrossingTie } from "../src/rules/beatCrossingTie.ts";
+import { runRule } from "./helpers.ts";
 
 const run = (chords: ChordSpec[], measures: MeasureSpec[]) =>
   runRule(beatCrossingTie, buildScore({ chords, measures }));

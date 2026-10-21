@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "../src/pitch.js";
+import { toTpc, tpcToAlter, tpcToLetter, tpcToName, tpcToStep } from "../src/pitch.ts";
 
 describe("tpc spelling helpers", () => {
   it("tpcToStep returns 0=C..6=B", () => {

@@ -11,7 +11,7 @@ import type {
   PlayingTechniqueTypeName,
 } from "@score-linter/musescore-api-types";
 
-import { checkHostVersion, type HostVersionCheck, strictEnum } from "./plugin.js";
+import { checkHostVersion, type HostVersionCheck, strictEnum } from "./plugin.ts";
 
 /**
  * 実行中の MuseScore に結び付けたヘルパ。enum の値は版によって振り直されるので、

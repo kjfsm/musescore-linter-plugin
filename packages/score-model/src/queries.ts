@@ -1,4 +1,4 @@
-import { stableSortBy } from "./sort.js";
+import { stableSortBy } from "./sort.ts";
 import type {
   Annotation,
   Chord,
@@ -9,7 +9,7 @@ import type {
   Slur,
   Tie,
   VoiceEvent,
-} from "./types.js";
+} from "./types.ts";
 
 // 結果は Score ごとに覚えておく。Score は組み立てたあと書き換えない前提で、
 // 書き換えると古い結果が返る。

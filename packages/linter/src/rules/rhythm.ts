@@ -7,16 +7,16 @@ import {
   voiceEventsIn,
 } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
-import type { Report } from "../types.js";
-import type { Meter } from "./meter.js";
+import { defineRule } from "../engine.ts";
+import type { Report } from "../types.ts";
+import type { Meter } from "./meter.ts";
 import {
   DURATION_NAMES,
   beatCrossing,
   beatPositionLabel,
   metersBySerial,
   noteValueTicks,
-} from "./meter.js";
+} from "./meter.ts";
 
 const restName = (ticks: number) => DURATION_NAMES[ticks]?.replace("音符", "休符") ?? null;
 

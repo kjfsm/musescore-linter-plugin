@@ -1,6 +1,7 @@
 {
   "name": "score-linter",
   "private": true,
+  "type": "module",
   "scripts": {
     "build:plugin": "pnpm --filter @score-linter/plugin build",
     "build:cli": "pnpm --filter @score-linter/cli build",
@@ -9,7 +10,7 @@
     "dev:web": "pnpm --filter @score-linter/web dev",
     "preview:web": "pnpm --filter @score-linter/web preview",
     "deploy:web": "pnpm --filter @score-linter/web deploy",
-    "lint:score": "tsx apps/cli/src/main.ts",
+    "lint:score": "node apps/cli/src/main.ts",
     "package": "pnpm --filter @score-linter/plugin package",
     "pipeline": "turbo run typecheck test build package",
     "test": "vitest run",
@@ -34,7 +35,6 @@
     "oxfmt": "0.73.0",
     "oxlint": "^1.88.0",
     "simple-git-hooks": "^2.14.0",
-    "tsx": "^4.23.15",
     "turbo": "^2.11.9",
     "typescript": "^6.0.3",
     "vitest": "catalog:",

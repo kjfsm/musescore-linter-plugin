@@ -1,8 +1,8 @@
 import type { Score } from "@score-linter/score-model";
 import { chordsIn, rhythmSignature, slursOn, spanCovers, tiesOn } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
-import { bracketGroupKeyOf } from "./support.js";
+import { defineRule } from "../engine.ts";
+import { bracketGroupKeyOf } from "./support.ts";
 
 // 主声部だけを比べる
 const VOICE = 0;

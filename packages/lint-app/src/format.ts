@@ -1,6 +1,6 @@
 import type { Severity } from "@score-linter/linter";
 
-import { countBySeverity, measureText, type ReportedIssue } from "./report.js";
+import { countBySeverity, measureText, type ReportedIssue } from "./report.ts";
 
 export interface FileResult {
   file: string;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizePartGroups } from "../src/partGroups.js";
-import type { PartGroup } from "../src/types.js";
+import { normalizePartGroups } from "../src/partGroups.ts";
+import type { PartGroup } from "../src/types.ts";
 
 const g = (symbol: PartGroup["symbol"], firstStaff: number, staffCount: number): PartGroup => ({
   symbol,

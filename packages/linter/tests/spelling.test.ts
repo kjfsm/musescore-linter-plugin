@@ -6,8 +6,8 @@ import {
   extremeSpelling,
   keySignature,
   redundantAccidental,
-} from "../src/rules/spelling.js";
-import { runRule } from "./helpers.js";
+} from "../src/rules/spelling.ts";
+import { runRule } from "./helpers.ts";
 
 const fSharp = (accidentalShown = true) => ({ pitch: 66, tpc: 20, line: 5, accidentalShown });
 const gFlat = { pitch: 66, tpc: 8, line: 4, accidentalShown: true };

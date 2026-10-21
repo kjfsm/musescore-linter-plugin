@@ -7,7 +7,7 @@ import type {
   ElementTypeName,
   NoteType,
   NoteTypeName,
-} from "./generated/enums.js";
+} from "./generated/enums.ts";
 
 /**
  * MuseScore (`MuseScore { }` ブロック) から実行時に渡される enum オブジェクトの型。

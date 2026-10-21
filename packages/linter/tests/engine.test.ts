@@ -1,10 +1,10 @@
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { createLinter, defineRule, isRuleEnabled } from "../src/engine.js";
-import { builtinRules } from "../src/rules/index.js";
-import type { Rule, Severity } from "../src/types.js";
-import { cleanScore, quintetScore, runAll } from "./helpers.js";
+import { createLinter, defineRule, isRuleEnabled } from "../src/engine.ts";
+import { builtinRules } from "../src/rules/index.ts";
+import type { Rule, Severity } from "../src/types.ts";
+import { cleanScore, quintetScore, runAll } from "./helpers.ts";
 
 const score = buildScore({
   parts: [

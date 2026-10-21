@@ -2,8 +2,8 @@ import { defineRule, type Rule, type RuleMeta } from "@score-linter/linter";
 import { buildScore } from "@score-linter/score-model";
 import { describe, expect, it } from "vitest";
 
-import { createLintApp } from "../src/app.js";
-import type { Settings } from "../src/settings.js";
+import { createLintApp } from "../src/app.ts";
+import type { Settings } from "../src/settings.ts";
 
 const score = buildScore({
   parts: [{ id: "p1", name: "Horn" }],

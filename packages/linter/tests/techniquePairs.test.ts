@@ -12,8 +12,8 @@ import {
   sulPontOrd,
   sulTastoOrd,
   unaCorda,
-} from "../src/rules/techniquePairs.js";
-import { cleanScore, runRule } from "./helpers.js";
+} from "../src/rules/techniquePairs.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 /** 1 小節 480 tick として、小節 n（1 始まり）の頭に置く。 */
 const staffText = (measure: number, text: string, staff = 0) => ({

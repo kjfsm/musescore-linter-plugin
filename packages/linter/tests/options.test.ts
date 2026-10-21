@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { parseOptionText, resolveOptions } from "../src/options.js";
-import type { OptionSpecs } from "../src/types.js";
+import { parseOptionText, resolveOptions } from "../src/options.ts";
+import type { OptionSpecs } from "../src/types.ts";
 
 const SPECS = {
   scope: {

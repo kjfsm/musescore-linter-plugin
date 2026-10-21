@@ -1,6 +1,6 @@
 import type { EngravingItem } from "@score-linter/musescore-api-types";
 
-import { trackToStaffIdx } from "./tracks.js";
+import { trackToStaffIdx } from "./tracks.ts";
 
 type AnnotationWithTextProps = {
   plainText?: unknown;

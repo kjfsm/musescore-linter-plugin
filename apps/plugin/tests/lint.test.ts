@@ -7,7 +7,7 @@ import { duetScore, host } from "@score-linter/reader-musescore/testing";
 import { readMusicXml } from "@score-linter/reader-musicxml";
 import { describe, expect, it } from "vitest";
 
-import { app, formatForCopy, lintCurrentScore, selectionFor } from "../src/lint.js";
+import { app, formatForCopy, lintCurrentScore, selectionFor } from "../src/lint.ts";
 
 const NO_SETTINGS: Settings = { preset: "recommended", enabled: {}, options: {} };
 const withScore = (): MuseScore => ({ ...host, curScore: duetScore() }) as unknown as MuseScore;

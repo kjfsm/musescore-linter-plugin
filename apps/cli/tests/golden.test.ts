@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { builtinRules } from "@score-linter/linter";
 import { describe, expect, it } from "vitest";
 
-import { type RunIO, run } from "../src/run.js";
+import { type RunIO, run } from "../src/run.ts";
 
 const REPO_ROOT = join(__dirname, "..", "..", "..");
 

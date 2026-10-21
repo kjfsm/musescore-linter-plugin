@@ -2,7 +2,7 @@ import type { MuseScore } from "@score-linter/musescore-api-types";
 import { generatedFrom } from "@score-linter/musescore-api-types";
 import { describe, expect, it, vi } from "vitest";
 
-import { assertHostVersion, checkHostVersion, definePlugin, strictEnum } from "../src/plugin.js";
+import { assertHostVersion, checkHostVersion, definePlugin, strictEnum } from "../src/plugin.ts";
 
 // generatedFrom.tag（例 "v4.7.3"）から major/minor を取り出す。
 const m = /v?(\d+)\.(\d+)/.exec(generatedFrom.tag);

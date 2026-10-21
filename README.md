@@ -162,7 +162,7 @@ MuseScore を起動せずに、MusicXML から同じルールをかけられま�
 pnpm build:cli                             # apps/cli/dist/score-lint.mjs を作る
 ./apps/cli/dist/score-lint.mjs score.musicxml
 
-pnpm lint:score score.musicxml             # ビルドせずに直接実行（tsx）
+pnpm lint:score score.musicxml             # ビルドせずに直接実行（Node の型除去）
 ```
 
 ```

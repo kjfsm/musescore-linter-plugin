@@ -1,5 +1,5 @@
-import { defineRule } from "../engine.js";
-import type { Severity } from "../types.js";
+import { defineRule } from "../engine.ts";
+import type { Severity } from "../types.ts";
 import {
   DURATION_NAMES,
   beatCrossing,
@@ -9,7 +9,7 @@ import {
   metersBySerial,
   noteValueTicks,
   splitSegments,
-} from "./meter.js";
+} from "./meter.ts";
 
 // 拍の骨格を隠す音符（イマジナリーバーライン違反）を検出し、タイでの分割案を出す。
 

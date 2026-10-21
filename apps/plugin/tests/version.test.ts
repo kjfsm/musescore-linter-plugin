@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { compareVersions, isNewerVersion } from "../src/version.js";
+import { compareVersions, isNewerVersion } from "../src/version.ts";
 
 describe("compareVersions", () => {
   it("小さい側で -1 を返す", () => {

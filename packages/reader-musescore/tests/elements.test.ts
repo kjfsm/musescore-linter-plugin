@@ -1,7 +1,7 @@
 import type { BarLineTypeName, Chord, Tie } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { barlineKindOf, dynamicText, notesOf, tiePitches } from "../src/elements.js";
+import { barlineKindOf, dynamicText, notesOf, tiePitches } from "../src/elements.ts";
 
 describe("dynamicText（修飾語付き）", () => {
   it("修飾語の付いた強弱記号でも、記号の部分だけを文字に直す", () => {

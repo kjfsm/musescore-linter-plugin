@@ -1,6 +1,6 @@
-import type { Rule } from "../types.js";
-import { slurTieArticulationConsistency } from "./articulationConsistency.js";
-import { beatCrossingTie } from "./beatCrossingTie.js";
+import type { Rule } from "../types.ts";
+import { slurTieArticulationConsistency } from "./articulationConsistency.ts";
+import { beatCrossingTie } from "./beatCrossingTie.ts";
 import {
   crescTextResolution,
   duplicateDynamics,
@@ -12,7 +12,7 @@ import {
   overlappingHairpins,
   simultaneousDynamics,
   tieContinuationDynamic,
-} from "./dynamics.js";
+} from "./dynamics.ts";
 import {
   codaSegno,
   courtesyAccidental,
@@ -22,8 +22,8 @@ import {
   rehearsalMarkPosition,
   repeatBarlineMatch,
   restAnnotation,
-} from "./notation.js";
-import { mergeableTie, restGrouping } from "./rhythm.js";
+} from "./notation.ts";
+import { mergeableTie, restGrouping } from "./rhythm.ts";
 import {
   duplicateSlur,
   slurOnRest,
@@ -31,13 +31,13 @@ import {
   slurSingleNote,
   slurTieEndpoint,
   tiePitchMismatch,
-} from "./slurTie.js";
+} from "./slurTie.ts";
 import {
   enharmonicSpelling,
   extremeSpelling,
   keySignature,
   redundantAccidental,
-} from "./spelling.js";
+} from "./spelling.ts";
 import {
   conLegnoArco,
   divUnis,
@@ -49,14 +49,14 @@ import {
   sulPontOrd,
   sulTastoOrd,
   unaCorda,
-} from "./techniquePairs.js";
+} from "./techniquePairs.ts";
 import {
   duplicateTempo,
   openingTempo,
   tempoBarline,
   tempoChangeResolution,
   tempoWithoutBpm,
-} from "./tempo.js";
+} from "./tempo.ts";
 
 /**
  * 組み込みのルール。並びがそのまま実行順で、設定画面の並びにもなる。

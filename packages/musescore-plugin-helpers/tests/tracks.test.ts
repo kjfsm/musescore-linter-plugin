@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { staffVoiceToTrack, trackToStaffIdx } from "../src/tracks.js";
+import { staffVoiceToTrack, trackToStaffIdx } from "../src/tracks.ts";
 
 describe("trackToStaffIdx", () => {
   it("converts track 0 to staffIdx 0, voice 0", () => {

@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { emit } from "../src/emit.js";
-import { parseHeader } from "../src/parse.js";
+import { emit } from "../src/emit.ts";
+import { parseHeader } from "../src/parse.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 

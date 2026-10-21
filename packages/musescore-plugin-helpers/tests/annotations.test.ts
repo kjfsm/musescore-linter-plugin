@@ -1,7 +1,7 @@
 import type { EngravingItem } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getAnnotationStaffIdx, getAnnotationText } from "../src/annotations.js";
+import { getAnnotationStaffIdx, getAnnotationText } from "../src/annotations.ts";
 
 function makeAnnotation(props: Record<string, unknown>): EngravingItem {
   return { name: "StaffText", ...props } as unknown as EngravingItem;

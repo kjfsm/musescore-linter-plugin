@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "bench": "tsx src/bench.ts",
+    "bench": "node src/bench.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

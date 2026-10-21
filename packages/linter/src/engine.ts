@@ -1,9 +1,9 @@
 import type { Score } from "@score-linter/score-model";
 import { partOfStaff } from "@score-linter/score-model";
 
-import { resolveOptions } from "./options.js";
-import { compareSeverity } from "./severity.js";
-import type { Issue, OptionSpecs, Preset, Report, Rule, RuleTier } from "./types.js";
+import { resolveOptions } from "./options.ts";
+import { compareSeverity } from "./severity.ts";
+import type { Issue, OptionSpecs, Preset, Report, Rule, RuleTier } from "./types.ts";
 
 /** オプションの宣言を `S` に保ったまま Rule を作る。型引数を書かずに済ませるための入口。 */
 export function defineRule<const S extends OptionSpecs = Record<never, never>>(

@@ -7,7 +7,7 @@ import {
   resolveEnabledRules,
   resolveRuleOptions,
   UsageError,
-} from "../src/args.js";
+} from "../src/args.ts";
 
 const RULES = ["opening-tempo", "pizz-arco", "final-barline"];
 

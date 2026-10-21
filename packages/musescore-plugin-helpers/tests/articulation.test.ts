@@ -1,7 +1,7 @@
 import type { Chord } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { getArticulationNames } from "../src/articulation.js";
+import { getArticulationNames } from "../src/articulation.ts";
 
 const chordWith = (names: string[]) =>
   ({

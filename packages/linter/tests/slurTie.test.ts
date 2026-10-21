@@ -8,8 +8,8 @@ import {
   slurSingleNote,
   slurTieEndpoint,
   tiePitchMismatch,
-} from "../src/rules/slurTie.js";
-import { runRule } from "./helpers.js";
+} from "../src/rules/slurTie.ts";
+import { runRule } from "./helpers.ts";
 
 describe("tie-pitch-mismatch", () => {
   const tieOf = (startPitch: number | null, endPitch: number | null) =>

@@ -2,9 +2,9 @@ import type { Issue, Rule, RuleTiming, Severity } from "@score-linter/linter";
 import { createLinter } from "@score-linter/linter";
 import type { Score } from "@score-linter/score-model";
 
-import { describeRule, type RuleCatalog, ruleCatalog, type RuleInfo } from "./catalog.js";
-import { countBySeverity, presentIssues, type ReportedIssue } from "./report.js";
-import { type Settings, type SettingsOps, settingsOps } from "./settings.js";
+import { describeRule, type RuleCatalog, ruleCatalog, type RuleInfo } from "./catalog.ts";
+import { countBySeverity, presentIssues, type ReportedIssue } from "./report.ts";
+import { type Settings, type SettingsOps, settingsOps } from "./settings.ts";
 
 /** ホストだけが知っている警告（版の食い違い・読めなかった小節など）。 */
 export interface HostDiagnostic {

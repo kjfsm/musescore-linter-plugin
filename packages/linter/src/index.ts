@@ -1,9 +1,9 @@
-export type { Linter, LinterConfig, LinterOptions, LintResult, RuleTiming } from "./engine.js";
-export { createLinter, defineRule, isEnabledByDefault, isRuleEnabled } from "./engine.js";
-export type { OptionParseResult } from "./options.js";
-export { defaultOptionValue, parseOptionText, resolveOptions } from "./options.js";
-export { builtinRules } from "./rules/index.js";
-export { compareSeverity } from "./severity.js";
+export type { Linter, LinterConfig, LinterOptions, LintResult, RuleTiming } from "./engine.ts";
+export { createLinter, defineRule, isEnabledByDefault, isRuleEnabled } from "./engine.ts";
+export type { OptionParseResult } from "./options.ts";
+export { defaultOptionValue, parseOptionText, resolveOptions } from "./options.ts";
+export { builtinRules } from "./rules/index.ts";
+export { compareSeverity } from "./severity.ts";
 export type {
   Issue,
   IssueCategory,
@@ -21,4 +21,4 @@ export type {
   RuleMeta,
   RuleTier,
   Severity,
-} from "./types.js";
+} from "./types.ts";

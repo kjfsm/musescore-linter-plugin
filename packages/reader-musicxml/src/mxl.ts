@@ -1,6 +1,6 @@
 import { unzipSync } from "fflate";
 
-import { attr, child, childrenNamed, find, parseXml } from "./xml.js";
+import { attr, child, childrenNamed, find, parseXml } from "./xml.ts";
 
 const decoder = new TextDecoder("utf-8");
 

@@ -1,7 +1,7 @@
 import type { Chord, Score } from "@score-linter/score-model";
 import { keyAt, stableSortBy, tpcToAlter, tpcToName } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
+import { defineRule } from "../engine.ts";
 
 interface Placed {
   chord: Chord;

@@ -13,7 +13,7 @@ import {
   tiesOn,
 } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
+import { defineRule } from "../engine.ts";
 import {
   directiveOf,
   ofKind,
@@ -21,7 +21,7 @@ import {
   staffChords,
   staffOfScope,
   tieEnds,
-} from "./support.js";
+} from "./support.ts";
 
 const dynamicsOn = (score: Score, staff: number) => ofKind(annotationsOn(score, staff), "dynamic");
 const dynamicsAffecting = (score: Score, staff: number) =>

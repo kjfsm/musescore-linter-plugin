@@ -1,7 +1,7 @@
 import type { ScoreElement } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { isChord, isNote, isRest } from "../src/predicates.js";
+import { isChord, isNote, isRest } from "../src/predicates.ts";
 
 const fake = (name: string) => ({ name }) as unknown as ScoreElement;
 

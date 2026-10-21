@@ -1,7 +1,7 @@
 import type { PartGroup, PartGroupSymbol } from "@score-linter/score-model";
 
-import type { XNode } from "./xml.js";
-import { attr, childText, childrenOf, tagOf } from "./xml.js";
+import type { XNode } from "./xml.ts";
+import { attr, childText, childrenOf, tagOf } from "./xml.ts";
 
 /** `<part-list>` 上での 1 グループ。staffIdx はこの時点では解決できない。 */
 export interface PartGroupDraft {

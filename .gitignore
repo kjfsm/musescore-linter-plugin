@@ -3,6 +3,7 @@ package-lock.json
 *.zip
 .DS_Store
 .turbo/
+tools/musescore-api-types-generator/.cache/
 out/
 coverage/
 packages/*/dist/

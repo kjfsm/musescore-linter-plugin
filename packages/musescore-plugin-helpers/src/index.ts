@@ -1,7 +1,7 @@
-export { getAnnotationStaffIdx, getAnnotationText } from "./annotations.js";
-export { getArticulationNames } from "./articulation.js";
-export { withCmd } from "./cmd.js";
-export { type ConnectedHelpers, type ConnectOptions, connect } from "./connect.js";
+export { getAnnotationStaffIdx, getAnnotationText } from "./annotations.ts";
+export { getArticulationNames } from "./articulation.ts";
+export { withCmd } from "./cmd.ts";
+export { type ConnectedHelpers, type ConnectOptions, connect } from "./connect.ts";
 export {
   getClefTypeAt,
   getKeySigAt,
@@ -22,16 +22,16 @@ export {
   isTempo,
   isTimeSig,
   type MeasureRepeatInfo,
-} from "./element-types.js";
-export { getHairpinRange, type Hairpin, type HairpinRange, isHairpin } from "./hairpin.js";
-export { getMetaTag } from "./metaTag.js";
+} from "./element-types.ts";
+export { getHairpinRange, type Hairpin, type HairpinRange, isHairpin } from "./hairpin.ts";
+export { getMetaTag } from "./metaTag.ts";
 export {
   findMeasureByIndex,
   findSegmentByTick,
   jumpToElement,
   jumpToMeasure,
-} from "./navigation.js";
-export { getNotePitches } from "./pitch.js";
+} from "./navigation.ts";
+export { getNotePitches } from "./pitch.ts";
 export {
   assertHostVersion,
   checkHostVersion,
@@ -40,17 +40,17 @@ export {
   type HostVersionCheck,
   strictEnum,
   type VersionMismatchMode,
-} from "./plugin.js";
-export { isChord, isNote, isRest } from "./predicates.js";
+} from "./plugin.ts";
+export { isChord, isNote, isRest } from "./predicates.ts";
 export {
   getSelectedElements,
   getSelectionRange,
   hasRangeSelection,
   type SelectionRange,
-} from "./selection.js";
-export { getSpannerRange, isSlur, type SpannerRange } from "./spanner.js";
-export { isTie } from "./tie.js";
-export { staffVoiceToTrack, trackToStaffIdx, VOICES_PER_STAFF } from "./tracks.js";
+} from "./selection.ts";
+export { getSpannerRange, isSlur, type SpannerRange } from "./spanner.ts";
+export { isTie } from "./tie.ts";
+export { staffVoiceToTrack, trackToStaffIdx, VOICES_PER_STAFF } from "./tracks.ts";
 export {
   type IterateScopeOptions,
   iterateAnnotations,
@@ -60,4 +60,4 @@ export {
   iterateNotes,
   iterateSegments,
   iterateStaves,
-} from "./traversal.js";
+} from "./traversal.ts";

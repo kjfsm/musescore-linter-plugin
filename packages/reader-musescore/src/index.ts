@@ -1,3 +1,3 @@
-export { barlineKindOf, dynamicText, notesOf, tiePitches } from "./elements.js";
-export type { MuseScoreOrigins, MuseScoreRead } from "./reader.js";
-export { readMuseScore } from "./reader.js";
+export { barlineKindOf, dynamicText, notesOf, tiePitches } from "./elements.ts";
+export type { MuseScoreOrigins, MuseScoreRead } from "./reader.ts";
+export { readMuseScore } from "./reader.ts";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { leadingTempoWord } from "../src/tempoWords.js";
+import { leadingTempoWord } from "../src/tempoWords.ts";
 
 describe("leadingTempoWord", () => {
   it("テンポ語だけのテキストを認識する", () => {

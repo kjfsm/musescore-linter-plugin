@@ -3,7 +3,7 @@ import { connect } from "@score-linter/musescore-plugin-helpers";
 import type { Annotation, Chord, Directive, Score } from "@score-linter/score-model";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { readMuseScore } from "../src/reader.js";
+import { readMuseScore } from "../src/reader.ts";
 
 // 実際の MuseScore のどの版とも違う値。ホストの enum 経由で解決されることを確かめる。
 // 実機の NoteType.NORMAL は 0 なので、0 はこのホストではグレースノートになる。

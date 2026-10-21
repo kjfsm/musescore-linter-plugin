@@ -1,7 +1,7 @@
 import type { BarLineType, Chord, MuseScore } from "@score-linter/musescore-api-types";
 import { describe, expect, it } from "vitest";
 
-import { connect } from "../src/connect.js";
+import { connect } from "../src/connect.ts";
 
 // 実際の MuseScore のどの版とも違う値。焼き込んだ値ではなく、結び付けたホストの
 // enum から引いていることを確かめるため。

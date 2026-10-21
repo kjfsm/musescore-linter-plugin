@@ -1,8 +1,8 @@
 import type { Chord } from "@score-linter/score-model";
 import { measureAt, slursOn, tiesOn } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
-import { restOnlyEndpoints, staffChords, tieEnds } from "./support.js";
+import { defineRule } from "../engine.ts";
+import { restOnlyEndpoints, staffChords, tieEnds } from "./support.ts";
 
 export const tiePitchMismatch = defineRule({
   id: "tie-pitch-mismatch",

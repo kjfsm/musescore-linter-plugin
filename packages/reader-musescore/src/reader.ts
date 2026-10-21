@@ -44,7 +44,7 @@ import type {
 } from "@score-linter/score-model";
 import { createScoreBuilder } from "@score-linter/score-model";
 
-import { barlineKindOf, dynamicText, notesOf, tiePitches } from "./elements.js";
+import { barlineKindOf, dynamicText, notesOf, tiePitches } from "./elements.ts";
 
 /**
  * 指摘を MuseScore の楽譜へ引き戻すための手がかり。ルールには渡さない。

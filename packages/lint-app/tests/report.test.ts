@@ -9,8 +9,8 @@ import {
   formatJson,
   formatMarkdown,
   formatText,
-} from "../src/format.js";
-import { countBySeverity, presentIssues } from "../src/report.js";
+} from "../src/format.ts";
+import { countBySeverity, presentIssues } from "../src/report.ts";
 
 // アウフタクトのある楽譜。通し番号 1 の小節に「0」と表示されている。
 const score = buildScore({

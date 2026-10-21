@@ -7,8 +7,8 @@ import {
   tempoBarline,
   tempoChangeResolution,
   tempoWithoutBpm,
-} from "../src/rules/tempo.js";
-import { cleanScore, runRule } from "./helpers.js";
+} from "../src/rules/tempo.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 /** 1 小節 480 tick として、小節 n（1 始まり）の頭に置く。 */
 const tempoAt = (measure: number, text: string, bpm: number) => ({

@@ -11,8 +11,8 @@ import {
   rehearsalMarkPosition,
   repeatBarlineMatch,
   restAnnotation,
-} from "../src/rules/notation.js";
-import { cleanScore, runRule } from "./helpers.js";
+} from "../src/rules/notation.ts";
+import { cleanScore, runRule } from "./helpers.ts";
 
 const barline = (tick: number, measure: number, kind: BarlineKind) => ({ tick, measure, kind });
 

@@ -7,8 +7,8 @@ import {
   stableSortBy,
 } from "@score-linter/score-model";
 
-import { defineRule } from "../engine.js";
-import { directiveOf, ofKind, staffOfScope } from "./support.js";
+import { defineRule } from "../engine.ts";
+import { directiveOf, ofKind, staffOfScope } from "./support.ts";
 
 const bpmOf = (a: Annotation): number | null => directiveOf(a, "tempo")?.bpm ?? null;
 

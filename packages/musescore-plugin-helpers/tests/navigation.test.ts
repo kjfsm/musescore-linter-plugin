@@ -12,7 +12,7 @@ import {
   findSegmentByTick,
   jumpToElement,
   jumpToMeasure,
-} from "../src/navigation.js";
+} from "../src/navigation.ts";
 
 function makeMeasures(numbers: number[]): Measure {
   // Build a linked list where each measure has the given `no`, in order.

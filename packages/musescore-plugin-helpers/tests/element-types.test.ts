@@ -14,7 +14,7 @@ import {
   isSystemText,
   isTempo,
   isTimeSig,
-} from "../src/element-types.js";
+} from "../src/element-types.ts";
 
 const fake = (name: string) => ({ name }) as unknown as ScoreElement;
 

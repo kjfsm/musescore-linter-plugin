@@ -18,7 +18,7 @@ import {
   resolveEnabledRules,
   resolveRuleOptions,
   UsageError,
-} from "./args.js";
+} from "./args.ts";
 
 export const EXIT_OK = 0;
 export const EXIT_ISSUES = 1;

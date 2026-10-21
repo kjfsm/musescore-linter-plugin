@@ -1,4 +1,4 @@
-import type { Score } from "./generated/plugin-api.js";
+import type { Score } from "./generated/plugin-api.ts";
 
 declare global {
   const curScore: Score | null;
