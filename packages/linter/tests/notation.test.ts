@@ -196,6 +196,23 @@ describe("rehearsal-mark-order", () => {
     expect(runRule(rehearsalMarkOrder, marks("A", "B", "C"))).toEqual([]);
   });
 
+  it.each([
+    ["26 進表記", ["Y", "Z", "AA", "AB", "AZ", "BA", "BB"]],
+    ["同じ文字の繰り返し", ["Y", "Z", "AA", "BB", "CC"]],
+  ])("Z の後を %s で続けた昇順は報告しない", (_, labels) => {
+    expect(runRule(rehearsalMarkOrder, marks(...labels))).toEqual([]);
+  });
+
+  it("Z より後の逆転も報告する", () => {
+    const issues = runRule(rehearsalMarkOrder, marks("BB", "AA"));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.detail).toEqual({ previous: "BB", current: "AA" });
+  });
+
+  it("欠番は報告しない", () => {
+    expect(runRule(rehearsalMarkOrder, marks("A", "C"))).toEqual([]);
+  });
+
   it("B → A の逆転は info で報告し、前後のマークを detail に持つ", () => {
     const issues = runRule(rehearsalMarkOrder, marks("B", "A"));
     expect(issues).toHaveLength(1);
