@@ -152,6 +152,7 @@ MuseScore {
             startedAt: startedAt
         });
         lastRun = view.run;
+        if (!view.run) console.error("[ScoreLinter] runLinter 失敗: " + view.issues[0].message);
         issuesList = view.issues;
         issueCounts = view.counts;
         perfText = view.perfText;
@@ -172,7 +173,7 @@ MuseScore {
             showSnapshot();
             if (!finished) return;
             stop();
-            if (snapshotBuildMs > 0) console.log("[ScoreLinter] スナップショット生成: " + snapshotBuildMs + " ms");
+            console.log("[ScoreLinter] スナップショット: " + snapshotBuildMs + " ms / " + snapshotText.length + " 文字");
         }
     }
 

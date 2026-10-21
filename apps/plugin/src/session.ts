@@ -40,7 +40,7 @@ function failed(message: string): RunView {
   };
 }
 
-function perfText(totalMs: number, gcMs: number, lintMs: number, detail: string): string {
+function formatPerf(totalMs: number, gcMs: number, lintMs: number, detail: string): string {
   // ラベルは桁を揃えるため ASCII のみ（monospace 表示なので全角が混ざるとずれる）
   const lines = [
     "[ScoreLinter:runLinter]",
@@ -72,7 +72,7 @@ export function runLint(host: MuseScore, request: RunRequest): RunView {
       counts: run.counts,
       run,
       perfText: request.measure
-        ? perfText(now - request.startedAt, request.gcMs, now - lintStarted, run.perfText)
+        ? formatPerf(now - request.startedAt, request.gcMs, now - lintStarted, run.perfText)
         : "",
     };
   } catch (error) {
@@ -105,10 +105,12 @@ export interface SnapshotSession {
   reset(): void;
 }
 
+const IDLE: SnapshotProgress = { building: false, done: 0, total: 0, text: "", buildMs: 0 };
+
 export function createSnapshotSession(): SnapshotSession {
   let writer: SnapshotWriter | null = null;
   let startedAt = 0;
-  let state: SnapshotProgress = { building: false, done: 0, total: 0, text: "", buildMs: 0 };
+  let state = IDLE;
 
   const cancel = () => {
     if (!state.building) return;
@@ -151,7 +153,7 @@ export function createSnapshotSession(): SnapshotSession {
     },
     reset() {
       writer = null;
-      state = { building: false, done: 0, total: 0, text: "", buildMs: 0 };
+      state = IDLE;
     },
   };
 }

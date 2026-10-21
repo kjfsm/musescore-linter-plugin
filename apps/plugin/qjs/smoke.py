@@ -27,7 +27,9 @@ SMOKE = """
     staves: snapshot.staves.length,
     groups: api.ruleCatalog().groups.length,
     copied: api.formatForCopy(view.issues, "markdown").length,
-    saved: api.serializeSettings(api.setRuleEnabled(settings, view.issues[0].ruleId, false)).enabled
+    saved: view.issues.length > 0
+      ? api.serializeSettings(api.setRuleEnabled(settings, view.issues[0].ruleId, false)).enabled
+      : ""
   });
 })()
 """
