@@ -37,3 +37,41 @@ jobs:
       # ゲートの正は package.json の verify（turbo のタスクグラフ）。手元でも同じコマンドを叩く。
       - name: 検証ゲート
         run: pnpm verify
+
+  # 型（lib: ES2017）による検査は近似なので、出荷するバンドルを MuseScore と同じ版の Qt の
+  # QJSEngine で実際に動かし、QML は qmllint で構文を見る。
+  qml-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: apps/plugin/qjs/requirements.txt
+
+      - name: 依存関係のインストール
+        run: |
+          pnpm install --frozen-lockfile --prefer-offline
+          pip install -r apps/plugin/qjs/requirements.txt
+
+      - name: バンドルとモックのビルド
+        run: |
+          pnpm build:plugin
+          node apps/plugin/qjs/build-mock.ts
+
+      - name: QJSEngine でバンドルを動かす
+        run: python apps/plugin/qjs/smoke.py apps/plugin/dist/bundle.js apps/plugin/dist-qjs/mock.js
+
+      # 未解決の型・未修飾のアクセスは警告に留まり、構文エラーだけが非ゼロで落ちる
+      - name: qmllint
+        run: pyside6-qmllint apps/plugin/ScoreLinter.qml apps/plugin/qml/*.qml

@@ -17,3 +17,6 @@ dist
 # Playwright の成果物
 apps/web/test-results/
 apps/web/playwright-report/
+
+# QJSEngine のスモークテスト用のモック（apps/plugin/qjs/build-mock.ts）
+apps/plugin/dist-qjs/
