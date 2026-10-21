@@ -7,20 +7,11 @@ import { defineConfig } from "vite";
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
-/** workspace パッケージは main が .ts を直指しするので、明示的に src へ向ける。 */
-function pkg(name: string): string {
-  return path.join(dir, "..", "..", "packages", name, "src", "index.ts");
-}
-
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.join(dir, "src"),
-      "@score-linter/score-model": pkg("score-model"),
-      "@score-linter/reader-musicxml": pkg("reader-musicxml"),
-      "@score-linter/linter": pkg("linter"),
-      "@score-linter/lint-app": pkg("lint-app"),
     },
   },
   build: {

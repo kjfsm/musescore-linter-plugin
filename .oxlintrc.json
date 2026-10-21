@@ -42,14 +42,6 @@
                 "importNames": ["createLinter", "isRuleEnabled"],
                 "message": "ホストは lint-app の createLintApp を通して lint する。"
               }
-            ],
-            // 目的はホストが lint-app を迂回して lint を組み立てるのを防ぐこと。reader・score-model は
-            // ホストが入口から呼ぶ層なので、深い import を禁じる理由が無い
-            "patterns": [
-              {
-                "group": ["@score-linter/linter/src/**", "@score-linter/lint-app/src/**"],
-                "message": "linter と lint-app は入口（index.ts）が公開するものだけを使う。"
-              }
             ]
           }
         ]
