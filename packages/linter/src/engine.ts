@@ -3,7 +3,7 @@ import { partOfStaff } from "@score-linter/score-model";
 
 import { resolveOptions } from "./options.js";
 import { compareSeverity } from "./severity.js";
-import type { Issue, OptionSpecs, Report, Rule } from "./types.js";
+import type { Issue, OptionSpecs, Preset, Report, Rule, RuleTier } from "./types.js";
 
 /** オプションの宣言を `S` に保ったまま Rule を作る。型引数を書かずに済ませるための入口。 */
 export function defineRule<const S extends OptionSpecs = Record<never, never>>(
@@ -13,7 +13,9 @@ export function defineRule<const S extends OptionSpecs = Record<never, never>>(
 }
 
 export interface LinterConfig {
-  /** ルール id → 有効か。書かれていないルールは {@link RuleMeta.defaultEnabled} に従う。 */
+  /** 書かれていないルールの ON/OFF を段階から決める。省略すると `recommended`。 */
+  preset?: Preset;
+  /** ルール id → 有効か。書かれていないルールは {@link isEnabledByDefault} に従う。 */
   enabled?: Readonly<Record<string, boolean>>;
   /** ルール id → オプションの生の値。エンジンが宣言に沿って正規化してから渡す。 */
   options?: Readonly<Record<string, unknown>>;
@@ -41,8 +43,14 @@ export interface Linter {
   lint(score: Score, config?: LinterConfig): LintResult;
 }
 
+export function isEnabledByDefault(tier: RuleTier, preset: Preset): boolean {
+  return tier === "recommended" || (tier === "pedantic" && preset === "all");
+}
+
 export function isRuleEnabled(rule: Rule, config: LinterConfig = {}): boolean {
-  return config.enabled?.[rule.id] ?? rule.meta.defaultEnabled;
+  return (
+    config.enabled?.[rule.id] ?? isEnabledByDefault(rule.meta.tier, config.preset ?? "recommended")
+  );
 }
 
 function issueFrom(score: Score, rule: Rule, report: Report): Issue {

@@ -1,3 +1,4 @@
+import type { Settings } from "@score-linter/lint-app";
 import { describe, expect, it } from "vitest";
 
 import { loadSettings, saveSettings } from "../src/lib/rules";
@@ -25,15 +26,18 @@ class MemoryStorage implements Storage {
 }
 
 describe("設定の保存", () => {
+  const DEFAULTS: Settings = { preset: "recommended", enabled: {}, options: {} };
+
   it("保存していなければすべて既定", () => {
-    expect(loadSettings(new MemoryStorage())).toEqual({ enabled: {}, options: {} });
+    expect(loadSettings(new MemoryStorage())).toEqual(DEFAULTS);
   });
 
   it("保存した設定を読み戻せる", () => {
     const storage = new MemoryStorage();
-    const settings = {
+    const settings: Settings = {
+      preset: "all",
       enabled: { "pizz-arco": false },
-      options: { "slur-tie-articulation-consistency": { scope: "group" as const } },
+      options: { "slur-tie-articulation-consistency": { scope: "group" } },
     };
     saveSettings(storage, settings);
     expect(loadSettings(storage)).toEqual(settings);
@@ -43,6 +47,7 @@ describe("設定の保存", () => {
   it("旧版と同じキーに、ON/OFF とオプションを分けて置く", () => {
     const storage = new MemoryStorage();
     saveSettings(storage, {
+      preset: "recommended",
       enabled: { "pizz-arco": false },
       options: { "slur-tie-articulation-consistency": { scope: "group" } },
     });
@@ -55,6 +60,14 @@ describe("設定の保存", () => {
   it("壊れた値は捨てて既定に戻す", () => {
     const storage = new MemoryStorage();
     storage.setItem("musescore-linter:rule-overrides", "{");
-    expect(loadSettings(storage)).toEqual({ enabled: {}, options: {} });
+    expect(loadSettings(storage)).toEqual(DEFAULTS);
+  });
+
+  it("プリセットは別のキーに置き、プリセットの無い旧版の保存値は推奨のみとして読む", () => {
+    const storage = new MemoryStorage();
+    storage.setItem("musescore-linter:rule-overrides", '{"pizz-arco":false}');
+    expect(loadSettings(storage)).toEqual({ ...DEFAULTS, enabled: { "pizz-arco": false } });
+    saveSettings(storage, { ...DEFAULTS, preset: "all" });
+    expect(storage.getItem("musescore-linter:preset")).toBe("all");
   });
 });

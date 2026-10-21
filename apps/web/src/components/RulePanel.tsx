@@ -1,8 +1,10 @@
 import type { OptionInfo, RuleInfo, Settings } from "@score-linter/lint-app";
-import type { OptionValue } from "@score-linter/linter";
+import type { OptionValue, Preset, RuleCategory } from "@score-linter/linter";
 import { ChevronRight } from "lucide-react";
+import type { MouseEvent } from "react";
 
 import { SeverityBadge } from "@/components/SeverityBadge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -103,48 +105,131 @@ function OptionField({
   );
 }
 
+function RuleItem({
+  rule,
+  settings,
+  enabled,
+  optionValues,
+  onChange,
+}: {
+  rule: RuleInfo;
+  settings: Settings;
+  enabled: boolean;
+  optionValues: Record<string, OptionValue>;
+  onChange: (settings: Settings) => void;
+}) {
+  return (
+    <li className="flex items-start gap-3">
+      <Checkbox
+        id={`rule-${rule.id}`}
+        className="mt-1"
+        checked={enabled}
+        onCheckedChange={(checked) =>
+          onChange(app.withRuleEnabled(settings, rule.id, checked === true))
+        }
+      />
+      <div className="flex flex-col gap-2">
+        <label htmlFor={`rule-${rule.id}`} className="cursor-pointer text-sm">
+          <span className="font-medium">{rule.name}</span>
+          <SeverityBadge severity={rule.severity} className="ml-2" />
+          {rule.tier === "pedantic" && (
+            <Badge variant="outline" className="ml-1">
+              細かい指摘
+            </Badge>
+          )}
+          <span className="block text-muted-foreground">{rule.description}</span>
+        </label>
+
+        {rule.options.length > 0 && (
+          // 無効なルールでも非表示にはしない。消えると設定が失われたように見える。
+          <div className="flex flex-col gap-2 border-l-2 py-1 pl-3">
+            {rule.options.map((spec) => (
+              <OptionField
+                key={spec.key}
+                rule={rule}
+                spec={spec}
+                value={optionValues[spec.key]}
+                disabled={!enabled}
+                onChange={(value) =>
+                  onChange(app.withRuleOption(settings, rule.id, spec.key, value))
+                }
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}
+
+const PRESETS: { value: Preset; label: string }[] = [
+  { value: "recommended", label: "推奨のみ" },
+  { value: "all", label: "すべて（細かい指摘を含む）" },
+];
+
 /**
  * 折りたたみに Radix の Accordion / Collapsible ではなくネイティブ `<details>` を使っている。
  * Radix はアニメーション用の CSS 変数を style 属性で注入するため、
  * _headers の `style-src 'self'`（'unsafe-inline' なし）に違反してしまう。
  */
 export function RulePanel({ settings, onChange }: RulePanelProps) {
-  const groups = app.catalog;
-  const all = groups.flatMap((g) => g.rules);
+  const { groups, nursery } = app.catalog;
+  const all = [...groups.flatMap((g) => g.rules), ...nursery];
   const view = app.settingsView(settings);
   const isEnabled = (rule: RuleInfo) => view.enabled[rule.id] === true;
-  const activeCount = all.filter(isEnabled).length;
+  const countText = (rules: readonly RuleInfo[]) =>
+    `${rules.filter(isEnabled).length} / ${rules.length} 有効`;
 
-  function setAll(enabled: boolean) {
-    onChange(all.reduce((s, r) => app.withRuleEnabled(s, r.id, enabled), settings));
-  }
+  const setGroup =
+    (category: RuleCategory, enabled: boolean) => (e: MouseEvent<HTMLButtonElement>) => {
+      // summary の中なので、押しても欄を開閉させない
+      e.preventDefault();
+      onChange(app.withGroupEnabled(settings, category, enabled));
+    };
 
-  const optionValues = (rule: RuleInfo) => view.options[rule.id] ?? {};
+  const item = (rule: RuleInfo) => (
+    <RuleItem
+      key={rule.id}
+      rule={rule}
+      settings={settings}
+      enabled={isEnabled(rule)}
+      optionValues={view.options[rule.id] ?? {}}
+      onChange={onChange}
+    />
+  );
 
   return (
     <details className="group rounded-xl border bg-card">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-medium [&::-webkit-details-marker]:hidden">
         <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />
         チェック項目
-        <span className="text-sm font-normal text-muted-foreground">
-          {activeCount} / {all.length} 有効
-        </span>
+        <span className="text-sm font-normal text-muted-foreground">{countText(all)}</span>
       </summary>
 
       <Separator />
 
-      <div className="flex flex-wrap gap-2 px-4 py-3">
-        <Button type="button" size="sm" variant="outline" onClick={() => setAll(true)}>
-          すべて有効
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => setAll(false)}>
-          すべて無効
-        </Button>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <legend className="sr-only">プリセット</legend>
+          {PRESETS.map(({ value, label }) => (
+            <label key={value} className="flex cursor-pointer items-center gap-1.5 text-sm">
+              <input
+                type="radio"
+                name="rule-preset"
+                value={value}
+                checked={settings.preset === value}
+                onChange={() => onChange(app.withPreset(settings, value))}
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
         <Button
           type="button"
           size="sm"
           variant="ghost"
-          onClick={() => onChange({ enabled: {}, options: {} })}
+          // プリセットは利用者が選んだものなので、戻すのはそのもとでの個別の設定だけ
+          onClick={() => onChange({ preset: settings.preset, enabled: {}, options: {} })}
         >
           既定に戻す
         </Button>
@@ -153,62 +238,59 @@ export function RulePanel({ settings, onChange }: RulePanelProps) {
       <Separator />
 
       <div className="flex flex-col gap-3 px-4 py-4">
-        {groups.map((group) => {
-          const activeInGroup = group.rules.filter(isEnabled).length;
-          return (
-            <details key={group.category} className="group/cat rounded-lg border" open>
-              <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                <ChevronRight
-                  className="size-3.5 transition-transform group-open/cat:rotate-90"
-                  aria-hidden
-                />
-                {group.label}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {activeInGroup} / {group.rules.length} 有効
-                </span>
-              </summary>
-              <ul className="flex flex-col gap-2 px-3 pb-3 pt-1">
-                {group.rules.map((rule) => (
-                  <li key={rule.id} className="flex items-start gap-3">
-                    <Checkbox
-                      id={`rule-${rule.id}`}
-                      className="mt-1"
-                      checked={isEnabled(rule)}
-                      onCheckedChange={(checked) =>
-                        onChange(app.withRuleEnabled(settings, rule.id, checked === true))
-                      }
-                    />
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor={`rule-${rule.id}`} className="cursor-pointer text-sm">
-                        <span className="font-medium">{rule.name}</span>
-                        <SeverityBadge severity={rule.severity} className="ml-2" />
-                        <span className="block text-muted-foreground">{rule.description}</span>
-                      </label>
+        {groups.map((group) => (
+          <details key={group.category} className="group/cat rounded-lg border" open>
+            <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+              <ChevronRight
+                className="size-3.5 transition-transform group-open/cat:rotate-90"
+                aria-hidden
+              />
+              {group.label}
+              <span className="text-xs font-normal text-muted-foreground">
+                {countText(group.rules)}
+              </span>
+              <span className="ml-auto flex gap-1">
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="outline"
+                  onClick={setGroup(group.category, true)}
+                >
+                  すべて ON
+                </Button>
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="outline"
+                  onClick={setGroup(group.category, false)}
+                >
+                  すべて OFF
+                </Button>
+              </span>
+            </summary>
+            <ul className="flex flex-col gap-2 px-3 pb-3 pt-1">{group.rules.map(item)}</ul>
+          </details>
+        ))}
 
-                      {rule.options.length > 0 && (
-                        // 無効なルールでも非表示にはしない。消えると設定が失われたように見える。
-                        <div className="flex flex-col gap-2 border-l-2 py-1 pl-3">
-                          {rule.options.map((spec) => (
-                            <OptionField
-                              key={spec.key}
-                              rule={rule}
-                              spec={spec}
-                              value={optionValues(rule)[spec.key]}
-                              disabled={!isEnabled(rule)}
-                              onChange={(value) =>
-                                onChange(app.withRuleOption(settings, rule.id, spec.key, value))
-                              }
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          );
-        })}
+        {nursery.length > 0 && (
+          <details className="group/cat rounded-lg border border-dashed">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+              <ChevronRight
+                className="size-3.5 transition-transform group-open/cat:rotate-90"
+                aria-hidden
+              />
+              試験中
+              <span className="text-xs font-normal text-muted-foreground">
+                {countText(nursery)}
+              </span>
+            </summary>
+            <p className="px-3 text-xs text-muted-foreground">
+              誤検出の様子を見ているチェックです。どのプリセットにも含まれないので、試すときは 1
+              つずつ ON にしてください。
+            </p>
+            <ul className="flex flex-col gap-2 px-3 pb-3 pt-2">{nursery.map(item)}</ul>
+          </details>
+        )}
       </div>
     </details>
   );

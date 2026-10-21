@@ -47,6 +47,15 @@ export type OptionValue = boolean | string | string[];
 
 export type RuleCategory = "tempo" | "dynamics" | "articulation" | "slur-tie" | "notation";
 
+/**
+ * どれだけ確実な誤りを指すか。severity とは独立で、既定で ON にするかだけを決める。
+ * `nursery` は誤検出の様子を見ているルールで、どのプリセットにも入らない。
+ */
+export type RuleTier = "recommended" | "pedantic" | "nursery";
+
+/** 既定で ON にする段階の集合。`all` は `nursery` を含まない。 */
+export type Preset = "recommended" | "all";
+
 /** `internal` はルールではなく、エンジンやホストが出す指摘。 */
 export type IssueCategory = RuleCategory | "internal";
 
@@ -59,7 +68,7 @@ export interface RuleMeta {
    * 実際の指摘から導くことはできない。これより重い指摘を報告するとエンジンが内部エラーにする。
    */
   severity: Severity;
-  defaultEnabled: boolean;
+  tier: RuleTier;
 }
 
 export interface Report {

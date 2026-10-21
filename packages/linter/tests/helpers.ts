@@ -7,11 +7,15 @@ import type { Issue, Rule } from "../src/types.js";
 
 /** ルールを 1 つだけ有効にしたリンターで lint する。オプションは生の値で渡す。 */
 export function runRule(rule: Rule, score: Score, options?: unknown): Issue[] {
-  return createLinter([rule]).lint(score, { options: { [rule.id]: options } }).issues;
+  return createLinter([rule]).lint(score, {
+    enabled: { [rule.id]: true },
+    options: { [rule.id]: options },
+  }).issues;
 }
 
 export function runAll(score: Score, enabled: Record<string, boolean> = {}): Issue[] {
-  return createLinter(builtinRules).lint(score, { enabled }).issues;
+  const all = Object.fromEntries(builtinRules.map((r) => [r.id, true]));
+  return createLinter(builtinRules).lint(score, { enabled: { ...all, ...enabled } }).issues;
 }
 
 /**

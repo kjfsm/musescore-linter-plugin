@@ -16,7 +16,7 @@ const meta = {
   description: "",
   category: "notation",
   severity: "info",
-  defaultEnabled: true,
+  tier: "recommended",
 } as const;
 
 const optionRule = defineRule({
@@ -54,6 +54,12 @@ describe("parseArgs", () => {
     expect(o.files).toEqual(["a.musicxml", "b.mxl"]);
     expect(o.format).toBe("pretty");
     expect(o.failOn).toBe("error");
+    expect(o.preset).toBe("recommended");
+  });
+
+  it("--preset で段階の集合を選び、候補外の値は指定できる値を示して拒否する", () => {
+    expect(parseArgs(["--preset=all", "a.xml"]).preset).toBe("all");
+    expect(() => parseArgs(["--preset=nursery"])).toThrow(/recommended \/ all/);
   });
 
   it("-- 以降はフラグに見えてもファイルとして扱う", () => {
@@ -90,7 +96,7 @@ describe("parseArgs", () => {
 });
 
 describe("resolveEnabledRules", () => {
-  it("指定が無ければ空（= 各ルールの defaultEnabled に従う）", () => {
+  it("指定が無ければ空（= プリセットと各ルールの段階に従う）", () => {
     expect(resolveEnabledRules({ onlyRules: [], disabledRules: [] }, RULES)).toEqual({});
   });
 

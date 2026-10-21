@@ -114,7 +114,7 @@ export const restGrouping = defineRule({
     description: "拍の頭を隠す休符と、1 つにまとめられる休符を検出",
     category: "notation",
     severity: "info",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   options: {},
   run({ score, report }) {
@@ -143,7 +143,7 @@ export const mergeableTie = defineRule({
     description: "1 つの音符で書けるタイを検出",
     category: "slur-tie",
     severity: "info",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   options: {},
   run({ score, report }) {

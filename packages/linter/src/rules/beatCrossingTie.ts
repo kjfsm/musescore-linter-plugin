@@ -21,7 +21,7 @@ export const beatCrossingTie = defineRule({
     category: "slur-tie",
     // 小節線や主要拍をまたぐときは warning を出す
     severity: "warning",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {

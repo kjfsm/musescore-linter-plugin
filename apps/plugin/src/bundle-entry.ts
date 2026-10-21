@@ -5,7 +5,9 @@ import { isNewerVersion } from "./version.js";
 
 const loadSettings = app.parseSettings;
 const serializeSettings = app.serializeSettings;
+const setPreset = app.withPreset;
 const setRuleEnabled = app.withRuleEnabled;
+const setGroupEnabled = app.withGroupEnabled;
 const setRuleOption = app.withRuleOption;
 const settingsView = app.settingsView;
 
@@ -22,6 +24,8 @@ export {
   ruleCatalog,
   selectionFor,
   serializeSettings,
+  setGroupEnabled,
+  setPreset,
   setRuleEnabled,
   setRuleOption,
   settingsView,

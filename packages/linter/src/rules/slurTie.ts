@@ -11,7 +11,7 @@ export const tiePitchMismatch = defineRule({
     description: "異なる音高をタイで結んでいる箇所を検出",
     category: "slur-tie",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -38,7 +38,7 @@ export const slurOnRest = defineRule({
     description: "スラーの端点が休符上にある箇所を検出",
     category: "slur-tie",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -59,7 +59,7 @@ export const slurSingleNote = defineRule({
     description: "単一音に掛かるスラーを検出",
     category: "slur-tie",
     severity: "info",
-    defaultEnabled: true,
+    tier: "pedantic",
   },
   options: {},
   run({ score, report }) {
@@ -85,7 +85,7 @@ export const slurTieEndpoint = defineRule({
     description: "タイで続く音から始まる・タイの途中で終わるスラーを検出",
     category: "slur-tie",
     severity: "info",
-    defaultEnabled: true,
+    tier: "nursery",
   },
   options: {},
   run({ score, report }) {
@@ -137,7 +137,7 @@ export const slurSamePitch = defineRule({
     description: "同じ音高の 2 音だけを結ぶスラー（タイの書き間違い）を検出",
     category: "slur-tie",
     severity: "warning",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
@@ -172,7 +172,7 @@ export const duplicateSlur = defineRule({
     description: "同じ範囲に重ねて掛けたスラーを検出",
     category: "slur-tie",
     severity: "info",
-    defaultEnabled: true,
+    tier: "recommended",
   },
   options: {},
   run({ score, report }) {
